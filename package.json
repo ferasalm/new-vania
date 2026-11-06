@@ -1,0 +1,38 @@
+{
+  "name": "opencodegamedesign",
+  "version": "0.14.0",
+  "description": "<p align=\"center\">   <img src=\"assets/banner.png\" alt=\"OpenCode Game Studios Banner\" width=\"100%\"> </p>",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "prepare": "node tools/git-hooks/install.mjs",
+    "hooks:install": "node tools/git-hooks/install.mjs",
+    "test": "npm run test:plugins && npm run test:hooks",
+    "test:plugins": "node --import tsx --test .opencode/plugins/tests/test-*.mjs",
+    "test:extensions": "node --import tsx --test tests/extensions/*.mjs",
+    "test:omp": "node --import tsx --test tests/omp/*.mjs",
+    "test:hooks": "node --test tests/git-hooks/test-commit-msg.mjs tests/git-hooks/test-pre-commit.mjs",
+    "test:framework": "node tests/agents/validate.mjs",
+    "test:modules": "node --test tests/modules/test-install-harness.mjs",
+    "test:parity": "node --import tsx --test tests/e2e/test-parity.test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/striderZA/OpenCodeGameStudios.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/striderZA/OpenCodeGameStudios/issues"
+  },
+  "homepage": "https://github.com/striderZA/OpenCodeGameStudios#readme",
+  "devDependencies": {
+    "minimatch": "^10.2.5",
+    "tsx": "^4.23.1"
+  }
+}
