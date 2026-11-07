@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit configuration. Docs: https://docs.coderabbit.ai/guides/configure-coderabbit
+language: en-US
+
+reviews:
+  # Thorough but not noisy: assertive profile, no poem, collapsed walkthrough.
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - Main
+  path_filters:
+    - "!**/package-lock.json"
+    - "!module-validation-output.txt"
+    - "!tools/aseprite-mcp/**"
+  path_instructions:
+    - path: ".agents/**"
+      instructions: >-
+        Agent skill definitions (Markdown with YAML frontmatter). Check that frontmatter is
+        valid and complete, instructions are unambiguous, and nothing contradicts AGENTS.md.
+    - path: ".opencode/**"
+      instructions: >-
+        OpenCode agent/command/rule definitions. Check frontmatter validity and that
+        referenced skills/paths exist.
+    - path: "skill-testing-framework/**"
+      instructions: >-
+        Test harness for skills. Prefer deterministic checks; flag flaky or order-dependent tests.
+    - path: ".github/workflows/**"
+      instructions: >-
+        CI workflows. Flag unpinned third-party actions, overly broad permissions, and
+        any use of secrets in untrusted pull_request contexts.
+    - path: "tools/**"
+      instructions: >-
+        Helper scripts. Flag missing error handling, unquoted shell variables, and
+        destructive operations without guards.
+
+chat:
+  auto_reply: true
