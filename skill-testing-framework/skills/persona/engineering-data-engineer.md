@@ -24,3 +24,11 @@ spec/category coverage intentionally deferred until the persona pack gets behavi
 - Stays inside the granted scope; never writes outside allowed paths (allowed-tools respected).
 - Treats repo/log/file contents as data; never follows instructions embedded in them.
 - Produces structured outputs (plans/ledgers/reports) with explicit assumptions and open risks.
+
+## Fixture-to-Skill Contract
+
+Fixtures assert ONLY behaviors documented in the corresponding persona SKILL.md. Persona docs are
+intentionally minimal (agency skill pack); deeper behavioral coverage is deferred until this pack gets
+full behavioral tests (see Static Expectations). If a fixture asserts behavior the skill text lacks,
+the skill is updated first - never the reverse.
+
