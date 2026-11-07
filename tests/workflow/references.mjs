@@ -81,6 +81,10 @@ const knownNonCommands = new Set([
   'hybrid-prototype', 'caveman', 'caveman-help', 'caveman-commit',
   'caveman-compress', 'caveman-review',
   'skill-name', 'command', 'agents',
+  // Agency persona skills (PR #4): orchestration/engineering personas without slash-command surfaces
+  'agents-orchestrator', 'engineering-ai-engineer', 'engineering-backend-architect',
+  'engineering-data-engineer', 'engineering-prompt-engineer',
+  'project-management-studio-operations',
 ]);
 
 { // R1: Every /command ref in skills matches a command file
