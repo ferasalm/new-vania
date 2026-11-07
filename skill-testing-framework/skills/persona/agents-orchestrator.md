@@ -15,10 +15,10 @@ Cataloged 2026-11-07 to satisfy invariant I10 when the agency skill pack landed 
 spec/category coverage intentionally deferred until the persona pack gets behavioral tests.
 ## Behavioral Fixtures (spec mode)
 
-### Fixture 1: multi-stream build -> routed plan
-- Input: user requests scaffolding plus a reconciler feature in one run.
-- Expected protocol: agent partitions the work into MECE streams, assigns builders with model pins and worktree/branch per stream, and defines gates before spawning.
-- Assertion: plan contains mutually exclusive scopes, an explicit gate list, and no stream touching another stream's files.
+### Fixture 1: feature request -> Dev-QA loop routing
+- Input: user asks to ship a small feature end-to-end.
+- Expected protocol: the agent follows its documented coordination style — route the work to the right specialist agent, collect QA/review results, and iterate until acceptance criteria are confirmed.
+- Assertion: output names the routed specialist, the QA checkpoint, and the completion criteria; ends with a clear handoff. (The persona documents sequential Dev-QA coordination; do not assert parallel fan-out or model pins — those belong to the operating run charter, not this skill.)
 ## Protocol-Compliance Assertions
 
 - Stays inside the granted scope; never writes outside allowed paths (allowed-tools respected).

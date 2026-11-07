@@ -15,10 +15,10 @@ Cataloged 2026-11-07 to satisfy invariant I10 when the agency skill pack landed 
 spec/category coverage intentionally deferred until the persona pack gets behavioral tests.
 ## Behavioral Fixtures (spec mode)
 
-### Fixture 1: verification harness request -> test-first design
-- Input: user asks to verify a tool installation end-to-end.
-- Expected protocol: agent enumerates checks (parse/behavior/recency), marks read-only vs mutating checks, and drafts OK/FAIL/WARN semantics before writing code.
-- Assertion: proposed checks include a read-only live test and a DryRun boundary; no destructive test proposed.
+### Fixture 1: ML feature request -> production-ready design
+- Input: user asks to add a churn-prediction model to the product.
+- Expected protocol: the agent covers its documented mission areas — intelligent system development (data/model design), production AI integration (serving and monitoring), and AI ethics/safety (bias, privacy) — before any training code.
+- Assertion: output addresses all three mission areas, includes an evaluation metric and a failure/fallback path, and proposes no model training before data and evaluation design are agreed.
 ## Protocol-Compliance Assertions
 
 - Stays inside the granted scope; never writes outside allowed paths (allowed-tools respected).

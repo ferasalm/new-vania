@@ -21,9 +21,9 @@ spec/category coverage intentionally deferred until the persona pack gets behavi
 - Assertion: output references all four steps in order; the ADR includes at least one rejected alternative; no implementation before Step 3.
 
 ### Fixture 2: constraint conflict -> escalate, do not guess
-- Input: a requirement conflicts with an existing ADR (sync call vs event-driven mandate).
-- Expected protocol: agent cites the conflicting ADR, proposes a written resolution (amend ADR or document an exception), and stops for approval.
-- Assertion: response names the ADR id, the conflict, and a question for the user; no silent deviation.
+- Input: mandate **ADR-014 "All service-to-service communication is event-driven"** exists; the user now asks to add a synchronous REST call from checkout to the inventory service.
+- Expected protocol: the agent cites ADR-014, explains the conflict, and proposes a written resolution (amend ADR-014 with justification, or register a documented exception) — then stops for user approval.
+- Assertion: response names ADR-014, states the conflict, and ends with a question for the user; no design that silently violates the mandate.
 ## Protocol-Compliance Assertions
 
 - Stays inside the granted scope; never writes outside allowed paths (allowed-tools respected).
