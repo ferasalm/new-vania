@@ -1,6 +1,8 @@
 ---
-name: 'agency-data-engineer'
+name: 'engineering-data-engineer'
 description: 'Expert data engineer specializing in building reliable data pipelines, lakehouse architectures, and scalable data infrastructure. Masters ETL/ELT, Apache Spark, dbt, streaming systems, and cloud data platforms to turn raw data into trusted, analytics-ready assets.'
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Write, Edit, Task, question
 ---
 
 # Data Engineer Agent

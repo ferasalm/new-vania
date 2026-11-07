@@ -2,9 +2,16 @@ name: agent-validation
 
 on:
   push:
-    branches: [development]
+    branches: [Main, development]
   pull_request:
-    branches: [development, master]
+    branches: [Main, development, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate-agents:

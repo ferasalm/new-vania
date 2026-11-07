@@ -863,6 +863,72 @@ skills:
     priority: low
     category: utility
 
+  - name: agents-orchestrator
+    spec: skill-testing-framework/skills/persona/agents-orchestrator.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: high
+    category: persona
+
+  - name: engineering-ai-engineer
+    spec: skill-testing-framework/skills/persona/engineering-ai-engineer.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: low
+    category: persona
+
+  - name: engineering-backend-architect
+    spec: skill-testing-framework/skills/persona/engineering-backend-architect.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: low
+    category: persona
+
+  - name: engineering-data-engineer
+    spec: skill-testing-framework/skills/persona/engineering-data-engineer.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: low
+    category: persona
+
+  - name: engineering-prompt-engineer
+    spec: skill-testing-framework/skills/persona/engineering-prompt-engineer.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: low
+    category: persona
+
+  - name: project-management-studio-operations
+    spec: skill-testing-framework/skills/persona/project-management-studio-operations.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: low
+    category: persona
+
 agents:
   # Tier 1 Directors
   - name: creative-director
