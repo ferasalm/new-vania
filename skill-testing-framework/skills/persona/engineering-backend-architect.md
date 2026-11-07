@@ -32,10 +32,11 @@ spec/category coverage intentionally deferred until the persona pack gets behavi
 
 ## Fixture-to-Skill Contract
 
-Fixtures assert ONLY behaviors documented in the corresponding persona SKILL.md. Persona docs are
+Fixtures assert behaviors documented in the corresponding persona SKILL.md. Persona docs are
 intentionally minimal (agency skill pack); deeper behavioral coverage is deferred until this pack gets
-full behavioral tests (see Static Expectations). If a fixture asserts behavior the skill text lacks,
-the skill is updated first - never the reverse.
+full behavioral tests (see Static Expectations). A failing spec is an investigation trigger, not a
+verdict: update the skill text when the asserted behavior is genuinely required, or correct the
+fixture when it over-asserts behavior the skill does not document.
 
 
 Deferred behavioral note: ADR-conflict escalation (cite conflicting ADR, propose amend-or-exception, stop for approval) is a desired behavior to encode INTO the persona skill during the behavioral-spec phase; Fixture 2 documents the target protocol meanwhile.
