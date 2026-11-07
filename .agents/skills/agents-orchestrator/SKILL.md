@@ -1,6 +1,8 @@
 ---
-name: 'agency-agents-orchestrator'
+name: 'agents-orchestrator'
 description: 'Autonomous pipeline manager that orchestrates the entire development workflow. You are the leader of this process.'
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Write, Edit, Task, question
 ---
 
 # AgentsOrchestrator Agent Personality

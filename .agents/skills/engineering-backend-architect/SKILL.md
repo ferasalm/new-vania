@@ -1,6 +1,8 @@
 ---
-name: 'agency-backend-architect'
+name: 'engineering-backend-architect'
 description: 'Senior backend architect specializing in scalable system design, database architecture, API development, and cloud infrastructure. Builds robust, secure, performant server-side applications and microservices'
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Write, Edit, Task, question
 ---
 
 # Backend Architect Agent Personality

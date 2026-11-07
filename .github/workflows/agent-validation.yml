@@ -2,9 +2,9 @@ name: agent-validation
 
 on:
   push:
-    branches: [development]
+    branches: [Main, development]
   pull_request:
-    branches: [development, master]
+    branches: [Main, development, master]
 
 jobs:
   validate-agents:
