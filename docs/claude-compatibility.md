@@ -94,8 +94,9 @@ Claude Code share one implementation.
 
 The TypeScript module loads through `tsx` only when an event needs it. Other Bash calls return in
 under 100 ms. Without `npm install` the hooks stay inactive and say so at session start. The
-commit check fails open: if it crashes, the command still runs, and the git pre-commit hook in
-`.githooks/` remains the enforced gate.
+commit check fails open: if it crashes, the command runs without the OCGS content checks, and
+the git pre-commit hook in `.githooks/` does not repeat them (it covers secrets, conflict markers,
+file size and framework validation).
 Tests: `npm run test:claude`.
 
 ## Permissions
@@ -127,8 +128,10 @@ Skill bodies are shared with other harnesses, so some still use OpenCode names.
 
 ## Known Gaps
 
-- **Commit gate timing:** the commit check sees what is staged when the hook runs. In
-  `git add x && git commit`, `x` is not yet staged and is not checked.
+- **Commit gate scope:** the commit check takes the staged path list when the hook runs, so in
+  `git add x && git commit`, `x` is not checked. It validates each staged file's working-tree
+  copy, so a fix that is not restaged can hide an invalid staged version. Commands whose
+  `git -C dir` points at another repository are not checked.
 - **Protected-branch match is case-sensitive:** the shared `detectPushToProtected` matches `main`,
   `master` and `develop` exactly, so this repository's `Main` branch gets no push reminder.
 - **Skill `agent:` and `isolation:` fields:** Claude Code applies `agent:` only together with

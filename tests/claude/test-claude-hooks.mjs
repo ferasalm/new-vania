@@ -112,10 +112,28 @@ test('pre-tool-use checks commits run with git global options', (t) => {
   write('assets/data/enemies.json', '{ "hp": ');
   git(root, 'add', 'assets/data/enemies.json');
 
-  for (const command of ['git -C . commit -m x', 'git --no-pager -c core.quotepath=false commit -m x']) {
+  for (const command of [
+    'git -C . commit -m x',
+    `git -C ${join(root, 'assets')} commit -m x`,
+    'git --no-pager -c core.quotepath=false commit -m x',
+  ]) {
     const result = runHook(root, 'pre-tool-use', { tool_name: 'Bash', tool_input: { command } });
     assert.equal(result.code, 2, command);
   }
+});
+
+test('pre-tool-use skips commits that git -C points at another repository', (t) => {
+  const { root, write } = makeRepo(t);
+  const { root: other } = makeRepo(t);
+  write('assets/data/enemies.json', '{ "hp": ');
+  git(root, 'add', 'assets/data/enemies.json');
+
+  const result = runHook(root, 'pre-tool-use', {
+    tool_name: 'Bash',
+    tool_input: { command: `git -C ${other} commit -m x` },
+  });
+
+  assert.deepEqual(result, { code: 0, stdout: '', stderr: '' });
 });
 
 test('pre-tool-use blocks a commit with invalid staged data JSON', (t) => {

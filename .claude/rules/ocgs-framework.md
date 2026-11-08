@@ -31,4 +31,4 @@ The mirror already renames the `/help` and `/code-review` references and the `al
 
 `.claude/settings.json` runs `.claude/hooks/ocgs-hooks.mjs`, which reuses `.opencode/plugins/ccgs-hooks.ts` (needs `npm install` for tsx). It adds session context at start, keeps `production/session-state/active.md` in the compaction summary, blocks commits that fail OCGS validation (invalid `assets/data/*.json`), warns on protected-branch pushes and asset naming, and flags edits to generated `.claude/` files.
 
-The commit check reads what is staged when the command starts. Stage files in a separate command before running `git commit`, rather than `git add x && git commit`.
+The commit check reads what is staged when the command starts. Stage files in a separate command before running `git commit`, rather than `git add x && git commit`. It validates the working-tree copy of each staged file, so restage any file you fix before committing.

@@ -23,9 +23,11 @@
  * say so at session start.
  *
  * The commit check fails open: if it crashes, Claude Code reports a
- * non-blocking error and the command runs. The git pre-commit hook in
- * `.githooks/` stays the enforced gate. The check reads what is staged when
- * the command starts, so `git add x && git commit` does not cover `x`.
+ * non-blocking error and the command runs without the OCGS content checks,
+ * which the git pre-commit hook does not repeat. The check takes the staged
+ * path list when the command starts, so `git add x && git commit` does not
+ * cover `x`, and it validates each staged file's working-tree copy. Commands
+ * whose `git -C dir` points at another repository are not checked.
  *
  * OCGS_PROJECT_ROOT overrides the project root (used by tests).
  */
@@ -43,9 +45,12 @@ const HOOKS_MODULE = resolve(CODE_ROOT, '.opencode', 'plugins', 'ccgs-hooks.ts')
 /** PreCompact stdout is capped at 10,000 characters; leave room for the truncation note. */
 const COMPACT_LIMIT = 9500;
 
-/** `git`, optional global options (`-C dir`, `-c key=value`, `--no-pager`, …), then `name`. */
+/**
+ * `git`, optional global options (`-C dir`, `-c key=value`, `--no-pager`, …), then `name`.
+ * Group 1 holds the global options.
+ */
 function gitSubcommand(name) {
-  return new RegExp(String.raw`(?:^|[\s;&|(])git(?:\s+(?:-[Cc]\s+\S+|--?[A-Za-z][\w-]*(?:=\S+)?))*\s+${name}\b`);
+  return new RegExp(String.raw`(?:^|[\s;&|(])git((?:\s+(?:-[Cc]\s+\S+|--?[A-Za-z][\w-]*(?:=\S+)?))*)\s+${name}\b`);
 }
 
 const GIT_COMMIT_RE = gitSubcommand('commit');
@@ -93,6 +98,28 @@ function toProjectPath(filePath) {
   const rel = relative(ROOT, isAbsolute(filePath) ? filePath : resolve(ROOT, filePath));
   if (!rel || rel.startsWith('..') || isAbsolute(rel)) return null;
   return rel.split(sep).join('/');
+}
+
+function repoTopLevel(dir) {
+  const result = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+    cwd: dir, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15000,
+  });
+  return result.status === 0 ? resolve(result.stdout.trim()) : null;
+}
+
+/**
+ * Whether the git command matched by `pattern` runs in this project's repository.
+ * Each `-C dir` changes the directory relative to the previous one, as git does.
+ */
+function targetsThisRepo(command, pattern) {
+  const options = command.match(pattern)?.[1] ?? '';
+  let dir = ROOT;
+  for (const [, value] of options.matchAll(/\s-C\s+(\S+)/g)) {
+    dir = resolve(dir, value.replace(/^(['"])(.*)\1$/, '$2'));
+  }
+  if (dir === ROOT) return true;
+  const target = repoTopLevel(dir);
+  return target !== null && target === repoTopLevel(ROOT);
 }
 
 function writeJson(payload) {
@@ -166,8 +193,8 @@ const HANDLERS = {
     if (tool !== 'Bash') return 0;
 
     const command = String(toolInput.command ?? '');
-    const isCommit = GIT_COMMIT_RE.test(command);
-    const isPush = GIT_PUSH_RE.test(command);
+    const isCommit = GIT_COMMIT_RE.test(command) && targetsThisRepo(command, GIT_COMMIT_RE);
+    const isPush = GIT_PUSH_RE.test(command) && targetsThisRepo(command, GIT_PUSH_RE);
     if (!isCommit && !isPush) return 0;
 
     const hooks = await loadHooks();
