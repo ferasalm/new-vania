@@ -130,8 +130,9 @@ Skill bodies are shared with other harnesses, so some still use OpenCode names.
 
 - **Commit gate scope:** the commit check takes the staged path list when the hook runs, so in
   `git add x && git commit`, `x` is not checked. It validates each staged file's working-tree
-  copy, so a fix that is not restaged can hide an invalid staged version. Commands whose
-  `git -C dir` points at another repository are not checked.
+  copy, so a fix that is not restaged can hide an invalid staged version. Commands that git
+  resolves to another repository (`-C`, `--git-dir`, `--work-tree` or inline `GIT_*=`
+  variables) are not checked.
 - **Protected-branch match is case-sensitive:** the shared `detectPushToProtected` matches `main`,
   `master` and `develop` exactly, so this repository's `Main` branch gets no push reminder.
 - **Skill `agent:` and `isolation:` fields:** Claude Code applies `agent:` only together with

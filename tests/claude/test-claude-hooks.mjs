@@ -128,12 +128,25 @@ test('pre-tool-use skips commits that git -C points at another repository', (t) 
   write('assets/data/enemies.json', '{ "hp": ');
   git(root, 'add', 'assets/data/enemies.json');
 
+  for (const command of [`git -C ${other} commit -m x`, `GIT_DIR=${join(other, '.git')} git commit -m x`]) {
+    const result = runHook(root, 'pre-tool-use', { tool_name: 'Bash', tool_input: { command } });
+    assert.deepEqual(result, { code: 0, stdout: '', stderr: '' }, command);
+  }
+});
+
+test('pre-tool-use checks commits that --git-dir and --work-tree point back at the project', (t) => {
+  const { root, write } = makeRepo(t);
+  const { root: other } = makeRepo(t);
+  write('assets/data/enemies.json', '{ "hp": ');
+  git(root, 'add', 'assets/data/enemies.json');
+
   const result = runHook(root, 'pre-tool-use', {
     tool_name: 'Bash',
-    tool_input: { command: `git -C ${other} commit -m x` },
+    tool_input: { command: `git -C ${other} --git-dir=${join(root, '.git')} --work-tree=${root} commit -m x` },
   });
 
-  assert.deepEqual(result, { code: 0, stdout: '', stderr: '' });
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /assets\/data\/enemies\.json is not valid JSON/);
 });
 
 test('pre-tool-use blocks a commit with invalid staged data JSON', (t) => {

@@ -27,7 +27,8 @@
  * which the git pre-commit hook does not repeat. The check takes the staged
  * path list when the command starts, so `git add x && git commit` does not
  * cover `x`, and it validates each staged file's working-tree copy. Commands
- * whose `git -C dir` points at another repository are not checked.
+ * that git resolves to another repository (through `-C`, `--git-dir`,
+ * `--work-tree` or inline `GIT_*=` variables) are not checked.
  *
  * OCGS_PROJECT_ROOT overrides the project root (used by tests).
  */
@@ -46,11 +47,12 @@ const HOOKS_MODULE = resolve(CODE_ROOT, '.opencode', 'plugins', 'ccgs-hooks.ts')
 const COMPACT_LIMIT = 9500;
 
 /**
- * `git`, optional global options (`-C dir`, `-c key=value`, `--no-pager`, …), then `name`.
- * Group 1 holds the global options.
+ * `git` (optionally after inline `NAME=value` assignments), global options
+ * (`-C dir`, `--git-dir dir`, `-c key=value`, `--no-pager`, …), then `name`.
+ * Group 1 holds the assignments, group 2 the global options.
  */
 function gitSubcommand(name) {
-  return new RegExp(String.raw`(?:^|[\s;&|(])git((?:\s+(?:-[Cc]\s+\S+|--?[A-Za-z][\w-]*(?:=\S+)?))*)\s+${name}\b`);
+  return new RegExp(String.raw`(?:^|[\s;&|(])((?:[A-Z_][A-Z0-9_]*=\S+\s+)*)git((?:\s+(?:-[Cc]\s+\S+|--(?:git-dir|work-tree|namespace)\s+\S+|--?[A-Za-z][\w-]*(?:=\S+)?))*)\s+${name}\b`);
 }
 
 const GIT_COMMIT_RE = gitSubcommand('commit');
@@ -86,13 +88,6 @@ function readInput() {
   }
 }
 
-function git(...args) {
-  const result = spawnSync('git', args, {
-    cwd: ROOT, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15000,
-  });
-  return result.status === 0 ? result.stdout.trim() : '';
-}
-
 /** Project-relative path with forward slashes, or null for files outside the project. */
 function toProjectPath(filePath) {
   const rel = relative(ROOT, isAbsolute(filePath) ? filePath : resolve(ROOT, filePath));
@@ -100,26 +95,45 @@ function toProjectPath(filePath) {
   return rel.split(sep).join('/');
 }
 
-function repoTopLevel(dir) {
-  const result = spawnSync('git', ['rev-parse', '--show-toplevel'], {
-    cwd: dir, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15000,
-  });
-  return result.status === 0 ? resolve(result.stdout.trim()) : null;
+const NO_LOCATION = Object.freeze({ args: [], env: {} });
+
+function unquote(value) {
+  return value.replace(/^(['"])(.*)\1$/, '$2');
 }
 
 /**
- * Whether the git command matched by `pattern` runs in this project's repository.
- * Each `-C dir` changes the directory relative to the previous one, as git does.
+ * How the git command matched by `pattern` locates its repository: its
+ * `-C`, `--git-dir` and `--work-tree` options and inline `GIT_*=` assignments.
  */
-function targetsThisRepo(command, pattern) {
-  const options = command.match(pattern)?.[1] ?? '';
-  let dir = ROOT;
-  for (const [, value] of options.matchAll(/\s-C\s+(\S+)/g)) {
-    dir = resolve(dir, value.replace(/^(['"])(.*)\1$/, '$2'));
+function gitLocation(command, pattern) {
+  const [, assignments = '', options = ''] = command.match(pattern) ?? [];
+  const env = {};
+  for (const [, key, value] of assignments.matchAll(/([A-Z_][A-Z0-9_]*)=(\S+)/g)) {
+    if (key.startsWith('GIT_')) env[key] = unquote(value);
   }
-  if (dir === ROOT) return true;
-  const target = repoTopLevel(dir);
-  return target !== null && target === repoTopLevel(ROOT);
+  const args = [];
+  for (const m of options.matchAll(/\s(?:(-C)\s+(\S+)|(--git-dir|--work-tree)(?:=|\s+)(\S+))/g)) {
+    if (m[1]) args.push('-C', unquote(m[2]));
+    else args.push(`${m[3]}=${unquote(m[4])}`);
+  }
+  return { args, env };
+}
+
+/** Run git from the project root with a command's location; trimmed stdout, or null on failure. */
+function gitAt(location, ...args) {
+  const result = spawnSync('git', [...location.args, ...args], {
+    cwd: ROOT, env: { ...process.env, ...location.env },
+    encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 15000,
+  });
+  return result.status === 0 ? result.stdout.trim() : null;
+}
+
+/** Whether a located git command uses this project's repository, as git itself resolves it. */
+function targetsThisRepo(location) {
+  if (location.args.length === 0 && Object.keys(location.env).length === 0) return true;
+  const target = gitAt(location, 'rev-parse', '--absolute-git-dir');
+  const own = gitAt(NO_LOCATION, 'rev-parse', '--absolute-git-dir');
+  return target !== null && own !== null && resolve(target) === resolve(own);
 }
 
 function writeJson(payload) {
@@ -193,15 +207,17 @@ const HANDLERS = {
     if (tool !== 'Bash') return 0;
 
     const command = String(toolInput.command ?? '');
-    const isCommit = GIT_COMMIT_RE.test(command) && targetsThisRepo(command, GIT_COMMIT_RE);
-    const isPush = GIT_PUSH_RE.test(command) && targetsThisRepo(command, GIT_PUSH_RE);
+    const commit = GIT_COMMIT_RE.test(command) ? gitLocation(command, GIT_COMMIT_RE) : null;
+    const push = GIT_PUSH_RE.test(command) ? gitLocation(command, GIT_PUSH_RE) : null;
+    const isCommit = commit !== null && targetsThisRepo(commit);
+    const isPush = push !== null && targetsThisRepo(push);
     if (!isCommit && !isPush) return 0;
 
     const hooks = await loadHooks();
     const notes = [];
 
     if (isPush) {
-      const branch = hooks.detectPushToProtected(command, git('rev-parse', '--abbrev-ref', 'HEAD'));
+      const branch = hooks.detectPushToProtected(command, gitAt(push, 'rev-parse', '--abbrev-ref', 'HEAD') ?? '');
       if (branch) {
         hooks.logAudit(ROOT, `Push to protected branch '${branch}' detected.`);
         notes.push(`Pushing to protected branch '${branch}': confirm the build passes, unit tests pass, and no S1/S2 bugs are open.`);
@@ -209,7 +225,7 @@ const HANDLERS = {
     }
 
     if (isCommit) {
-      const staged = git('diff', '--cached', '--name-only').split('\n').filter(Boolean);
+      const staged = (gitAt(commit, 'diff', '--cached', '--name-only') ?? '').split('\n').filter(Boolean);
       const { errors, warnings } = hooks.validateCommitFiles(ROOT, staged);
       if (errors.length > 0) {
         errors.forEach((error) => hooks.logAudit(ROOT, error));
