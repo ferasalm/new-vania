@@ -31,6 +31,16 @@ contrast, no visual noise, no characters. Style: Castlevania Symphony of the Nig
 Saturn era pixel art.
 ```
 
+**Shared geometry (must survive into 1B):** pointed gothic arches, strictly rectilinear
+90/45-degree geometry, central steel altar, single candle, single demon-sigil seal on the
+floor.
+
+**Reality A materials (replace in 1B):** cold bulkhead frames, desaturated steel-cyan and
+slate palette, glowing monitor light strips, server monoliths standing in place of altar
+pews, pristine museum-clean surfaces.
+
+**Reality A red rule:** the only red is the demon-sigil seal on the floor.
+
 ## Shot 1B — Warm Truth (same geometry, magic past, reality B)
 
 **Preferred: edit the 01a result with:**
@@ -43,12 +53,14 @@ drips on stone. Same composition, same shapes, wrong world.
 ```
 
 **Fallback (fresh generation):** use the accepted 01a image as a structural reference
-(image-to-image, ControlNet, or the tool's reference-image mode) and replace only the
-material sentences with: `carved stone gothic arches with candlelight, choir stalls with
+(image-to-image, ControlNet, or the tool's reference-image mode). Keep the shared geometry
+list and the altar/candle/floor-seal positions word-for-word, and replace only the
+reality-A materials with: `carved stone gothic arches with candlelight, choir stalls with
 rows of burning candles, warm amber light, wine-red hanging banners, incense haze, sacred
-decay`. Keep every geometry sentence word-for-word, then compare 01a and 01b side by side
-before accepting the pair; if camera angle, arch positions, pillar spacing, or altar
-placement differ, reject and retry.
+decay`. In reality B, wine-red banners are allowed; the "red appears ONLY there" rule is a
+reality-A rule and does not apply. Compare 01a and 01b side by side before accepting the
+pair; if camera angle, arch positions, pillar spacing, or altar placement differ, reject
+and retry.
 
 ## Shot 2 — Library Glitching into a Mass Grave
 
