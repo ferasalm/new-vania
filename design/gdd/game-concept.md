@@ -1,0 +1,160 @@
+# Game Concept: Five Errands for the Devil
+
+*Created: 2026-11-08*
+*Status: Draft*
+
+## Core Identity
+
+| Field | Details |
+|---|---|
+| Working title | Five Errands for the Devil |
+| Genre | 2D story-forward metroidvania (SotN-school: RPG texture, deliberate combat, room-based exploration) |
+| Platform | Mobile (iOS/Android) primary, PC (itch.io demo → Steam) secondary. Touch-first controls; keyboard + gamepad supported from day one |
+| Estimated scope | Medium (3–6 months, solo part-time) |
+| Engine recommendation | Godot 4 (both owned core assets — Metroidvania System 1.6.1 addon, Warped City — are Godot projects) |
+
+## Elevator Pitch
+
+A demon lord's android assassin — built from a dead woman's preserved brain — is sent through parallel universes to hunt her maker. Five errands, five grief-warped realities, and a final choice: the timeline where she lives, or the one where you don't lose yourself.
+
+## Core Fantasy & Unique Hook
+
+- **Core fantasy**: Be the slick, clever anti-hero who wins by reading the world — then discover you are the weapon, and choose whose side you're on. Includes the revenge-rematch arc (an unbeatable early foe, later crushed) and a long peak-power window.
+- **Unique hook**: Like SotN's inverted castle, AND ALSO you cast the inversion yourself — reality-shift is a combat verb — AND ALSO the recurring boss is the woman you're copied from, fought across grief stages, with one version that lowers her weapon and joins you before the demon lord executes her.
+
+## Pillars
+
+| Pillar | One-sentence definition | Design test |
+|---|---|---|
+| SotN, Not Hollow Knight | Deliberation + RPG texture (levels, drops, gear, save sanctuaries) over twitch platforming purity | Would this design fit HK better than SotN? Then cut it |
+| Read, Then Strike | Every threat telegraphs; the clash/parry is optional mastery, never a requirement | Flashy-but-unreadable vs. readable → choose readable |
+| One World, Two Truths | The reality-shift is the single spine: traversal, combat, puzzles, story structure | A feature not expressible through shift or memory → cut it |
+| Five Goodbyes | The map is her mind; every region changes what we know or feel about her | An area that teaches nothing about her → it doesn't ship |
+| Remade Every Death | Death is story: cache stations, body reconstruction, the incrementing name counter | A death reduced to a plain "YOU DIED" screen → redesign it |
+
+### Anti-Pillars
+
+- We will NOT do helpless horror — the player always has attack and shift (compromises Read, Then Strike)
+- We will NOT do timers or speed pressure — deliberation is the fantasy (compromises Read, Then Strike)
+- We will NOT do endless multiverse content — 5 realities + hub + final room, boss variety within budget (compromises Five Goodbyes and scope)
+- We will NOT do stat-spreadsheet menus — lean RPG (compromises touch-first simplicity)
+- We will NOT do cutscene-driven storytelling — story lives in logs, environments, boss encounters (compromises scope and Five Goodbyes)
+- We will NOT do twitch-precision platforming gauntlets (compromises SotN, Not Hollow Knight)
+
+## Core Loop
+
+### 30-Second Loop
+
+Read a room → fight 2–3 telegraphed enemies (two-hit combo, optional clash with power comparison and the flashy double-clash when evenly matched, projectile deflects, mid-air attacks) → loot roll (essence + rare gear) → reach a reality seam → shift → the room is wrong now, a new path opens → move on. Juice: glitch-shift transition, hit-stop, clash sparks, soft memory chime.
+
+### 5-Minute Loop
+
+Clear a wing → reach a **cache station** (iconic sci-fi save terminal; saving prints **"MEMORY CACHED"**) → memory fragment (numbered, e.g., "Memory 7/24") + materials. Choices: which seam to shift at, detour to optional memory rooms, push on or return to spend.
+
+### Session Loop (30–120 minutes)
+
+One session = 1–2 errands. Court briefing → dive a reality → grief-stage boss → return → **report to the demon lord** (dramatic irony, text-only) → **demon contract choice** (accept a blessing = power that visibly corrupts the android; "don't lose yourself" as a mechanic) → spend essence/gear → pick next errand. Cliffhanger: a new memory recontextualizes the lord's last order.
+
+### Progression Loop (Days/Weeks)
+
+Power: one new shift rule per errand + the **Demonic Cyber Stinger** (demon lord's gift — Shift-then-Attack during the phase window punctures through an enemy, exits behind, i-frames) + XP/gear. Knowledge: assembling who really killed her father. Emotion: five goodbyes. Completion: the final choice + short epilogue shaped by it.
+
+### Combat Verbs (3 buttons, touch-first: Attack / Jump / Shift)
+
+- Two-hit combo; committed SotN-weight attacks; mid-air versions
+- **Clash (optional parry)**: timed Attack as a strike lands — vastly stronger → stagger them; evenly matched → weapons lock and clash twice, neither staggers, flashy; weaker → you're staggered. Projectiles deflect back and can hit other enemies
+- **Shift in combat (tactical, never direct damage)**: vanish-reset (old reality loses lock), projectile denial (route enemy fire across realities), phase window (~0.4s intangible after shift), Stinger setup (Attack during window)
+- **Demonic Cyber Stinger**: the stylish lunge-through, granted by the demon lord
+
+### Boss Roster (variety beyond the mirror)
+
+- **5 grief-stage self-bosses** (one rig, five states): Denial (pristine lie-world, doesn't recognize you), Anger (warzone), Bargaining (machine scaffolding + her experiment logs), Depression (inverted silent world — lowers her weapon, joins, is executed mid-conversation), Acceptance (final confrontation)
+- **Demon lord** — final boss; every prior errand was his errand
+- **Shapeshifter** — variety boss (candidates: copies the player's moveset, or mimics her across stages)
+- **Mini-bosses** (2–3 elite encounters) — short arenas, story-lore hooks
+- Doctrine: every non-self boss introduces a new interaction rule
+
+### Enemy Lore Doctrine
+
+Every enemy type gets a bestiary entry tying it to the world and plot (e.g., reality A's demons are AI-possessed humans; reality B's undead are magic-era remains). Text-only, cohesion-first.
+
+### Story-Revealing Item
+
+A SotN-Holy-Glasses-analog item that reveals hidden truths/illusions in the world (gates the true ending route). Name and exact behavior TBD (see Open Questions).
+
+## MVP Definition
+
+Greybox/juice-first prototype (feel over visuals): one reality — ~6 rooms with one seam-shift puzzle — the Denial boss, full 3-button combat (combo, clash, deflect, shift: vanish-reset + projectile denial + phase window), one cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Success test: is room→fight→shift→loot intrinsically fun, and does clash timing feel rewarding?
+
+## Scope Tiers
+
+| Tier | Included scope | Target timeline / team |
+|---|---|---|
+| MVP | 1 reality, 6 rooms, Denial boss, combat + shift core, cache + death counter, 3–4 memories, greybox visuals | 2–4 weeks, solo |
+| Vertical Slice | One complete errand loop: court briefing → dive (7–8 rooms) → Anger boss → report → contract choice + essence spend | 6–8 weeks cumulative, solo |
+| Full Vision | Hub + 5 realities (~35–40 rooms), 5 self-bosses + demon lord + shapeshifter + 2–3 mini-bosses, 24 memories, 5 shift rules, ~10 contracts, story-revealing item, 2 endings, touch/keyboard/gamepad, MetSys map/minimap/fog-of-war, enemy bestiary | 3–6 months, solo part-time |
+
+*Post-launch / sequel hooks (Tier 3): evidence-withholding system (present or hide proof at court), SotN-style inverted re-tour, NG+, additional endings. Production doctrine: every asset works twice — one geometry, two palettes; one rig, five grief states.*
+
+## Risks
+
+| Risk | Type | Mitigation or validation |
+|---|---|---|
+| Dual-reality rendering + mobile performance | technical | MetSys room instancing + palette-swap approach; build the shift shader first, week 1 of MVP |
+| Emotional pacing by a first-time developer | design | Log-driven storytelling (anti-pillar); the surrender scene is short and scripted; playtest with 3–5 players |
+| Clash-window tuning | design | Generous windows in MVP; tighten from playtest data |
+| 7+ boss fights in 1–2 hours feels dense/repetitive | design | Mini-bosses are short arenas; grief bosses 2–4 minutes; every boss has a unique interaction rule |
+| One rig across five bosses feels samey | design | State-driven movesets + reality-specific arena hazards, not new sprites |
+| Mobile discoverability | market | Free itch.io demo → Steam page; "the boss that lowers her weapon" is the marketing hook |
+
+## Visual Identity Anchor
+
+**LOCKED 2026-11-08** — AD-CONCEPT-VISUAL verdict: STRONG (art-director gate, run via subagent). Direction selected by designer. To be formalized and expanded via `/art-bible`.
+
+- **Direction name**: "Same Room, Two Truths" (+ two grafts: grief-tint washes from "Grief Made Geography"; diegetic serial numbers from "Chrome Reliquary")
+- **One-line visual rule**: Same geometry, wrong world — a room's shape never changes, its truth always does; any screenshot must be nameable as demon-future (reality A) or magic-past (reality B) within 2 seconds
+- **Supporting visual principles and design tests**:
+  - Dual-palette doctrine: cold cyan/steel demon-tech (Warped City assets) vs. warm candlelit gothic (Gothicvania assets) — test: screenshot identifiable as A or B in 2 seconds
+  - Shared silhouettes: the two truths share shape language — an arch is a bulkhead frame in A, a gothic arch in B; shape is memory, material is truth
+  - The glitch is the signature VFX — test: shift transition stays readable at mobile framerates, no frame-rate-dependent tricks
+  - One rig, five truths: each grief state changes contour-bearing elements (Denial: pristine + halo-frame; Anger: burning hair, raised weapon; Bargaining: half-disassembled with scaffolding; Depression: weapon lowered, posture collapsed; Acceptance: chrome stripped, true face) — test: name the state from a 32px-tall black silhouette, no color
+  - Grief-tint washes: five errands = five tint layers applied over both truths (cheap tint passes, not new art)
+  - Diegetic serial numbers: death counter stamped on her chassis, "MEMORY CACHED" as printed output, sigil-red strictly reserved for the demon lord's presence
+- **Color philosophy**: Reality A: steel cyan/teal, desaturated slate, monitor-glow. Reality B: amber candlelight, wine red, aged parchment. Demon-sigil red appears only where the lord's influence is physically present (contracts, seals, his court) — never decoration. Neutral greys mark liminal/seam space.
+- **Binding conditions from the AD gate (carry into `/art-bible`)**:
+  1. Pack normalization: Warped City and Gothicvania never share a frame — one pack per reality; they meet only at seam/glitch transitions; normalization audit (single tile grid, shared outline color, harmonized saturation) before promotion from `inbox/`
+  2. Mobile readability budget: ~480×270 base art resolution, one tile grid, integer scaling; enemies 2px value-separated from backdrops; telegraphs = color-flash + shape, never opacity pulses
+  3. Silhouette-first grief states (as above) — palette-only variants would collapse at phone scale
+
+## MDA Analysis
+
+- **Primary aesthetic**: Narrative + Discovery (Challenge secondary)
+- **Desired player emotion**: Catharsis through understanding, wrapped in the "slick and smart" mastery feeling
+- **Dynamics that create it**: Shift-driven repositioning/deflection creates tactical mastery; memory collection recontextualizes earlier areas; grief-stage bosses convert combat into story beats; contracts create identity tension
+- **Mechanics that enable those dynamics**: 3-button combat + clash; shift rules; memory pickups; cache stations + death counter; demon contracts
+
+## Player Motivation Profile
+
+- **Autonomy**: Seam sequence-breaks, contract choices, optional memory detours, the final choice
+- **Competence**: Telegraph-reading, clash timing, shift-rule mastery, revenge-rematch power arc
+- **Relatedness**: Her — the woman you're copied from and trying to save; her father's messages; the court's false warmth
+- **Primary player type**: Explorer-Storyteller (Discovery + Mastery + Fantasy motivations) — the SotN camp
+- **Secondary appeal**: Achievers with taste for builds (Hades/DMC refugees who want their power trip framed by story)
+- **Not for**: Twitch-platforming purists, pure competitors, cozy/sandbox players, helpless-horror fans
+- **Market validation**: Bloodstained (RPG-MV audience at scale), Timespinner (time-travel MV), Ghost Song (android-protagonist MV), Grimvalor + Dead Cells mobile (touch-first action-MV viability). Niche: story-forward SotN-like built touch-first — proven audience, thin competition
+
+## Flow State Design
+
+- **Challenge-skill balance**: Telegraphs + optional clash = high skill ceiling, low floor; bosses escalate across errands; contracts let players tune their own difficulty
+- **Clear goals**: Errand structure gives an explicit objective per reality; map % + memory counter serve completists
+- **Feedback**: Hit-stop, clash sparks, glitch VFX, "MEMORY CACHED" text, incrementing name counter, memory chime, bestiary lore confirming understanding
+- **Agency and focus**: Save rooms as sanctuaries (RE anchor); court reports as session bookends; seam-breaking rewards curiosity without punishing progress
+
+## Open Questions
+
+- Visual identity: RESOLVED — anchor "Same Room, Two Truths" + grafts locked 2026-11-08 (AD verdict STRONG); concept-test renders are user-driven (`design/art/concepts/PROMPT-PACK.md`, results to `inbox/art-concepts/`); then `/art-bible` formalization
+- Story-revealing item: name and exact mechanics (candidates: father's locket, optic implant, preserved brain resonance)
+- Shapeshifter design: copies the player's moveset, or mimics her across grief stages?
+- Does the demon lord ever address the player's death-counter number (e.g., "004") as a story hook?
+- Engine version pin and reference docs — resolve via `/setup-engine`
+- License verification for all inbox packs before promotion to `assets/` (per `inbox/assets/MANIFEST.md`)
