@@ -314,7 +314,8 @@ All framework changes go through pull requests to `development`:
 2. **One issue per branch**: Each branch addresses exactly one issue
 3. **Commit convention**: Conventional Commits (`feat:`, `fix:`, `docs:`, etc.) — enforced by `.githooks/commit-msg` (`npm run hooks:install`)
 4. **Close issue reference**: Include `Closes #N` in the commit message
-5. **CI must pass**: Agent validation, workflow integrity, and plugin tests
+5. **CI must pass**: Run `npm run ci` locally, then confirm the PR checks are
+   green with `gh pr checks <number> --watch`
 6. **Merge to `development`**: Fast-forward merge, push, close issue
 7. **Release**: `development` merges to `master` at milestone completion
 
