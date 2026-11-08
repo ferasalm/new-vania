@@ -108,8 +108,8 @@ faint circuit tracery under the ice, so the reality is identifiable within two s
 human woman — the original the android protagonist is copied from, visibly human rather
 than mechanical — stands centered: her sword lowered in one hand and clearly pointing down
 and away, her other hand extended forward with an open palm — an unmistakable gesture of
-surrender and offer of trust. Head up, steady gaze with softly glowing amber eyes,
-dignified stance with the collapsed shoulder line of Depression — not kneeling, not
+surrender and offer of trust. Head slightly lowered, gaze lifted and steady with softly
+glowing amber eyes, dignified stance with the collapsed shoulder line of Depression — not kneeling, not
 defeated. One warm amber light touches her face; her silhouette stays clean and readable
 against the pale world, and at 32px the bowed shoulder line plus lowered sword still reads
 as Depression while the open palm distinguishes surrender. Melancholy, tender. Style: SotN
