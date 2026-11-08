@@ -86,6 +86,14 @@ test('mapAllowedTools maps OCGS tool names to Claude Code names and drops duplic
   );
 });
 
+test('renameSlashCommands renames "Skill: `name`" cross-references only', () => {
+  const input = '- Skill: `code-review` — reviews code\n- Skill: `test-setup`\nThe `code-review` folder';
+
+  const output = renameSlashCommands(input);
+
+  assert.equal(output, '- Skill: `ocgs-code-review` — reviews code\n- Skill: `test-setup`\nThe `code-review` folder');
+});
+
 test('claudeAgentFile injects name frontmatter and renames commands', () => {
   const output = claudeAgentFile(AGENT_MD.replace(/\n/g, '\r\n'), 'demo-agent.md');
 

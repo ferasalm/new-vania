@@ -22,6 +22,11 @@
  * without loading it. Without `npm install` the hooks stay inactive and
  * say so at session start.
  *
+ * The commit check fails open: if it crashes, Claude Code reports a
+ * non-blocking error and the command runs. The git pre-commit hook in
+ * `.githooks/` stays the enforced gate. The check reads what is staged when
+ * the command starts, so `git add x && git commit` does not cover `x`.
+ *
  * OCGS_PROJECT_ROOT overrides the project root (used by tests).
  */
 
@@ -38,8 +43,13 @@ const HOOKS_MODULE = resolve(CODE_ROOT, '.opencode', 'plugins', 'ccgs-hooks.ts')
 /** PreCompact stdout is capped at 10,000 characters; leave room for the truncation note. */
 const COMPACT_LIMIT = 9500;
 
-const GIT_COMMIT_RE = /(?:^|[\s;&|(])git\s+commit\b/;
-const GIT_PUSH_RE = /(?:^|[\s;&|(])git\s+push\b/;
+/** `git`, optional global options (`-C dir`, `-c key=value`, `--no-pager`, …), then `name`. */
+function gitSubcommand(name) {
+  return new RegExp(String.raw`(?:^|[\s;&|(])git(?:\s+(?:-[Cc]\s+\S+|--?[A-Za-z][\w-]*(?:=\S+)?))*\s+${name}\b`);
+}
+
+const GIT_COMMIT_RE = gitSubcommand('commit');
+const GIT_PUSH_RE = gitSubcommand('push');
 const ASSET_RE = /(?:^|\/)assets\//;
 const SKILL_SOURCE_RE = /^\.(?:agents|opencode)\/(?:skills|commands)\//;
 const MIRROR_SOURCE_RE = /^\.agents\/(?:agents|skills|rules)\//;

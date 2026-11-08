@@ -24,6 +24,11 @@ OCGS skills and agents are shared with other harnesses. In Claude Code:
 
 The mirror already renames the `/help` and `/code-review` references and the `allowed-tools` names inside mirrored files. Skill bodies and other docs (e.g. `docs/framework/workflow-catalog.yaml`) still use the OCGS names.
 
+- **Choices:** `AskUserQuestion` takes up to 4 questions with 2–4 options each, and adds "Other" itself. When an OCGS skill lists more choices, split them across questions or group them.
+- **Skill `agent:` field:** it names the OCGS agent that owns the skill. Claude Code runs the skill in this session, so its interactive steps still work; follow that agent's guidance, and delegate to it with the `Agent` tool where the skill says to.
+
 ## Hooks
 
 `.claude/settings.json` runs `.claude/hooks/ocgs-hooks.mjs`, which reuses `.opencode/plugins/ccgs-hooks.ts` (needs `npm install` for tsx). It adds session context at start, keeps `production/session-state/active.md` in the compaction summary, blocks commits that fail OCGS validation (invalid `assets/data/*.json`), warns on protected-branch pushes and asset naming, and flags edits to generated `.claude/` files.
+
+The commit check reads what is staged when the command starts. Stage files in a separate command before running `git commit`, rather than `git add x && git commit`.

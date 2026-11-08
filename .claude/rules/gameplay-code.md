@@ -47,6 +47,6 @@ var speed: float = 5.0      # VIOLATION: not from config, not using delta
 - Agent: `systems-designer` — creates formulas and tuning
 - Agent: `ui-programmer` — receives gameplay-to-UI events
 - Skill: `dev-story` — implements gameplay stories
-- Skill: `code-review` — reviews gameplay code
+- Skill: `ocgs-code-review` — reviews gameplay code
 - Rule: `engine-code.md` — dependency direction
 - Rule: `test-standards.md` — gameplay test patterns

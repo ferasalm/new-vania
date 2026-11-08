@@ -50,6 +50,12 @@ const SLASH_RENAME_RE = new RegExp(
   'gm',
 );
 
+// Rule cross-references written as "Skill: `code-review`".
+const SKILL_REF_RENAME_RE = new RegExp(
+  `(\\bSkill:\\s*\`)(${Object.keys(SKILL_RENAMES).map(escapeRegex).join('|')})(\`)`,
+  'g',
+);
+
 // ── Content transforms ─────────────────────────────────────────────────────
 
 /** Convert CRLF/CR line endings to LF. */
@@ -57,9 +63,14 @@ export function normalizeEol(text) {
   return text.replace(/\r\n?/g, '\n');
 }
 
-/** Rewrite `/help` and `/code-review` command references to their Claude Code names. */
+/**
+ * Rewrite references to the renamed skills: `/help` and `/code-review` commands,
+ * and "Skill: `code-review`" cross-references, become their Claude Code names.
+ */
 export function renameSlashCommands(text) {
-  return text.replace(SLASH_RENAME_RE, (_, lead, name) => `${lead}/${SKILL_RENAMES[name]}`);
+  return text
+    .replace(SLASH_RENAME_RE, (_, lead, name) => `${lead}/${SKILL_RENAMES[name]}`)
+    .replace(SKILL_REF_RENAME_RE, (_, open, name, close) => `${open}${SKILL_RENAMES[name]}${close}`);
 }
 
 /** Map a comma-separated `allowed-tools` value to Claude Code tool names, dropping duplicates. */

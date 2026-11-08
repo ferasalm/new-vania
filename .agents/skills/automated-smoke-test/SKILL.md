@@ -20,11 +20,12 @@ No manual verification required. The entire check is automated through MCP.
 ## Phase 1: Verify godot-mcp Availability
 
 Call `get_godot_version` via the godot-mcp server. If the call succeeds, note
-the version string. If it fails, inform the user:
+the version string. If it fails, show the user the error the call returned and:
 
 > "godot-mcp server is not available. Install it with:
 > `npx @coding-solo/godot-mcp`
-> Then configure the MCP server in `opencode.json` (OpenCode) or `~/.pi/agent/mcp.json` (Pi)."
+> Then configure the MCP server in `opencode.json` (OpenCode), `.mcp.json` (Claude Code)
+> or `~/.pi/agent/mcp.json` (Pi), with `GODOT_PATH` set to your Godot executable."
 
 Stop if the server is unavailable.
 

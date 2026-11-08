@@ -101,9 +101,21 @@ test('session-end archives the session state', (t) => {
 test('pre-tool-use ignores Bash commands that are not git commit or push', (t) => {
   const { root } = makeRepo(t);
 
-  const result = runHook(root, 'pre-tool-use', { tool_name: 'Bash', tool_input: { command: 'ls -la' } });
+  for (const command of ['ls -la', 'git log --grep commit', 'git status && git diff']) {
+    const result = runHook(root, 'pre-tool-use', { tool_name: 'Bash', tool_input: { command } });
+    assert.deepEqual(result, { code: 0, stdout: '', stderr: '' }, command);
+  }
+});
 
-  assert.deepEqual(result, { code: 0, stdout: '', stderr: '' });
+test('pre-tool-use checks commits run with git global options', (t) => {
+  const { root, write } = makeRepo(t);
+  write('assets/data/enemies.json', '{ "hp": ');
+  git(root, 'add', 'assets/data/enemies.json');
+
+  for (const command of ['git -C . commit -m x', 'git --no-pager -c core.quotepath=false commit -m x']) {
+    const result = runHook(root, 'pre-tool-use', { tool_name: 'Bash', tool_input: { command } });
+    assert.equal(result.code, 2, command);
+  }
 });
 
 test('pre-tool-use blocks a commit with invalid staged data JSON', (t) => {
