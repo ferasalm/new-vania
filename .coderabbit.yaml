@@ -19,7 +19,16 @@ reviews:
     - "!**/package-lock.json"
     - "!module-validation-output.txt"
     - "!tools/aseprite-mcp/**"
+    # Generated from .agents/ by `npm run claude:sync`; review the .agents/ sources instead.
+    - "!.claude/agents/**"
+    - "!.claude/skills/**"
+    - "!.claude/ocgs-sync.json"
   path_instructions:
+    - path: ".claude/**"
+      instructions: >-
+        Claude Code config. settings.json, hooks/ and rules/ocgs-framework.md are hand-written.
+        The other .claude/rules/*.md files are generated from .agents/rules/ (listed in
+        .claude/ocgs-sync.json); raise content findings against the .agents/ source.
     - path: ".agents/**"
       instructions: >-
         Agent skill definitions (Markdown with YAML frontmatter). Check that frontmatter is
