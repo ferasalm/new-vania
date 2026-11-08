@@ -22,7 +22,7 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 ├── opencode.json                # OpenCode V2 config (plugins, MCP, permissions)
 ├── .pi/                         # Pi config (settings, 9 extensions)
 ├── .omp/                        # oh-my-pi config, generated agents, MCP
-├── .claude/                     # Claude Code target (agents, skills, commands, rules)
+├── .claude/                     # Claude Code: generated .agents/ mirror + settings, hooks
 ├── .mcp.json                    # Claude Code project MCP servers
 ├── .codex/                      # Codex target (agents, MCP config)
 ├── .githooks/                   # Tracked git hooks (commit-msg, pre-commit)
@@ -196,14 +196,25 @@ omp
 
 See [docs/omp-compatibility.md](docs/omp-compatibility.md) for omp setup, extension wiring, and known gaps versus Pi.
 
+### Claude Code
+
+Run `npm install` once (hooks need tsx), then start Claude Code from the project root:
+```bash
+claude
+```
+
+`.claude/{agents,skills,rules}` is a generated mirror of `.agents/`: edit `.agents/`, then run
+`npm run claude:sync`. `/help` and `/code-review` are `/ocgs-help` and `/ocgs-code-review` in
+Claude Code. See [docs/claude-compatibility.md](docs/claude-compatibility.md).
+
 ### Key commands by harness
 
-| Command | OpenCode | Pi | oh-my-pi (omp) |
-|---------|----------|----|----------------|
-| Delegation | `Task` tool (built-in) | No subagent tool; `ocgs-tool-map` maps `Task` to direct work | omp's built-in task tool; OCGS agents generated into `.omp/agents/` |
-| Peer review | — | — (removed with `ocgs-delegation`) | — |
-| Decision capture | question tool | question tool (ocgs-question with TUI) | ask (omp built-in); answers logged to `agent-decisions.jsonl` by ocgs-question |
-| Skill invocation | `/command-name` | `/command-name` (via prompt templates) | `/skill:<name>` (`skills.enableSkillCommands`) |
+| Command | OpenCode | Pi | oh-my-pi (omp) | Claude Code |
+|---------|----------|----|----------------|-------------|
+| Delegation | `Task` tool (built-in) | No subagent tool; `ocgs-tool-map` maps `Task` to direct work | omp's built-in task tool; OCGS agents generated into `.omp/agents/` | `Agent` tool; OCGS agents mirrored into `.claude/agents/` |
+| Peer review | — | — (removed with `ocgs-delegation`) | — | — |
+| Decision capture | question tool | question tool (ocgs-question with TUI) | ask (omp built-in); answers logged to `agent-decisions.jsonl` by ocgs-question | `AskUserQuestion` |
+| Skill invocation | `/command-name` | `/command-name` (via prompt templates) | `/skill:<name>` (`skills.enableSkillCommands`) | `/skill-name` (`/ocgs-help`, `/ocgs-code-review` for the renamed two) |
 
 ### Harness targets
 
@@ -283,11 +294,14 @@ Before merging to `Main`, the CI must pass:
 - **Local CI mirror** (`npm run ci`): runs the same checks as both workflows
   before a push; see `tools/ci/README.md`
 - **Git hooks** (`.githooks/`, installed by `npm run hooks:install`):
-  - 13 suites, 54 tests (`npm run test:hooks`)
+  - 14 suites, 60 tests (`npm run test:hooks`)
   - `.githooks/commit-msg` enforces Conventional Commits
   - `.githooks/pre-commit` blocks credentials, conflict markers and >20 MB files,
     verifies the `.opencode/*` redirect stubs, and runs framework validation plus
-    workflow integrity — or plugin tests — when their paths are staged
+    workflow integrity, plugin tests, or the Claude Code mirror check when their
+    paths are staged
+- **Claude Code mirror** (`npm run claude:check`): `.claude/` matches `.agents/`;
+  `npm run test:claude` (part of `npm test`) covers the mirror and hook adapter
 
 ## Notes
 

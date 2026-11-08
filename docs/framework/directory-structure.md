@@ -44,12 +44,13 @@
 │   ├── config.yml               # Shared extension wiring
 │   ├── modules/installed.json   # omp install manifest
 │   └── mcp.json                 # Project MCP servers (disabled by default)
-├── .claude/                     # Claude Code target (created by --harness claude)
-│   ├── agents/                  # Subagents (name: frontmatter injected)
-│   ├── skills/                  # Skills
-│   ├── commands/                # Slash commands
-│   ├── rules/                   # Path-scoped rules (paths: frontmatter)
-│   └── modules/installed.json   # Claude install manifest
+├── .claude/                     # Claude Code (see docs/claude-compatibility.md)
+│   ├── agents/                  # Generated from .agents/agents/ (name: frontmatter injected)
+│   ├── skills/                  # Generated from .agents/skills/ (also the slash commands)
+│   ├── rules/                   # Generated from .agents/rules/ + hand-written ocgs-framework.md
+│   ├── ocgs-sync.json           # Generated-file manifest (npm run claude:sync)
+│   ├── settings.json            # Shared permissions and hooks
+│   └── hooks/ocgs-hooks.mjs     # Hook adapter over .opencode/plugins/ccgs-hooks.ts
 ├── .mcp.json                    # Claude Code project MCP servers
 ├── .codex/                      # Codex target (created by --harness codex)
 │   ├── agents/                  # TOML agents generated from .agents/agents/

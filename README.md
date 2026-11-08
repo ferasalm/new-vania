@@ -73,7 +73,7 @@ and [oh-my-pi](https://omp.sh/).
 | 🤖 **Agents** | 49 agents (`.claude/agents/`) | 52 agents (`.agents/agents/`) | 52 agents (`.agents/agents/`) | Generated into `.omp/agents/` by the installer | ✅ |
 | ⌨️ **Skills** | 72 skills (`.claude/skills/`) | 78 skills (`.agents/skills/`) | 78 skills (`.agents/skills/`) | 78 skills (`/skill:<name>`) | ✅ +6 |
 | ⌨️ **Commands** | — | 78 commands (`.agents/commands/`) | → prompt templates | → slash commands | ✅ New |
-| 🔗 **Plugins** | 12 bash hooks (`.claude/hooks/`) | 3 TS plugins (`.opencode/plugins/`) | 9 Pi extensions (`.pi/extensions/`) | 8 shared via config | ✅ **177 plugin + 54 hook tests** |
+| 🔗 **Plugins** | 12 bash hooks (`.claude/hooks/`) | 3 TS plugins (`.opencode/plugins/`) | 9 Pi extensions (`.pi/extensions/`) | 8 shared via config | ✅ **177 plugin + 60 hook tests** |
 | 📏 **Rules** | 11 rule files (`.claude/rules/`) | 11 rule files (`.agents/rules/`) | 11 rule files (`.agents/rules/`) | 11 rule files (`.agents/rules/`) | ✅ |
 | ⚙️ **Config** | `CLAUDE.md` + `.claude/settings.json` | `AGENTS.md` + `opencode.json` | `AGENTS.md` + `.pi/settings.json` | `AGENTS.md` + `.omp/config.yml` | ✅ |
 
@@ -109,7 +109,8 @@ See [docs/omp-compatibility.md](docs/omp-compatibility.md) for setup details and
 ```bash
 claude
 ```
-Claude Code reads `AGENTS.md` natively and `.claude/rules/` with `paths` frontmatter. Run `/init-template --harness claude` (or `add core --harness claude`) to install agents, skills, and commands into `.claude/`; agent files gain the required `name:` frontmatter. Project MCP servers live in `.mcp.json` and need approval in an interactive session.
+Claude Code reads `AGENTS.md` natively. `.claude/{agents,skills,rules}` is a generated mirror of `.agents/` (`npm run claude:sync`), with the `name:` frontmatter, tool names and command renames Claude Code needs (`/help` → `/ocgs-help`, `/code-review` → `/ocgs-code-review`). `.claude/settings.json` adds permissions and ports the CCGS hooks; run `npm install` once so they can load. Project MCP servers live in `.mcp.json` and need approval in an interactive session.
+See [docs/claude-compatibility.md](docs/claude-compatibility.md) for the mirror, hooks and known gaps.
 
 ### Codex
 ```bash
@@ -234,7 +235,7 @@ on startup. See [docs/pi-extensions.md](docs/pi-extensions.md) for details.
 ├── .pi/                       ⚙️ Pi config (extensions, settings)
 │   └── extensions/            🧩 Pi extensions (ocgs-core, delegation, question, etc.)
 ├── .omp/                      ⚙️ oh-my-pi config (extensions, generated agents, MCP)
-├── .claude/                   ⚙️ Claude Code target (agents, skills, commands, rules)
+├── .claude/                   ⚙️ Claude Code: generated .agents/ mirror + settings, hooks
 ├── .mcp.json                  ⚙️ Claude Code project MCP servers
 ├── .codex/                    ⚙️ Codex target (agents, MCP config)
 ├── .agents/                   📦 Canonical content (harness-agnostic)
