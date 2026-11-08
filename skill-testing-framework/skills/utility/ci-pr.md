@@ -49,7 +49,7 @@ does not delete branches or worktrees; that remains the user's call.
 
 **Expected behavior:**
 1. Skill reports the dirty `Main` state and asks before moving files.
-2. Skill creates `..\<repo>-<topic>` on a `docs/<topic>` branch.
+2. Skill creates `../<repo>-<topic>` on a `docs/<topic>` branch.
 3. Skill moves the untracked files and confirms `Main` is clean.
 4. Skill runs `npm ci` and `npm run ci`; all steps `PASS`.
 5. Skill commits with a Conventional Commit and pushes the branch.
@@ -66,7 +66,7 @@ does not delete branches or worktrees; that remains the user's call.
 - [ ] Merge happens only after checks are green and the user approves
 - [ ] Branch and worktree are left in place
 
-**Case Verdict**: PASS
+**Case Verdict**: PENDING (run `/skill-test spec ci-pr`)
 
 ---
 
@@ -89,7 +89,7 @@ does not delete branches or worktrees; that remains the user's call.
 - [ ] Two consecutive failures trigger a stop
 - [ ] Skill does not bypass the failure with `--no-verify`
 
-**Case Verdict**: PASS
+**Case Verdict**: PENDING (run `/skill-test spec ci-pr`)
 
 ---
 
@@ -112,7 +112,7 @@ does not delete branches or worktrees; that remains the user's call.
 - [ ] CodeRabbit findings are triaged, not blindly accepted
 - [ ] Merge gate is re-evaluated after new commits
 
-**Case Verdict**: PASS
+**Case Verdict**: PENDING (run `/skill-test spec ci-pr`)
 
 ---
 
@@ -133,4 +133,4 @@ does not delete branches or worktrees; that remains the user's call.
 - [ ] No admin bypass is attempted
 - [ ] User receives the exact blocker and next action
 
-**Case Verdict**: PASS
+**Case Verdict**: PENDING (run `/skill-test spec ci-pr`)

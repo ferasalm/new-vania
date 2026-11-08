@@ -9,10 +9,11 @@ agent: devops-engineer
 
 # CI + PR Workflow
 
-Use this skill whenever a change needs to leave the working tree and reach
-`Main`. It mirrors the house rules in `AGENTS.md` and the repository SOPs:
-never commit on `Main`, always use a worktree, run the same checks as CI before
-pushing, and merge only after CI and CodeRabbit are green.
+Use this skill whenever a change needs to leave the working tree and reach the
+repository's default branch (`Main` in this repo; `development` only if it is
+the default). It mirrors the house rules in `AGENTS.md` and the repository SOPs:
+never commit on the default branch, always use a worktree, run the same checks
+as CI before pushing, and merge only after CI and CodeRabbit are green.
 
 ---
 
@@ -24,17 +25,22 @@ Read the repository state before writing anything.
 git -C <repo> status --short --branch
 git -C <repo> worktree list
 git -C <repo> log --oneline -5
+git -C <repo> symbolic-ref --short refs/remotes/origin/HEAD
 gh auth status
 node --version
 npm --version
 ```
 
+Set `DEFAULT_BRANCH` from the last command by stripping the `origin/` prefix
+(e.g. `origin/Main` → `Main`).
+
 Confirm:
 
 - `gh` is authenticated and points at the expected repository.
 - Node is 20 or newer (CI uses Node 20).
-- The current checkout is not `Main`/`master`; if it is, do not commit there.
-- Any dirty files on `Main` are user work. Ask before moving or discarding them.
+- The current checkout is not the default branch; if it is, do not commit there.
+- Any dirty files on the default branch are user work. Ask before moving or
+  discarding them.
 
 If the change is already on a feature branch with a clean worktree, skip to
 Phase 3.
@@ -47,10 +53,10 @@ explicitly in this session.
 
 ## Phase 2: Isolate the Work in a Worktree
 
-Create one worktree per topic from the default branch:
+Create one worktree per topic from `DEFAULT_BRANCH`:
 
 ```bash
-git -C <repo> worktree add ..\<repo>-<topic> -b <branch> Main
+git -C <repo> worktree add ../<repo>-<topic> -b <branch> "$DEFAULT_BRANCH"
 ```
 
 Branch naming:
@@ -63,11 +69,17 @@ Branch naming:
 | `chore/<topic>` | Tooling, dependencies, maintenance |
 | `ci/<topic>` | Workflow or CI-only change |
 
-If the changes are currently uncommitted in the `Main` checkout, move them into
-the worktree rather than committing on `Main`:
+If the changes are currently uncommitted in the default-branch checkout, move
+them into the worktree rather than committing on the default branch:
 
 ```powershell
+# Windows
 Move-Item -LiteralPath <main-repo>\path\to\change -Destination <worktree>\path\to\change
+```
+
+```bash
+# POSIX
+mv <main-repo>/path/to/change <worktree>/path/to/change
 ```
 
 Then verify the main checkout is clean and the worktree contains the changes:
@@ -152,7 +164,7 @@ Never use `--no-verify` to bypass hooks. If a hook fails, fix the cause.
 
 ```bash
 git -C <worktree> push -u origin <branch>
-gh pr create --repo <owner>/<repo> --base Main --head <branch> \
+gh pr create --repo <owner>/<repo> --base "$DEFAULT_BRANCH" --head <branch> \
   --title "<conventional title>" --body-file <pr-body.md>
 ```
 
@@ -230,8 +242,8 @@ Merge only when all of these are true:
 Create the revert point before merging:
 
 ```bash
-git -C <main-repo> tag -a backup/<repo>-main-pre-pr<pr-number>-<YYYYMMDD> \
-  -m "Revert point before PR #<pr-number>" Main
+git -C <main-repo> tag -a backup/<repo>-<default-branch>-pre-pr<pr-number>-<YYYYMMDD> \
+  -m "Revert point before PR #<pr-number>" "$DEFAULT_BRANCH"
 ```
 
 Then merge with a merge commit (matching the repository history):
@@ -271,7 +283,7 @@ Report:
 
 ## Hard Rules
 
-- Never commit directly to `Main`/`master`.
+- Never commit directly to the default branch (`Main`, `master`, or `development`).
 - Never `git reset --hard`, `git clean -fd`, or force-push.
 - Never bypass hooks with `--no-verify`.
 - Never merge with red or pending checks.

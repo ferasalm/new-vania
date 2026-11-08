@@ -272,7 +272,7 @@ Tier 3 — Specialists (Subagents)
 
 ## Quality Gates
 
-Before merging to `development`, the CI must pass:
+Before merging to `Main`, the CI must pass:
 
 - **Agent validation** (`.github/workflows/agent-validation.yml`):
   - All agent files have required frontmatter and sections

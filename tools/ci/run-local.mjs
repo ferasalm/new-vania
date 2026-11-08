@@ -17,7 +17,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -92,6 +92,9 @@ const color = {
   yellow: (value) => (useColor ? `\x1b[33m${value}\x1b[0m` : value),
 };
 
+/**
+ * Prints the command-line help text.
+ */
 function printHelp() {
   console.log(`Local CI runner — mirrors the GitHub Actions workflows.
 
@@ -114,6 +117,11 @@ Examples:
 `);
 }
 
+/**
+ * Parses the CLI arguments into an options object.
+ * @param {string[]} argv Arguments after `node` and the script path.
+ * @returns {{jobs: string[], skipInstall: boolean, forceInstall: boolean, keepGoing: boolean, list: boolean, help: boolean}}
+ */
 function parseArgs(argv) {
   const options = {
     jobs: [],
@@ -151,6 +159,11 @@ function parseArgs(argv) {
   return options;
 }
 
+/**
+ * Resolves job names into a deduplicated list of steps.
+ * @param {string[]} jobNames Job names from the CLI.
+ * @returns {{label: string, steps: Array<{id: string, label: string, command: string, args: string[]}>}}
+ */
 function resolveSteps(jobNames) {
   if (jobNames.length === 0 || jobNames.includes('all')) {
     return { label: 'all workflows', steps: ALL_STEPS };
@@ -174,6 +187,9 @@ function resolveSteps(jobNames) {
   return { label: jobNames.join(', '), steps };
 }
 
+/**
+ * Prints the available jobs and their steps.
+ */
 function listJobs() {
   console.log('Local CI jobs:\n');
   for (const [name, job] of Object.entries(JOBS)) {
@@ -187,12 +203,42 @@ function listJobs() {
   console.log(`  ${color.bold('all')} — both workflows (plugin suite runs once via npm test)`);
 }
 
+/**
+ * Returns true when package.json or package-lock.json is newer than the
+ * installed dependency tree.
+ * @returns {boolean}
+ */
+function lockfileIsNewerThanInstall() {
+  const installed = join(ROOT, 'node_modules', '.package-lock.json');
+  if (!existsSync(installed)) return true;
+
+  const sources = ['package.json', 'package-lock.json']
+    .map((name) => join(ROOT, name))
+    .filter((path) => existsSync(path));
+
+  if (sources.length === 0) return false;
+
+  const newestSource = Math.max(...sources.map((path) => statSync(path).mtimeMs));
+  return newestSource > statSync(installed).mtimeMs;
+}
+
+/**
+ * Decides whether dependencies must be installed before running the steps.
+ * @param {{skipInstall: boolean, forceInstall: boolean}} options CLI options.
+ * @returns {boolean}
+ */
 function shouldInstall(options) {
   if (options.skipInstall) return false;
   if (options.forceInstall) return true;
-  return !existsSync(join(ROOT, 'node_modules'));
+  if (!existsSync(join(ROOT, 'node_modules'))) return true;
+  return lockfileIsNewerThanInstall();
 }
 
+/**
+ * Runs one step and reports its result.
+ * @param {{id: string, label: string, command: string, args: string[]}} step Step to run.
+ * @returns {{step: object, ok: boolean, seconds: string}}
+ */
 function runStep(step) {
   const started = Date.now();
   console.log(`\n${color.bold('▶')} ${step.label}`);
@@ -221,6 +267,10 @@ function runStep(step) {
   return { step, ok: true, seconds };
 }
 
+/**
+ * Entry point: parses options, runs the selected steps, and exits non-zero on
+ * failure.
+ */
 function main() {
   let options;
   try {
@@ -294,6 +344,10 @@ function main() {
   process.exit(results.every((result) => result.ok) ? 0 : 1);
 }
 
+/**
+ * Prints the pass/fail table for the completed steps.
+ * @param {Array<{step: object, ok: boolean, seconds: string}>} results Step results.
+ */
 function printSummary(results) {
   const passed = results.filter((result) => result.ok).length;
   const failed = results.length - passed;
