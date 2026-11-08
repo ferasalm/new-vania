@@ -25,14 +25,17 @@ Read the repository state before writing anything.
 git -C <repo> status --short --branch
 git -C <repo> worktree list
 git -C <repo> log --oneline -5
-git -C <repo> symbolic-ref --short refs/remotes/origin/HEAD
 gh auth status
+gh repo view <owner>/<repo> --json defaultBranchRef --jq '.defaultBranchRef.name'
 node --version
 npm --version
 ```
 
-Set `DEFAULT_BRANCH` from the last command by stripping the `origin/` prefix
-(e.g. `origin/Main` → `Main`).
+Set `DEFAULT_BRANCH` from the `gh repo view` output. Query the remote rather
+than reading `refs/remotes/origin/HEAD`, which can stay stale after a
+default-branch rename.
+
+If the argument is a PR number, record it as `PR_NUMBER` and use it in Phase 6.
 
 Confirm:
 
@@ -69,8 +72,10 @@ Branch naming:
 | `chore/<topic>` | Tooling, dependencies, maintenance |
 | `ci/<topic>` | Workflow or CI-only change |
 
-If the changes are currently uncommitted in the default-branch checkout, move
-them into the worktree rather than committing on the default branch:
+If the changes are currently uncommitted in the default-branch checkout,
+transfer only the approved paths into the worktree.
+
+**Untracked files and directories** — move them:
 
 ```powershell
 # Windows
@@ -81,6 +86,18 @@ Move-Item -LiteralPath <main-repo>\path\to\change -Destination <worktree>\path\t
 # POSIX
 mv <main-repo>/path/to/change <worktree>/path/to/change
 ```
+
+**Tracked files with uncommitted edits** — copy the diff, apply it in the
+worktree, then restore only those paths in the original checkout:
+
+```bash
+git -C <main-repo> diff HEAD --binary -- <paths> > /tmp/ci-pr.patch
+git -C <worktree> apply /tmp/ci-pr.patch
+git -C <main-repo> restore --source=HEAD --staged --worktree -- <paths>
+```
+
+Never use a hard reset or a forced clean to make the checkout appear clean.
+Leave unrelated changes alone.
 
 Then verify the main checkout is clean and the worktree contains the changes:
 
@@ -96,13 +113,17 @@ another agent is using.
 
 ## Phase 3: Run Local CI
 
-Install dependencies once per worktree, then run the local mirror of both
-GitHub workflows:
+Run the local mirror of both GitHub workflows from the worktree created in
+Phase 2 — not from the original checkout:
 
 ```bash
+cd <worktree>
 npm ci
 npm run ci
 ```
+
+The runner resolves its own repository root from `tools/ci/run-local.mjs`, so
+the current directory must be the worktree that contains the change.
 
 The runner maps directly to the workflows:
 
@@ -156,7 +177,7 @@ Rules enforced by `.githooks/commit-msg`:
 - Lowercase type and scope; no trailing period; header ≤ 100 characters.
 - A `!` header requires a `BREAKING CHANGE:` footer.
 
-Never use `--no-verify` to bypass hooks. If a hook fails, fix the cause.
+Never bypass a hook to force a commit. If a hook fails, fix the cause.
 
 ---
 
@@ -164,9 +185,21 @@ Never use `--no-verify` to bypass hooks. If a hook fails, fix the cause.
 
 ```bash
 git -C <worktree> push -u origin <branch>
-gh pr create --repo <owner>/<repo> --base "$DEFAULT_BRANCH" --head <branch> \
-  --title "<conventional title>" --body-file <pr-body.md>
+
+# Reuse an existing open PR for this branch before creating a new one.
+PR_NUMBER=$(gh pr list --repo <owner>/<repo> --head <branch> --state open \
+  --json number --jq '.[0].number')
+
+if [ -n "$PR_NUMBER" ]; then
+  echo "Reusing PR #$PR_NUMBER"
+else
+  gh pr create --repo <owner>/<repo> --base "$DEFAULT_BRANCH" --head <branch> \
+    --title "<conventional title>" --body-file <pr-body.md>
+fi
 ```
+
+If the argument was a PR number, use it directly and skip both the lookup and
+creation. Continue with Phase 6 either way.
 
 The PR body must include:
 
@@ -284,8 +317,8 @@ Report:
 ## Hard Rules
 
 - Never commit directly to the default branch (`Main`, `master`, or `development`).
-- Never `git reset --hard`, `git clean -fd`, or force-push.
-- Never bypass hooks with `--no-verify`.
+- Never rewrite history or discard uncommitted work; never force a push.
+- Never bypass commit or push hooks.
 - Never merge with red or pending checks.
 - Never delete a branch, tag, or worktree without explicit user approval.
 - Two consecutive failures of any step: stop, diagnose, report.
