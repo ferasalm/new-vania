@@ -157,4 +157,4 @@ Greybox/juice-first prototype (feel over visuals): one reality — ~6 rooms with
 - Shapeshifter design: copies the player's moveset, or mimics her across grief stages?
 - Does the demon lord ever address the player's death-counter number (e.g., "004") as a story hook?
 - Engine version pin and reference docs — resolve via `/setup-engine`
-- License verification for all inbox packs before promotion to `assets/` (per `inbox/assets/MANIFEST.md`)
+- License verification for all inbox packs before promotion to `assets/` (recorded in `assets/LICENSE-MANIFEST.md`)

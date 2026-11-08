@@ -42,10 +42,13 @@ amber candlelight, wine-red hanging banners, aged parchment tones, incense haze,
 drips on stone. Same composition, same shapes, wrong world.
 ```
 
-**Fallback (fresh generation):** same prompt as 1A but replace the material sentences with:
-`carved stone gothic arches with candlelight, choir stalls with rows of burning candles,
-warm amber light, wine-red hanging banners, incense haze, sacred decay` — keep every
-geometry sentence word-for-word.
+**Fallback (fresh generation):** use the accepted 01a image as a structural reference
+(image-to-image, ControlNet, or the tool's reference-image mode) and replace only the
+material sentences with: `carved stone gothic arches with candlelight, choir stalls with
+rows of burning candles, warm amber light, wine-red hanging banners, incense haze, sacred
+decay`. Keep every geometry sentence word-for-word, then compare 01a and 01b side by side
+before accepting the pair; if camera angle, arch positions, pillar spacing, or altar
+placement differ, reject and retry.
 
 ## Shot 2 — Library Glitching into a Mass Grave
 
@@ -85,7 +88,8 @@ safe pocket in a hostile facility. No red, no characters.
 ```
 16-bit pixel art game scene, 16:9 widescreen. An inverted cathedral of ice — architecture
 hanging upside down from above, pale desaturated blue-white palette, gentle snowfall. A
-female android stands centered: her sword lowered in one hand and clearly pointing down
+human woman — the original the android protagonist is copied from, visibly human rather
+than mechanical — stands centered: her sword lowered in one hand and clearly pointing down
 and away, her other hand extended forward with an open palm — an unmistakable gesture of
 surrender and offer of trust. Head up, steady gaze with softly glowing amber eyes,
 dignified upright stance, absolutely not kneeling or defeated. One warm amber light
@@ -109,8 +113,9 @@ characters besides the distant throne silhouette. Style: SotN pixel art.
 
 ```
 Sprite design sheet on a plain off-white background, 16:9. Five SOLID FLAT BLACK
-silhouettes — single color, no gradients, no gray, no colored accents — of the SAME female
-android, identical height and body proportions, standing in one row, each a different
+silhouettes — single color, no gradients, no gray, no colored accents — of the SAME woman
+(the human original the android is copied from; the android shares this rig), identical
+height and body proportions, standing in one row, each a different
 grief stage told only by pose and contour: 1) Denial: rigid pristine upright stance, hands
 clasped, thin halo ring above the head. 2) Anger: mid-lunge, sword raised high overhead,
 jagged flame-shaped ragged hair. 3) Bargaining: upright but held together by an external
@@ -126,11 +131,11 @@ outline, distinct from 1. Each silhouette nameable by pose alone.
 
 1. **2-Second Truth Test** — a cold viewer names the reality (A cold-tech / B warm-gothic) from a still in under 2 seconds, no caption
 2. **Read-Then-Strike Test** — threats separate from background by *value*, not detail; a telegraph would be visible at 3× scale on a phone screen
-3. **Grief Test** — the image teaches one specific thing about her (a viewer guesses the emotional stage uncaptioned)
+3. **Grief Test** — at 32px tall as a solid black silhouette, with no color, a viewer names the emotional stage uncaptioned
 4. **Death-as-Story Test** — cache/counter reads as narrative device, not HUD litter
 5. **SotN Test** — feels like a place worth re-touring; sanctuaries feel like sanctuaries
 6. **Production Feasibility** — reducible to ~480×270 pixel art buildable from the owned packs + palette passes
-7. **Palette Discipline** — count the colors; red appearing anywhere the demon lord isn't = fail
+7. **Palette Discipline** — count the colors; wine-red is allowed in reality B (including banners and fabric), but **demon-sigil red** is reserved for the demon lord's physical influence (contracts, seals, his court) and must not appear as decoration anywhere else
 8. **Anti-Pillar Sweep** — no helpless composition (her posture carries agency), no urgency framing
 
 ## Status of the 15 existing AI-generated concepts
