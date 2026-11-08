@@ -33,3 +33,10 @@ omp-session-*.html
 
 # Submodule dependencies
 tools/aseprite-mcp/.venv/
+
+# Local staging for downloaded assets and tool copies (never commit)
+/inbox/
+
+# Local Godot binaries (large; install separately)
+/Godot_v*.exe
+/Godot_v*.zip

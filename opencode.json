@@ -22,20 +22,24 @@
       },
       "aseprite": {
         "type": "local",
-        "command": ["uv", "--directory", "tools/aseprite-mcp", "run", "-m", "aseprite_mcp"],
-        "codemode": false,
-        "environment": {
-          "ASEPRITE_PATH": "{env:ASEPRITE_PATH}"
-        }
+        "command": [
+          "docker",
+          "exec",
+          "-e",
+          "HOME=/workspace/setup/home",
+          "-i",
+          "opencode-workspace-opencode-1",
+          "/workspace/setup/pixel-mcp/bin/pixel-mcp"
+        ],
+        "codemode": false
       },
       "godot": {
         "type": "local",
-        "command": ["npx", "@coding-solo/godot-mcp"],
-        "disabled": true,
+        "command": ["npx", "-y", "@coding-solo/godot-mcp"],
         "codemode": false,
         "environment": {
-          "GODOT_PATH": "{env:GODOT_PATH}",
-          "DEBUG": "{env:DEBUG}"
+          "GODOT_PATH": "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania-ocgs\\Godot_v4.7.2-stable_win64.exe",
+          "DEBUG": "false"
         }
       },
       "unity": {
