@@ -13,6 +13,7 @@ import {
 	checkFileSizes,
 	checkFrameworkLinks,
 	evaluatePreCommit,
+	gateEnv,
 	parseAddedLines,
 	planGates,
 	runGates,
@@ -191,19 +192,92 @@ describe("pre-commit: gate planning", () => {
 		assert.deepEqual(planGates(["README.md", "docs/guide.md"]), [])
 	})
 
-	it("requests framework validation for .agents changes", () => {
-		assert.deepEqual(planGates([".agents/agents/producer.md"]), ["framework"])
+	it("requests framework validation and the Claude mirror check for mirrored .agents changes", () => {
+		assert.deepEqual(planGates([".agents/agents/producer.md"]), ["framework", "claude"])
+	})
+
+	it("requests only framework validation for .agents/commands changes", () => {
+		assert.deepEqual(planGates([".agents/commands/start.md"]), ["framework"])
+	})
+
+	it("requests the Claude mirror check for .claude and mirror tooling changes", () => {
+		assert.deepEqual(planGates([".claude/skills/start/SKILL.md"]), ["claude"])
+		assert.deepEqual(planGates(["tools/lib/claude-mirror.mjs"]), ["claude"])
 	})
 
 	it("requests plugin tests for plugin changes", () => {
 		assert.deepEqual(planGates([".opencode/plugins/ccgs-hooks.ts"]), ["plugins"])
 	})
 
-	it("requests both gates when both areas change", () => {
+	it("requests every matching gate when several areas change", () => {
 		assert.deepEqual(
 			planGates([".agents/skills/x/SKILL.md", ".opencode/plugins/ccgs-hooks.ts"]),
-			["framework", "plugins"],
+			["framework", "plugins", "claude"],
 		)
+	})
+})
+
+describe("pre-commit: claude mirror gate", () => {
+	function stubSync(root, exitCode, output = "") {
+		mkdirSync(join(root, "tools"), { recursive: true })
+		writeFileSync(
+			join(root, "tools", "sync-claude.mjs"),
+			`console.log(${JSON.stringify(output)})\nprocess.exit(${exitCode})\n`,
+			"utf8",
+		)
+	}
+
+	it("passes when the mirror is in sync", () => {
+		const root = makeTempDir()
+		stubSync(root, 0)
+
+		const result = runGates(root, ["claude"])
+		assert.deepEqual(result.errors, [])
+		assert.deepEqual(result.notes, ["claude mirror check passed"])
+		cleanup(root)
+	})
+
+	it("runs gate commands without the hook's repository-pinning git variables", () => {
+		// Regression: gates inherited GIT_DIR/GIT_INDEX_FILE from `git commit`, so plugin
+		// tests that build throwaway repos committed, tagged and set config in this one.
+		const root = makeTempDir()
+		mkdirSync(join(root, "tools"), { recursive: true })
+		writeFileSync(
+			join(root, "tools", "sync-claude.mjs"),
+			`const leaked = ["GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"].filter((n) => process.env[n])\n` +
+				`console.log("leaked:", leaked.join(","))\nprocess.exit(leaked.length ? 1 : 0)\n`,
+			"utf8",
+		)
+		const saved = { GIT_DIR: process.env.GIT_DIR, GIT_INDEX_FILE: process.env.GIT_INDEX_FILE }
+		process.env.GIT_DIR = join(root, "not-this-repo.git")
+		process.env.GIT_INDEX_FILE = join(root, "not-this-index")
+		try {
+			const result = runGates(root, ["claude"])
+			assert.deepEqual(result.errors, [])
+			assert.deepEqual(result.notes, ["claude mirror check passed"])
+		} finally {
+			for (const [name, value] of Object.entries(saved)) {
+				if (value === undefined) delete process.env[name]
+				else process.env[name] = value
+			}
+			cleanup(root)
+		}
+	})
+
+	it("gateEnv drops repository-pinning git variables and keeps the rest", () => {
+		const env = gateEnv({ GIT_DIR: "/r/.git", GIT_COMMON_DIR: "/r/.git", PATH: "/bin", GIT_SSH_COMMAND: "ssh" })
+		assert.deepEqual(env, { PATH: "/bin", GIT_SSH_COMMAND: "ssh" })
+	})
+
+	it("blocks with the sync command when the mirror is stale", () => {
+		const root = makeTempDir()
+		stubSync(root, 1, "Out of date (1): .claude/agents/producer.md")
+
+		const result = runGates(root, ["claude"])
+		assert.equal(result.errors.length, 1)
+		assert.match(result.errors[0], /npm run claude:sync/)
+		assert.match(result.errors[0], /\.claude\/agents\/producer\.md/)
+		cleanup(root)
 	})
 })
 

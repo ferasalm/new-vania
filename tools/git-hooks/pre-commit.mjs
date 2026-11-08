@@ -9,13 +9,14 @@
  *   - staged files larger than 20 MB
  *   - framework validation when `.agents/` is staged
  *   - plugin tests when `.opencode/plugins/` is staged
+ *   - Claude Code mirror check when mirrored `.agents/` content or `.claude/` is staged
  *
  * Advisory checks (warnings only):
  *   - likely-hardcoded credentials
  *   - staged files larger than 5 MB
  *
  * Environment:
- *   OCGS_SKIP_HOOK_CHECKS=1  skip the framework/plugin gates (secret scan still runs)
+ *   OCGS_SKIP_HOOK_CHECKS=1  skip the framework/plugin/claude gates (secret scan still runs)
  *
  * Usage: node tools/git-hooks/pre-commit.mjs
  * Exit codes: 0 = accepted, 1 = rejected.
@@ -273,6 +274,10 @@ export function checkFrameworkLinks(root) {
 	return { errors, warnings }
 }
 
+/** Paths whose changes can put the generated `.claude/` mirror out of date. */
+const CLAUDE_MIRROR_INPUT =
+	/^(?:\.agents\/(?:agents|skills|rules)\/|\.claude\/|tools\/sync-claude\.mjs$|tools\/lib\/(?:claude-mirror|harness-targets)\.mjs$)/
+
 /** Which repository gates the staged paths require. */
 export function planGates(files) {
 	const gates = []
@@ -289,7 +294,30 @@ export function planGates(files) {
 	if (files.some((file) => file.startsWith(".opencode/plugins/"))) {
 		gates.push("plugins")
 	}
+	if (files.some((file) => CLAUDE_MIRROR_INPUT.test(file))) {
+		gates.push("claude")
+	}
 	return gates
+}
+
+/**
+ * Variables git exports to hooks that pin git commands to this repository
+ * (`git rev-parse --local-env-vars`). Inherited by a gate, they make test
+ * suites that build throwaway repositories commit, tag and write config into
+ * the repository being committed instead.
+ */
+export const GIT_LOCAL_ENV_VARS = [
+	"GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT",
+	"GIT_OBJECT_DIRECTORY", "GIT_DIR", "GIT_WORK_TREE", "GIT_IMPLICIT_WORK_TREE", "GIT_GRAFT_FILE",
+	"GIT_INDEX_FILE", "GIT_NO_REPLACE_OBJECTS", "GIT_REPLACE_REF_BASE", "GIT_PREFIX",
+	"GIT_SHALLOW_FILE", "GIT_COMMON_DIR",
+]
+
+/** Copy of `env` without the repository-pinning git variables, for gate commands. */
+export function gateEnv(env = process.env) {
+	const clean = { ...env }
+	for (const name of GIT_LOCAL_ENV_VARS) delete clean[name]
+	return clean
 }
 
 function runCommand(root, command, args, options = {}) {
@@ -297,6 +325,7 @@ function runCommand(root, command, args, options = {}) {
 		const output = execFileSync(command, args, {
 			cwd: root,
 			encoding: "utf8",
+			env: gateEnv(),
 			maxBuffer: 32 * 1024 * 1024,
 			stdio: ["ignore", "pipe", "pipe"],
 			timeout: options.timeout ?? 180_000,
@@ -352,6 +381,12 @@ export function runGates(root, gates, env = process.env) {
 			if (result.ok) notes.push("plugin tests passed")
 			else errors.push(`plugin tests failed:\n${tail(result.output)}`)
 		}
+	}
+
+	if (gates.includes("claude")) {
+		const result = runCommand(root, process.execPath, ["tools/sync-claude.mjs", "--check"])
+		if (result.ok) notes.push("claude mirror check passed")
+		else errors.push(`.claude/ mirror is out of date: run "npm run claude:sync" and stage .claude/.\n${tail(result.output)}`)
 	}
 
 	return { errors, warnings, notes }

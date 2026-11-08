@@ -41,7 +41,8 @@ function normalizePath(p: string): string {
   return p.replace(/\\/g, "/")
 }
 
-function logAudit(projectRoot: string, message: string) {
+/** Append a line to production/session-logs/agent-audit.log (shared with the Claude Code hook adapter). */
+export function logAudit(projectRoot: string, message: string) {
   try {
     const dir = path.join(projectRoot, "production", "session-logs")
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
