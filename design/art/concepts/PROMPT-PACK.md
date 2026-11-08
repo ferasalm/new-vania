@@ -99,7 +99,9 @@ safe pocket in a hostile facility. No red, no characters.
 
 ```
 16-bit pixel art game scene, 16:9 widescreen. An inverted cathedral of ice — architecture
-hanging upside down from above, pale desaturated blue-white palette, gentle snowfall. A
+hanging upside down from above, pale desaturated blue-white palette, gentle snowfall. The
+inverted architecture still reads as demon-tech reality A: steel-cyan bulkhead frames and
+faint circuit tracery under the ice, so the reality is identifiable within two seconds. A
 human woman — the original the android protagonist is copied from, visibly human rather
 than mechanical — stands centered: her sword lowered in one hand and clearly pointing down
 and away, her other hand extended forward with an open palm — an unmistakable gesture of
@@ -148,8 +150,8 @@ apply rather than failing the shot for it.
 |---|---|---|
 | 1A / 1B | 1, 5, 6, 7, 8 | 2, 3, 4 |
 | 2 | 1, 5, 6, 7, 8 | 2, 3, 4 |
-| 3 | 4, 5, 6, 7, 8 | 1, 2, 3 |
-| 4 | 3, 5, 6, 7, 8 | 1, 2, 4 |
+| 3 | 1, 4, 5, 6, 7, 8 | 2, 3 |
+| 4 | 1, 3, 5, 6, 7, 8 | 2, 4 |
 | 5 | 1, 2, 5, 6, 7, 8 | 3, 4 |
 | 6 | 3, 6, 8 | 1, 2, 4, 5, 7 |
 
