@@ -74,6 +74,9 @@ Melancholy and unsettling, not gory, no characters. Style: Castlevania Symphony 
 Night pixel art.
 ```
 
+**Reality test for this shot:** the top half is reality B (warm library); below the glitch
+band is reality A (cold gravestone field). A reviewer must name both halves, not just one.
+
 ## Shot 3 — Cache Station (save sanctuary)
 
 **Primary concept — the brain cradle (fuses the save ritual with the story's core object):**
@@ -106,9 +109,11 @@ human woman — the original the android protagonist is copied from, visibly hum
 than mechanical — stands centered: her sword lowered in one hand and clearly pointing down
 and away, her other hand extended forward with an open palm — an unmistakable gesture of
 surrender and offer of trust. Head up, steady gaze with softly glowing amber eyes,
-dignified upright stance, absolutely not kneeling or defeated. One warm amber light
-touches her face; her silhouette stays clean and readable against the pale world.
-Melancholy, tender. Style: SotN pixel art.
+dignified stance with the collapsed shoulder line of Depression — not kneeling, not
+defeated. One warm amber light touches her face; her silhouette stays clean and readable
+against the pale world, and at 32px the bowed shoulder line plus lowered sword still reads
+as Depression while the open palm distinguishes surrender. Melancholy, tender. Style: SotN
+pixel art.
 ```
 
 ## Shot 5 — The Demon Lord's Court (hub throne room)
@@ -155,7 +160,7 @@ apply rather than failing the shot for it.
 | 5 | 1, 2, 5, 6, 7, 8 | 3, 4 |
 | 6 | 3, 6, 8 | 1, 2, 4, 5, 7 |
 
-1. **2-Second Truth Test** — a cold viewer names the reality (A cold-tech / B warm-gothic) from a still in under 2 seconds, no caption
+1. **2-Second Truth Test** — a cold viewer names the reality (A cold-tech / B warm-gothic) from a still in under 2 seconds, no caption; for the mixed-frame Shot 2, name both halves
 2. **Read-Then-Strike Test** — threats separate from background by *value*, not detail; a telegraph would be visible at 3× scale on a phone screen
 3. **Grief Test** — at 32px tall as a solid black silhouette, with no color, a viewer names the emotional stage uncaptioned
 4. **Death-as-Story Test** — cache/counter reads as narrative device, not HUD litter
