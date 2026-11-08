@@ -102,7 +102,8 @@ does not delete branches or worktrees; that remains the user's call.
 **Input:** `/ci-pr 42`
 
 **Expected behavior:**
-1. Skill detects the existing PR and skips worktree creation.
+1. Skill detects the existing PR, resolves its head branch, and reuses the
+   matching worktree (creating one only if it is missing).
 2. Skill reads PR checks and CodeRabbit threads.
 3. Skill fixes valid findings, pushes, and requests `@coderabbitai review`.
 4. Skill rechecks the merge gate after the new review.

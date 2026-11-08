@@ -62,6 +62,20 @@ Create one worktree per topic from `DEFAULT_BRANCH`:
 git -C <repo> worktree add ../<repo>-<topic> -b <branch> "$DEFAULT_BRANCH"
 ```
 
+If the branch already exists on the remote, omit `-b` and check it out instead:
+
+```bash
+git -C <repo> worktree add ../<repo>-<topic> <branch>
+```
+
+When `PR_NUMBER` is set, resolve its head branch and reuse an existing worktree
+for that branch if one exists; otherwise create the worktree from the PR branch:
+
+```bash
+gh pr view "$PR_NUMBER" --repo <owner>/<repo> --json headRefName --jq '.headRefName'
+git -C <repo> worktree list
+```
+
 Branch naming:
 
 | Prefix | Use |
