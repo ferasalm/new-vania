@@ -38,7 +38,7 @@
         "command": ["npx", "-y", "@coding-solo/godot-mcp"],
         "codemode": false,
         "environment": {
-          "GODOT_PATH": "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania-ocgs\\Godot_v4.7.2-stable_win64.exe",
+          "GODOT_PATH": "C:\\Users\\AUC\\opencode-workspace\\tools\\Godot\\Godot_v4.7.2-stable_win64.exe",
           "DEBUG": "false"
         }
       },
