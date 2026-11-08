@@ -323,10 +323,12 @@ See `docs/omp-compatibility.md` for setup and known gaps.
 ```bash
 claude
 ```
-Claude Code reads `AGENTS.md` natively and `.claude/rules/` with `paths`
-frontmatter. Install agents, skills, and commands into `.claude/` with
-`--harness claude`; the installer adds the required `name:` frontmatter to
-agents. MCP servers live in `.mcp.json`.
+Claude Code reads `AGENTS.md` natively. `.claude/{agents,skills,rules}` is a
+generated mirror of `.agents/`: edit `.agents/`, then run `npm run claude:sync`.
+`/help` and `/code-review` are `/ocgs-help` and `/ocgs-code-review` there.
+`.claude/settings.json` holds permissions and the ported CCGS hooks (run
+`npm install` once). MCP servers live in `.mcp.json`. See
+`docs/claude-compatibility.md`.
 
 #### Codex
 ```bash
@@ -379,9 +381,10 @@ opencode.json                      -- OpenCode V2 config (plugins, MCP, permissi
   agents/                          -- Generated agent definitions for the task tool
   config.yml                       -- Extension wiring
   mcp.json                         -- Project MCP servers
-.claude/                           -- Claude Code target (created by --harness claude)
-  agents/ skills/ commands/ rules/
-  modules/installed.json           -- Claude install manifest
+.claude/                           -- Claude Code (see docs/claude-compatibility.md)
+  agents/ skills/ rules/           -- Generated mirror of .agents/ (npm run claude:sync)
+  ocgs-sync.json                   -- Generated-file manifest
+  settings.json  hooks/            -- Shared permissions and hook adapter
 .mcp.json                          -- Claude Code project MCP servers
 .codex/                            -- Codex target (created by --harness codex)
   agents/                          -- TOML agents generated from .agents/agents/

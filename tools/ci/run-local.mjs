@@ -33,7 +33,7 @@ const JOBS = {
     steps: [
       {
         id: 'npm-test',
-        label: 'npm test (plugin + git-hook suites)',
+        label: 'npm test (plugin, git-hook and Claude Code suites)',
         command: NPM,
         args: ['test'],
       },

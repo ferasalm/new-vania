@@ -19,6 +19,11 @@ docs/superpowers/
 # Git worktrees
 .worktrees/
 
+# Claude Code per-user files (shared config is .claude/settings.json)
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
 # OS junk
 Thumbs.db
 .DS_Store

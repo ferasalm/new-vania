@@ -10,7 +10,7 @@
   "scripts": {
     "prepare": "node tools/git-hooks/install.mjs",
     "hooks:install": "node tools/git-hooks/install.mjs",
-    "test": "npm run test:plugins && npm run test:hooks",
+    "test": "npm run test:plugins && npm run test:hooks && npm run test:claude",
     "test:plugins": "node --import tsx --test .opencode/plugins/tests/test-*.mjs",
     "test:extensions": "node --import tsx --test tests/extensions/*.mjs",
     "test:omp": "node --import tsx --test tests/omp/*.mjs",
@@ -18,6 +18,9 @@
     "test:framework": "node tests/agents/validate.mjs",
     "test:modules": "node --test tests/modules/test-install-harness.mjs",
     "test:parity": "node --import tsx --test tests/e2e/test-parity.test.ts",
+    "test:claude": "node --test tests/claude/test-claude-mirror.mjs tests/claude/test-claude-hooks.mjs",
+    "claude:sync": "node tools/sync-claude.mjs",
+    "claude:check": "node tools/sync-claude.mjs --check",
     "ci": "node tools/ci/run-local.mjs",
     "ci:test": "node tools/ci/run-local.mjs --job test",
     "ci:agents": "node tools/ci/run-local.mjs --job agents"
