@@ -308,15 +308,16 @@ node tests/agents/validate-gdscript.mjs  # Lints GDScript snippets
 
 ## PR Process
 
-All framework changes go through pull requests to `development`:
+All framework changes go through pull requests to `Main`:
 
-1. **Branch from `development`**: `feature/{issue-number}-{short-name}`
+1. **Branch from `Main`**: `feat/{short-name}`, `fix/{short-name}`, or `docs/{short-name}`
 2. **One issue per branch**: Each branch addresses exactly one issue
 3. **Commit convention**: Conventional Commits (`feat:`, `fix:`, `docs:`, etc.) — enforced by `.githooks/commit-msg` (`npm run hooks:install`)
 4. **Close issue reference**: Include `Closes #N` in the commit message
-5. **CI must pass**: Agent validation, workflow integrity, and plugin tests
-6. **Merge to `development`**: Fast-forward merge, push, close issue
-7. **Release**: `development` merges to `master` at milestone completion
+5. **CI must pass**: Run `npm run ci` locally, then confirm the PR checks are
+   green with `gh pr checks <number> --watch`
+6. **Merge to `Main`**: Merge commit via PR, then pull `Main`
+7. **Release**: Tag from `Main` at milestone completion
 
 ### Commit Message Format
 

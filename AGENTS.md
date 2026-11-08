@@ -272,7 +272,7 @@ Tier 3 — Specialists (Subagents)
 
 ## Quality Gates
 
-Before merging to `development`, the CI must pass:
+Before merging to `Main`, the CI must pass:
 
 - **Agent validation** (`.github/workflows/agent-validation.yml`):
   - All agent files have required frontmatter and sections
@@ -280,6 +280,8 @@ Before merging to `development`, the CI must pass:
   - All command files reference valid skill directories
 - **Plugin tests** (`npm run test:plugins`):
   - 19 test suites, 177 tests
+- **Local CI mirror** (`npm run ci`): runs the same checks as both workflows
+  before a push; see `tools/ci/README.md`
 - **Git hooks** (`.githooks/`, installed by `npm run hooks:install`):
   - 13 suites, 54 tests (`npm run test:hooks`)
   - `.githooks/commit-msg` enforces Conventional Commits

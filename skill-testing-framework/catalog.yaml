@@ -929,6 +929,17 @@ skills:
     priority: low
     category: persona
 
+  - name: ci-pr
+    spec: skill-testing-framework/skills/utility/ci-pr.md
+    last_static: ""
+    last_static_result: ""
+    last_spec: ""
+    last_spec_result: ""
+    last_category: ""
+    last_category_result: ""
+    priority: high
+    category: utility
+
 agents:
   # Tier 1 Directors
   - name: creative-director
