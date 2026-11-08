@@ -141,6 +141,18 @@ outline, distinct from 1. Each silhouette nameable by pose alone.
 
 ## The 8-Point Validity Checklist (judge your results against this)
 
+Not every test applies to every shot. Use this matrix; skip a test that does not
+apply rather than failing the shot for it.
+
+| Shot | Apply | Skip |
+|---|---|---|
+| 1A / 1B | 1, 5, 6, 7, 8 | 2, 3, 4 |
+| 2 | 1, 5, 6, 7, 8 | 2, 3, 4 |
+| 3 | 4, 5, 6, 7, 8 | 1, 2, 3 |
+| 4 | 3, 5, 6, 7, 8 | 1, 2, 4 |
+| 5 | 1, 2, 5, 6, 7, 8 | 3, 4 |
+| 6 | 3, 6, 8 | 1, 2, 4, 5, 7 |
+
 1. **2-Second Truth Test** — a cold viewer names the reality (A cold-tech / B warm-gothic) from a still in under 2 seconds, no caption
 2. **Read-Then-Strike Test** — threats separate from background by *value*, not detail; a telegraph would be visible at 3× scale on a phone screen
 3. **Grief Test** — at 32px tall as a solid black silhouette, with no color, a viewer names the emotional stage uncaptioned
