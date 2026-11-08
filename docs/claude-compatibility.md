@@ -1,7 +1,8 @@
 # Claude Code Compatibility Guide
 
 OpenCode Game Studios (OCGS) runs on [Claude Code](https://code.claude.com/docs/) alongside OpenCode, Pi, oh-my-pi and Codex.
-Claude Code 2.1.277+ reads `AGENTS.md` natively, so no `CLAUDE.md` is needed.
+Claude Code 2.1.277+ reads `AGENTS.md` natively, so no `CLAUDE.md` is needed. If you add a
+`CLAUDE.md` or `CLAUDE.local.md`, put `@AGENTS.md` at the top so the project guide still loads.
 
 ## Quick Start
 
@@ -10,8 +11,10 @@ npm install          # git hooks + tsx (needed by the Claude Code hooks)
 claude
 ```
 
-On first start, approve the project MCP servers in `.mcp.json` when prompted.
-Type `/` to see the OCGS skills; start with `/start` or `/ocgs-help`.
+`.mcp.json` describes one machine's setup: `aseprite` runs through `docker exec` in the
+`opencode-workspace-opencode-1` container, and `godot` needs `GODOT_PATH` pointing at a local
+Godot 4.7 executable. Adjust both for your machine, then approve the servers when Claude Code
+prompts on first start. Type `/` to see the OCGS skills; start with `/start` or `/ocgs-help`.
 
 ## What Lives Where
 
@@ -69,6 +72,8 @@ Commit the `.agents/` change and the regenerated `.claude/` files together. Rest
 The module installer's `--harness claude` target copies from `.agents/modules/`, whose copies
 currently lag behind canonical `.agents/` content. In this repository, install modules into
 `.agents/` instead (`--harness pi` writes there directly), then run `npm run claude:sync`.
+`--harness pi` merges MCP servers into `.pi/mcp.json`, so if the module ships
+`mcp/claude.json`, copy its servers into `.mcp.json` yourself.
 
 ## Hooks
 
@@ -88,7 +93,9 @@ Claude Code share one implementation.
 | `PostToolUse` · `Write`/`Edit` | Asset naming and JSON checks under `assets/`; `/skill-test` reminder for skill changes; note when a generated `.claude/` file or a mirrored `.agents/` file is edited |
 
 The TypeScript module loads through `tsx` only when an event needs it. Other Bash calls return in
-under 100 ms. Without `npm install` the hooks stay inactive and say so at session start.
+under 100 ms. Without `npm install` the hooks stay inactive and say so at session start. The
+commit check fails open: if it crashes, the command still runs, and the git pre-commit hook in
+`.githooks/` remains the enforced gate.
 Tests: `npm run test:claude`.
 
 ## Permissions
@@ -97,8 +104,10 @@ Tests: `npm run test:claude`.
 
 - **Allowed without prompting:** read-only git (`status`, `diff`, `log`, `branch`, `rev-parse`),
   `ls`/`dir`, `python -m json.tool`, pytest, and the repo's test and `claude:*` npm scripts.
-- **Denied:** `rm -rf`, force pushes, `git reset --hard`, `git clean -f*`, `sudo`, `chmod 777`,
-  and reading `.env` files.
+- **Denied:** recursive force deletes (`rm -rf`, `-fr`, `-Rf`, `-r -f`), force pushes in any
+  form (`--force`, `--force-with-lease`, `-f`, `+branch`), `git reset --hard`, forced
+  `git clean`, `sudo`, `chmod 777`, and reading `.env` files. Bash rules match command text, so
+  they are a guard rail, not a security boundary.
 
 Skill `allowed-tools` pre-approve the listed tools while a skill runs, which is Claude Code's
 meaning for that field. Deny rules still apply. Personal overrides go in
