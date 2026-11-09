@@ -29,7 +29,7 @@ Keep it short: it is loaded in every session.
 
 ## Git
 
-- Never commit to `Main`. One worktree per task: `git worktree add ..\<repo>-<topic> -b <type>/<topic>`.
+- Never commit to `Main`. One worktree per task: `git worktree add ../<repo>-<topic> -b <type>/<topic>` (forward slashes work in Git Bash, PowerShell and cmd).
 - WIP commits, never a bare stash. No `reset --hard`, `clean` or force-push.
 - Move aside, never delete. Back up a config file before editing it.
 - Review = PR + CodeRabbit governor (at most 2 rounds, then ask). Backup tag before every merge.
@@ -50,9 +50,10 @@ Keep it short: it is loaded in every session.
 - `.agents/` is canonical; run `npm run claude:sync` after editing it. Never edit `.claude/{agents,skills}`.
 - From a repo task, never edit `opencode.json`, `.opencode/*`, `.pi`, `.omp` or Hermes config.
   Never add `.hermes.md` (it hides `AGENTS.md` from Hermes).
-- When a harness breaks: read `setup/HARNESS-MAP.md` and run `setup/scripts/harness-status.ps1`.
+- When a harness breaks: read `HARNESS-MAP.md` and run `scripts/harness-status.ps1` from the `setup` repo
+  (`ferasalm/setup`, checked out as `workspace/setup` beside this repo; it is not part of this checkout).
 
 ## Collaboration
 
-- Keep the `AGENTS.md` protocol (Question, Options, Decision, Draft, Approval), but ask for approval
-  once per changeset, not once per file.
+- Keep the `AGENTS.md` protocol (Question, Options, Decision, Draft, Approval). For several files, ask one
+  `May I write this to <path>?` question that lists every path; one approval covers that whole changeset.

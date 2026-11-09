@@ -10,10 +10,10 @@ OCGS text is written for OpenCode; in Hermes read it with this table.
 
 | OCGS text says | Use in Hermes |
 |---|---|
-| `question` tool | `clarify` (one question, optional choices; add "Other" yourself) |
-| `Task` tool / delegate to an agent | `delegate_task`. The OCGS agent file is `.agents/agents/<name>.md`: read it and pass its body as the subagent's instructions |
+| `question` tool | `clarify`: up to 4 choices, and it appends "Other" itself (do not add one). If the skill lists more than 4, group them or split them across several `clarify` calls |
+| `Task` tool / delegate to an agent | `delegate_task`. The OCGS agent file is `.agents/agents/<name>.md`: read it and pass its body as the subagent's instructions. Subagents are leaf workers by default and cannot delegate further: when an agent file says to delegate (e.g. `lead-programmer` to specialists), you, the parent, run each specialist as its own `delegate_task` and pass results between them |
 | `.opencode/agents`, `.opencode/skills`, `.opencode/rules`, `.opencode/commands` | the same path under `.agents/` |
-| `/help` | the project's help skill (`.agents/skills/help`) |
+| `/help` | `/skill help` (Hermes's own `/help` is built in and only lists commands) |
 | `/code-review` | `.agents/skills/code-review` |
 | an "OpenCode session" | this Hermes session |
 
