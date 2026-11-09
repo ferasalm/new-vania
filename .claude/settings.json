@@ -34,8 +34,40 @@
       "Bash(sudo *)",
       "Bash(chmod 777 *)",
       "Read(**/.env)",
-      "Read(**/.env.*)"
+      "Read(**/.env.*)",
+      "Read(**/.godot/**)",
+      "Read(**/*.import)",
+      "Read(**/*.uid)",
+      "Read(**/node_modules/**)",
+      "Read(**/*.glb)",
+      "Read(**/*.gltf)",
+      "Read(**/*.blend)",
+      "Read(**/*.fbx)",
+      "Read(**/*.wav)",
+      "Read(**/*.ogg)",
+      "Read(**/*.mp3)",
+      "Read(**/*.mp4)",
+      "Read(**/*.webm)",
+      "Read(**/*.ttf)",
+      "Read(**/*.otf)",
+      "Edit(**/*.import)",
+      "Edit(**/*.uid)"
+    ],
+    "ask": [
+      "mcp__hyper3d__rodin_generate*",
+      "mcp__blender__generate_3d"
     ]
+  },
+  "skillOverrides": {
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:xlsx": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:morning": "off",
+    "anthropic-skills:import-memory": "off",
+    "anthropic-skills:computer-use": "off"
   },
   "hooks": {
     "SessionStart": [
@@ -44,7 +76,10 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs", "session-start"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs",
+              "session-start"
+            ],
             "timeout": 30
           }
         ]
@@ -56,7 +91,10 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs", "pre-compact"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs",
+              "pre-compact"
+            ],
             "timeout": 30
           }
         ]
@@ -68,7 +106,10 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs", "session-end"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs",
+              "session-end"
+            ],
             "timeout": 10
           }
         ]
@@ -81,7 +122,10 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs", "pre-tool-use"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs",
+              "pre-tool-use"
+            ],
             "timeout": 30
           }
         ]
@@ -94,7 +138,10 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs", "post-tool-use"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/ocgs-hooks.mjs",
+              "post-tool-use"
+            ],
             "timeout": 30
           }
         ]
