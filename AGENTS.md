@@ -5,11 +5,15 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 
 ## Technology Stack
 
-- **Engine**: [CHOOSE: Godot 4 / Unity / Unreal Engine 5 / SFML 3 / Raylib / Bevy]
-- **Language**: [CHOOSE: GDScript / C# / C++ / Blueprint / C / C++17]
-- **Build System**: [SPECIFY after choosing engine]
-- **Asset Pipeline**: [SPECIFY after choosing engine]
-- **Agent Harness**: [CHOOSE: OpenCode / Pi / oh-my-pi / Claude Code / Codex]
+- **Engine**: Godot 4.7.2
+- **Language**: GDScript
+- **Build System**: SCons (engine), Godot Export Templates
+- **Asset Pipeline**: Godot Import System + custom resource pipeline
+- **Agent Harness**: OpenCode
+
+## Engine Version Reference
+
+@docs/engine-reference/godot/VERSION.md
 
 > **Note**: Engine-specialist agents exist for Godot, Unity, Unreal, SFML 3,
 > Raylib, and Bevy. Use the set matching your engine.
@@ -102,6 +106,16 @@ The framework is partitioned into installable theme modules.
    `producer` agent coordinates the propagation.
 5. **No Unilateral Cross-Domain Changes**: An agent must never modify files
    outside its designated directories without explicit delegation.
+
+## Checkpoint Policy (user priority: never lose progress)
+
+- **Every milestone is a pushed checkpoint**: when a meaningful unit of work completes
+  (prototype built, GDD authored, fix landed), commit it and push — the user has
+  pre-authorized checkpoint commits for this purpose.
+- Prefer small, logical, conventional commits over one giant "checkpoint" commit.
+- Push immediately after committing; never leave completed work local-only.
+- Never rewrite pushed history (no force-push to shared branches).
+- In-flight or untracked work must be checkpointed on a branch before switching context.
 
 ## Collaboration Protocol
 
