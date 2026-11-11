@@ -47,7 +47,7 @@
 
 ### Foundation
 
-- SYS-01 Input & Control Mapping — no dependencies (Attack / Jump main; Dash = ability-unlocked; contextual Interact; unified across touch/KB/gamepad)
+- SYS-01 Input & Control Mapping — no dependencies (Attack / Jump main; Dash = ability-unlocked; contextual Interact; unified across touch/KB/gamepad). Coordination authority: SYS-05 owns the context state machine, input enforces gates. UX flag: `/ux-design` for the Recalibration screen + touch help overlay before UI stories
 - SYS-02 Room & World Structure (MetSys) — no dependencies (16px grid, room graph, doors)
 - SYS-03 Save & Serialization — no dependencies (world truth, designation counter, memories)
 - SYS-04 Audio Core — no dependencies
@@ -79,7 +79,7 @@
 
 ### Presentation
 
-- SYS-24 HUD → depends on SYS-08, SYS-07 (red-disciplined per REVIEW.md)
+- SYS-24 HUD → depends on SYS-08, SYS-07, SYS-01 (touch dispatcher + hit-rect registration, z-order load-bearing; red-disciplined per REVIEW.md)
 - SYS-25 Map / Minimap / Fog-of-War → depends on SYS-02, SYS-10
 - SYS-26 Sanctuary Menus → depends on SYS-17, SYS-18, SYS-19
 - SYS-27 Memory Gallery & Bestiary → depends on SYS-20, SYS-13
@@ -139,7 +139,7 @@
 
 | ID | System | Priority tier | GDD status | GDD path |
 |---|---|---|---|---|
-| SYS-01 | Input & Control Mapping | MVP | Not Started | design/gdd/input-control-mapping.md |
+| SYS-01 | Input & Control Mapping | MVP | Designed (pending review); CD-GDD-ALIGN: CONCERNS (accepted) 2026-11-11 | design/gdd/input-control-mapping.md |
 | SYS-02 | Room & World Structure (MetSys) | MVP | Not Started | design/gdd/room-world-structure.md |
 | SYS-03 | Save & Serialization | MVP | Not Started | design/gdd/save-serialization.md |
 | SYS-04 | Audio Core | MVP | Not Started | design/gdd/audio-core.md |
