@@ -468,7 +468,7 @@ Enumerated repair in a FRESH session under the freeze (fix table + riders + mach
 | A7 | TR-INP-029: "resolve only when the body is available"; "structural" | F-10 post-NB-F — the mid-swing wait is now formula-backed | PASS(post) |
 | A8 | F-07: `body_available(completion_tick)`; "body-free completion" | F-08 defines body_available = ¬body_busy; fail-open policy stated at F-08 | PASS |
 | B1 | Manifest: "MVP-lock gate: AC-64, AC-63, AC-02 — whole ACs" | Tags are execution environments (manifest's own law); AC-64's inline note "its gate is this one" ✓ | PASS |
-| B2 | Manifest VS list ↔ chip clauses exist only in AC-33/35/36/37/42/60/69 | Grep "chip clause|chip hold|chip is tapped|chip commits" — the five clause sites + two whole ACs; no other AC carries chip semantics | PASS |
+| B2 | Manifest VS list ↔ chip clauses exist only in AC-33/35/36/37/42/60/69 | Grep "chip clause" / "chip hold" / "chip is tapped" / "chip commits" — the five clause sites + two whole ACs; no other AC carries chip semantics | PASS |
 | B3 | Manifest device gate (post-NB-K): 19 units — AC-27, AC-50, AC-70×2, AC-12, AC-45, AC-36-MVP, AC-37-MVP, AC-69×3, DEVICE halves ×8 | Each unit device-executed; none is a lock/VS member (AC-69's chip clause, AC-36/37's chip clauses, AC-64 explicitly excluded) — the parenthetical "device-executed clauses; lock and VS members excluded" is satisfied BY the list (the NB-E discriminator) | PASS(post) |
 | B4 | "a [DEVICE]-tagged clause never defaults home to smoke" | The 17 DEVICE-tagged ACs (03,12,27,36,37,45,47,48,50,52,53,64,65,66,69,70,74): 8 → DEVICE halves; 12/27/45/50 → device wholes; 70 → two device clauses; 36/37 → MVP clauses device; 69 → non-chip clauses device (chip clause VS); 64 → lock (explicit) — none defaults home | PASS(post) |
 | B5 | Smoke enumerated list = the GUT clauses + GUT halves | The 27 listed wholes are [GUT]-tagged; the 3 GUT halves are the GUT sides of dual-tagged ACs | PASS |
@@ -507,7 +507,7 @@ Enumerated repair in a FRESH session under the freeze (fix table + riders + mach
 | E5 | F-08 "Input-owned OR" ↔ contracts table "body-busy: ORed" | Same composition, both sides | PASS |
 | E6 | Haptic meaning owned by Combat (TR-INP-070 + HAPTIC_CHANNEL_MAP row) | Consistent pair; the rendition table names no new meaning (backdash rider keeps three) | PASS(post) |
 
-**Audit verdict: 47/47 claims verified — 39 PASS as-written, 8 PASS(post) (true only after this repair's edits — each is one of the six blockers' falsified claims or their direct dependents), 2 ADJ (recorded adjudications verified against the formulas' actual terms). Zero unresolvable claims remain.** The artifact is machine-reproducible: the grep stems + hit counts above regenerate the claim inventory.
+**Audit verdict: 47/47 claims verified — 35 PASS as-written, 10 PASS(post) (true only after this repair's edits — each is one of the six blockers' falsified claims or their direct dependents), 2 ADJ (A6 + D10 — recorded adjudications verified against the formulas' actual terms; counts corrected per the PR #17 cross-check: the initial summary mis-tallied 39/8 — the row-by-row recount is 35/10/2 = 47). Zero unresolvable claims remain.** The artifact is machine-reproducible: the grep stems + hit counts above regenerate the claim inventory.
 
 ### Grep dependent sweeps per edit (artifacts)
 
