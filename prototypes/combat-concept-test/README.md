@@ -14,8 +14,9 @@ controls? Full context: `SPEC.md`.
 ## Run
 
 - **Editor**: open this folder (`prototypes/combat-concept-test/`) in Godot 4.7.2 → F5.
-- **Headless sanity check** (no SCRIPT ERROR lines = healthy) — requires a Godot 4.7.2
-  binary; if it is not on `PATH`, substitute your local editor binary's full path:
+- **Headless sanity check** (no SCRIPT ERROR lines = healthy) — run from the
+  **repository root** (the `--path` argument is relative to it); requires a Godot
+  4.7.2 binary; if it is not on `PATH`, substitute your local editor binary's full path:
 
 ```
 godot --headless --path prototypes/combat-concept-test --quit-after 120
@@ -34,11 +35,13 @@ godot --headless --path prototypes/combat-concept-test --quit-after 120
 1. **Kill 10 dummies** (they respawn). Notice: do you WANT to keep going?
 2. **Counter-clash**: attack during a dummy's amber/red windup flash — does the timing
    window feel fair or lucky? (Hit them mid-windup → staggered for 0.8s = free punish.)
-3. **Power read**: wait for a dummy's **red** windup (heavy strike), then clash it with
-   ATK1 (single J — you should LOSE: staggered + half damage), then with ATK2 (J J —
-   should LOCK even). Amber windup = light (power 1), red = heavy (power 2). Is the read
-   legible? (Against a **light** strike the table inverts: ATK1 vs light = lock, ATK2 vs
-   light = the dummy staggers — see the clash table below.)
+3. **Power read**: wait for a dummy's **red** windup to end and the **strike** to start
+   (the red reach rect), then start your swing so the enemy's strike connects while you
+   are mid-swing. With ATK1 (single J) you should LOSE: staggered + half damage; with
+   ATK2 (J J) it should LOCK even. Amber windup = light (power 1), red = heavy (power 2).
+   Is the read legible? (Swinging during the red **windup** itself is the counter-clash
+   test in step 2 — free stagger, no power comparison. Against a **light** strike the
+   table inverts: ATK1 vs light = lock, ATK2 vs light = the dummy staggers.)
 4. **Deflect**: swat the shooter's cyan orb with an active swing — it returns amber,
    faster, and hurts whatever it hits (shooter included). Satisfying? Does the returned
    orb hitting another enemy matter to you?
