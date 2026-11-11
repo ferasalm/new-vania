@@ -53,7 +53,7 @@
 
 <!-- Add approved third-party dependencies here -->
 - **Metroidvania System (MetSys) 1.6.1** — room/map/minimap/fog-of-war backbone; owned, integration begins with the MVP scaffold (pending promotion from `inbox/downloads/organized/projects/Metroidvania_System_1.6.1` to the Godot project)
-- **LimboAI v1.8.1** — CANDIDATE, pending ADR at SYS-13 (Enemy AI) / SYS-14 (Grief-Boss) authoring. Behavior trees + state machines + utility AI for enemy/boss behaviors. MIT; GDExtension with editor integration. v1.8.1 ships Godot 4.7.2-stable builds (exact match for our engine pin — verified 2026-11-11 via release page). Not required for MVP's 2–3 dummy enemy types (hand-rolled state machines suffice — proven in combat concept-test); pays off for grief-boss state framework and per-reality enemy behaviors. Mobile export binaries to verify at adoption time.
+- **LimboAI v1.8.1** — CANDIDATE, pending ADR at SYS-13 (Enemy AI) / SYS-14 (Grief-Boss) authoring. Behavior trees + state machines + utility AI for enemy/boss behaviors. MIT; ships as **two distinct artifacts**: (a) the **GDExtension** release — built against Godot 4.6, supports 4.6+ including our 4.7.2 pin; (b) prebuilt **4.7.2-stable editor builds** for the engine-module route (exact match for our engine pin — verified 2026-11-11 via release page). Adoption must pick ONE integration route and verify that route's export binaries. Not required for MVP's 2–3 dummy enemy types (hand-rolled state machines suffice — proven in combat concept-test); pays off for grief-boss state framework and per-reality enemy behaviors.
 
 ## Architecture Decisions Log
 

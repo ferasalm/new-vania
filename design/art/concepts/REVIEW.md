@@ -87,7 +87,7 @@ The direction survives contact with the actual work: Shot 2 proves the visual th
 
 ## Key art / store page
 
-- `game-concept.jpg` — **REFINE**: in-game mock / store-page candidate. Red HUD segments (Pandora HP bar, boss bar) break sigil discipline. Recolor to cyan/amber — or earn the red with a visible sigil if that UI belongs to the lord's court.
+- `game-concept.jpg` — **REFINE**: in-game mock / store-page candidate. Red HUD segments (Pandora HP bar, boss bar) break sigil discipline. Recolor to cyan/amber — or earn the red with a visible sigil if that UI belongs to the lord's court (court-canonical red only — see the red rule, finding 5).
 
 ## Re-generation list (exact single changes, user-driven edits)
 
@@ -99,7 +99,7 @@ The direction survives contact with the actual work: Shot 2 proves the visual th
 | 4 | Ira-anger | Sword raised overhead + hair ignited (match Shot-6 Anger contour); violet → steel-cyan/amber. |
 | 5 | Demon lord sprite | Restore forehead sigil + contract sigil; re-carve so jaw/hair/sigil survive 32px. |
 | 6 | lament-006 | Re-add a steel core edge to the blade. |
-| 7 | game-concept.jpg | HUD red segments → cyan/amber (or sigil-earned red for court UI). |
+| 7 | game-concept.jpg | HUD red segments → cyan/amber (court-canonical red only if that UI belongs to the lord's court — see the red rule, finding 5). |
 | 8 | 06 lineup | Bargaining: add the deal-making reaching arm. |
 | 9 (optional) | Blocked GIF | Re-export as compressed contact sheet for review. |
 
@@ -109,7 +109,7 @@ The direction survives contact with the actual work: Shot 2 proves the visual th
 2. **Crown invariant** — one anchor per grief state; the crown persists, cracked differently per stage (fixes the same-woman failure).
 3. **Timepiece motif** — Lenore's watch chains ↔ Arnetria's clock-face; rhyming motifs across grief stages.
 4. **Animation evidence standard** — frame strips required; single-frame GIFs prove nothing.
-5. **Red-rule enforcement in writing** — red = lord's physical presence only (court, seals, contracts, his granted Stinger); HUD and decoration never.
+5. **Red-rule enforcement in writing** — red = the lord's **court-canonical presence only**: his physical sigils, seals, contracts, his granted Stinger, **and the court's own canonical red (e.g., 1B's wine-red banners, the floor seal — court decoration IS earned red)**; everything else — HUD segments, stray/unearned decoration — never.
 6. **Rim-light rule for near-black bodies** on dark room palettes (mobile readability).
 
 ## Final Selections — LOCKED 2026-11-11 (designer-confirmed)

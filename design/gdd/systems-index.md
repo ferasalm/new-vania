@@ -4,7 +4,7 @@
 > **Created**: 2026-11-11
 > **Last Updated**: 2026-11-11
 > **Source Concept**: design/gdd/game-concept.md
-> **Review mode**: lean — director gates (TD-SYSTEM-BOUNDARY, PR-SCOPE, CD-SYSTEMS) deferred to the phase gate per `production/review-mode.txt`
+> **Review mode**: lean at creation — per-skill director gates **skipped** (lean runs phase gates only — `docs/framework/director-gates.md`; not deferred); switched to **full** 2026-11-11
 > **Design pivot applied 2026-11-11**: no on-command reality shift — world truth mutates through story progress + backtrack reveal ("Story-Driven Truth"); Stinger = motion input; touch scheme = Attack/Jump main, Dash (ability-unlocked), contextual Interact
 
 ## System Enumeration
@@ -34,7 +34,7 @@
 | SYS-21 | Reality-Law Progression | Feature | No (VS: first law) | SYS-10, SYS-16 | game-designer |
 | SYS-22 | Story-Revealing Item | Feature | No (Alpha) | SYS-17, SYS-10 | narrative-director |
 | SYS-23 | Variety Bosses | Feature | No (Alpha) | SYS-14 | game-designer |
-| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07 | ui-programmer |
+| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01 | ui-programmer |
 | SYS-25 | Map / Minimap / Fog-of-War | Presentation | No (VS) | SYS-02, SYS-10 | ui-programmer |
 | SYS-26 | Sanctuary Menus (Inventory/Contracts/Essence) | Presentation | No (VS) | SYS-17, SYS-18, SYS-19 | ui-programmer |
 | SYS-27 | Memory Gallery & Bestiary | Presentation | No (VS) | SYS-20, SYS-13 | narrative-director + ui-programmer |
@@ -56,20 +56,20 @@
 
 ### Core
 
-- SYS-06 Movement → depends on SYS-01 (committed SotN arcs; Dash is an ability gate — locked at start; traversal ladder Dash → Wall Jump → Double Jump as behavior-level gates on Jump; Backdash day-one, SotN-exact double-tap back)
+- SYS-06 Movement → depends on SYS-01 (committed SotN arcs; **Dash is an action-level lock — locked at start, TR-INP-003; Wall Jump → Double Jump are behavior-level gates on Jump owned by SYS-06, TR-INP-057**; Backdash day-one, SotN-exact double-tap back)
 - SYS-07 Health & Damage → no upstream deps (data layer for combat)
 - SYS-08 Combat → depends on SYS-01, SYS-06, SYS-07 (combo, clash, deflect)
 - SYS-09 Dual-Reality State & Rendering → depends on SYS-02 (epoch-driven: one geometry, two palettes; shift shader for transitions)
-- SYS-10 World Mutation & Epochs → depends on SYS-09, SYS-03, SYS-02 (story-threshold truth flips; backtrack reveals; zone scoping/locking)
-- SYS-11 Seam Borders → depends on SYS-10 (borders between flipped/unflipped zones; Cold Corridor purple = bridge material)
+- SYS-10 World Mutation & Epochs → depends on SYS-09, SYS-03, SYS-02, SYS-32 (story-threshold truth flips; backtrack reveals; zone scoping/locking; camera holds the target through the truth flip + reveal framing zone)
+- SYS-11 Seam Borders → depends on SYS-10, SYS-32 (borders between flipped/unflipped zones; Cold Corridor purple = bridge material; reveal framing zone at seams)
 - SYS-12 Motion Input / Stinger → depends on SYS-01, SYS-08 (quarter-spin + Attack; gesture buffering across touch/KB/gamepad)
 - SYS-13 Enemy AI & Telegraphs → depends on SYS-07 (per-reality behaviors, bestiary data)
-- SYS-14 Grief-Boss Framework → depends on SYS-13, SYS-08 (one rig, five states, interaction rule per state)
+- SYS-14 Grief-Boss Framework → depends on SYS-13, SYS-08, SYS-32 (one rig, five states, interaction rule per state; boss-arena camera locks)
 - SYS-15 Cache Stations & Death-as-Story → depends on SYS-03, SYS-05 (MEMORY CACHED, reconstruction, designation increment)
 
 ### Feature
 
-- SYS-16 Progression → depends on SYS-08, SYS-13 (lean RPG texture; ability unlock ladder: Dash → Wall Jump → Double Jump)
+- SYS-16 Progression → depends on SYS-08, SYS-13 (lean RPG texture; ability unlock ladder: Dash → Wall Jump → Double Jump — **grants flow SYS-16 → SYS-06's gates**: Dash action-level, Wall Jump/Double Jump behavior-level on Jump, TR-INP-057)
 - SYS-17 Inventory & Items → depends on SYS-16
 - SYS-18 Essence Economy → depends on SYS-16
 - SYS-19 Demon Contracts & Corruption → depends on SYS-16, SYS-05
@@ -80,12 +80,12 @@
 
 ### Presentation
 
-- SYS-24 HUD → depends on SYS-08, SYS-07, SYS-01 (touch dispatcher + hit-rect registration, z-order load-bearing; red-disciplined per REVIEW.md)
+- SYS-24 HUD → depends on SYS-08, SYS-07, SYS-01, SYS-32 (touch dispatcher + hit-rect registration, z-order load-bearing; thumb-coverage caps from the camera; red-disciplined per REVIEW.md)
 - SYS-25 Map / Minimap / Fog-of-War → depends on SYS-02, SYS-10
 - SYS-26 Sanctuary Menus → depends on SYS-17, SYS-18, SYS-19
 - SYS-27 Memory Gallery & Bestiary → depends on SYS-20, SYS-13
 - SYS-28 Narrative Presentation → depends on SYS-05 (logs, briefings, reports — text-only)
-- SYS-29 Juice & Feedback → depends on SYS-08, SYS-06 (hit-stop, clash sparks, glitch transition, chime)
+- SYS-29 Juice & Feedback → depends on SYS-08, SYS-06, SYS-32 (hit-stop, clash sparks, glitch transition, chime; camera shake offset clamped to limits)
 - SYS-32 Camera & Framing → depends on SYS-01 (D1 render model: world SubViewport at safe-derived integer scale, native HUD; camera reads no input), SYS-02 (room bounds = default limits), SYS-06 (facing/velocity/grounded/wall-cling/body-busy/backdash/knockback publication). Feeds SYS-29 (shake offset, clamped to limits; follow runs on the game clock), SYS-14 (boss-arena locks), SYS-10/11 (hold target through the truth flip; reveal framing zone), SYS-24 (thumb-coverage caps). **Working plan (user-accepted 2026-11-11, from the camera brief — playtest-tunable, GDD pending):** room limits first, in-room directors/false boundaries at VS only where a secret must sit inside a room; MVP = follow + small facing-keyed look-ahead with a commit delay (~32 px, frozen during attacks/backdash/knockback/hit-stop) + vertical move only on landing + long-fall look-down + 2 framing zones (Denial arena, backtrack reveal); focus objects VS (weight ≤ 0.4, never enemy lock-on); manual look up/down not planned (no ninth verb — TR-INP-004; down-zone = Crouch); zoom rejected through VS (breaks D1 integer scale, mobile fill-rate; cutscene zoom-in spike later). Engine feasibility items → godot-specialist / technical-artist at authoring. Source: the Inbound Shovel camera devlog + game-designer brief.
 
 ### Polish
@@ -172,5 +172,5 @@
 | SYS-28 | Narrative Presentation | MVP | Not Started | design/gdd/narrative-presentation.md |
 | SYS-29 | Juice & Feedback | MVP | Not Started | design/gdd/juice-feedback.md |
 | SYS-30 | Endings & Final Choice | Full Vision | Not Started | design/gdd/endings.md |
-| SYS-31 | Post-Launch Hooks | Full Vision | Not Started | design/gdd/post-launch-hooks.md |
+| SYS-31 | Post-Launch Hooks | Post-Launch (Tier 3) | Not Started | design/gdd/post-launch-hooks.md |
 | SYS-32 | Camera & Framing | MVP | Not Started (working plan recorded in the Dependency Map; GDD after the SYS-01 revision lands) | design/gdd/camera-framing.md |

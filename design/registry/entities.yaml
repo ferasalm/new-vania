@@ -127,7 +127,7 @@ formulas:
     variables:
       - window_ms
       - physics_tps
-    output_range: [1, 500]
+    output_range: [1, 5000]
     expression: "window_ticks = ceil(window_ms * physics_tps / 1000)"
     notes: "Never-stingy law: effective duration always >= window_ms (ceil).
       140ms@60 -> 9 ticks (150ms effective). Rate-scaling: ms is the contract,
