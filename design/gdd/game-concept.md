@@ -20,7 +20,7 @@ A demon lord's android assassin — built from a dead woman's preserved brain �
 ## Core Fantasy & Unique Hook
 
 - **Core fantasy**: Be the slick, clever anti-hero who wins by reading the world — then discover you are the weapon, and choose whose side you're on. Includes the revenge-rematch arc (an unbeatable early foe, later crushed) and a long peak-power window.
-- **Unique hook**: Like SotN's inverted castle, AND ALSO you cast the inversion yourself — reality-shift is a combat verb — AND ALSO the recurring boss is the woman you're copied from, fought across grief stages, with one version that lowers her weapon and joins you before the demon lord executes her.
+- **Unique hook**: Like SotN's inverted castle, AND ALSO the inversion creeps forward as you work — every errand leaves reality wronger than you found it, and backtracking shows you exactly how — AND ALSO the recurring boss is the woman you're copied from, fought across grief stages, with one version that lowers her weapon and joins you before the demon lord executes her.
 
 ## Pillars
 
@@ -28,7 +28,7 @@ A demon lord's android assassin — built from a dead woman's preserved brain �
 |---|---|---|
 | SotN, Not Hollow Knight | Deliberation + RPG texture (levels, drops, gear, save sanctuaries) over twitch platforming purity | Would this design fit HK better than SotN? Then cut it |
 | Read, Then Strike | Every threat telegraphs; the clash/parry is optional mastery, never a requirement | Flashy-but-unreadable vs. readable → choose readable |
-| One World, Two Truths | The reality-shift is the single spine: traversal, combat, puzzles, story structure | A feature not expressible through shift or memory → cut it |
+| One World, Two Truths | Reality's changing truth is the single spine: traversal, puzzles, story structure | A feature not expressible through the world's changing truth or memory → cut it |
 | Five Goodbyes | The map is her mind; every region changes what we know or feel about her | An area that teaches nothing about her → it doesn't ship |
 | Remade Every Death | Death is story: cache stations, body reconstruction, the incrementing name counter | A death reduced to a plain "YOU DIED" screen → redesign it |
 
@@ -45,7 +45,7 @@ A demon lord's android assassin — built from a dead woman's preserved brain �
 
 ### 30-Second Loop
 
-Read a room → fight 2–3 telegraphed enemies (two-hit combo, optional clash with power comparison and the flashy double-clash when evenly matched, projectile deflects, mid-air attacks) → loot roll (essence + rare gear) → reach a reality seam → shift → the room is wrong now, a new path opens → move on. Juice: glitch-shift transition, hit-stop, clash sparks, soft memory chime.
+Read a room → fight 2–3 telegraphed enemies (two-hit combo, optional clash with power comparison and the flashy double-clash when evenly matched, projectile deflects, mid-air attacks, Stinger via quarter-spin + attack once granted) → loot roll (essence + rare gear) → push deeper until the errand's threshold flips the zone's truth — and when you backtrack, familiar rooms are wrong now: new paths open where reality has moved on. Juice: glitch transition at truth changes, hit-stop, clash sparks, soft memory chime.
 
 ### 5-Minute Loop
 
@@ -57,14 +57,15 @@ One session = 1–2 errands. Court briefing → dive a reality → grief-stage b
 
 ### Progression Loop (Days/Weeks)
 
-Power: one new shift rule per errand + the **Demonic Cyber Stinger** (demon lord's gift — Shift-then-Attack during the phase window punctures through an enemy, exits behind, i-frames) + XP/gear. Knowledge: assembling who really killed her father. Emotion: five goodbyes. Completion: the final choice + short epilogue shaped by it.
+Power: one new **reality law** per errand (the dive rewrites a law of reality; mutated zones obey it going forward) + ability unlocks (Dash first) + the **Demonic Cyber Stinger** (demon lord's gift — quarter-spin + Attack punctures through an enemy, exits behind, brief i-frames) + XP/gear. Knowledge: assembling who really killed her father. Emotion: five goodbyes. Completion: the final choice + short epilogue shaped by it.
 
-### Combat Verbs (3 buttons, touch-first: Attack / Jump / Shift)
+### Combat Verbs (touch-first: Attack / Jump main; Dash unlocked as an ability; contextual Interact)
 
 - Two-hit combo; committed SotN-weight attacks; mid-air versions
 - **Clash (optional parry)**: timed Attack as a strike lands — vastly stronger → stagger them; evenly matched → weapons lock and clash twice, neither staggers, flashy; weaker → you're staggered. Projectiles deflect back and can hit other enemies
-- **Shift in combat (tactical, never direct damage)**: vanish-reset (old reality loses lock), projectile denial (route enemy fire across realities), phase window (~0.4s intangible after shift), Stinger setup (Attack during window)
-- **Demonic Cyber Stinger**: the stylish lunge-through, granted by the demon lord
+- **Dash**: a movement ability LOCKED at start, gained through progression (classic MV gating); designed as the defensive repositioning answer — i-frame usage decided in the combat GDD
+- **Interact (contextual)**: cache terminals, memory pickups, seam borders, logs — one contextual button
+- **Demonic Cyber Stinger (motion input)**: quarter-spin on the floating stick + Attack — the stylish lunge-through granted by the demon lord (keyboard: ↓↘→ + Attack; gamepad same). Requires gesture buffering across all input methods
 
 ### Boss Roster (variety beyond the mirror)
 
@@ -84,17 +85,17 @@ A SotN-Holy-Glasses-analog item that reveals hidden truths/illusions in the worl
 
 ## MVP Definition
 
-Greybox/juice-first prototype (feel over visuals): one reality — ~6 rooms with one seam-shift puzzle — the Denial boss, full 3-button combat (combo, clash, deflect, shift: vanish-reset + projectile denial + phase window), one cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Success test: is room→fight→shift→loot intrinsically fun, and does clash timing feel rewarding?
+Greybox/juice-first prototype (feel over visuals): one zone — ~6 rooms with one story-threshold that flips the zone's truth mid-run, plus a backtrack reveal of an earlier flipped room — the Denial boss, core combat (combo, clash, deflect; Attack/Jump/Interact; Dash locked), one cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Two-stage prototyping: FIRST a single-mechanic combat concept-test (combo weight + clash timing + deflect feel), THEN the ACTUAL greybox MVP with the truth-flip. Success test: is room→fight→truth-change→loot intrinsically fun, does the backtrack reveal land emotionally, and does clash timing feel rewarding?
 
 ## Scope Tiers
 
 | Tier | Included scope | Target timeline / team |
 |---|---|---|
-| MVP | 1 reality, 6 rooms, Denial boss, combat + shift core, cache + death counter, 3–4 memories, greybox visuals | 2–4 weeks, solo |
+| MVP | 1 zone, 6 rooms, one story-truth-flip + backtrack reveal, Denial boss, combat core (combo/clash/deflect), cache + death counter, 3–4 memories, greybox visuals | 2–4 weeks, solo |
 | Vertical Slice | One complete errand loop: court briefing → dive (7–8 rooms) → Anger boss → report → contract choice + essence spend | 6–8 weeks cumulative, solo |
 | Full Vision | Hub + 5 realities (~35–40 rooms), 5 self-bosses + demon lord + shapeshifter + 2–3 mini-bosses, 24 memories, 5 shift rules, ~10 contracts, story-revealing item, 2 endings, touch/keyboard/gamepad, MetSys map/minimap/fog-of-war, enemy bestiary | 3–6 months, solo part-time |
 
-*Post-launch / sequel hooks (Tier 3): evidence-withholding system (present or hide proof at court), SotN-style inverted re-tour, NG+, additional endings. Production doctrine: every asset works twice — one geometry, two palettes; one rig, five grief states.*
+*Post-launch / sequel hooks (Tier 3): evidence-withholding system (present or hide proof at court), SotN-style inverted re-tour, NG+, additional endings. Production doctrine: every asset works twice where the story says — mutated zones are one geometry, two palettes; zones the story never flips are single-truth (locked or unchanged); one rig, five grief states. Story is woven into gameplay and visuals, never narrated.*
 
 ## Risks
 
@@ -130,12 +131,12 @@ Greybox/juice-first prototype (feel over visuals): one reality — ~6 rooms with
 
 - **Primary aesthetic**: Narrative + Discovery (Challenge secondary)
 - **Desired player emotion**: Catharsis through understanding, wrapped in the "slick and smart" mastery feeling
-- **Dynamics that create it**: Shift-driven repositioning/deflection creates tactical mastery; memory collection recontextualizes earlier areas; grief-stage bosses convert combat into story beats; contracts create identity tension
-- **Mechanics that enable those dynamics**: 3-button combat + clash; shift rules; memory pickups; cache stations + death counter; demon contracts
+- **Dynamics that create it**: Backtrack reveals and reality-law rewrites create discovery and dread; clash timing creates tactical mastery; memory collection recontextualizes earlier areas; grief-stage bosses convert combat into story beats; contracts create identity tension
+- **Mechanics that enable those dynamics**: committed combat + clash; reality-law mutations; memory pickups; cache stations + death counter; demon contracts
 
 ## Player Motivation Profile
 
-- **Autonomy**: Seam sequence-breaks, contract choices, optional memory detours, the final choice
+- **Autonomy**: Backtrack route-finding through mutated zones, contract choices, optional memory detours, the final choice
 - **Competence**: Telegraph-reading, clash timing, shift-rule mastery, revenge-rematch power arc
 - **Relatedness**: Her — the woman you're copied from and trying to save; her father's messages; the court's false warmth
 - **Primary player type**: Explorer-Storyteller (Discovery + Mastery + Fantasy motivations) — the SotN camp
@@ -148,7 +149,7 @@ Greybox/juice-first prototype (feel over visuals): one reality — ~6 rooms with
 - **Challenge-skill balance**: Telegraphs + optional clash = high skill ceiling, low floor; bosses escalate across errands; contracts let players tune their own difficulty
 - **Clear goals**: Errand structure gives an explicit objective per reality; map % + memory counter serve completists
 - **Feedback**: Hit-stop, clash sparks, glitch VFX, "MEMORY CACHED" text, incrementing name counter, memory chime, bestiary lore confirming understanding
-- **Agency and focus**: Save rooms as sanctuaries (RE anchor); court reports as session bookends; seam-breaking rewards curiosity without punishing progress
+- **Agency and focus**: Save rooms as sanctuaries (RE anchor); court reports as session bookends; backtrack exploration through mutated zones rewards curiosity without punishing progress
 
 ## Open Questions
 
@@ -156,5 +157,8 @@ Greybox/juice-first prototype (feel over visuals): one reality — ~6 rooms with
 - Story-revealing item: name and exact mechanics (candidates: father's locket, optic implant, preserved brain resonance)
 - Shapeshifter design: copies the player's moveset, or mimics her across grief stages?
 - Does the demon lord ever address the player's death-counter number (e.g., "004") as a story hook?
-- Engine version pin and reference docs — resolve via `/setup-engine`
+- Engine version pin: RESOLVED — Godot 4.7.2 pinned 2026-11-11 (`/setup-engine` complete; reference docs verified)
+- Defensive answer in combat now that shift tactics are gone: Dash i-frames vs clash-as-only-defense — decide in the combat GDD
+- Zone-mutation budget: how many zones are dual-truth in Full Vision (mutation scoping doctrine)
+- Stinger gesture details: touch quarter-spin tolerance window, keyboard ↓↘→ input buffer length
 - License verification for all inbox packs before promotion to `assets/` (recorded in `assets/LICENSE-MANIFEST.md`)
