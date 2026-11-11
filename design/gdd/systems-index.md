@@ -42,6 +42,7 @@
 | SYS-29 | Juice & Feedback | Presentation | Yes (minimal) | SYS-08, SYS-06 | technical-artist + gameplay-programmer |
 | SYS-30 | Endings & Final Choice | Polish | No (Full Vision) | SYS-05, SYS-19, SYS-22 | narrative-director |
 | SYS-31 | Post-Launch Hooks | Polish | No (Tier 3) | SYS-30 | game-designer |
+| SYS-32 | Camera & Framing | Presentation | Yes (minimal) | SYS-01, SYS-02, SYS-06 | game-designer + gameplay-programmer |
 
 ## Dependency Map
 
@@ -85,6 +86,7 @@
 - SYS-27 Memory Gallery & Bestiary → depends on SYS-20, SYS-13
 - SYS-28 Narrative Presentation → depends on SYS-05 (logs, briefings, reports — text-only)
 - SYS-29 Juice & Feedback → depends on SYS-08, SYS-06 (hit-stop, clash sparks, glitch transition, chime)
+- SYS-32 Camera & Framing → depends on SYS-01 (D1 render model: world SubViewport at safe-derived integer scale, native HUD; camera reads no input), SYS-02 (room bounds = default limits), SYS-06 (facing/velocity/grounded/wall-cling/body-busy/backdash/knockback publication). Feeds SYS-29 (shake offset, clamped to limits; follow runs on the game clock), SYS-14 (boss-arena locks), SYS-10/11 (hold target through the truth flip; reveal framing zone), SYS-24 (thumb-coverage caps). **Working plan (user-accepted 2026-11-11, from the camera brief — playtest-tunable, GDD pending):** room limits first, in-room directors/false boundaries at VS only where a secret must sit inside a room; MVP = follow + small facing-keyed look-ahead with a commit delay (~32 px, frozen during attacks/backdash/knockback/hit-stop) + vertical move only on landing + long-fall look-down + 2 framing zones (Denial arena, backtrack reveal); focus objects VS (weight ≤ 0.4, never enemy lock-on); manual look up/down not planned (no ninth verb — TR-INP-004; down-zone = Crouch); zoom rejected through VS (breaks D1 integer scale, mobile fill-rate; cutscene zoom-in spike later). Engine feasibility items → godot-specialist / technical-artist at authoring. Source: the Inbound Shovel camera devlog + game-designer brief.
 
 ### Polish
 
@@ -106,21 +108,22 @@
 4. SYS-07 Health & Damage
 5. SYS-29 Juice & Feedback
 6. SYS-02 Room & World Structure (MetSys)
-7. SYS-09 Dual-Reality State & Rendering
-8. SYS-10 World Mutation & Epochs
-9. SYS-11 Seam Borders
-10. SYS-03 Save & Serialization
-11. SYS-15 Cache Stations & Death-as-Story
-12. SYS-13 Enemy AI & Telegraphs
-13. SYS-14 Grief-Boss Framework
-14. SYS-20 Memory Fragments
-15. SYS-04 Audio Core
-16. SYS-05 Game Flow & Session Structure
-17. SYS-24 HUD
-18. SYS-12 Motion Input / Stinger
-19. SYS-16 Progression → SYS-17 Inventory → SYS-18 Essence → SYS-19 Contracts → SYS-21 Reality-Laws
-20. SYS-25 Map/Fog → SYS-26 Sanctuary Menus → SYS-27 Gallery/Bestiary → SYS-28 Narrative
-21. SYS-22 Story-Revealing Item → SYS-23 Variety Bosses → SYS-30 Endings → SYS-31 Post-Launch
+7. SYS-32 Camera & Framing
+8. SYS-09 Dual-Reality State & Rendering
+9. SYS-10 World Mutation & Epochs
+10. SYS-11 Seam Borders
+11. SYS-03 Save & Serialization
+12. SYS-15 Cache Stations & Death-as-Story
+13. SYS-13 Enemy AI & Telegraphs
+14. SYS-14 Grief-Boss Framework
+15. SYS-20 Memory Fragments
+16. SYS-04 Audio Core
+17. SYS-05 Game Flow & Session Structure
+18. SYS-24 HUD
+19. SYS-12 Motion Input / Stinger
+20. SYS-16 Progression → SYS-17 Inventory → SYS-18 Essence → SYS-19 Contracts → SYS-21 Reality-Laws
+21. SYS-25 Map/Fog → SYS-26 Sanctuary Menus → SYS-27 Gallery/Bestiary → SYS-28 Narrative
+22. SYS-22 Story-Revealing Item → SYS-23 Variety Bosses → SYS-30 Endings → SYS-31 Post-Launch
 
 > **Fast-lane note (approved 2026-11-11):** Prototype 1 (combat concept-test) runs BEFORE formal GDDs — it uses a bullet spec, not a GDD. Formal authoring via /design-system resumes with the systems that survive the prototype, in the order above.
 
@@ -170,3 +173,4 @@
 | SYS-29 | Juice & Feedback | MVP | Not Started | design/gdd/juice-feedback.md |
 | SYS-30 | Endings & Final Choice | Full Vision | Not Started | design/gdd/endings.md |
 | SYS-31 | Post-Launch Hooks | Full Vision | Not Started | design/gdd/post-launch-hooks.md |
+| SYS-32 | Camera & Framing | MVP | Not Started (working plan recorded in the Dependency Map; GDD after the SYS-01 revision lands) | design/gdd/camera-framing.md |
