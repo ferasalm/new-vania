@@ -34,7 +34,7 @@ A demon lord's android assassin — built from a dead woman's preserved brain �
 
 ### Anti-Pillars
 
-- We will NOT do helpless horror — the player always has attack and shift (compromises Read, Then Strike)
+- We will NOT do helpless horror — the player always has attack and clash, with Dash arriving as an unlock (compromises Read, Then Strike)
 - We will NOT do timers or speed pressure — deliberation is the fantasy (compromises Read, Then Strike)
 - We will NOT do endless multiverse content — 5 realities + hub + final room, boss variety within budget (compromises Five Goodbyes and scope)
 - We will NOT do stat-spreadsheet menus — lean RPG (compromises touch-first simplicity)
@@ -57,15 +57,19 @@ One session = 1–2 errands. Court briefing → dive a reality → grief-stage b
 
 ### Progression Loop (Days/Weeks)
 
-Power: one new **reality law** per errand (the dive rewrites a law of reality; mutated zones obey it going forward) + ability unlocks (Dash first) + the **Demonic Cyber Stinger** (demon lord's gift — quarter-spin + Attack punctures through an enemy, exits behind, brief i-frames) + XP/gear. Knowledge: assembling who really killed her father. Emotion: five goodbyes. Completion: the final choice + short epilogue shaped by it.
+Power: one new **reality law** per errand (the dive rewrites a law of reality; mutated zones obey it going forward) + ability unlocks (Dash first, then Wall Jump, then Double Jump) + the **Demonic Cyber Stinger** (demon lord's gift — quarter-spin + Attack punctures through an enemy, exits behind, brief i-frames) + XP/gear. Knowledge: assembling who really killed her father. Emotion: five goodbyes. Completion: the final choice + short epilogue shaped by it.
 
 ### Combat Verbs (touch-first: Attack / Jump main; Dash unlocked as an ability; contextual Interact)
 
 - Two-hit combo; committed SotN-weight attacks; mid-air versions
 - **Clash (optional parry)**: timed Attack as a strike lands — vastly stronger → stagger them; evenly matched → weapons lock and clash twice, neither staggers, flashy; weaker → you're staggered. Projectiles deflect back and can hit other enemies
 - **Dash**: a movement ability LOCKED at start, gained through progression (classic MV gating); designed as the defensive repositioning answer — i-frame usage decided in the combat GDD
+- **Backdash (day-one)**: double-tap back — brief i-frames, quick backward hop (SotN-exact); joins the defensive family (backdash · Dash · clash; i-frame rules decided in the combat GDD)
+- **Wall Jump (ability-unlocked, after Dash)**: wall-slide + jump-off; generous physics, no stamina — the two-wall shaft climb is a deliberate read, never a reflex test
+- **Double Jump (ability-unlocked, after Wall Jump)**: the Leap-Stone-style relic moment — the map changes meaning when she can jump twice
 - **Interact (contextual)**: cache terminals, memory pickups, seam borders, logs — one contextual button
 - **Demonic Cyber Stinger (motion input)**: quarter-spin on the floating stick + Attack — the stylish lunge-through granted by the demon lord (keyboard: ↓↘→ + Attack; gamepad same). Requires gesture buffering across all input methods
+- **Unhinted tech**: emergent chains (e.g., backdash dodge → Stinger counter) are real and NEVER taught — no tutorial, log, or bestiary hint; the player figures them out. Guard: both gestures stay natural enough to stumble into (SotN playground-culture depth)
 
 ### Boss Roster (variety beyond the mirror)
 

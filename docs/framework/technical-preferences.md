@@ -17,7 +17,7 @@
 
 - **Target Platforms**: Mobile (iOS/Android) primary; PC (itch.io demo → Steam) secondary
 - **Input Methods**: Touch, Keyboard, Gamepad
-- **Primary Input**: Touch (floating stick + 3 buttons: Attack / Jump / Shift)
+- **Primary Input**: Touch (floating stick + Attack/Jump buttons; contextual Interact bubble; Quick-use Item via HUD chip hold; Dash socket dormant until unlocked — post-pivot verb set per `design/gdd/input-control-mapping.md`)
 - **Gamepad Support**: Partial (keyboard + gamepad supported from day one on PC)
 - **Touch Support**: Full (touch-first design; all UI must work with touch)
 - **Platform Notes**: Base art resolution ~480×270 with integer scaling; enemies separate from backdrops by value (2px), never opacity pulses; no hover-only interactions; telegraphs = color-flash + shape

@@ -55,7 +55,7 @@
 
 ### Core
 
-- SYS-06 Movement → depends on SYS-01 (committed SotN arcs; Dash is an ability gate — locked at start)
+- SYS-06 Movement → depends on SYS-01 (committed SotN arcs; Dash is an ability gate — locked at start; traversal ladder Dash → Wall Jump → Double Jump as behavior-level gates on Jump; Backdash day-one, SotN-exact double-tap back)
 - SYS-07 Health & Damage → no upstream deps (data layer for combat)
 - SYS-08 Combat → depends on SYS-01, SYS-06, SYS-07 (combo, clash, deflect)
 - SYS-09 Dual-Reality State & Rendering → depends on SYS-02 (epoch-driven: one geometry, two palettes; shift shader for transitions)
@@ -68,7 +68,7 @@
 
 ### Feature
 
-- SYS-16 Progression → depends on SYS-08, SYS-13 (lean RPG texture)
+- SYS-16 Progression → depends on SYS-08, SYS-13 (lean RPG texture; ability unlock ladder: Dash → Wall Jump → Double Jump)
 - SYS-17 Inventory & Items → depends on SYS-16
 - SYS-18 Essence Economy → depends on SYS-16
 - SYS-19 Demon Contracts & Corruption → depends on SYS-16, SYS-05
