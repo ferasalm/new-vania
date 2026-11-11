@@ -16,7 +16,7 @@ const PLAYER_CENTER := Vector2(0.0, -20.0)  # mid-body, relative to player origi
 
 func _physics_process(delta: float) -> void:
 	position += velocity * delta
-	if position.x < -50.0 or position.x > 1010.0 or position.y > 600.0:
+	if position.x < -50.0 or position.x > 1010.0 or position.y > 600.0 or position.y < -200.0:
 		queue_free()
 		return
 	var p: Variant = main.get("player")

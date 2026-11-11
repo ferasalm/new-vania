@@ -31,8 +31,9 @@ responsiveness, hit-stop impact read, and the subjective "want to keep fighting 
 | `projectile.gd` | ✅ DONE | Deflect on active hitbox (flips toward facing); friendly orbs deal 15 |
 | `README.md` | ✅ DONE | Run instructions + test protocol + tuning map + interpretation notes |
 
-After all files exist: smoke-test headless
-`C:\Users\AUC\opencode-workspace\tools\Godot\Godot_v4.7.2-stable_win64.exe --headless --path prototypes/combat-concept-test --quit-after 120`
+After all files exist: smoke-test headless (requires a Godot 4.7.2 binary; if not on
+`PATH`, substitute your local editor binary's full path)
+`godot --headless --path prototypes/combat-concept-test --quit-after 120`
 (fix any script errors), then hand to the designer for playtest, then fill REPORT.md.
 
 ## Mechanics contract (build EXACTLY this)

@@ -1,7 +1,7 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # Question: Does committed SotN-weight combat (combo + clash + deflect) feel rewarding?
 # Date: 2026-11-11
-# ALL feel tunables live here. Tweak, press F5 (or R to hot-reload-ish: restart scene), judge.
+# ALL feel tunables live here. Tweak, press F5 (restarts the scene), judge.
 
 extends Node
 
@@ -59,7 +59,7 @@ const ORB_SPEED_DEFLECTED := 360.0
 const ORB_DAMAGE := 8
 
 # --- World ---
-const FLOOR_Y := 540.0
+const FLOOR_Y := 520.0
 const ARENA_MIN_X := 40.0
 const ARENA_MAX_X := 920.0
 const PLAYER_HP := 100
