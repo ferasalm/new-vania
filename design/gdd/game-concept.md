@@ -89,7 +89,7 @@ A SotN-Holy-Glasses-analog item that reveals hidden truths/illusions in the worl
 
 ## MVP Definition
 
-Greybox/juice-first prototype (feel over visuals): one zone — ~6 rooms with one story-threshold that flips the zone's truth mid-run, plus a backtrack reveal of an earlier flipped room — the Denial boss, core combat (combo, clash, deflect; Attack/Jump/Interact; Dash locked), one cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Two-stage prototyping: FIRST a single-mechanic combat concept-test (combo weight + clash timing + deflect feel), THEN the ACTUAL greybox MVP with the truth-flip. Success test: is room→fight→truth-change→loot intrinsically fun, does the backtrack reveal land emotionally, and does clash timing feel rewarding?
+Greybox/juice-first prototype (feel over visuals): one zone — ~6 rooms with one story-threshold that flips the zone's truth mid-run, plus a backtrack reveal of an earlier flipped room — the Denial boss, core combat (combo, clash, deflect; Attack/Jump/Interact), movement state Crouch (stick down-zone), day-one Backdash (double-tap-back + a11y press); Dash locked. One cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Two-stage prototyping: FIRST a single-mechanic combat concept-test (combo weight + clash timing + deflect feel), THEN the ACTUAL greybox MVP with the truth-flip. Success test: is room→fight→truth-change→loot intrinsically fun, does the backtrack reveal land emotionally, and does clash timing feel rewarding?
 
 ## Scope Tiers
 

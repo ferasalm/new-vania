@@ -47,7 +47,7 @@
 
 ### Foundation
 
-- SYS-01 Input & Control Mapping — no dependencies (Attack / Jump main; Dash = ability-unlocked; contextual Interact; unified across touch/KB/gamepad). Coordination authority: SYS-05 owns the context state machine, input enforces gates. UX flag: `/ux-design` for the Recalibration screen + touch help overlay before UI stories
+- SYS-01 Input & Control Mapping — no dependencies (Attack / Jump main; Dash = ability-unlocked; Backdash day-one — double-tap back + a11y direct press; contextual Interact; unified across touch/KB/gamepad; **landscape-primary at MVP** — review ruling D-1, portrait = post-MVP re-audit; landscape safe-area floors sides 59 / bottom 48 / top 0). Soft downstream: SYS-02/15 Prompt Slot; SYS-29 clock/haptics; SYS-12 VS. Backdash facing latch at press1; Movement owns facing publication + hop-lock rate. Coordination authority: SYS-05 owns the context state machine, input enforces gates. UX flag: `/ux-design` for the Recalibration screen + touch help overlay before UI stories
 - SYS-02 Room & World Structure (MetSys) — no dependencies (16px grid, room graph, doors)
 - SYS-03 Save & Serialization — no dependencies (world truth, designation counter, memories)
 - SYS-04 Audio Core — no dependencies
@@ -139,7 +139,7 @@
 
 | ID | System | Priority tier | GDD status | GDD path |
 |---|---|---|---|---|
-| SYS-01 | Input & Control Mapping | MVP | Designed (pending review); CD-GDD-ALIGN: CONCERNS (accepted) 2026-11-11 | design/gdd/input-control-mapping.md |
+| SYS-01 | Input & Control Mapping | MVP | In Review — re-review #5 NEEDS REVISION 2026-11-11 (14 blockers, 5/17 prior fixed; D1–D6 user decisions pending; next: fresh-session revision under the altitude law, then diff-scoped re-review #6; ADR = engine-probe spike only). Earlier state — re-review #4 revision applied 2026-11-11 (verdict NEEDS REVISION: 10/10 prior blockers verified fixed; 17 new blockers resolved in-session — AC-53 workload pins, backdash same-sign model R-13, V8/V21 invariants, AC-64 p10 fallback, pause disc exemption R-9, crouch a11y action R-10, Interact fallback AC-79, gate-ack phase-terminal rule, AC-54 control-run fix, AC-63 negation rule, AC-37/60 gate splits, composed stretch×safe-offset transform, window-rect derivation + ceil rounding, narrowed time_scale rider, flushing item 16; mash handoff R-11; game-concept MVP list reconciled; re-review #5 since run — see above); CD-synthesis #5: fixes piling up, doctrine held | design/gdd/input-control-mapping.md |
 | SYS-02 | Room & World Structure (MetSys) | MVP | Not Started | design/gdd/room-world-structure.md |
 | SYS-03 | Save & Serialization | MVP | Not Started | design/gdd/save-serialization.md |
 | SYS-04 | Audio Core | MVP | Not Started | design/gdd/audio-core.md |
