@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: ""
+last_updated: "2026-11-11"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -49,7 +49,18 @@ last_updated: ""
 # Attribute fields: any key stats that could appear in another GDD
 #   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: facing
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    kind: published_state
+    published_by: SYS-06 Movement
+    consumed_by: SYS-01 backdash detector (TR-INP-056)
+    values: [left, right]
+    added: 2026-11-11
+    revised: ""
 
 # Example (remove when first real entry is added):
 #
@@ -107,7 +118,22 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: ms_to_ticks
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    variables:
+      - window_ms
+      - physics_tps
+    output_range: [1, 5000]
+    expression: "window_ticks = ceil(window_ms * physics_tps / 1000)"
+    notes: "Never-stingy law: effective duration always >= window_ms (ceil).
+      140ms@60 -> 9 ticks (150ms effective). Rate-scaling: ms is the contract,
+      ticks derived; re-baseline ages through ms on rate change. GDD F-01."
+    added: 2026-11-11
+    revised: ""
 
 # Example:
 #
@@ -140,7 +166,86 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: intent_window_ms
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 140
+    unit: ms
+    notes: "Global intent-window default (the proven combo buffer). Per-verb
+      override map lives in the buffer; Combat's combo window is expected to
+      ride the same hook. TR-INP-018 / F-05."
+    added: 2026-11-11
+    revised: ""
+  - name: backdash_tap_window_ms
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 280
+    unit: ms
+    notes: "SotN-exact double-tap-back generosity window; game-clock timed
+      (ratified). CD watch item if DEVICE playtests show touch flick patterns
+      failing. TR-INP-056 / F-07."
+    added: 2026-11-11
+    revised: ""
+  - name: chip_hold_commit_ms
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 150
+    unit: ms
+    notes: "Spend-weight hold guard on the HUD item chip (touch rig only;
+      KB/pad press directly). Chip is a Reserved slot until SYS-17/SYS-24 at VS.
+      TR-INP-068 / F-09."
+    added: 2026-11-11
+    revised: ""
+  - name: dp_floor_gameplay
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 48
+    unit: dp
+    notes: "Minimum hit-target floor for gameplay controls; SYS-24 consumes via
+      hit_rect_floor (F-06). Absolute a11y floor is 44 dp (secondary UI only)."
+    added: 2026-11-11
+    revised: ""
+  - name: dp_floor_absolute
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 44
+    unit: dp
+    notes: "WCAG-derived absolute floor; compliance value, practically fixed."
+    added: 2026-11-11
+    revised: ""
+  - name: bubble_hit_dp
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 56
+    unit: dp
+    notes: "Interact bubble hit target — larger than the gameplay floor because
+      a dynamically appearing control deserves slack. TR-INP-067."
+    added: 2026-11-11
+    revised: ""
+  - name: creep_ratio
+    status: active
+    source: design/gdd/input-control-mapping.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+    value: 0.5
+    unit: ratio_of_walk_speed
+    notes: "Creep band multiplier consumed by SYS-06's speed mapping; the touch
+      rig's analog gift. Keyboard is walk-only at MVP (ratified). F-03."
+    added: 2026-11-11
+    revised: ""
 
 # Example:
 #
