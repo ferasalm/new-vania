@@ -1,113 +1,144 @@
 #!/usr/bin/env node
 /**
- * Detects and repairs inert `.opencode/{agents,commands,skills,rules}` entries.
+ * Create or repair the `.opencode/{agents,commands,skills,rules}` mirrors.
  *
- * These paths are committed as git symlinks pointing at `../.agents/<name>`.
- * On Windows, `git checkout` materializes symlinks as real OS symlinks only
- * when `core.symlinks=true` is set (which itself requires Developer Mode or
- * admin rights). With the default `core.symlinks=false`, git instead writes
- * a small plain-text file containing the link target string — which silently
- * breaks OpenCode's `.opencode/`-based agent/skill/command/rule discovery.
+ * These paths are **generated, not tracked**. `.gitignore` excludes them and
+ * `npm install` runs this script through the `prepare` script, so every clone
+ * materialises them the same way:
  *
- * This script detects that broken state and repairs it by replacing the stub
- * file with a real directory symlink/junction pointing at the canonical
- * `.agents/<name>` directory.
+ *   - Windows: an NTFS junction (no Developer Mode or admin rights needed)
+ *   - POSIX:   a directory symlink
  *
- * Usage: node tools/fix-opencode-symlinks.mjs [--dry-run]
+ * Why generated instead of committed: git can only represent these as
+ * symlinks (mode 120000). A Windows checkout without Developer Mode cannot
+ * create real symlinks, so it writes inert text stubs or junctions that git
+ * reads as "symlink deleted". Committing that converts the mirrors into
+ * independent copies on POSIX clones and the two trees drift silently.
+ * Removing them from the index removes the conflict instead of guarding it.
+ *
+ * Usage: node tools/fix-opencode-symlinks.mjs [--dry-run] [--check]
+ *   --check exits 1 when a link is missing or broken, without writing.
  */
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import fs from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { pathToFileURL } from "node:url"
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const LINKS = ["agents", "commands", "skills", "rules"];
-const STUB_RE = /^\.\.[\\/]\.agents[\\/][a-z-]+\s*$/i;
+export const LINKS = ["agents", "commands", "skills", "rules"]
 
-const dryRun = process.argv.includes("--dry-run");
+const STUB_RE = /^\.\.[\\/]\.agents[\\/][a-z-]+\s*$/i
 
-function classify(linkPath) {
-  if (!fs.existsSync(linkPath)) return "missing";
-  const stat = fs.lstatSync(linkPath);
-  if (stat.isSymbolicLink()) {
-    try {
-      const real = fs.realpathSync(linkPath);
-      return fs.existsSync(real) && fs.statSync(real).isDirectory()
-        ? "ok-symlink"
-        : "broken-symlink";
-    } catch {
-      return "broken-symlink";
-    }
-  }
-  if (stat.isDirectory()) return "ok-directory"; // e.g. a real materialized copy
-  if (stat.isFile()) {
-    const content = fs.readFileSync(linkPath, "utf8").trim();
-    if (STUB_RE.test(content)) return "stub-file";
-    return "unknown-file";
-  }
-  return "unknown";
+/** @returns {"missing"|"ok-symlink"|"broken-symlink"|"ok-directory"|"stub-file"|"unknown-file"|"unknown"} */
+export function classifyLink(linkPath) {
+	if (!fs.existsSync(linkPath)) return "missing"
+	const stat = fs.lstatSync(linkPath)
+	if (stat.isSymbolicLink()) {
+		try {
+			const real = fs.realpathSync(linkPath)
+			return fs.existsSync(real) && fs.statSync(real).isDirectory() ? "ok-symlink" : "broken-symlink"
+		} catch {
+			return "broken-symlink"
+		}
+	}
+	if (stat.isDirectory()) return "ok-directory"
+	if (stat.isFile()) {
+		const content = fs.readFileSync(linkPath, "utf8").trim()
+		return STUB_RE.test(content) ? "stub-file" : "unknown-file"
+	}
+	return "unknown"
 }
 
-function repair(name) {
-  const linkPath = path.join(ROOT, ".opencode", name);
-  const targetRel = path.join("..", ".agents", name);
-  const targetAbs = path.join(ROOT, ".agents", name);
+function createLink(root, name) {
+	const linkPath = path.join(root, ".opencode", name)
+	const targetRel = path.join("..", ".agents", name)
+	const targetAbs = path.join(root, ".agents", name)
 
-  if (!fs.existsSync(targetAbs) || !fs.statSync(targetAbs).isDirectory()) {
-    console.error(`  ✗ ${name}: canonical source .agents/${name} does not exist — skipping`);
-    return false;
-  }
-
-  if (dryRun) {
-    console.log(`  → would replace .opencode/${name} with a symlink/junction to .agents/${name}`);
-    return true;
-  }
-
-  fs.rmSync(linkPath, { force: true });
-  try {
-    // 'junction' works without elevated privileges on Windows; falls back
-    // to a regular symlink type on POSIX (junction is ignored there).
-    fs.symlinkSync(targetRel, linkPath, process.platform === "win32" ? "junction" : "dir");
-  } catch (err) {
-    // Junctions require an absolute target on Windows.
-    if (process.platform === "win32") {
-      fs.symlinkSync(targetAbs, linkPath, "junction");
-    } else {
-      throw err;
-    }
-  }
-  console.log(`  ✓ ${name}: repaired -> .agents/${name}`);
-  return true;
+	fs.rmSync(linkPath, { force: true, recursive: false })
+	try {
+		fs.symlinkSync(targetRel, linkPath, process.platform === "win32" ? "junction" : "dir")
+	} catch (err) {
+		// Junctions require an absolute target on Windows.
+		if (process.platform === "win32") fs.symlinkSync(targetAbs, linkPath, "junction")
+		else throw err
+	}
 }
 
-console.log("Checking .opencode/{agents,commands,skills,rules}...\n");
+/**
+ * Ensure every mirror exists and resolves.
+ * @returns {{ ok: boolean, actions: string[], failures: string[] }}
+ */
+export function ensureLinks(root, { dryRun = false } = {}) {
+	const actions = []
+	const failures = []
+	const opencode = path.join(root, ".opencode")
 
-let anyBroken = false;
-for (const name of LINKS) {
-  const linkPath = path.join(ROOT, ".opencode", name);
-  const state = classify(linkPath);
-  if (state === "ok-symlink" || state === "ok-directory") {
-    console.log(`  ✓ ${name}: OK (${state})`);
-    continue;
-  }
-  anyBroken = true;
-  console.log(`  ✗ ${name}: ${state} — this is broken, OpenCode cannot see .agents/${name}`);
-  repair(name);
+	if (!fs.existsSync(opencode)) {
+		return { ok: false, actions, failures: [".opencode/ is missing"] }
+	}
+
+	for (const name of LINKS) {
+		const linkPath = path.join(opencode, name)
+		const targetAbs = path.join(root, ".agents", name)
+		const state = classifyLink(linkPath)
+
+		if (state === "ok-symlink") {
+			actions.push(`${name}: ok`)
+			continue
+		}
+		// A real directory is a materialised copy. Never delete it; report it.
+		if (state === "ok-directory") {
+			actions.push(`${name}: ok (materialised directory, not a link)`)
+			continue
+		}
+		if (!fs.existsSync(targetAbs) || !fs.statSync(targetAbs).isDirectory()) {
+			failures.push(`${name}: canonical source .agents/${name} does not exist`)
+			continue
+		}
+		if (dryRun) {
+			actions.push(`${name}: would create link -> .agents/${name} (was ${state})`)
+			continue
+		}
+		try {
+			createLink(root, name)
+			actions.push(`${name}: created -> .agents/${name} (was ${state})`)
+		} catch (error) {
+			failures.push(`${name}: ${error.message}`)
+		}
+	}
+
+	return { ok: failures.length === 0, actions, failures }
 }
 
-if (!anyBroken) {
-  console.log("\nAll .opencode/* links are healthy. Nothing to do.");
-  process.exit(0);
+function main() {
+	const dryRun = process.argv.includes("--dry-run")
+	const check = process.argv.includes("--check")
+	const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+
+	// Not an OpenCode checkout (e.g. a packaged tarball): nothing to link.
+	if (!check && !fs.existsSync(path.join(root, ".opencode"))) {
+		console.log("ℹ No .opencode/ directory here; skipping link generation.")
+		process.exit(0)
+	}
+
+	console.log("Checking .opencode/{agents,commands,skills,rules}...\n")
+	const { ok, actions, failures } = ensureLinks(root, { dryRun: dryRun || check })
+
+	for (const action of actions) console.log(`  ${action.startsWith("ok") ? "✓" : "→"} ${action}`)
+	for (const failure of failures) console.error(`  ✗ ${failure}`)
+
+	if (check) {
+		console.log(ok ? "\nLinks are healthy." : "\nLinks are missing or broken; run `npm run fix:symlinks`.")
+		process.exit(ok ? 0 : 1)
+	}
+	console.log(
+		dryRun
+			? "\nDry run complete. Re-run without --dry-run to apply."
+			: "\nLinks ready. This runs automatically on `npm install`.",
+	)
+	process.exit(ok ? 0 : 1)
 }
 
-console.log(
-  dryRun
-    ? "\nDry run complete. Re-run without --dry-run to apply fixes."
-    : "\nRepair complete. Re-run this script any time after a fresh clone/checkout."
-);
-console.log(
-  "\nTip: to avoid this permanently, enable symlink support before cloning:\n" +
-  "  git config --global core.symlinks true\n" +
-  "  (Windows also requires Developer Mode or running git as Administrator)\n" +
-  "then re-clone, or run `git checkout -- .opencode` after enabling it."
-);
+const invokedDirectly =
+	process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href
+
+if (invokedDirectly) main()

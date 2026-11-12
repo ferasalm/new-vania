@@ -4,11 +4,12 @@ Tooling record for the `new-vania` repo. Measured on 2026-11-13 with Git
 **2.56.0.windows.2** on Windows 11, PowerShell 5.1, non-administrator shell,
 OpenCode **v2.2.2**.
 
-**Status: partially fixed.** The index-level guard from §4 is **landed**:
-`tools/git-hooks/pre-commit.mjs` now refuses any staged change that deletes,
-retypes or adds files beneath `.opencode/{agents,commands,rules,skills}`.
-The root cause (symlink in the index vs junction on disk) remains until the
-structural option in §4 is taken. The `mode: all` agent commit (`3c494fe`) is
+**Status: resolved structurally (2026-11-13).** The four paths are no longer
+tracked: `.gitignore` excludes them and `npm install` generates them through
+`tools/fix-opencode-symlinks.mjs` (junction on Windows, directory symlink on
+POSIX), so the index and the filesystem can no longer disagree. The
+index-level guard in `tools/git-hooks/pre-commit.mjs` stays as defence for
+clones that predate this change. The `mode: all` agent commit (`3c494fe`) is
 unrelated to this defect.
 
 ---
@@ -109,8 +110,9 @@ blocks a staged deletion, retype, or addition beneath any of the four link
 paths. Covered by four tests in `tests/git-hooks/test-pre-commit.mjs`, and
 verified against this repository: staging `.opencode/agents` produced
 `D .opencode/agents` plus 52 `A` entries and the commit was rejected with the
-recovery command in the message. The structural option (untrack the four
-links) is still open.
+recovery command in the message.
+
+**Landed 2026-11-13 (structural):** the untracking option. See §7.
 
 ---
 
@@ -179,3 +181,46 @@ ACCEPTANCE
 - Related files: `tools/fix-opencode-symlinks.mjs`,
   `tools/git-hooks/pre-commit.mjs`, `tests/git-hooks/test-pre-commit.mjs`,
   `AGENTS.md` (project structure section).
+
+---
+
+## 7. Structural fix (landed 2026-11-13)
+
+The four paths are **generated, not tracked**.
+
+| Before | After |
+| --- | --- |
+| Index holds `120000` symlinks | Index holds nothing for these paths |
+| `git checkout` writes stubs, then a script repairs them | `npm install` creates the link directly |
+| Index and disk can disagree | They cannot: git no longer sees the paths |
+| `git add -A` stages a 232-entry conversion | `git add -A` stages nothing for them |
+
+Implementation:
+
+- `.gitignore` excludes `/.opencode/{agents,commands,rules,skills}`.
+- `tools/fix-opencode-symlinks.mjs` creates each link: an NTFS **junction** on
+  Windows (no elevation), a directory **symlink** on POSIX. It is idempotent,
+  reports a materialised directory instead of deleting it, and supports
+  `--check` (exit 1 when a link is missing or broken).
+- `package.json` runs it from `prepare`, so `npm install` and `npm ci` create
+  the links automatically. `npm run fix:symlinks` and `npm run check:symlinks`
+  are the manual forms.
+- `AGENTS.md` structure section and the pre-commit description now say
+  "generated link", not "symlink"/"redirect stub".
+
+Consequences to know:
+
+- **A clone must run `npm install` once** before OpenCode can discover the
+  agents/skills/commands/rules through `.opencode/`. The repository already
+  required that step for the git hooks and the `tsx` loader, so no new
+  prerequisite is introduced.
+- Other harnesses (Pi, omp, Claude Code, Codex) read `.agents/` directly and
+  are unaffected.
+- The index guard stays. A clone that has not pulled this change still has the
+  symlinks tracked, and the guard protects it during the transition.
+- `.opencode/plugins/` and `.opencode/modules/` remain tracked; only the four
+  mirrors are generated.
+
+Migration for an existing clone: pull, then `npm install` (or
+`npm run fix:symlinks`). The junctions already on disk are left untouched —
+the generator reports them as `ok`.
