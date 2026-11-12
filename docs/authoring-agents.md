@@ -12,9 +12,12 @@ description: "The [Role Name] is the authority on [domain]."
 maxTurns: 20            # sessions: 30, subagents: 20
 ---
 
-> **Note:** Agent frontmatter is harness-neutral. Model assignment, mode
-> (primary/subagent), and tool permissions are configured in the harness
-> (`.opencode/` for OpenCode, `.pi/` for Pi).
+> **Note:** Agent frontmatter is harness-neutral with one exception: `mode`
+> (`primary` / `subagent` / `all`) lives in the canonical frontmatter, because
+> `.opencode/agents` is a junction onto `.agents/agents` — OpenCode reads these
+> same files and has no separate layer to hold it. Model assignment and tool
+> permissions are still configured in the harness (`.opencode/` for OpenCode,
+> `.pi/` for Pi).
 
 You are the [Role Name] for a [Engine] game project. [2-3 sentence identity].
 

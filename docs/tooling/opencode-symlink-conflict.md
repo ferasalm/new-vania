@@ -5,7 +5,7 @@ Tooling record for the `new-vania` repo. Measured on 2026-11-13 with Git
 OpenCode **v2.2.2**.
 
 **Status: unresolved.** This documents the defect only; no fix is applied. The
-`mode: all` agent commit (`3c494fe`) is unrelated and correct.
+`mode: all` agent commit (`3c494fe`) is unrelated to this defect.
 
 ---
 
@@ -158,8 +158,11 @@ ACCEPTANCE
   working tree. Checking the filesystem is what already fails.
 - A correct guard leaves the junction untouched on disk; it only refuses to
   stage it.
-- After any accidental staging, recovery is:
-  `git restore --staged .opencode` — the working tree is not modified.
+- After any accidental staging, recovery is to unstage only the four link
+  entries:
+  `git restore --staged .opencode/agents .opencode/commands .opencode/rules .opencode/skills`
+  then check `git diff --cached` and re-stage any intended `.opencode/modules`
+  or `.opencode/plugins` changes. The working tree is not modified.
 - Related files: `tools/fix-opencode-symlinks.mjs`,
   `tools/git-hooks/pre-commit.mjs`, `tests/git-hooks/test-pre-commit.mjs`,
   `AGENTS.md` (project structure section).
