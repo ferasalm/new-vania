@@ -26,8 +26,8 @@
 | SYS-13 | Enemy AI & Telegraphs | Core | Yes (2–3 types) | SYS-07 | game-designer |
 | SYS-14 | Grief-Boss Framework | Core | Yes (Denial state only) | SYS-13, SYS-08 | game-designer |
 | SYS-15 | Cache Stations & Death-as-Story | Core | Yes | SYS-03, SYS-05 | game-designer |
-| SYS-16 | Progression (XP/Gear/Levels) | Feature | No (VS) | SYS-08, SYS-13 | systems-designer |
-| SYS-17 | Inventory & Items | Feature | No (VS) | SYS-16 | game-designer |
+| SYS-16 | Progression (XP/Gear/Levels) | Feature | Yes (MVP-minimal level 1–5; full sheet VS) | SYS-07, SYS-08, SYS-13 | systems-designer |
+| SYS-17 | Inventory & Items | Feature | Yes (MVP carve-out: Suture + quick slot + restore module; full inventory VS) | SYS-07, SYS-16 | game-designer |
 | SYS-18 | Essence Economy | Feature | No (VS) | SYS-16 | economy-designer |
 | SYS-19 | Demon Contracts & Corruption | Feature | No (VS) | SYS-16, SYS-05 | game-designer + narrative-director |
 | SYS-20 | Memory Fragments | Feature | Yes (3–4 pickups + counter) | SYS-03, SYS-05 | narrative-director |
@@ -65,12 +65,12 @@
 - SYS-12 Motion Input / Stinger → depends on SYS-01, SYS-08 (quarter-spin + Attack; gesture buffering across touch/KB/gamepad)
 - SYS-13 Enemy AI & Telegraphs → depends on SYS-07 (per-reality behaviors, bestiary data)
 - SYS-14 Grief-Boss Framework → depends on SYS-13, SYS-08, SYS-32 (one rig, five states, interaction rule per state; boss-arena camera locks)
-- SYS-15 Cache Stations & Death-as-Story → depends on SYS-03, SYS-05 (MEMORY CACHED, reconstruction, designation increment)
+- SYS-15 Cache Stations & Death-as-Story → depends on SYS-03, SYS-05 (MEMORY CACHED, reconstruction, designation increment); provides the System Offline contract and training-point surface to SYS-07
 
 ### Feature
 
-- SYS-16 Progression → depends on SYS-08, SYS-13 (lean RPG texture; ability unlock ladder: Dash → Wall Jump → Double Jump — **grants flow SYS-16 → SYS-06's gates**: Dash action-level, Wall Jump/Double Jump behavior-level on Jump, TR-INP-057)
-- SYS-17 Inventory & Items → depends on SYS-16
+- SYS-16 Progression → depends on SYS-07 (MVP level 1–5 points-only data), SYS-08, SYS-13 (lean RPG texture; ability unlock ladder: Dash → Wall Jump → Double Jump — **grants flow SYS-16 → SYS-06's gates**: Dash action-level, Wall Jump/Double Jump behavior-level on Jump, TR-INP-057)
+- SYS-17 Inventory & Items → depends on SYS-07 (MVP carve-out: the Suture, the fixed quick slot, the restore module), SYS-16
 - SYS-18 Essence Economy → depends on SYS-16
 - SYS-19 Demon Contracts & Corruption → depends on SYS-16, SYS-05
 - SYS-20 Memory Fragments → depends on SYS-03, SYS-05

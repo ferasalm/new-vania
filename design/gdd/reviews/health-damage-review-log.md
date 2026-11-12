@@ -22,7 +22,7 @@ Specialists: **creative seat** (fresh-context, GLM-5.3-Flash via `game-designer`
 
 1. **T1 — the heal arithmetic was wrong.** 25 at 90/100 applies **10**, discards **15** (not "15 applied, 10 discarded"); the charge is consumed on a legal use. F-HD-06/AC-HD-31 fixed.
 2. **T2 — the progression contradiction** (same as C2/Q1). Fixed by the points-only model.
-3. **T3 — the chain cycle was 48 ticks, not 37.** Combat's W12/AC-CMB-39 measures ATK1 start → ATK2 end with ATK1's recovery cancelled: 6+5+6+5+15 = **37 ticks**. Every DPS/TTK number moved: Dirge 48.65 dmg/s, the 60 s integral 2920, T1–boss 0.617/1.233/2.467/6.167 s. F-HD-10/13, TR-HD-034, AC-HD-36 fixed.
+3. **T3 — the chain cycle is 37 ticks, not 48.** Combat's W12/AC-CMB-39 measures ATK1 start → ATK2 end with ATK1's recovery cancelled: 6+5+6+5+15 = **37 ticks**. Every DPS/TTK number moved: Dirge 48.65 dmg/s, the 60 s integral 2920, T1–boss 0.617/1.233/2.467/6.167 s. F-HD-10/13, TR-HD-034, AC-HD-36 fixed.
 4. **T4 — AC-HD-14's floor clause was wrong.** DEF 100 clamps to 25 → 4/9/15, not 1; the floor-1 case is raw 1 at DEF 25 → floor(0.75) = 0 → 1. Fixed.
 5. **T5 — the parity precision and harness.** "+9.9%" was exactly +10.0% under the Dirge denominator; the 60 s integral was 2244, not 2250; the harness frame was undefined. Fixed: the rate law (`48.65` / `52.17`, +7.2%), the 60 s integral (2920 / 3120), the light loop's +10.0% inclusive boundary, and the harness frame (infinite-HP dummy, no knockback, hit-stop excluded, melee reach).
 6. **T6 — F-HD-12 was power-2-only.** Power 1 gives 430–680 ms vs a clean 180, not 250–500 vs 1200. Fixed: the **delta is always 250–500 ms** (the stagger elapsed); both power bands stated; AC-HD-50 added.
@@ -78,7 +78,7 @@ All 27 blockers (3 creative + 13 technical + 11 QA) were revised in `design/gdd/
 - **Claim sites:** 19/19 claimed repairs present and correct (C1–C3, T1–T13, Q1–Q11 with the duplicates counted once); no failed site.
 - **Counts:** 39 TR / 15 formulas / 50 ACs / 67 edge bullets / 19 OQ rows / 15 V-HD / 32 knob rows — the header, TR-HD-039 and AC-HD-49 agree.
 - **Gate manifest:** 42 + 3 + 5 + 0 = 50; exactly one gate per AC; no gap, no duplicate; no DEVICE AC defaulting to smoke; no playtest AC in smoke; VS = 0.
-- **Arithmetic:** ATK 108/116/124/132 → 11/22/9/11 (33), 12/24/10/12 (35), 13/25/10/13 (38), 14/27/11/14 (40); counters 17/18/19/20; DEF 0/5/25 → 6/12/20, 5/11/19, 4/9/15; heal 10 applied/15 discarded; revive 66; TTK 0.617/1.233/2.467/6.167; chain 37, 48.65, 2920; Elegy 69, 52.17, +7.2%; light loop 27.27/30.0 (+10.0%); envelope 1.85/4.75; 4 points → 132/132, 2/2 → 116/116.
+- **Arithmetic:** ATK 108/116/124/132 → 11/22/9/11 (33), 12/24/10/12 (36), 13/25/10/13 (38), 14/27/11/14 (41); counters 17/18/19/20; DEF 0/5/25 → 6/12/20, 5/11/19, 4/9/15; heal 10 applied/15 discarded; revive 66; TTK 0.617/1.233/2.467/6.167; chain 37, 48.65, 2920; Elegy 69, 52.17, +7.2%; light loop 27.27/30.0 (+10.0%); envelope 1.85/4.75; 4 ATK points → 132/100, 4 HP points → 100/132, 2/2 → 116/116.
 - **Residual strings:** none of `64 edge`, `30 knob`, `37.5`, `2250`, `48 ticks`, `9.9%`, `8.0 s`, `third seed`, `AC-42 … move`, `PLAYER_ATK_PER_LEVEL`, `MVP_SUIT`, `the charge still consumed`, `the AC-54 family bars`, `gear swap`, `DEF 100 … 1`, `six playtest ACs` remain. `swing_seq` occurs once, as the intentional prohibition.
 - **Verdict: SPOT-CHECK PASS.** Three non-claim follow-ups were closed: this review log; the AC-13/Overview pipeline wording; the `ATK_BASE` → `PLAYER_ATK_BASE` naming.
 
