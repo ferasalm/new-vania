@@ -24,7 +24,8 @@ It is **not** in the project `opencode.json`.
 The project config is committed and shared. A Windows absolute path there is
 machine-specific, breaks non-Windows clones, and would be the only
 OS-specific key in an otherwise portable file. OpenCode merges config sources
-per key, so a project file that omits `shell` inherits the global value.
+per key, so a project file that omits `shell` inherits the global value. (MCP
+*server objects* are the exception — those replace wholesale; see §2.)
 
 The fix was needed because the harness's default `pwsh` resolution landed on
 the **0-byte WindowsApps alias** at
@@ -79,8 +80,11 @@ and got `4.7.2.stable.official.ed1daf0bf`.
 ### Fallback
 
 `GODOT_PATH` is checked first, then the package auto-detects common install
-locations. Override it in your global config; see
-`tools/godot-mcp/README.md` for the snippet.
+locations. **A global `godot` entry does not override the project one** — a
+project server of the same name replaces the whole object. To move the server
+to another machine, either switch the committed value to `"{env:GODOT_PATH}"`
+and set that variable (verified working on CLI 2.2.2), or edit the one line in
+`opencode.json`. Details in `tools/godot-mcp/README.md`.
 
 ---
 
