@@ -71,3 +71,47 @@ All 16 blockers were revised in `design/gdd/combat.md` on 2026-11-12. The GDD is
 - The OpenCode shell remains broken machine-wide; the review and landing ran through the documented throwaway Godot OS.execute bridge (untracked; in no commit).
 - The three review seats ran as fresh-context subagents; the creative seat used GLM-5.3-Flash (`game-designer`); the technical and QA seats used the default model (`general`). The creative seat wrote no files.
 - The authoring session was not the reviewer; the review read the GDD, ADR-0001, the approved Movement GDD, SYS-01 and the prototype report.
+
+## Re-review — 2026-11-12 — Verdict: PASS (after in-session repair)
+
+Scope signal: **S** (diff-scoped: the changed sections from the 16-blocker revision + the arithmetic/AC fixtures; no design re-open). Fresh session; the review lead was the orchestrator, not the authoring session. Seats: **technical** (fresh-context, DeepSeek V4.1 Flash via `general`) and the **mandatory qa-lead spot-check** (fresh-context, DeepSeek V4.1 Flash via `general`). No creative re-review (the design-review creative seat passed; no feel ruling changed).
+
+**Verdict at re-entry: NEEDS REVISION** — 5 blockers (2 regressions introduced by the revision, 3 arithmetic/range defects) + 6 one-clause notes. All were repaired in-session; the post-repair machine audit is **60/60 PASS** and the qa-lead spot-check is **16/16 fix sites, 6/6 fixtures, counts 34/12/48/47/10**. Final verdict: **PASS**.
+
+### The 5 blockers and their repairs
+
+1. **R1 — TR-CMB-001 never pulls a normal attack (regression from T1).** The contact-time pull was made normative, but the rule named only the strike-contact frame and the chain point; an attack pressed on a free body with no incoming strike had no pull trigger and expired silently — contradicting the states table, the dash/hop edge cases, F-CMB-12 and AC-CMB-03/05/46. Fixed: TR-CMB-001, the Interactions row and the ADR ratification row now read **"the strike-contact frame, the chain point, or immediately on the first body-free tick when no contact is pending"**; a held press that never contacts is pulled when its window closes — **never silently lost** (SYS-01's promise).
+2. **R2 — AC-CMB-39's W12 was arithmetically impossible (regression from Q2).** 10,000 ticks = 166.7 s, but the four 2,500-cycle sets need ≈ 412,500 ticks (≈ 114 h); a 37-tick chain also cannot start every 36 ticks. Fixed: W12 is now **50 chains (37 t) + 50 counter-clashes (32 t) + 50 double clashes (54 t) + 50 lose-branch cycles (42 t) + 10 clean power-2 → knockdown→getup cycles (78 t) = 9,030 busy ticks**, 970 idle/transition. The lose branch and the getup are separated (the lose branch publishes no `KnockbackOrder`, so it cannot produce a knockdown).
+3. **R3 — formula-variable ranges contradicted the knob safe ranges.** F-CMB-02 declared Active 50–120 and Recovery 100–300 while `CROUCH_ATTACK_ACTIVE_MS` is 40–80 and `AIR_ATTACK_RECOVERY_MS` is 80–160; F-CMB-06 declared `ATK.damage` 8–20 while the four damage knobs are 6–14 / 14–26 / 5–12 / 6–14. Fixed: Active **40–120**, Recovery **80–300**, `ATK.damage` **5–26**; TR-CMB-026's "power is 1" is now **"at defaults"** (the power knobs allow 1–2 and 2–3).
+4. **R4 — `ATTACK_WINDOW_MS`'s 140 ms floor could not carry the chain-from-first-tick.** The chain point is 11 ticks after ATK1's start; 140 ms = 9 ticks, so the earliest press expired before the chain. At `ATK1_STARTUP_MS = 120` (8 ticks) the chain point is 13 ticks, beyond even the 200 ms default. Fixed: the floor is **183 ms (11 ticks)**; `ATK1_STARTUP_MS` is capped at **116 ms (7 ticks)** so 7 + 5 = the 200 ms window; **V-CMB-13** added (`ms_to_ticks(ATTACK_WINDOW_MS) ≥ ATK1_startup_ticks + ATK1_active_ticks`, dev boot failure).
+5. **R5 — F-CMB-01's "overshoot ≤ 1 tick" was false per arc.** ATK1 330 ms → 22 ticks = 366.7 ms (2.20 ticks), air 270 → 300 ms (1.80). Fixed: **"< 1 tick per phase; an arc's total is the sum of its phases' overshoots — 2.2 ticks for ATK1 at 60 tps"**.
+
+### The 6 one-clause notes (all applied)
+
+- **N1 — the clash needs a free body at contact.** TR-CMB-008(a) now requires it (an attack already in its arc cannot clash; its pending press waits for the chain point). The **deflect** inherits the projected-active model (TR-CMB-015, F-CMB-10) — T1 had left the deflect evaluating the contact tick.
+- **N2 — the 84 ms floor's justification** is now "the fastest startup **at defaults** is 5 ticks" (the 60 ms crouch corner is 4; the 84 ms floor is the design floor SYS-13 authors to).
+- **N3 — TR-CMB-014 / AC-CMB-16 / AC-CMB-47 marked PROVISIONAL — blocked on OQ#7.** SYS-01 does not yet publish `stream_origin_tick`/`repeat_tag`, and its supersede law currently resets the age on every repeat, so the exemption cannot fire until the one-field amendment lands.
+- **N4 — state table:** COMBAT_IDLE exits only on "attack pulled" (clash/stagger/hit were unreachable from IDLE); STAGGER gains the "hit" exit (law 2); an **AIR_LANDING** row was added for the fifth commitment.
+- **N5 — the two summary enumerations** (Overview, Interactions `body_busy` row) now list all five commitments, including the air landing lag.
+- **N6 — the prior entry's "10 open questions"** is corrected here: **10 OQ rows, 9 open (OQ#2 closed)**. The prior entry is not edited (append-only log).
+
+### Recorded obligations (no Combat edit)
+
+- **OQ#7 — the hold-repeat contract extension** (`repeat_tag` + `stream_origin_tick`) is a one-field SYS-01/ADR amendment **before the first Combat story**; it does not re-open the SYS-01 review loop. Until it lands, TR-CMB-014/AC-CMB-16/AC-CMB-47 are PROVISIONAL.
+- **SYS-01's verb table** still records "proven 140 combo value" for the attack override while Combat declares 200 ms (legal under SYS-01's override hook; the SYS-01 row must carry 200 when it is next edited).
+- **Lose-branch economy note for SYS-07:** the clash-lose branch (500 ms stagger, no `KnockbackOrder`) is deliberately cheaper than a clean power-2 hit (1200 ms knockdown+getup); SYS-07 ratifies the gap when it consumes the `DamageEvent` boundary.
+
+### Machine audit + qa-lead spot-check (post-repair)
+
+- **qa-lead spot-check:** 16/16 claimed fixes present (2 PASS-with-note, both repaired by N5/N1), 6/6 arithmetic fixtures recomputed exactly, counts 34 TR / 12 formulas / 48 ACs / 47 edge bullets / 10 OQ rows, gate manifest 39 + 4 + 5 + 0 = 48 with exactly-one membership. **SPOT-CHECK PASS.**
+- **Machine audit (post-repair):** 60/60 — TR/AC/formula uniqueness (34/12/48), every TR cited (slash shorthand expanded; 53 citations, 34 unique), gate membership, edge/OQ counts, the 18 numeric fixtures, the 25 repair-site checks, and zero stale strings (`140–260`, `70–120`, `8–20`, `2,500`, the four-commitment summaries, the IDLE clash exit, the unqualified "fastest startup").
+- **CI:** PR #23's five checks + CodeRabbit were green pre-repair; the post-repair push re-runs them.
+
+### Sequencing after this re-review
+
+**SYS-07 Health & Damage** — consumes the `DamageEvent` boundary, the provisional damage values (ATK1 10 / ATK2 20 / crouch 8 / air 10; counter 15/30) and `KNOCKDOWN_POWER = 2`; it ratifies the economy and the lose-branch gap. Then **SYS-29 Juice** (the hit-stop pairing 70/90/40 and the haptic channel), then **SYS-13** (the enemy strike contract: `power` 1–3, `active_ms ≥ 84`, `telegraph_ms`, hitbox; the unclashable flag). OQ-M1/OQ-M2 remain the recorded Movement-side one-clause edits.
+
+### Process notes (re-review)
+
+- The OpenCode shell remains broken machine-wide; the review, the repair, the audit and the landing run through the documented throwaway Godot OS.execute bridge (untracked; in no commit).
+- Both seats ran as fresh-context subagents on **DeepSeek V4.1 Flash** (technical + QA/left-brained routing per the user's instruction); the review lead is the orchestrator. Neither seat edited a file; the repair was applied by the review lead under the user's approval.

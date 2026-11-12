@@ -1,16 +1,16 @@
 # Combat
 
-> **Status**: **In Review — NEEDS REVISION addressed in-session (2026-11-12)**. The three-seat design review (technical 8 blockers, QA 8 blockers, creative PASS) was revised in-session; a diff-scoped re-review is pending. The user-approved decisions 1–11 held; no design re-open.
+> **Status**: **APPROVED (2026-11-12 — diff-scoped re-review PASS after an in-session 5-blocker repair)**. The three-seat design review (technical 8, QA 8, creative PASS) was revised in-session; the diff-scoped re-review (changed sections + arithmetic/AC fixtures; qa-lead spot-check) then found 2 revision regressions + 3 arithmetic/range defects, all repaired in-session. The user-approved decisions 1–11 held; no design re-open.
 > **Author**: user + game-designer (creative seat, GLM-5.3-Flash) + systems-designer/gameplay-programmer (technical seat, DeepSeek V4.1 Flash)
 > **Last Updated**: 2026-11-12 (design review + in-session revision)
-> **Design Review**: NEEDS REVISION (2026-11-12) → revision applied; record at `design/gdd/reviews/combat-review-log.md`
+> **Design Review**: NEEDS REVISION (2026-11-12) → revision applied → diff-scoped re-review PASS (2026-11-12); record at `design/gdd/reviews/combat-review-log.md`
 > **Implements Pillar**: "Read, Then Strike" (every threat telegraphs; the clash is optional mastery) · "SotN, Not Hollow Knight" (committed weight, deliberate exchange) · "Remade Every Death" (the body's commitments are honest, so death is never a mishearing)
 > **System ID**: SYS-08 (Core layer, MVP)
 > **Contracts**: ADR-0001 — Input Architecture (Accepted 2026-11-12); SYS-01 `design/gdd/input-control-mapping.md` (UNFROZEN, #10 record) — TR-INP-013/014/019/020/021/022/024/028/029/047/056/057/066/070/075/076, F-01/F-05/F-07/F-08, EX-1/EX-5, AC-18/AC-65; SYS-06 `design/gdd/movement.md` (APPROVED 2026-11-12) — `facing`/`grounded`/`body_busy`, `crouch_effective` + posture-carry, `KnockbackOrder {dir, power}`, `KNOCKDOWN_POWER`, `BACKDASH_IFRAME_MS`, derived `worst_case_arc_ms` 1200, `move_refused`, `freeze_hold`.
 
 ## Overview
 
-The Combat system is the exchange half of the trust contract: it turns SYS-01's honored attack presses and SYS-06's committed body into a deliberate, readable fight. It owns the attack arcs (ATK1 → ATK2, crouch, air), the chain point and combo custody, the clash — eligibility, power comparison, counter-clash, double clash, the lose branch — projectile deflect, the player's commitments (attack arc, clash lock, stagger, hit-stop pairing), the defensive family's i-frame grants (backdash 140 ms, Dash 0, clash 0, getup 300 ms), the `DamageEvent`/`KnockbackOrder` boundary to SYS-07/SYS-06, and the enemy-strike contract it consumes from SYS-13. It never reads `Input` directly and never owns HP: input promises the press, Combat promises the answer, SYS-07 owns the number. Without it the game loses the pillar's central bet — a fight where the read is the skill, the clash is the reward, and mashing is never the answer.
+The Combat system is the exchange half of the trust contract: it turns SYS-01's honored attack presses and SYS-06's committed body into a deliberate, readable fight. It owns the attack arcs (ATK1 → ATK2, crouch, air), the chain point and combo custody, the clash — eligibility, power comparison, counter-clash, double clash, the lose branch — projectile deflect, the player's commitments (attack arc, air landing lag, clash lock, stagger, hit-stop pairing), the defensive family's i-frame grants (backdash 140 ms, Dash 0, clash 0, getup 300 ms), the `DamageEvent`/`KnockbackOrder` boundary to SYS-07/SYS-06, and the enemy-strike contract it consumes from SYS-13. It never reads `Input` directly and never owns HP: input promises the press, Combat promises the answer, SYS-07 owns the number. Without it the game loses the pillar's central bet — a fight where the read is the skill, the clash is the reward, and mashing is never the answer.
 
 → *Implementation patterns (CombatCore reducer, hitbox probes, commitment publication, the freeze pairing) are ADR raw material for the planned **Combat Architecture ADR**; this GDD stays at the behavior level. The input contracts it consumes are ratified by **ADR-0001**; the body contracts by the approved **Movement GDD**.*
 
@@ -67,7 +67,7 @@ Playtesters say: "I saw it coming"; "I knew when to hit it"; "I pressed a little
 
 #### 1 · The combat contract — consume, never poll
 
-- **TR-CMB-001 — Consume, never poll.** SYS-08 consumes attack presses through the InputBus (`PulledIntent {verb, press_tick, snapshot, gesture_tag}`); it never calls `Input.*`. The attack override is `ATTACK_WINDOW_MS = 200` (12 ticks at 60 tps), set through SYS-01's override hook; the global `INTENT_WINDOW_MS` stays 140. Combat pulls the held attack at the strike-contact frame (TR-INP-020) or the chain point; the intent's `press_tick` and supersede recency are exposed (TR-INP-022's handoff). The attack hitbox is placed on the published `facing` side, read at the pull. *Test: a mocked intent stream behaves identically to a human capture; `src/combat/` contains no direct-Input symbol (CI grep); the hitbox side follows `facing`.*
+- **TR-CMB-001 — Consume, never poll.** SYS-08 consumes attack presses through the InputBus (`PulledIntent {verb, press_tick, snapshot, gesture_tag}`); it never calls `Input.*`. The attack override is `ATTACK_WINDOW_MS = 200` (12 ticks at 60 tps), set through SYS-01's override hook; the global `INTENT_WINDOW_MS` stays 140. Combat pulls the held attack at the strike-contact frame (TR-INP-020), the chain point, or immediately on the first body-free tick when no contact is pending (the normal attack); a held press that never contacts is pulled when its window closes — never silently lost. The intent's `press_tick` and supersede recency are exposed (TR-INP-022's handoff). The attack hitbox is placed on the published `facing` side, read at the pull. *Test: a mocked intent stream behaves identically to a human capture; `src/combat/` contains no direct-Input symbol (CI grep); the hitbox side follows `facing`.*
 - **TR-CMB-002 — No new verbs, no ninth body verb.** Attack, crouch attack, air attack, clash and deflect are Combat states produced from (verb press + body state); they add zero registry entries. The eight body verbs are SYS-01's. *Test: the registry diff is empty; input-layer files unchanged.*
 - **TR-CMB-003 — Data-driven arcs.** Every phase, damage, power, lock, hit-stop, i-frame, multiplier and hitbox is a Tuning Knob; no gameplay literal in code. *Test: changing a knob changes behavior with no code edit.*
 
@@ -80,14 +80,14 @@ Playtesters say: "I saw it coming"; "I knew when to hit it"; "I pressed a little
 
 #### 3 · The clash
 
-- **TR-CMB-008 — Clash eligibility (the press-age gate).** A clash is possible when (a) the enemy strike's hitbox contacts the player's hurtbox at `contact_tick` — the pull tick; (b) the press-age gate passes at the pull: for a discrete tap, `CLASH_MIN_AGE_TICKS = 5 ≤ age ≤ CLASH_MAX_AGE_TICKS = 12`; for a hold-repeat stream, `age ≥ 5` (the upper bound is waived — the repeats keep the order alive); and (c) the attack's **projected** active window (start at `contact_tick + startup_ticks`) still overlaps the enemy's active window — the enemy's remaining active window must be ≥ the attack's startup + 1 tick. A fresh press (age < 5) is not eligible. The clash resolves at the attack's projected active start; the hit-stop/lock starts there. *Test: age 4 loses, 5 passes, 12 passes, 13 is not offered; a fresh press is ineligible; the projected active start is `contact + startup`; the enemy's active must cover it.*
+- **TR-CMB-008 — Clash eligibility (the press-age gate).** A clash is possible when (a) the enemy strike's hitbox contacts the player's hurtbox at `contact_tick` — the pull tick — and the body is free at `contact_tick` (an attack already in its arc cannot clash; its pending press waits for the chain point); (b) the press-age gate passes at the pull: for a discrete tap, `CLASH_MIN_AGE_TICKS = 5 ≤ age ≤ CLASH_MAX_AGE_TICKS = 12`; for a hold-repeat stream, `age ≥ 5` (the upper bound is waived — the repeats keep the order alive); and (c) the attack's **projected** active window (start at `contact_tick + startup_ticks`) still overlaps the enemy's active window — the enemy's remaining active window must be ≥ the attack's startup + 1 tick. A fresh press (age < 5) is not eligible. The clash resolves at the attack's projected active start; the hit-stop/lock starts there. *Test: age 4 loses, 5 passes, 12 passes, 13 is not offered; a fresh press is ineligible; the projected active start is `contact + startup`; the enemy's active must cover it.*
 - **TR-CMB-009 — Clash resolution.** With eligibility: `player_power > enemy_power` → **counter-clash**; `=` → **double clash**; `<` → **lose**. Without eligibility or overlap → **no clash** (the normal hit/whiff resolves). The clash is grounded-only at MVP (an air attack hits or whiffs; no air clash). *Test: the four branches resolve exactly once; the power comparison uses the strike powers, never the damage values.*
 - **TR-CMB-010 — Counter-clash damage (the reward).** The counter deals `floor(ATK.damage × COUNTER_CLASH_MULT)` with `COUNTER_CLASH_MULT = 1.5` (provisional; SYS-07 ratifies the economy): ATK1 15, ATK2 30 at defaults. The enemy is staggered (SYS-13's `ENEMY_STAGGER_MS = 800`); the player's attack arc completes; hit-stop 90 ms. *Test: ATK1 15 / ATK2 30; the enemy stagger order; no clash lock on the counter branch.*
 - **TR-CMB-011 — Double clash (the duet).** Equal powers: both weapons lock for `CLASH_LOCK_MS = 700` (42 ticks); no damage; two spark pulses within the lock (the double-beat); hit-stop 90 ms. Both bodies are committed for the lock; the player's attack is consumed; after the lock both are free. *Test: 700 ms; zero damage; both `body_busy`; the second spark pulse at the lock midpoint; no second resolution.*
 - **TR-CMB-012 — The lose branch.** Player power < enemy power: the enemy strike's damage applies; the player is staggered for `STAGGER_MS = 500` (30 ticks); the player's attack is cancelled; hit-stop 90 ms; the enemy continues its recovery. The lose branch publishes the `DamageEvent` but **no `KnockbackOrder`** — the 500 ms Combat stagger replaces the hit reaction (the weapons met; the player lost the lock, not a clean hit); the enemy's `power` does not drive Movement's `KNOCKDOWN_POWER` on this branch. *Test: the damage event; the 500 ms stagger; no knockback order; the attack arc dies; the enemy's recovery continues.*
 - **TR-CMB-013 — The mash cost (the Fresh Press rule).** A fresh press (age < `CLASH_MIN_AGE_TICKS`) is not clash-eligible: the strike lands, the attack is cancelled, the hit reaction applies. The cost is player-observable — the lost clash, the strike connecting, the hit reaction — never a silent stat. The anti-mash guarantee is SYS-01's TR-INP-022 handoff: mash-through-windup is **weakly dominated**; the single deliberate early press wins, the mash fails or pays. *Test: a 12 t/s mash loses the clash; a single early press at the same contact wins; the GUT sweep on AC-20's harness (the D6/B11 handoff) shows at least one arc timing where the single press wins and the mash fails.*
-- **TR-CMB-014 — Hold-repeat exemption (a11y).** The `ATTACK_HOLD_REPEAT` stream (SYS-01 AC-49) is exempt from the freshness cost, not from the read: the gate uses the hold's **origin** (`stream_origin_tick`), the repeats do not re-origin the order, and the power comparison still applies. The hold's selected arc at the pull is ATK1 (power 1) unless the combo state is already ATK2; the hold cannot *choose* ATK2, but a chained ATK2 still uses its power 2. The origin resets when the order is consumed (a clash/attack) and the stream re-origins on the first repeat after the body is free. *Test: a hold whose origin is ≥5 ticks survives; a hold does not auto-win a power-2 exchange; a direct tap still pays the freshness cost; the origin resets on consumption.*
-- **TR-CMB-015 — Projectile deflect.** The player's attack active window overlapping a projectile's hitbox, with the same age gate, deflects it: the projectile reverses at `DEFLECT_SPEED = 360` px/s, its owner flips to the player, its damage is the projectile's original damage (8 at the prototype default), friendly fire applies, and the deflect hit-stop is 40 ms. A fresh press does not deflect. *Test: the reversal; the deflected orb damages an enemy; the fresh press is hit; the 40 ms freeze.*
+- **TR-CMB-014 — Hold-repeat exemption (a11y).** **PROVISIONAL — blocked on OQ#7** (SYS-01 does not yet publish `stream_origin_tick`/`repeat_tag`; its supersede law currently resets the age on every repeat, so this exemption cannot fire until the one-field amendment lands). The `ATTACK_HOLD_REPEAT` stream (SYS-01 AC-49) is exempt from the freshness cost, not from the read: the gate uses the hold's **origin** (`stream_origin_tick`), the repeats do not re-origin the order, and the power comparison still applies. The hold's selected arc at the pull is ATK1 (power 1) unless the combo state is already ATK2; the hold cannot *choose* ATK2, but a chained ATK2 still uses its power 2. The origin resets when the order is consumed (a clash/attack) and the stream re-origins on the first repeat after the body is free. *Test: a hold whose origin is ≥5 ticks survives; a hold does not auto-win a power-2 exchange; a direct tap still pays the freshness cost; the origin resets on consumption.*
+- **TR-CMB-015 — Projectile deflect.** The player's **projected** attack active window (F-CMB-03's model) overlapping a projectile's hitbox, with the same age gate, deflects it: the projectile reverses at `DEFLECT_SPEED = 360` px/s, its owner flips to the player, its damage is the projectile's original damage (8 at the prototype default), friendly fire applies, and the deflect hit-stop is 40 ms. A fresh press does not deflect. *Test: the reversal; the deflected orb damages an enemy; the fresh press is hit; the 40 ms freeze.*
 
 #### 4 · The defensive family
 
@@ -107,12 +107,12 @@ Playtesters say: "I saw it coming"; "I knew when to hit it"; "I pressed a little
 #### 6 · Damage, knockback, death
 
 - **TR-CMB-025 — The damage boundary.** Combat publishes `DamageEvent {source, target, raw_damage, kind ∈ {NORMAL, COUNTER, DEFLECT, ENEMY_STRIKE}, contact_tick}`; SYS-07 owns HP, damage application, death and respawn. Combat never subtracts HP. The Combat GDD's damage values are provisional until SYS-07 ratifies the economy. *Test: a SYS-07 mock receives the event; Combat's state contains no HP field; death is SYS-07's edge.*
-- **TR-CMB-026 — The knockback order.** Combat sends `KnockbackOrder {dir, power}` to Movement: `dir = sign(target_x − source_x)` (away from the attacker), `power = strike.power` — the single strike power; the enemy contract has no separate `knockback_power`. Movement executes the motion and the lock; `KNOCKDOWN_POWER = 2` is consumed by Movement (a player hit with power ≥ 2 enters KNOCKDOWN on the hit tick; below runs KNOCKBACK). The player's ATK1/crouch/air power is 1; ATK2 is 2. The clash-lose branch publishes no `KnockbackOrder` (TR-CMB-012). *Test: a power-2 enemy strike → knockdown; power 1 → knockback; the order's direction; the 1200 ms arc; the lose branch publishes no order.*
+- **TR-CMB-026 — The knockback order.** Combat sends `KnockbackOrder {dir, power}` to Movement: `dir = sign(target_x − source_x)` (away from the attacker), `power = strike.power` — the single strike power; the enemy contract has no separate `knockback_power`. Movement executes the motion and the lock; `KNOCKDOWN_POWER = 2` is consumed by Movement (a player hit with power ≥ 2 enters KNOCKDOWN on the hit tick; below runs KNOCKBACK). The player's ATK1/crouch/air power is 1 and ATK2 is 2 at defaults (the power knobs' safe ranges are 1–2 and 2–3). The clash-lose branch publishes no `KnockbackOrder` (TR-CMB-012). *Test: a power-2 enemy strike → knockdown; power 1 → knockback; the order's direction; the 1200 ms arc; the lose branch publishes no order.*
 - **TR-CMB-027 — No re-knockdown.** During KNOCKDOWN or GETUP a further hit applies damage but starts no new lock (Movement's rule); Combat may grant the 300 ms getup i-frames. *Test: a second heavy hit during GETUP deals damage, no new lock; the getup grant covers the first 300 ms.*
 
 #### 7 · The enemy strike contract
 
-- **TR-CMB-028 — The enemy strike contract.** Every enemy strike publishes `{power ∈ 1…3, active_ms, telegraph_ms, hitbox}`; SYS-13 owns the values, Combat consumes them. `active_ms` must be ≥ 84 ms (6 ticks at 60 tps) for the clash to be possible — the fastest startup is 5 ticks and the enemy's active must cover the startup + 1 tick; the specific clashability is `remaining active ≥ startup + 1`. A shorter strike is flagged **unclashable** and the GDD records it. The telegraph must precede the active window by `telegraph_ms`; the MVP threats must be answerable with **backdash · clash · crouch** (Dash is locked). *Test: a mock contract; the unclashable flag; the telegraph precedes the active; the answerability review at SYS-13.*
+- **TR-CMB-028 — The enemy strike contract.** Every enemy strike publishes `{power ∈ 1…3, active_ms, telegraph_ms, hitbox}`; SYS-13 owns the values, Combat consumes them. `active_ms` must be ≥ 84 ms (6 ticks at 60 tps) for the clash to be possible — the fastest startup at defaults is 5 ticks and the enemy's active must cover the startup + 1 tick; the specific clashability is `remaining active ≥ startup + 1`. A shorter strike is flagged **unclashable** and the GDD records it. The telegraph must precede the active window by `telegraph_ms`; the MVP threats must be answerable with **backdash · clash · crouch** (Dash is locked). *Test: a mock contract; the unclashable flag; the telegraph precedes the active; the answerability review at SYS-13.*
 - **TR-CMB-029 — Multi-enemy resolution order.** The first contact in the tick resolves; ties break by entity id. The clash lock does not protect against a third strike: the other strikes resolve normally, and a hit during the lock cancels the player's lock and applies the hit reaction. *Test: two enemies strike the same tick — one clashes, the other hits; ties by id; the lock dies on the hit.*
 - **TR-CMB-030 — Telegraph language.** Every enemy strike telegraphs with color-flash + shape lean; opacity pulses are banned. SYS-13 owns the timing and palette; Combat's contract requires the telegraph to be readable before the active window. *Test: the static audit finds zero opacity-pulse telegraphs; the SYS-13 mock's telegraph precedes the active.*
 
@@ -129,13 +129,14 @@ Combat's player states are orthogonal to Movement's locomotion: a Combat state i
 
 | State | Enter | Exit | body_busy |
 |---|---|---|---|
-| **COMBAT_IDLE** | no Combat commitment | attack pulled; clash; stagger; hit | no |
+| **COMBAT_IDLE** | no Combat commitment | attack pulled | no |
 | **ATTACK_ATK1** | attack pulled on the ground | chain at the chain point; recovery end; hit; gate | yes |
 | **ATTACK_ATK2** | chain point + pending attack | recovery end; hit; gate | yes |
 | **ATTACK_CROUCH** | crouch attack pulled | recovery end; hit; gate | yes |
 | **ATTACK_AIR** | air attack pulled | landing (lag); recovery end; hit; gate | yes |
+| **AIR_LANDING** | air attack lands | lag end; hit; gate | yes |
 | **CLASH_LOCK** | double clash | lock end; third hit; gate | yes |
-| **STAGGER** | clash lose | stagger end; gate | yes |
+| **STAGGER** | clash lose | stagger end; hit; gate | yes |
 | **HITSTOP_PAIR** | a freeze source with a commitment | unfreeze | yes (paired) |
 | **DEAD** | SYS-07's death edge | respawn (Movement's DISABLED) | yes (context) |
 
@@ -151,9 +152,9 @@ Combat's player states are orthogonal to Movement's locomotion: a Combat state i
 
 | Contract | SYS-08 owns | Consumer owns |
 |---|---|---|
-| **Attack presses** | the pull at the contact/chain point; the arc; the clash | SYS-01: the window (200 ms override), the stamp, the custody, the supersede record |
+| **Attack presses** | the pull at the contact/chain point/body-free tick; the arc; the clash | SYS-01: the window (200 ms override), the stamp, the custody, the supersede record |
 | **Crouch + attack** | the selection from the raw channel; the crouch hurtbox read; the low hitbox | SYS-01: the raw `crouch` channel; SYS-06: `crouch_effective` + posture-carry |
-| **`body_busy`** | the Combat commitments (arc, lock, stagger, hit-stop pair); the 700 ms declaration | SYS-01: the OR; SYS-06: the locomotion locks |
+| **`body_busy`** | the Combat commitments (attack arc, air landing lag, clash lock, stagger, hit-stop pair); the 700 ms declaration | SYS-01: the OR; SYS-06: the locomotion locks |
 | **Knockback** | the vector/power computation; the order | SYS-06: the motion and the lock; SYS-07: the HP/damage/death |
 | **Damage** | the `DamageEvent`; the provisional values | SYS-07: HP, damage, death, respawn |
 | **Enemy strikes** | the clash/deflect resolution; the counter/stagger orders | SYS-13: the strike contract, telegraphs, AI; SYS-14: boss rules |
@@ -177,7 +178,7 @@ Combat's player states are orthogonal to Movement's locomotion: a Combat state i
 
 | Contract | Combat's obligation | Test |
 |---|---|---|
-| Attack presses + stamp snapshots + `press_tick`/supersede | Pull at the contact/chain point; expose the age; never read `Input`; the 200 ms override | TR-CMB-001/005; AC-CMB-01/05 |
+| Attack presses + stamp snapshots + `press_tick`/supersede | Pull at the contact/chain point/body-free tick; expose the age; never read `Input`; the 200 ms override | TR-CMB-001/005; AC-CMB-01/05 |
 | Crouch raw is the selection input; `crouch_effective` is the hurtbox | Select from the raw channel at the pull; read the applied posture for the hurtbox; posture-carry | TR-CMB-006; AC-CMB-07/08 |
 | `body_busy` OR + `worst_case_arc_ms` | Publish the commitments as levels; declare 700; coordinate with Movement's 1200 | TR-CMB-021; AC-CMB-26 |
 | Hit-stop⇒body-committed | Pair every hit-stop source with a commitment; no freeze without one | TR-CMB-022; AC-CMB-27 |
@@ -216,7 +217,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 `phase_ticks = ceil(phase_ms × physics_tps ÷ 1000)` · `arc_ticks = Σ phase_ticks`
 
-**Variables:** `phase_ms` int 1–5000; `physics_tps` int (60 pinned); `phase_ticks` int ≥ 1. **Output:** the phase boundaries; effective duration ≥ the ms contract, overshoot ≤ 1 tick. **Example:** 90 ms → 6 ticks; 70 → 5; 170 → 11.
+**Variables:** `phase_ms` int 1–5000; `physics_tps` int (60 pinned); `phase_ticks` int ≥ 1. **Output:** the phase boundaries; effective duration ≥ the ms contract, overshoot < 1 tick **per phase** (an arc's total is the sum of its phases' overshoots — 2.2 ticks for ATK1 at 60 tps). **Example:** 90 ms → 6 ticks; 70 → 5; 170 → 11.
 
 #### F-CMB-02 · attack_arc — the four arcs (TR-CMB-004)
 
@@ -227,8 +228,8 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
 | Startup | `startup_ms` | int | 60–140 | The lift; committed |
-| Active | `active_ms` | int | 50–120 | The swing; the hitbox window |
-| Recovery | `recovery_ms` | int | 100–300 | The cost of signing |
+| Active | `active_ms` | int | 40–120 | The swing; the hitbox window |
+| Recovery | `recovery_ms` | int | 80–300 | The cost of signing |
 | Chain point | `chain_point` | int | derived | The first recovery tick; ATK2 may start here |
 | Arc end | `arc_end` | int | derived | The last busy tick is `arc_end − 1` |
 
@@ -256,7 +257,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 `counter_damage = floor(ATK.damage × COUNTER_CLASH_MULT)`
 
-**Variables:** `ATK.damage` 8–20; `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 15, ATK2 30 at defaults. **Example:** ATK2 20 × 1.5 = 30; the enemy's HP is SYS-07's.
+**Variables:** `ATK.damage` 5–26; `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 15, ATK2 30 at defaults. **Example:** ATK2 20 × 1.5 = 30; the enemy's HP is SYS-07's.
 
 #### F-CMB-07 · hitstop_ticks — the beat (TR-CMB-022)
 
@@ -278,7 +279,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 #### F-CMB-10 · deflect — the return (TR-CMB-015)
 
-`deflect = (attack_active ∩ projectile_hitbox ≠ ∅) ∧ age_gate` · `deflected_speed = DEFLECT_SPEED` · `damage = projectile.damage`
+`deflect = (projected_active ∩ projectile_hitbox ≠ ∅) ∧ age_gate` · `projected_active` is F-CMB-03's window (start = `contact_tick + startup_ticks`) · `deflected_speed = DEFLECT_SPEED` · `damage = projectile.damage`
 
 **Output:** the projectile reverses, owner flips, friendly fire; hit-stop 40 ms. **Example:** an orb at 170 px/s is deflected to 360 px/s; it damages the shooter for 8.
 
@@ -401,11 +402,12 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 | V-CMB-10 | `air_landing_lag` is in the `body_busy` OR | dev boot failure | the fifth commitment is not lost |
 | V-CMB-11 | `ENEMY_ACTIVE_MS ≥ 84` (6 ticks) for a clashable strike | flag unclashable | the 5-tick startup needs 6 ticks |
 | V-CMB-12 | every hitbox knob is present or marked provisional | dev boot failure | TR-CMB-003's data-driven law |
+| V-CMB-13 | `ms_to_ticks(ATTACK_WINDOW_MS) ≥ ATK1_startup_ticks + ATK1_active_ticks` | dev boot failure | the chain-from-first-tick guarantee (AC-CMB-05) must hold at the chosen pair |
 
 | Knob | Default | Safe range | Extreme behavior | Interactions | Rule |
 |---|---|---|---|---|---|
-| `ATTACK_WINDOW_MS` | 200 | 140–260 | <140: the earliest startup press drops; >260: the mash's old presses survive | `CLASH_MAX_AGE_TICKS`; **Combat declares the value, SYS-01 owns the slot/window** | TR-CMB-001/005 |
-| `ATK1_STARTUP_MS` | 90 | 70–120 | <70: no lift; >120: the read feels late | `ATK1_ACTIVE_MS` | F-CMB-02 |
+| `ATTACK_WINDOW_MS` | 200 | 183–260 | <183: a press on ATK1's first startup tick expires before the chain point (11 ticks at the default startup); >260: the mash's old presses survive | `CLASH_MAX_AGE_TICKS`; **Combat declares the value, SYS-01 owns the slot/window** | TR-CMB-001/005 |
+| `ATK1_STARTUP_MS` | 90 | 70–116 | <70: no lift; >116: the 8-tick startup outruns the 200 ms window's chain-from-first-tick guarantee (V-CMB-13) | `ATK1_ACTIVE_MS` | F-CMB-02 |
 | `ATK1_ACTIVE_MS` | 70 | 50–90 | <50: the hitbox blinks; >90: the swing lingers | `ATK1_RECOVERY_MS` | F-CMB-02 |
 | `ATK1_RECOVERY_MS` | 170 | 120–220 | <120: no cost; >220: the punish is too long | `ATK2_STARTUP_MS` | F-CMB-02 |
 | `ATK1_DAMAGE` | 10 | 6–14 | SYS-07 economy | `ATK2_DAMAGE` | F-CMB-06 |
@@ -500,7 +502,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 - **AC-CMB-13** [GUT] *(TR-CMB-009/011)* — **GIVEN** equal powers, **WHEN** the clash resolves, **THEN** the double clash fires: 700 ms lock, zero damage, both bodies `body_busy`, two `spark_pulse` events (contact + midpoint; the visual is SYS-29's), no second resolution; after the lock both are free.
 - **AC-CMB-14** [GUT] *(TR-CMB-009/012)* — **GIVEN** player power 1 vs enemy power 2, **WHEN** the clash resolves, **THEN** the lose branch fires: the enemy strike's damage applies via a `DamageEvent`, **no `KnockbackOrder` is published**, the player is staggered 500 ms, the attack arc dies, the enemy's recovery continues.
 - **AC-CMB-15** [GUT] *(TR-CMB-013)* — **GIVEN** a 12 t/s mash and a single early press at the same contact, **WHEN** the gate runs, **THEN** the mash's newest press is fresh and loses the clash; the single early press (5–12 ticks) wins; the GUT sweep on **SYS-01 AC-20's** 600 ms arc mock shows at least one arc timing where the single press wins and the mash fails (the D6/B11 handoff).
-- **AC-CMB-16** [GUT] *(TR-CMB-014)* — **GIVEN** the a11y hold-repeat on, **WHEN** the hold's origin is ≥5 ticks at the contact, **THEN** the freshness cost is waived; the power comparison still applies; a hold does not auto-win a power-2 exchange; a direct tap still pays; the origin resets on consumption.
+- **AC-CMB-16** [GUT] *(TR-CMB-014)* — **PROVISIONAL (OQ#7).** **GIVEN** the a11y hold-repeat on, **WHEN** the hold's origin is ≥5 ticks at the contact, **THEN** the freshness cost is waived; the power comparison still applies; a hold does not auto-win a power-2 exchange; a direct tap still pays; the origin resets on consumption.
 - **AC-CMB-17** [GUT] *(TR-CMB-015, F-CMB-10)* — **GIVEN** a player attack active window overlapping a projectile with an eligible age, **WHEN** the deflect resolves, **THEN** the projectile reverses at 360 px/s, the owner flips, the damage is the projectile's (8 at default), friendly fire applies, and the hit-stop is 40 ms.
 - **AC-CMB-18** [GUT] *(TR-CMB-015)* — **GIVEN** a fresh press at the projectile contact, **WHEN** the deflect evaluates, **THEN** no deflect occurs; the projectile hits the player; the cost is observable.
 - **AC-CMB-19** [GUT] *(TR-CMB-008/028)* — **GIVEN** an enemy strike with `active_ms = 84` (6 ticks) and another with 60 ms (4 ticks), **WHEN** the clash evaluates against the 5-tick crouch startup, **THEN** the 6-tick strike is clashable (startup + 1 = 6); the 4-tick strike is flagged unclashable; the 6-tick ATK1/ATK2 startup needs a 7-tick strike (the per-arc condition); the GDD records it.
@@ -532,7 +534,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 - **AC-CMB-36** [GUT] *(TR-CMB-031)* — **GIVEN** a scripted trace, **WHEN** it is replayed twice through `CombatCore` with `FakeCombatBodyPort`, **THEN** the two traces are bit-identical; the fixture repeats bit-identically.
 - **AC-CMB-37** [GUT] *(TR-CMB-032)* — **GIVEN** the combat build, **WHEN** the CI grep runs, **THEN** `src/combat/` contains zero `Input.` symbols; all presses arrive through the InputBus.
 - **AC-CMB-38** [GUT] *(TR-CMB-033)* — **GIVEN** a 10,000-tick soak under the SYS-01 AC-54 monitors (600-tick warm-up, counters reset), **WHEN** the combat structures run, **THEN** net object delta == 0, net resource delta == 0, dynamic heap growth ≤ 256 KB, and the churn envelope ≤ 16 KB over any 1,000-tick window; the named structures are preallocated and bounded — active arc 1, commitment set 5, contact list 8, trace ring 600, hitbox probes fixed — with dev assert + production telemetry on overflow; no hot-path allocation.
-- **AC-CMB-39** [DEVICE] *(TR-CMB-033)* — **GIVEN** the QA plan §5.1 reference SKU, **WHEN** workload **W12** runs 10,000 ticks after a 600-tick warm-up, **THEN** the combat tick budget is p99.9 ≤ 0.3 ms / max ≤ 1.0 ms. **W12 definition:** 2,500 ATK1→ATK2 chains (600 ms apart), 2,500 counter-clashes (ATK2 vs power 1), 2,500 double clashes, 2,500 lose-branch + getup cycles; the enemy-strike fixture: active 120 ms, power 1/2/3, telegraph 450/850 ms; the freeze windows 70/90/40 ms; nearest-rank estimators and sample counts are the SYS-01 QA plan §5.3's. The combined SYS-01 + SYS-06 + SYS-08 bar is scoped to **S_base**: ≤ 2.0 ms p99.9 / ≤ 4.0 ms max; the S_burst combined bar is defined per the QA plan's partition (SYS-01 alone may reach 4.0 ms on a burst tick); the combined claim is the arithmetic envelope of the three individual runs, not a single W12 measurement.
+- **AC-CMB-39** [DEVICE] *(TR-CMB-033)* — **GIVEN** the QA plan §5.1 reference SKU, **WHEN** workload **W12** runs 10,000 ticks after a 600-tick warm-up, **THEN** the combat tick budget is p99.9 ≤ 0.3 ms / max ≤ 1.0 ms. **W12 definition:** 50 ATK1→ATK2 chains (37 ticks each), 50 counter-clashes (ATK2 vs power 1; 32 ticks each), 50 double clashes (54 ticks each), 50 lose-branch cycles (42 ticks each) and 10 clean power-2 hits → knockdown→getup cycles (78 ticks each) ≈ 9,030 busy ticks, the remainder idle/transition; the enemy-strike fixture: active 120 ms, power 1/2/3, telegraph 450/850 ms; the freeze windows 70/90/40 ms; nearest-rank estimators and sample counts are the SYS-01 QA plan §5.3's. The combined SYS-01 + SYS-06 + SYS-08 bar is scoped to **S_base**: ≤ 2.0 ms p99.9 / ≤ 4.0 ms max; the S_burst combined bar is defined per the QA plan's partition (SYS-01 alone may reach 4.0 ms on a burst tick); the combined claim is the arithmetic envelope of the three individual runs, not a single W12 measurement.
 - **AC-CMB-40** [GUT] *(TR-CMB-034)* — **GIVEN** the TR-CMB registry, **WHEN** the traceability audit runs, **THEN** every TR has an AC or a recorded guidance note, every formula has an AC, the counts are 34 TR / 12 formulas / 48 ACs, and no `[To be designed]` exists.
 
 ### Feel and device
@@ -543,7 +545,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 - **AC-CMB-44** [PLAYTEST] *(TR-CMB-010)* — **GIVEN** the same cohort, **WHEN** the interview codes **C6 counter-as-hit**, **THEN** ≥3/5 describe the counter-clash as a hit/reward, not as a stall or interrupt.
 - **AC-CMB-45** [PLAYTEST] *(TR-CMB-006)* — **GIVEN** the same cohort, **WHEN** the interview codes **C7 crouch-low-read**, **THEN** ≥3/5 describe the crouch as making a high attack miss and the crouch attack as the answer from below.
 - **AC-CMB-46** [DEVICE] *(TR-CMB-001)* — **GIVEN** the QA plan §7.1 device matrix and the Combat attack trace (a scripted 600-tick attack/clash trace replayed through the device input path; the trace and the enemy-strike fixture are pinned in the Combat QA plan), **WHEN** the trace runs, **THEN** every attack press is delivered once, the clash count equals the **eligible-contact count** (contacts passing F-CMB-04's age gate and the projected-active overlap), and no input failure is recorded.
-- **AC-CMB-47** [DEVICE] *(TR-CMB-014)* — **GIVEN** the `ATTACK_HOLD_REPEAT` toggle on, **WHEN** the hold-repeat stream meets a clash, **THEN** the read resolves without the freshness penalty; the hold is not the optimal counter; the scripted hold-repeat exchange completes with AC-CMB-16's expected outcome (power comparison applied, no freshness penalty), and the a11y player can complete the exchange.
+- **AC-CMB-47** [DEVICE] *(TR-CMB-014)* — **PROVISIONAL (OQ#7).** **GIVEN** the `ATTACK_HOLD_REPEAT` toggle on, **WHEN** the hold-repeat stream meets a clash, **THEN** the read resolves without the freshness penalty; the hold is not the optimal counter; the scripted hold-repeat exchange completes with AC-CMB-16's expected outcome (power comparison applied, no freshness penalty), and the a11y player can complete the exchange.
 - **AC-CMB-48** [DEVICE] *(TR-CMB-001)* — **GIVEN** three-finger play (move + attack + jump) on the device matrix, **WHEN** the combat exchange runs, **THEN** no cross-capture, no double-fire, and the attack intent resolves once.
 
 ### Playtest coding table (C1–C7)
