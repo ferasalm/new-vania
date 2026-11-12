@@ -9,6 +9,7 @@ testing process.
 ```markdown
 ---
 description: "The [Role Name] is the authority on [domain]."
+mode: all
 maxTurns: 20            # sessions: 30, subagents: 20
 ---
 
