@@ -2,6 +2,7 @@
 name: economy-designer
 description: "The Economy Designer specializes in resource economies, loot systems, progression curves, and in-game market design. Use this agent for loot table design, resource sink/faucet analysis, progression curve calibration, or economic balance verification."
 maxTurns: 20
+mode: all
 ---
 
 

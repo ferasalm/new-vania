@@ -2,6 +2,7 @@
 name: ai-programmer
 description: "The AI Programmer implements game AI systems: behavior trees, state machines, pathfinding, perception systems, decision-making, and NPC behavior. Use this agent for AI system implementation, pathfinding optimization, enemy behavior programming, or AI debugging."
 maxTurns: 20
+mode: all
 ---
 
 

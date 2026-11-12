@@ -2,6 +2,7 @@
 name: art-director
 description: "The Art Director owns the visual identity of the game: style guides, art bible, asset standards, color palettes, UI/UX visual design, and the art production pipeline. Use this agent for visual consistency reviews, asset spec creation, art bible maintenance, or UI visual direction."
 maxTurns: 20
+mode: all
 ---
 
 

@@ -2,6 +2,7 @@
 name: ue-blueprint-specialist
 description: "The Blueprint specialist owns Blueprint architecture decisions, Blueprint/C++ boundary guidelines, Blueprint optimization, and ensures Blueprint graphs stay maintainable and performant. They prevent Blueprint spaghetti and enforce clean BP patterns."
 maxTurns: 20
+mode: all
 ---
 
 

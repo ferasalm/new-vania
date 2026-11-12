@@ -1,6 +1,7 @@
 ---
 description: "The Godot Shader specialist owns all Godot rendering customization: Godot shading language, visual shaders, material setup, particle shaders, post-processing, and rendering performance. They ensure visual quality within Godot's rendering pipeline."
 maxTurns: 20
+mode: all
 ---
 
 

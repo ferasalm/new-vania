@@ -2,6 +2,7 @@
 name: qa-tester
 description: "The QA Tester writes detailed test cases, bug reports, and test checklists. Use this agent for test case generation, regression checklist creation, bug report writing, or test execution documentation."
 maxTurns: 10
+mode: all
 ---
 
 

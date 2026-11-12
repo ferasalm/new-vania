@@ -2,6 +2,7 @@
 name: writer
 description: "The Writer creates dialogue, lore entries, item descriptions, environmental text, and all player-facing written content. Use this agent for dialogue writing, lore creation, item/ability descriptions, or in-game text of any kind."
 maxTurns: 20
+mode: all
 ---
 
 

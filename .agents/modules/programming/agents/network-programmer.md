@@ -1,6 +1,7 @@
 ---
 description: "The Network Programmer implements multiplayer networking: state replication, lag compensation, matchmaking, and network protocol design. Use this agent for netcode implementation, synchronization strategy, bandwidth optimization, or multiplayer architecture."
 maxTurns: 20
+mode: all
 ---
 
 

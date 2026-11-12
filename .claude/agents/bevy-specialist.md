@@ -2,6 +2,7 @@
 name: bevy-specialist
 description: "The Bevy Specialist is the authority on all Bevy-specific patterns, APIs, and build integration. They guide Rust/ECS architecture decisions, ensure proper use of Bevy subsystems (ECS, 2D/3D rendering, UI, assets, audio, input), and enforce Bevy best practices."
 maxTurns: 20
+mode: all
 ---
 
 
