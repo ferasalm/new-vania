@@ -69,6 +69,16 @@ Seats: technical seat + qa-lead spot-check (single-session synthesis; the four-s
 - The re-review ran in the same session as the SYS-08 Combat authoring kickoff. The OpenCode shell remains broken machine-wide; git/gh ran through the documented throwaway Godot OS.execute bridge (untracked; in no commit).
 - The creative seat for SYS-08 ran as a GLM-5.3-Flash subagent (`game-designer`) with excerpts only; it returned a memo and wrote no files.
 
-### Post-approval CodeRabbit finding (PR #22) — resolved
+### Post-approval CodeRabbit findings (PR #22) — resolved
 
 - **CR-1 — posture-carry vs commitment-entry stands.** The finding was valid: TR-MOV-016's posture-carry was unscoped and could be read as applying to a crouch-held dash/jump/hop, contradicting the commitment-entry stand. Fixed as a one-clause scoping edit: **posture-carry applies to attack commitments only**; dash, jump and hop use the commitment-entry stand (they stand her up). The Combat GDD's TR-CMB-006 was aligned in the same pass. No design re-open; the re-review verdict stands.
+- **CR-2 — body-free tick vs lock interval.** TR-MOV-033/AC-MOV-13 now use the lock's `end_tick` (the level is true through `end_tick−1`) as the tick-open body-free boundary; a lock whose last busy tick is T applies at T+1.
+- **CR-3 — dash-jump vs transition law 2 / DASH row.** Transition law 2 gained the dash-jump exception; the DASH row gained the jump exit; TR-MOV-019 states the dash `body_busy` lock ends at the jump tick.
+- **CR-4 — mid-rise jump cut.** TR-MOV-011 now states the cut scales the **remaining** velocity; a mid-rise cut follows `h_total = h_gained + (v_remaining × r)² ÷ (2 × GRAVITY)`; only a jump-tick cut scales the total apex by r².
+- **CR-5 — wall-normal direction.** The `BodyPort` contract now defines `wall_normal` as pointing **away from the wall** (Godot's `get_wall_normal()` convention); F-MOV-08 uses `+wall_normal_x`.
+- **CR-6 — entity registry.** `STAND_HEIGHT`, `CROUCH_HURTBOX_RATIO`, `KNOCKDOWN_POWER`, `BACKDASH_IFRAME_MS`, the two `worst_case_arc_ms` declarations and `ATTACK_WINDOW_MS` are registered in `design/registry/entities.yaml` under their owning systems; the GDDs reference the registry facts.
+- **CR-7 — AC-MOV-05 discrete values.** The AC now asserts the 60-tps semi-implicit apexes **16.7 px ± 1** (r = 0.5) and **34.5 px ± 1** (r = √0.5), with the continuous intents 18.5/37.0 px labelled.
+- **CR-8 — AC-MOV-14 one-tick crouch.** The AC now distinguishes a one-tick value that flips back before application (no change) from a one-tick value on a grounded body-free tick (applies); the 90 ms guard is the cone-entry path's, bypassed by keyboard/latch.
+- **CR-9 — systems-index consistency.** The SYS-06 enumeration row now lists SYS-01, SYS-02, SYS-16 and SYS-05; the SYS-24 row now includes SYS-32.
+- **CR-10 — AC-MOV-11 vertical (new).** The vertical wall-jump height is **≈60.7 px ± 1** at 60 tps (continuous 64 px), matching the horizontal convention.
+- **CR-11 — SYS-06 facing cadence (new).** The SYS-06 entry states the facing cadence follows R3/§8 (re-asserted every `physics_tick`) and records the §10 erratum as pending under OQ-M2.
