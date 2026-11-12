@@ -151,3 +151,21 @@ CodeRabbit reviewed PR #23's full commit range (the Combat diff plus the SYS-06 
 ### Process notes (post-review)
 
 - The shell remains broken; the adjudication ran through the documented throwaway Godot bridge (untracked). Thread replies + resolutions were posted via the GitHub API; no reviewer prompt was executed.
+
+## Post-review CodeRabbit pass #2 — 2026-11-12 — 6 threads adjudicated
+
+Second CodeRabbit pass (on `1edbe98`/`7a43f43`). **5 valid findings repaired; 1 refuted** (the registry re-post). No reviewer prompt executed.
+
+1. **N1 — "pending contact" was undefined (TR-CMB-001).** Without a definition, a press during an enemy windup could be pulled on the first free tick, start the attack, and be body-busy at `contact_tick` — blocking the clash the Early Press promises. Fixed: a **pending contact** is an enemy strike in windup or active whose hitbox will reach the player's hurtbox within the remaining intent window (Combat reads the strike's `telegraph_ms`/`active_ms` schedule at the pull); a press with a pending contact waits for the contact frame, the chain point, or the window close.
+2. **N2 — the ATK2 counter-clash was unreachable (the major finding).** Under T1's contact-time pull, ATK1 starts at `contact_tick`, so ATK1's chain point is 11 ticks later and ATK2's projected active is 17 ticks after contact — beyond any 120 ms enemy active. A single press (ATK1, power 1) can only double-clash (vs power 1) or lose (vs 2/3), so the counter branch — the pillar's reward — could never fire. Fixed: **the clash may ride the chain** — eligibility is the body free at contact (pull = contact; ATK1/crouch/air) **or** the body in ATK1 with a pending chain press (pull = ATK1's chain point; ATK2). F-CMB-03 projects from `pull_tick`; TR-CMB-028 adds the **long-active requirement** (the enemy's remaining active ≥ 18 ticks / 300 ms from contact for the ATK2 counter); SYS-13 authors at least one power-1 heavy with that long active (the wide overhead); AC-CMB-12 uses it; W12's counter cycle is 43 ticks (ATK1 11 + ATK2 26 + hit-stop 6). The reachable matrix is now: **single press** → ATK1 vs power 1 = double, vs 2/3 = lose; **double press (chain)** → ATK2 vs power 1 = counter (30), vs 2 = double, vs 3 = lose. The ATK1 damage-10 → 15 case is F-CMB-06's **formula unit test**, not a reachable counter.
+3. **N3 — literal age thresholds.** TR-CMB-008's hold-repeat/fresh-press clauses and F-CMB-04 used literal `5`/`12` while the knob's safe range is 3–7. Fixed: the normative clauses use `CLASH_MIN_AGE_TICKS`/`CLASH_MAX_AGE_TICKS`; 5/12 remain the knob defaults and the test examples.
+4. **N4 — registry (refuted).** The entries exist: `knockdown_power` (line 273) and `backdash_iframe_ms` (line 285). No change.
+5. **N5 — deflect precision.** `projected_active` (a tick interval) ∩ `projectile_hitbox` (a spatial shape) was undefined. Fixed: the projectile's contact is **deferred** to the projected active start; the deflect samples `projectile_hitbox(projected_active_start)` against the attack's projected hitbox; no overlap → the projectile hits at that tick; an example added (orb 40 px away, 170 px/s, 6 ticks → 17 px closer, inside ATK1's 28 px reach).
+6. **N6 — AC-CMB-03's knob edit violated V-CMB-13.** `ATK1_STARTUP_MS` 90→120 (8 ticks) + 5 active = 13 > the 12-tick window. Fixed: the AC edits 90→**110** (7 ticks; 7 + 5 = 12) and asserts V-CMB-13.
+7. **N7 — systems-index progress tracker stale.** The SYS-08 progress row still said "In Review" and 700 ms; updated to **APPROVED**, `worst_case_arc_ms` **800**, the chain-clash reachability note.
+
+**Post-repair audit: 89/89 PASS** (the 34/12/48/47/10 ledger, the gate manifest, 19 numeric fixtures, 35 repair-site checks, 0 stale strings). The Combat counts are unchanged.
+
+### Process notes (pass #2)
+
+- The shell remains broken; the second pass ran through the same untracked Godot bridge. Thread replies + resolutions via the GitHub API; no reviewer prompt executed. The ATK2 reachability finding is the most consequential of the whole review — it was missed by the design review, the re-review and both re-review seats, and caught by the post-review CodeRabbit pass.

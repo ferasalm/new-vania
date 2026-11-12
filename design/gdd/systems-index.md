@@ -150,7 +150,7 @@
 | SYS-05 | Game Flow & Session Structure | MVP | Not Started | design/gdd/game-flow-session.md |
 | SYS-06 | Movement & Platforming | MVP | **APPROVED (2026-11-12 — diff-scoped re-review PASS 16/16; 15-site qa-lead spot-check; R1/R2/N1 non-blocking bookkeeping; the review loop is closed; ADR-0001 contracts ratified; derived `worst_case_arc_ms` 1200; 34 TR-MOV / 14 formulas / 49 ACs; OQ-M1 remains a one-clause SYS-01 edit before the first story)** | design/gdd/movement.md |
 | SYS-07 | Health & Damage | MVP | Not Started | design/gdd/health-damage.md |
-| SYS-08 | Combat | MVP | **In Review (2026-11-12 — GDD authored at `design/gdd/combat.md`; creative memo "The Body Answers the Read"; 34 TR-CMB / 12 formulas / 48 ACs; design review NEEDS REVISION (technical 8 + QA 8 blockers; creative PASS); all blockers revised in-session; Combat `worst_case_arc_ms` 700; 5 commitments; review record `design/gdd/reviews/combat-review-log.md`)** | design/gdd/combat.md |
+| SYS-08 | Combat | MVP | **APPROVED (2026-11-12 — diff-scoped re-review PASS after an in-session 5-blocker repair + 4 post-review CodeRabbit repairs; qa-lead spot-check 16/16 sites, 6/6 fixtures; machine audit 71/71; 34 TR-CMB / 12 formulas / 48 ACs; Combat `worst_case_arc_ms` 800; 5 commitments; the ATK2 counter is reachable via the chain clash on a long-active power-1 heavy; review record `design/gdd/reviews/combat-review-log.md`)** | design/gdd/combat.md |
 | SYS-09 | Dual-Reality State & Rendering | MVP | Not Started | design/gdd/dual-reality-state.md |
 | SYS-10 | World Mutation & Epochs | MVP | Not Started | design/gdd/world-mutation-epochs.md |
 | SYS-11 | Seam Borders | MVP | Not Started | design/gdd/seam-borders.md |
