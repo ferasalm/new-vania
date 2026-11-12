@@ -35,7 +35,10 @@
       },
       "godot": {
         "type": "local",
-        "command": ["npx", "-y", "@coding-solo/godot-mcp"],
+        "command": [
+          "node",
+          "tools/godot-mcp/node_modules/@coding-solo/godot-mcp/build/index.js"
+        ],
         "codemode": false,
         "environment": {
           "GODOT_PATH": "C:\\Users\\AUC\\opencode-workspace\\tools\\Godot\\Godot_v4.7.2-stable_win64.exe",
