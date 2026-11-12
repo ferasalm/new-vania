@@ -4,8 +4,12 @@ Tooling record for the `new-vania` repo. Measured on 2026-11-13 with Git
 **2.56.0.windows.2** on Windows 11, PowerShell 5.1, non-administrator shell,
 OpenCode **v2.2.2**.
 
-**Status: unresolved.** This documents the defect only; no fix is applied. The
-`mode: all` agent commit (`3c494fe`) is unrelated to this defect.
+**Status: partially fixed.** The index-level guard from §4 is **landed**:
+`tools/git-hooks/pre-commit.mjs` now refuses any staged change that deletes,
+retypes or adds files beneath `.opencode/{agents,commands,rules,skills}`.
+The root cause (symlink in the index vs junction on disk) remains until the
+structural option in §4 is taken. The `mode: all` agent commit (`3c494fe`) is
+unrelated to this defect.
 
 ---
 
@@ -98,6 +102,15 @@ Consequence already observed once: a `git add -A` produced a 388-file commit
 
 Recommended sequence: the index guard first (cheap, immediate), the untracking
 change second if the setup-step cost is acceptable.
+
+**Landed 2026-11-13:** `checkFrameworkLinkStaging` in
+`tools/git-hooks/pre-commit.mjs` reads `git diff --cached --name-status` and
+blocks a staged deletion, retype, or addition beneath any of the four link
+paths. Covered by four tests in `tests/git-hooks/test-pre-commit.mjs`, and
+verified against this repository: staging `.opencode/agents` produced
+`D .opencode/agents` plus 52 `A` entries and the commit was rejected with the
+recovery command in the message. The structural option (untrack the four
+links) is still open.
 
 ---
 

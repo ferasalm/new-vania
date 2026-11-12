@@ -7,6 +7,7 @@
  *   - credentials/private keys added in the staged diff
  *   - unresolved merge-conflict markers
  *   - staged files larger than 20 MB
+ *   - staged changes that convert a `.opencode/*` symlink into a directory
  *   - framework validation when `.agents/` is staged
  *   - plugin tests when `.opencode/plugins/` is staged
  *   - Claude Code mirror check when mirrored `.agents/` content or `.claude/` is staged
@@ -278,6 +279,64 @@ export function checkFrameworkLinks(root) {
 const CLAUDE_MIRROR_INPUT =
 	/^(?:\.agents\/(?:agents|skills|rules)\/|\.claude\/|tools\/sync-claude\.mjs$|tools\/lib\/(?:claude-mirror|harness-targets)\.mjs$)/
 
+/**
+ * The four `.opencode` paths tracked as symlinks to `.agents/`.
+ * On Windows without Developer Mode they exist as junctions, which git cannot
+ * represent, so a full `git add -A` stages them as "symlink deleted + N files
+ * added". Committing that turns the mirrors into independent copies on POSIX
+ * clones and the trees drift silently.
+ * @see docs/tooling/opencode-symlink-conflict.md
+ */
+export const FRAMEWORK_LINK_PATHS = [
+	".opencode/agents",
+	".opencode/commands",
+	".opencode/rules",
+	".opencode/skills",
+]
+
+const STAGE_STATUS = {
+	A: "added",
+	C: "copied",
+	D: "deleted",
+	M: "modified",
+	R: "renamed",
+	T: "type-changed",
+	U: "unmerged",
+}
+
+/**
+ * Refuse staged changes that would commit a framework link as a directory.
+ * Reads the **index**; the filesystem check below cannot see this conflict
+ * because a junction is a directory to lstat.
+ * @returns {{ errors: string[] }}
+ */
+export function checkFrameworkLinkStaging(root) {
+	const output = git(root, ["diff", "--cached", "--name-status", "--no-renames", "--no-color"])
+	const errors = []
+	const reported = new Set()
+
+	for (const line of output.split("\n")) {
+		if (!line.trim()) continue
+		const [code, ...rest] = line.split("\t")
+		const file = normalize(rest.join("\t").trim())
+		if (!file) continue
+
+		const link = FRAMEWORK_LINK_PATHS.find((path) => file === path || file.startsWith(`${path}/`))
+		if (!link || reported.has(link)) continue
+		reported.add(link)
+
+		const action = STAGE_STATUS[code[0]] ?? code
+		errors.push(
+			`${file}: staged ${action}, but ${link} is tracked as a symlink to .agents/ — committing this converts the mirror into an independent copy. ` +
+				`Run "git restore --staged ${FRAMEWORK_LINK_PATHS.join(" ")}" and stage the change under .agents/ instead ` +
+				`(docs/tooling/opencode-symlink-conflict.md).`,
+		)
+	}
+
+	return { errors }
+}
+
+
 /** Which repository gates the staged paths require. */
 export function planGates(files) {
 	const gates = []
@@ -401,11 +460,12 @@ export function evaluatePreCommit(root, env = process.env) {
 		parseAddedLines(stagedDiff(root)),
 	)
 	const { errors: sizeErrors, warnings: sizeWarnings } = checkFileSizes(root, files)
+	const { errors: linkStageErrors } = checkFrameworkLinkStaging(root)
 	const { errors: linkErrors } = checkFrameworkLinks(root)
 	const gates = runGates(root, planGates(files), env)
 
 	return {
-		errors: [...secretErrors, ...linkErrors, ...sizeErrors, ...gates.errors],
+		errors: [...secretErrors, ...linkStageErrors, ...linkErrors, ...sizeErrors, ...gates.errors],
 		warnings: [...secretWarnings, ...sizeWarnings, ...gates.warnings],
 		notes: gates.notes,
 	}
