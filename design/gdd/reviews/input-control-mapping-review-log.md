@@ -844,3 +844,47 @@ One row per changed site — claim → its named target → verdict. The verdict
 ### Sequencing after this record
 
 **Input Architecture ADR in a FRESH session** (expanded brief; the engine-probe spike is a throwaway prototype) → Acceptance (ratifies the listed laws + owns the named mechanisms; carries O1) + the QA plan completes its AC→gate ledger at 96 (carries O1) → Combat/Movement GDDs → SYS-32 camera GDD last.
+
+---
+
+## Post-unfreeze record — 2026-11-12 — ADR-0001 Accepted + the QA plan's 96-unit ledger
+
+Scope signal: S (record only — **not a review**; the #10 record is the authority;
+no new blockers, no tripwire, no loop re-open). Fresh session.
+
+**ADR-0001 — Input Architecture: Capture, Tick Pipeline, Gates, and the D1 Render
+Model** (`docs/architecture/adr-0001-input-architecture.md`) is **Accepted**
+2026-11-12. It ratifies the five laws the #10 record named — the
+first-Gameplay-tick delivery law (EX-14/AC-79), the publish-raw-every-tick law
+(B2), gate-request terminality (B4), the NB-I freeze-processing scope (EX-15),
+and the NB-J non-ack gate-entry rule — and owns the D1 SubViewport wiring,
+flip-attribution, mirror/reach-disc mechanism, and pipeline order. It carries
+**O1**. The engine-probe spike remains a throwaway prototype; no probe code is
+imported. The 16-item engine register records **2 documented, 1 reassigned, 13
+`PROBE-PENDING`**; the pending items gate the first implementation story (AC-74),
+not the ADR's acceptance. Key decisions: `_input`-only capture; a
+`_physics_process` pipeline with a manual `GameClock` freeze (not
+`time_scale`); atomic `try_pull`; `(raw_axis, move_order)`; no direct `Input`
+reads by consumers; root-stretch-disabled `SubViewport` at 480k×270k with a
+native HUD; `FacingPublication { value, epoch, cause }`; canonical
+right-anchored mirror frame with a 200 dp corner reach disc.
+
+**QA plan** (`production/qa/qa-plan-sys01-input-control-mapping-2026-11-12.md`)
+prints the full **96-unit AC→gate ledger**: **67 smoke + 19 device + 3 lock + 7
+VS**; 79 ACs = 65 singles + 14 splits = 31 split clause-units; the four NB-E
+units (AC-12, AC-45, AC-36's MVP clause, AC-37's MVP clause) are device-gated;
+the exactly-one proof is §2.3; the perf/layout/device/playtest protocols are
+§5–§8. **O1** is carried by the ADR's Acceptance Record and the QA plan's AC-65
+protocol: the ratified budget is **p99.9 ≤ 2 `logic_tick`s, max ≤ 3**; AC-18's
+head ("up to 2") is the one-clause residue, corrected under the unfrozen regime
+and verified by an audit re-run + qa-lead spot-check. The manifest's stale
+"hard-blocked until #9" parenthetical is superseded by the #10 record (a
+bookkeeping edit, not a new obligation).
+
+**Bookkeeping only:** the GDD's Overview now cites ADR-0001 and the QA plan; the
+systems-index SYS-01 row records the ADR acceptance and the printed ledger; the
+technical-preferences Architecture Decisions Log gains ADR-0001. No design edits
+were made; the GDD remains **UNFROZEN**. Next: **Combat/Movement GDDs** (normative
+consumption of the crouch channel / posture handoff / gate manifest is unlocked)
+→ SYS-32 camera GDD last. The QA plan's smoke gate executes only after the
+probe register closes (AC-74).
