@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-11"
+last_updated: "2026-11-12"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -245,6 +245,91 @@ constants:
     notes: "Creep band multiplier consumed by SYS-06's speed mapping; the touch
       rig's analog gift. Keyboard is walk-only at MVP (ratified). F-03."
     added: 2026-11-11
+    revised: ""
+  - name: stand_height
+    status: active
+    source: design/gdd/movement.md
+    referenced_by:
+      - design/gdd/movement.md
+      - design/gdd/combat.md
+    value: 44
+    unit: px
+    notes: "Body hurtbox height; the crouch hurtbox is stand_height ×
+      crouch_hurtbox_ratio. F-MOV-11; Combat consumes the crouched hurtbox."
+    added: 2026-11-12
+    revised: ""
+  - name: crouch_hurtbox_ratio
+    status: active
+    source: design/gdd/movement.md
+    referenced_by:
+      - design/gdd/movement.md
+      - design/gdd/combat.md
+    value: 0.6
+    unit: ratio
+    notes: "Crouch height ratio; top drop 17.6 px at defaults. The high-attack
+      band is (26.4, 44] px. F-MOV-11."
+    added: 2026-11-12
+    revised: ""
+  - name: knockdown_power
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/movement.md
+    value: 2
+    unit: power_threshold
+    notes: "SYS-08's hit rule consumed by SYS-06: a hit with power >= 2 enters
+      KNOCKDOWN on the hit tick; below runs KNOCKBACK. TR-CMB-026 / TR-MOV-021."
+    added: 2026-11-12
+    revised: ""
+  - name: backdash_iframe_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/movement.md
+    value: 140
+    unit: ms
+    notes: "SYS-08's grant consumed by SYS-06's hop: 9 ticks at 60 tps; the
+      280 ms lock leaves an 8-tick exposure. TR-CMB-016 / F-MOV-07."
+    added: 2026-11-12
+    revised: ""
+  - name: combat_worst_case_arc_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/input-control-mapping.md
+    value: 700
+    unit: ms
+    notes: "Combat's derived max (the clash lock); the combined body_busy max
+      with Movement is 1200. TR-CMB-021 / TR-INP-029."
+    added: 2026-11-12
+    revised: ""
+  - name: movement_worst_case_arc_ms
+    status: active
+    source: design/gdd/movement.md
+    referenced_by:
+      - design/gdd/movement.md
+      - design/gdd/input-control-mapping.md
+    value: 1200
+    unit: ms
+    notes: "Movement's derived max (knockdown + getup; scripted cap). TR-MOV-022 /
+      TR-INP-029."
+    added: 2026-11-12
+    revised: ""
+  - name: attack_window_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/input-control-mapping.md
+    value: 200
+    unit: ms
+    notes: "Combat's per-verb override of the 140 ms global intent window; 12
+      ticks at 60 tps. SYS-01 owns the slot/window; Combat declares the value.
+      TR-CMB-001."
+    added: 2026-11-12
     revised: ""
 
 # Example:

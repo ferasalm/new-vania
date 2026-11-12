@@ -16,7 +16,7 @@
 | SYS-03 | Save & Serialization | Foundation | Yes | None | lead-programmer |
 | SYS-04 | Audio Core | Foundation | Yes (minimal) | None | sound-designer |
 | SYS-05 | Game Flow & Session Structure | Foundation | Yes (linear stub) | SYS-03 | game-designer |
-| SYS-06 | Movement & Platforming | Core | Yes (Dash locked) | SYS-01 | game-designer |
+| SYS-06 | Movement & Platforming | Core | Yes (Dash locked) | SYS-01, SYS-02, SYS-16, SYS-05 | game-designer |
 | SYS-07 | Health & Damage | Core | Yes | None (data layer) | systems-designer |
 | SYS-08 | Combat | Core | Yes | SYS-01, SYS-06, SYS-07 | game-designer |
 | SYS-09 | Dual-Reality State & Rendering | Core | Yes (one scripted flip) | SYS-02 | technical-artist |
@@ -34,7 +34,7 @@
 | SYS-21 | Reality-Law Progression | Feature | No (VS: first law) | SYS-10, SYS-16 | game-designer |
 | SYS-22 | Story-Revealing Item | Feature | No (Alpha) | SYS-17, SYS-10 | narrative-director |
 | SYS-23 | Variety Bosses | Feature | No (Alpha) | SYS-14 | game-designer |
-| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01 | ui-programmer |
+| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01, SYS-06 (state read-only; no touch geometry), SYS-32 | ui-programmer |
 | SYS-25 | Map / Minimap / Fog-of-War | Presentation | No (VS) | SYS-02, SYS-10 | ui-programmer |
 | SYS-26 | Sanctuary Menus (Inventory/Contracts/Essence) | Presentation | No (VS) | SYS-17, SYS-18, SYS-19 | ui-programmer |
 | SYS-27 | Memory Gallery & Bestiary | Presentation | No (VS) | SYS-20, SYS-13 | narrative-director + ui-programmer |
@@ -56,7 +56,7 @@
 
 ### Core
 
-- SYS-06 Movement → depends on SYS-01 (committed SotN arcs; **Dash is an action-level lock — locked at start, TR-INP-003; Wall Jump → Double Jump are behavior-level gates on Jump owned by SYS-06, TR-INP-057**; Backdash day-one, SotN-exact double-tap back)
+- SYS-06 Movement → depends on SYS-01 (committed SotN arcs; **Dash is an action-level lock — locked at start, TR-INP-003; Wall Jump → Double Jump are behavior-level gates on Jump owned by SYS-06, TR-INP-057**; Backdash day-one, SotN-exact double-tap back), SYS-02 (collision/stairs/slopes/one-way, hard at runtime), SYS-16 (grants, soft) and SYS-05 (coordination). **GDD `design/gdd/movement.md` — APPROVED (2026-11-12, diff-scoped re-review PASS 16/16; 15-site qa-lead spot-check; R1/R2/N1 non-blocking bookkeeping):** ADR-0001 contracts ratified (facing `value/epoch/cause/asserted_tick`, **re-asserted every `physics_tick` per R3/§8; the §10 cadence erratum remains pending under OQ-M2**, crouch handoff + posture-carry + `crouch_effective`, hop side + MVP drop-when-busy, `body_busy` locks incl. KNOCKBACK + `freeze_hold` + derived `worst_case_arc_ms` 1200, `grounded` publication, movement-zone ownership, body phase + `MotionCore`/`BodyPort`); 34 TR-MOV / 14 formulas / 49 ACs; the review loop is closed; OQ-M1 (SYS-01 press1-creep amendment) remains a one-clause edit before the first SYS-06 story
 - SYS-07 Health & Damage → no upstream deps (data layer for combat)
 - SYS-08 Combat → depends on SYS-01, SYS-06, SYS-07 (combo, clash, deflect)
 - SYS-09 Dual-Reality State & Rendering → depends on SYS-02 (epoch-driven: one geometry, two palettes; shift shader for transitions)
@@ -147,7 +147,7 @@
 | SYS-03 | Save & Serialization | MVP | Not Started | design/gdd/save-serialization.md |
 | SYS-04 | Audio Core | MVP | Not Started | design/gdd/audio-core.md |
 | SYS-05 | Game Flow & Session Structure | MVP | Not Started | design/gdd/game-flow-session.md |
-| SYS-06 | Movement & Platforming | MVP | Not Started | design/gdd/movement-platforming.md |
+| SYS-06 | Movement & Platforming | MVP | **APPROVED (2026-11-12 — diff-scoped re-review PASS 16/16; 15-site qa-lead spot-check; R1/R2/N1 non-blocking bookkeeping; the review loop is closed; ADR-0001 contracts ratified; derived `worst_case_arc_ms` 1200; 34 TR-MOV / 14 formulas / 49 ACs; OQ-M1 remains a one-clause SYS-01 edit before the first story)** | design/gdd/movement.md |
 | SYS-07 | Health & Damage | MVP | Not Started | design/gdd/health-damage.md |
 | SYS-08 | Combat | MVP | Prototype PROCEED 2026-11-11 — ready to author | design/gdd/combat.md |
 | SYS-09 | Dual-Reality State & Rendering | MVP | Not Started | design/gdd/dual-reality-state.md |
