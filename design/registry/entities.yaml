@@ -331,6 +331,90 @@ constants:
       TR-CMB-001."
     added: 2026-11-12
     revised: ""
+  - name: atk1_damage
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/health-damage.md
+    value: 10
+    unit: hp
+    notes: "Dirge-042's ATK1 damage; SYS-07 consumes it in the dealt pipeline.
+      TR-CMB-004 / F-HD-02."
+    added: 2026-11-12
+    revised: ""
+  - name: atk2_damage
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/health-damage.md
+    value: 20
+    unit: hp
+    notes: "Dirge-042's ATK2 damage; the chain total is 30 at ATK 100.
+      TR-CMB-004 / F-HD-02."
+    added: 2026-11-12
+    revised: ""
+  - name: crouch_attack_damage
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/health-damage.md
+    value: 8
+    unit: hp
+    notes: "Dirge-042's crouch-attack damage; SYS-07 consumes it.
+      TR-CMB-004 / F-HD-02."
+    added: 2026-11-12
+    revised: ""
+  - name: air_attack_damage
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/health-damage.md
+    value: 10
+    unit: hp
+    notes: "Dirge-042's air-attack damage; SYS-07 consumes it.
+      TR-CMB-004 / F-HD-02."
+    added: 2026-11-12
+    revised: ""
+  - name: strike_dmg_p1
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/combat.md
+    value: 6
+    unit: hp
+    notes: "SYS-07's enemy-strike damage for power 1; Combat stamps raw_damage
+      from the table. TR-HD-003 / F-HD-01."
+    added: 2026-11-12
+    revised: ""
+  - name: strike_dmg_p2
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/combat.md
+    value: 12
+    unit: hp
+    notes: "SYS-07's enemy-strike damage for power 2 (the knockdown tier).
+      TR-HD-003 / F-HD-01."
+    added: 2026-11-12
+    revised: ""
+  - name: strike_dmg_p3
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/combat.md
+    value: 20
+    unit: hp
+    notes: "SYS-07's enemy-strike damage for power 3 (the heavy tier).
+      TR-HD-003 / F-HD-01."
+    added: 2026-11-12
+    revised: ""
 
 # Example:
 #
