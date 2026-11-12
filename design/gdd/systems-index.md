@@ -18,7 +18,7 @@
 | SYS-05 | Game Flow & Session Structure | Foundation | Yes (linear stub) | SYS-03 | game-designer |
 | SYS-06 | Movement & Platforming | Core | Yes (Dash locked) | SYS-01 | game-designer |
 | SYS-07 | Health & Damage | Core | Yes | None (data layer) | systems-designer |
-| SYS-08 | Combat | Core | Yes | SYS-01, SYS-06, SYS-07 | game-designer |
+| SYS-08 | Combat | Core | Yes | SYS-01, SYS-06, SYS-07, SYS-13, SYS-29 | game-designer |
 | SYS-09 | Dual-Reality State & Rendering | Core | Yes (one scripted flip) | SYS-02 | technical-artist |
 | SYS-10 | World Mutation & Epochs | Core | Yes (scripted flip + backtrack reveal) | SYS-09, SYS-03, SYS-02 | game-designer |
 | SYS-11 | Seam Borders | Core | Yes (one + VFX) | SYS-10 | game-designer + technical-artist |
@@ -58,7 +58,7 @@
 
 - SYS-06 Movement → depends on SYS-01 (committed SotN arcs; **Dash is an action-level lock — locked at start, TR-INP-003; Wall Jump → Double Jump are behavior-level gates on Jump owned by SYS-06, TR-INP-057**; Backdash day-one, SotN-exact double-tap back), SYS-02 (collision/stairs/slopes/one-way, hard at runtime), SYS-16 (grants, soft) and SYS-05 (coordination). **GDD `design/gdd/movement.md` — APPROVED (2026-11-12, diff-scoped re-review PASS 16/16; 15-site qa-lead spot-check; R1/R2/N1 non-blocking bookkeeping):** ADR-0001 contracts ratified (facing `value/epoch/cause/asserted_tick`, crouch handoff + posture-carry + `crouch_effective`, hop side + MVP drop-when-busy, `body_busy` locks incl. KNOCKBACK + `freeze_hold` + derived `worst_case_arc_ms` 1200, `grounded` publication, movement-zone ownership, body phase + `MotionCore`/`BodyPort`); 34 TR-MOV / 14 formulas / 49 ACs; the review loop is closed; OQ-M1 (SYS-01 press1-creep amendment) remains a one-clause edit before the first SYS-06 story
 - SYS-07 Health & Damage → no upstream deps (data layer for combat)
-- SYS-08 Combat → depends on SYS-01, SYS-06, SYS-07 (combo, clash, deflect)
+- SYS-08 Combat → depends on SYS-01, SYS-06, SYS-07, SYS-13, SYS-29 (combo, clash, deflect; enemy strikes; hit-stop). **GDD `design/gdd/combat.md` — In Review (2026-11-12):** the creative seat (GLM-5.3-Flash) returned the feel memo "The Body Answers the Read"; the technical spine authored the arcs (ATK1 90/70/170, ATK2 100/80/250, crouch 80/60/150, air 80/70/120 + 100 ms landing lag), the clash matrix (age gate 5–12 ticks; counter 1.5×; double lock 700 ms; lose 500 ms), the defensive family (backdash 140 / Dash 0 / clash 0 / getup 300), the five commitments (`worst_case_arc_ms` 700; combined 1200), the hit-stop table (70/90/40) and the SYS-07/SYS-13 boundaries; 34 TR-CMB / 12 formulas / 48 ACs; the three-seat design review returned NEEDS REVISION (technical 8 + QA 8 blockers; creative PASS); all blockers revised in-session; the review record is `design/gdd/reviews/combat-review-log.md`
 - SYS-09 Dual-Reality State & Rendering → depends on SYS-02 (epoch-driven: one geometry, two palettes; shift shader for transitions)
 - SYS-10 World Mutation & Epochs → depends on SYS-09, SYS-03, SYS-02, SYS-32 (story-threshold truth flips; backtrack reveals; zone scoping/locking; camera holds the target through the truth flip + reveal framing zone)
 - SYS-11 Seam Borders → depends on SYS-10, SYS-32 (borders between flipped/unflipped zones; Cold Corridor purple = bridge material; reveal framing zone at seams)
@@ -149,7 +149,7 @@
 | SYS-05 | Game Flow & Session Structure | MVP | Not Started | design/gdd/game-flow-session.md |
 | SYS-06 | Movement & Platforming | MVP | **APPROVED (2026-11-12 — diff-scoped re-review PASS 16/16; 15-site qa-lead spot-check; R1/R2/N1 non-blocking bookkeeping; the review loop is closed; ADR-0001 contracts ratified; derived `worst_case_arc_ms` 1200; 34 TR-MOV / 14 formulas / 49 ACs; OQ-M1 remains a one-clause SYS-01 edit before the first story)** | design/gdd/movement.md |
 | SYS-07 | Health & Damage | MVP | Not Started | design/gdd/health-damage.md |
-| SYS-08 | Combat | MVP | Prototype PROCEED 2026-11-11 — ready to author | design/gdd/combat.md |
+| SYS-08 | Combat | MVP | **In Review (2026-11-12 — GDD authored at `design/gdd/combat.md`; creative memo "The Body Answers the Read"; 34 TR-CMB / 12 formulas / 48 ACs; design review NEEDS REVISION (technical 8 + QA 8 blockers; creative PASS); all blockers revised in-session; Combat `worst_case_arc_ms` 700; 5 commitments; review record `design/gdd/reviews/combat-review-log.md`)** | design/gdd/combat.md |
 | SYS-09 | Dual-Reality State & Rendering | MVP | Not Started | design/gdd/dual-reality-state.md |
 | SYS-10 | World Mutation & Epochs | MVP | Not Started | design/gdd/world-mutation-epochs.md |
 | SYS-11 | Seam Borders | MVP | Not Started | design/gdd/seam-borders.md |
