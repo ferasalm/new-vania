@@ -727,3 +727,120 @@ The claim inventory is the verified object, not the raw counts. **The 47-row inv
 The pinned set is complete: 3 blockers + 12 riders, zero further riders nominated, the audit artifact attached, the dependent sweeps clean, the ledger unchanged. **This session STOPS — #10 DIFF-SCOPED runs in a FRESH session** on this repair's diff + the audit verification only (qa-lead spot-check mandatory; NO tripwire — findings route to the post-#10 path, CD ruling 3), then **the GDD UNFREEZES on the #10 record regardless of outcome**.
 
 **Landing:** branch `fix/sys01-final-repair` → **PR #19** (base Main) → pre-merge cross-check (the PR diff against the pinned set: nothing extra, nothing missing) → merged. The OpenCode shell tool was broken machine-wide again this session (the same "The system cannot find the path specified" outage); the landing ran through the documented Godot OS.execute bridge pattern (throwaway bridge files — UNTRACKED, in no commit; kept until the shell works).
+
+## Review — 2026-11-12 — Verdict: PASS WITH RECORDED OBLIGATIONS (re-review #10, DIFF-SCOPED — the loop's final round; **UNFREEZE**)
+
+Scope signal: S (the diff-scoped verification) — program XL unchanged (ADR-gated)
+Specialists: **qa-lead stand-in** (engineering-code-reviewer — the MANDATORY seat; stand-in substitution per the #4/#6/#7/#8/#9 recorded precedent, disclosed; the spot-check ran as a fresh-session subagent against the changed sites only). Review lead: the independent diff walk + the audit verification + the ledger check. Fresh session; **NO panel, NO whole-document sweep** (the loop is capped — CD ruling 4).
+Blocking items: **0** (the loop is over — no tripwire; findings route to the post-#10 path, CD ruling 3) | **Recorded obligations: 1 (O1)** | Notes: 5 non-blocking + 1 log-bookkeeping.
+
+**Summary:** The final repair's diff **equals the pinned set exactly** — 3 files (the GDD +21/−22, the review log +121/−0, the systems-index row 1/1), the 3 blockers + the 12 riders (a)–(l) at their named sites, the disclosed TR-INP-074 dependent site at both of its clauses, and the bookkeeping — nothing extra, nothing missing. The **qa-lead spot-check** (21 changed-site rows, claim → target → verdict) returns **21/21 PASS(post)**, including the two repaired-site residues (k)/(l) and the two TR-INP-074 clauses. The **machine audit re-run reproduces**: the 13 recorded stem families (with the instrument note below), the symbol-uniqueness stem (**55 rows / 55 distinct symbols, zero duplicates**), the event-class membership check (**backdash = the sole EX-1 exception**), and the **59-claim inventory = 34 PASS / 23 PASS(post) / 2 ADJ** (arithmetic + a 21-row spot-check of the PASS(post) population). The **AC→gate ledger is unchanged at 96 = 67 smoke + 19 device + 3 lock + 7 VS**. Post-merge CodeRabbit produced **zero findings** (the review pass aborted on the merge: "Review failed — the pull request is closed"; the summary walkthrough carries no actionable content; no reviewer text was executed). **ONE recorded obligation** — a one-clause intra-sentence residue in AC-18 (the stamp-budget head still says "up to 2" while its own parenthetical states "max ≤ 3") — lands under the unfrozen regime per CD ruling 3. **Verdict: PASS WITH RECORDED OBLIGATIONS — the GDD UNFREEZES.**
+
+### 1 · Diff walk — the pinned set vs the actual diff
+
+**PR #19** (base Main; head `fix/sys01-final-repair`; merged 2026-11-12T01:49:41Z; merge commit `472bb76852441b4508433566fc7a508d308821a3`). `git diff 472bb76~1 472bb76`: **3 files** — `design/gdd/input-control-mapping.md` (21+/22−), `design/gdd/reviews/input-control-mapping-review-log.md` (121+/0−, one append-only hunk at the file end), `design/gdd/systems-index.md` (1+/1−, the SYS-01 row only). Working tree: clean except the four untracked throwaway bridge files.
+
+| Pinned item | Changed site(s) in the diff | Status |
+|---|---|---|
+| UX B1 | Exposure L687 (+`CHIP_TAP_COMMIT`, `BACKDASH_BTN_TOGGLE`; re-cite 009/070/**037** + EX-2) · UI L715 (the same two toggles) | present |
+| PA B-1 | AC-54 L873 (six-structure enumeration + blanket law + measurand attribution) | present |
+| GP B1 | Edge Cases L535 (AC-44's scoping + the three-law citation) | present |
+| (a) | AC-11 L812 (64/**6** + live re-validation) · TR-INP-074 L521 + Tuning Knobs preamble L595 (**dependent site — both clauses**) | present |
+| (b) | `CLUSTER_GAP_DP` L650 (rationale + V0/V14) | present |
+| (c) | TR-INP-069 L173 tail ("pairwise **center distances**") | present |
+| (d) | F-01 L263 ("old 60-tps effective 150") | present |
+| (e) | AC-18 L822 ("p99.9 ≤ 2 and max ≤ 3") | present |
+| (f) | `DASH_SOCKET_VISUAL_DP` duplicate row deleted (old L673); L646 kept | present |
+| (g) | AC-70 L895 (breach-adjudication pointer) | present |
+| (h) | AC-50 L866 (platform carve-out) + engine item 13 L788 (target → AC-50) | present |
+| (i) | engine item 9 L784 + TR-INP-077 L174 (`[unverified]`; "engine-grounded" dropped) | present |
+| (j) | F-04 L358 (the release half drops) | present |
+| (k) | AC-63 Q4 L885 (drop-rate report) | present |
+| (l) | F-10 L492 (binding failure dominates the body wait) | present |
+| Bookkeeping | Status header L3 · Last Updated L12 · systems-index SYS-01 row | present |
+
+**Nothing extra:** every `+` line in the GDD diff resolves to a pinned item, the disclosed dependent site, or bookkeeping; the log's single hunk is the repair entry; the index diff is the SYS-01 row only. **Nothing missing:** all 15 pinned items + the dependent site + bookkeeping are present at their named sites.
+
+### 2 · qa-lead spot-check (MANDATORY — stand-in seat, disclosed)
+
+One row per changed site — claim → its named target → verdict. The verdicts are the seat's; the review lead independently reproduced the arithmetic on rows 1, 7, 13, 14, 19 and the two repo-reference checks (11, 20).
+
+| # | Site | Claim (short) | Named target | Verdict |
+|---|---|---|---|---|
+| 1 | L263 (F-01) | "(old 60-tps effective 150 > new 141.7 ms effective)" | F-01 rate table L265–270; the 140 ms contract | PASS(post) |
+| 2 | L358 (F-04) | Release ⇒ mag 0 ⇒ ¬in_exit ⇒ the held-zone half drops | F-04 state machine L332–341; AC-31 L838 | PASS(post) |
+| 3 | L492 (F-10) | A binding failure dominates the body wait | TR-INP-030 L152; F-10's binding terms | PASS(post) |
+| 4 | L521 (TR-INP-074) | Validated at config load **and re-validated on every live edit** (AC-11) | AC-11 L812; V10 L608 | PASS(post) |
+| 5 | L535 (Edge Case) | Same-frame drop scoped to presses that do not open the gate | TR-INP-047(2) L199; AC-44 L857; AC-59 L881 | PASS(post) |
+| 6 | L595 (Knobs preamble) | Live edit = production clamp + telemetry, dev assert; config load keeps dev boot-fail | AC-11 L812; AC-24 L828; AC-72 L897 | PASS(post) |
+| 7 | L650 (`CLUSTER_GAP_DP`) | Tightest edge clearance 15.3 dp, gap-independent; >12 → V0 clamps to 12; V14 boot-fails/fixes the table | Audited table L173; V0 L611; V14 L613 | PASS(post) |
+| 8 | L646 (`DASH_SOCKET_VISUAL_DP`) | Exactly one row (duplicate deleted) | Knob table L624–681; "exactly one row" law L622 | PASS(post) |
+| 9 | L687 (Exposure) | 009/070/037 + EX-2, incl. `CHIP_TAP_COMMIT` + `BACKDASH_BTN_TOGGLE`, nothing more | TR-INP-037 L182; TR-INP-070 L175; TR-INP-009; EX-2 L759; L717 | PASS(post) |
+| 10 | L715 (UI) | Recalibration exposes the two added toggles | L687; L717 | PASS(post) |
+| 11 | L784 (item 9) | `[unverified]` — no repo citation for `action_press` × deadzone | `docs/engine-reference/godot/` — zero matches | PASS(post) |
+| 12 | L788 (item 13) | The unqualified strength-0 claim is **AC-50's**; AC-70 carries the carve-out | AC-50 L866; AC-70 L895 | PASS(post) |
+| 13 | L812 (AC-11) | 64/6 is V10-legal ("6 ≤ 0.1 × 64"); live edit re-validated | V10 L608; L521; L595 | PASS(post) |
+| 14 | L822 (AC-18) | "(p99.9 ≤ 2 and max ≤ 3)" | TR-INP-076 L119; AC-65 L890 | PASS(post) — the parenthetical matches; the head's "up to 2" is O1 (below) |
+| 15 | L866 (AC-50) | Silent where the platform allows — the iOS carve-out is AC-70's | AC-70 L895 | PASS(post) |
+| 16 | L873 (AC-54) | Six SYS-01-owned hot-path structures (incl. the capture queue + the gate-request queue) + measurand attribution | AC-53 L872; TR-INP-076 L119; L538; AC-59 L881 | PASS(post) |
+| 17 | L885 (AC-63 Q4) | Drop rate (per session-minute) reported alongside the negation counts | Player Fantasy L37 | PASS(post) |
+| 18 | L895 (AC-70) | Breach adjudication is AC-53's ledger pointer's | AC-53 L872 | PASS(post) |
+| 19 | L173 tail (TR-INP-069) | All six pairwise **center distances** ≥ 84 dp at 1.5 | AC-34 L841; AC-66 L891; the coordinates | PASS(post) — 87.32 · 87.48 · 98.41 · 151.87 · 90.09 · 97.53 (min 87.32) |
+| 20 | L174 (TR-INP-077) | `[unverified]` — `get_display_safe_area` has zero repo matches; heading no longer "engine-grounded" | `docs/engine-reference/godot/` — zero matches; zero "engine-grounded" | PASS(post) |
+| 21 | L3 + L12 | Header records the final repair; ledger unchanged at 96 = 67+19+3+7; consistent with the repair entry | The repair entry (§Repair, this log) | PASS(post) |
+
+**Tally: 21/21 PASS(post) — zero FAIL, zero ADJ.** The two repaired-site residues: (k) AC-63 Q4 ↔ Player Fantasy L37 — PASS; (l) F-10 ↔ TR-INP-030 — PASS. The two dependent TR-INP-074 clauses: L521 and L595 **both** carry the live-edit re-validation; neither says config-load-only — PASS.
+
+### 3 · Audit verification (the re-run's reproduction)
+
+| Stem family (case-insensitive) | Recorded occ/lines (repair) | Observed this run (lines) | Note |
+|---|---|---|---|
+| `consumed by` | 2 / 2 | 2 | ✓ |
+| `gated by` | 2 / 2 | 2 | ✓ |
+| `meets\|passes` | 10 / 9 | 9 | ✓ with word boundaries (`\bmeets\b\|\bpasses\b`); the substring form also matches "bypasses" (11 lines) — instrument note (a) |
+| `rides` | 19 / 17 | 17 | ✓ (the stem also matches "overrides" — #9 instrument note (a) stands) |
+| `applies to\|applies` | 16 / 16 | 16 | ✓ |
+| `excluded` | 9 / 8 | 8 | ✓ |
+| `exempt` | 17 / 13 | 13 | ✓ excluding the status/header block (L3, L10); 15 with it — instrument note (a) |
+| `device-executed` | 3 / 2 | 2 | ✓ |
+| `default home\|defaults home` | 2 / 1 | 1 | ✓ |
+| `takes no body\|does not bind` | 1 / 1 | 1 | ✓ |
+| `win over\|wins over\|winning` | 3 / 3 | 3 | ✓ (the #9-corrected stem) |
+| `polled first` | 3 / 3 | 3 | ✓ |
+| `sole puller\|sole deadzone` | 2 / 2 | 2 | ✓ |
+
+**Instrument note (recorded, NOT re-baselined):** the raw counts vary by the matcher — substring vs word-boundary and whether the status/header block is included — exactly as #9's instrument note (a) recorded; the **claim inventory, not the raw counts, is the verified object**. No claim site changed: the #8 artifact's 47-row inventory reproduces (46 rows byte-identical; D9 re-verified as PASS(post) at L687), and the 12 repair-delta rows (F1–F12) are verified at their sites.
+
+**Symbol-uniqueness stem:** the Tuning Knobs table parses **55 rows / 55 distinct symbols / zero duplicates**; the duplicate `DASH_SOCKET_VISUAL_DP` row is gone (one row, L646); L622's "exactly one row" law holds. **Event-class membership check:** TR-INP-013 (L114) lists six buffered-event members — Jump, Attack, Dash, Interact, Quick-use, backdash; checked member-by-member against EX-1 (L758): **backdash is the sole excepted member** (no buffer, single-tick offer); the other five carry no exception row. PASS — the GD-rec-2 coverage hole is discharged (the missing inline pointer remains the #9 QA-plan-routed item, below).
+
+**The claim inventory:** **59 claims = 34 PASS / 23 PASS(post) / 2 ADJ (A6 + D10 stand), 0 unresolvable.** Arithmetic: the #8 tally 35/10/2 → D9 moves PASS→PASS(post) → 34/11/2; + the 12 delta rows (all PASS(post)) → 34/23/2 ✓. Spot-check of the PASS(post) population (21 rows: A1, A2, A5, A6, A7, B3, B4, B6, B12, D7, D8, D9, F1–F12) — all hold against their targets. AC census: **79** (AC-01…AC-79, no gaps, no duplicates).
+
+### 4 · Ledger
+
+**Unchanged at 96 = 67 smoke + 19 device + 3 lock + 7 VS.** Structural proof: the diff touches **no gate-manifest line**; the AC census is 79 (65 singles + 14 splits = 31 clause-units); no fix adds, removes, or moves a clause-unit (AC-54 stays smoke — still in the smoke list; AC-11/AC-18 smoke; AC-50 device; AC-63 lock; AC-70 two device clauses — all verified in the manifest at L921). The QA plan's ledger derivation stands as #9 recorded it (four independent derivations agree).
+
+### 5 · Post-merge CodeRabbit
+
+`pulls/19/comments` = **0**; `pulls/19/reviews` = **0**; `issues/19/comments` = **1** (CodeRabbit's summary: the walkthrough + "**Review failed** — The pull request is closed"). **No findings to adjudicate; no reviewer text executed as a prompt; no post-#10 obligation from CodeRabbit.** (The pass aborted on the merge, as the repair session recorded — the diff-vs-pinned-set cross-check was the gate.)
+
+### 6 · The recorded obligation (O1) — one clause, post-#10 path (CD ruling 3)
+
+**O1 — AC-18 (L822): the stamp-budget head contradicts its own parenthetical.** Text: "arrival→stamp may consume up to 2 `logic_tick`s (p99.9 ≤ 2 **and** max ≤ 3) per TR-INP-076's device budget". The head states a hard maximum of 2; the parenthetical states max ≤ 3 — the same clause disagrees with itself. Rider (e)'s charge was to align the restatement with TR-INP-076/AC-65 (both read "p99.9 ≤ 2 and max ≤ 3"); the parenthetical is correct and the head's understatement survived. **Fix (one clause, under the unfrozen regime — an ordinary reviewed edit):** "may consume up to 3 `logic_tick`s (p99.9 ≤ 2, max ≤ 3)" (or an equivalent that removes the head/parenthetical split). **Verification route:** a re-run of the machine cross-reference membership audit (the AC-18 row + the stem sweep) **and** a qa-lead spot-check on the changed site. **Recorded as an explicit obligation:** ADR Acceptance ratifies the TR-INP-076 stamp budget (its latency rider) and the QA plan's AC-65 device protocol measures it — both carry O1. **Does not block the unfreeze** (the loop is capped; no further adversarial rounds).
+
+### 7 · Notes (non-blocking — recorded, no obligation)
+
+- qa-lead's ambiguity list: (i) AC-18's phrasing (folded into O1); (ii) AC-54's "raised per tick" is a loose paraphrase of L538's "raised at any point in tick T" (the operative "applied at the next gate-entry phase — NB-J" matches); (iii) the Tuning Knobs preamble's live-edit parenthetical precedes the unqualified "Dev: violation = boot failure" (AC-11's split resolves the scope; clarity nit); (iv) TR-INP-069's "all six pairwise center distances" denotes the six pairs among the four gameplay sockets (pause distances are profile-dependent; AC-34/AC-66 govern); (v) the repair log's edit-map line refs for (f)/AC-34/EX-2 are off by one — **the correct refs: kept Dash row = L646 (not L645); AC-34 = L841 (not L842); EX-2 = L759 (not L760)**; prior log entries are historical and are not edited.
+- The #9 QA-plan-routed items stand unchanged (not #10 findings): the L232 data-chain scoping ("gated by F-08/F-10" → scope to the body-gated family) and the TR-INP-013 backdash reflex-class inline pointer ("backdash alone is reflex-class — EX-1").
+
+### 8 · Verdict + the unfreeze record
+
+**PASS WITH RECORDED OBLIGATIONS — unfreeze.** The diff-scoped review found **zero blockers**; the single finding is a one-clause wording residue recorded as **O1** with its verification route. Per CD ruling 3, **the GDD UNFREEZES on this record regardless of outcome — the adversarial loop is CLOSED (capped at #10; no further whole-document or diff-scoped rounds).** On this record: **ADR Acceptance unblocks** (it ratifies the first-Gameplay-tick delivery law, the publish-raw-every-tick law, gate-request terminality, the NB-I freeze-processing scope, the NB-J non-ack gate-entry rule; owns D1 SubViewport wiring, flip-attribution, mirror/reach-disc, pipeline order; **carries O1**) and **the QA plan's AC→gate ledger unblocks** at the 96-unit partition (it resolves the four NB-E units as device, as already recorded; **carries O1's AC-65 protocol duty**). Combat/Movement normative consumption of the crouch channel / posture handoff / gate manifest unlocks.
+
+### 9 · Process notes
+
+- The OpenCode shell tool was broken machine-wide again ("The system cannot find the path specified", exit 1, empty output — re-tested this session). The diff walk, the PR/CodeRabbit queries, and the landing ran through the documented throwaway Godot OS.execute bridge (untracked; in no commit). `production/session-state/` is gitignored; this entry is the committed record.
+- Landing: branch `fix/sys01-rr10` → PR (base Main) → pre-merge cross-check (the PR diff against this #10 record: nothing extra, nothing missing) → merged.
+
+### Sequencing after this record
+
+**Input Architecture ADR in a FRESH session** (expanded brief; the engine-probe spike is a throwaway prototype) → Acceptance (ratifies the listed laws + owns the named mechanisms; carries O1) + the QA plan completes its AC→gate ledger at 96 (carries O1) → Combat/Movement GDDs → SYS-32 camera GDD last.
