@@ -16,7 +16,7 @@
 | SYS-03 | Save & Serialization | Foundation | Yes | None | lead-programmer |
 | SYS-04 | Audio Core | Foundation | Yes (minimal) | None | sound-designer |
 | SYS-05 | Game Flow & Session Structure | Foundation | Yes (linear stub) | SYS-03 | game-designer |
-| SYS-06 | Movement & Platforming | Core | Yes (Dash locked) | SYS-01 | game-designer |
+| SYS-06 | Movement & Platforming | Core | Yes (Dash locked) | SYS-01, SYS-02, SYS-16, SYS-05 | game-designer |
 | SYS-07 | Health & Damage | Core | Yes | None (data layer) | systems-designer |
 | SYS-08 | Combat | Core | Yes | SYS-01, SYS-06, SYS-07 | game-designer |
 | SYS-09 | Dual-Reality State & Rendering | Core | Yes (one scripted flip) | SYS-02 | technical-artist |
@@ -34,7 +34,7 @@
 | SYS-21 | Reality-Law Progression | Feature | No (VS: first law) | SYS-10, SYS-16 | game-designer |
 | SYS-22 | Story-Revealing Item | Feature | No (Alpha) | SYS-17, SYS-10 | narrative-director |
 | SYS-23 | Variety Bosses | Feature | No (Alpha) | SYS-14 | game-designer |
-| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01, SYS-06 (state read-only; no touch geometry) | ui-programmer |
+| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01, SYS-06 (state read-only; no touch geometry), SYS-32 | ui-programmer |
 | SYS-25 | Map / Minimap / Fog-of-War | Presentation | No (VS) | SYS-02, SYS-10 | ui-programmer |
 | SYS-26 | Sanctuary Menus (Inventory/Contracts/Essence) | Presentation | No (VS) | SYS-17, SYS-18, SYS-19 | ui-programmer |
 | SYS-27 | Memory Gallery & Bestiary | Presentation | No (VS) | SYS-20, SYS-13 | narrative-director + ui-programmer |
