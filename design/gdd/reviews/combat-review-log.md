@@ -169,3 +169,17 @@ Second CodeRabbit pass (on `1edbe98`/`7a43f43`). **5 valid findings repaired; 1 
 ### Process notes (pass #2)
 
 - The shell remains broken; the second pass ran through the same untracked Godot bridge. Thread replies + resolutions via the GitHub API; no reviewer prompt executed. The ATK2 reachability finding is the most consequential of the whole review — it was missed by the design review, the re-review and both re-review seats, and caught by the post-review CodeRabbit pass.
+
+## Post-review CodeRabbit pass #3 — 2026-11-12 — 3 threads adjudicated
+
+Third pass (on `3600670`). **3 valid, all repaired.** No reviewer prompt executed.
+
+1. **P1 — the lose branch's consecutive interval.** `worst_case_arc_ms` had `max_startup + clash_lock` and `stagger` separately, but the lose branch is `startup + stagger`; at `CLASH_LOCK_MS = 500` / `STAGGER_MS = 650` (both legal) the declaration would be 650 while the body is busy 750. Fixed: `max_startup_ms + max(clash_lock_ms, stagger_ms)` at TR-CMB-021, F-CMB-11 and V-CMB-05. Defaults unchanged at **800 ms**.
+2. **P2 — `facing` missing from the enemy strike contract.** The same-x knockback fallback reads `source.facing`, but the contract did not declare it. Fixed: the contract is `{power, active_ms, telegraph_ms, hitbox, facing ∈ {−1, +1}}`; the dependency row, the cross-system inputs and AC-CMB-33 carry the field.
+3. **P3 — the active-start edge case skipped the other gates.** It now requires the press-age and body gates as well as the overlap: a fresh press loses under TR-CMB-013; a short remaining active still means no clash.
+
+**Final audit: 92/92 PASS.** The Combat counts are unchanged (34 TR / 12 formulas / 48 ACs / 47 edge bullets / 10 OQ rows); the gate manifest is 39 + 4 + 5 + 0 = 48.
+
+### Convergence note
+
+The three CodeRabbit passes found 4 + 6 + 3 findings (13 total, 1 refuted — the registry entry exists). The findings shrank from model-level (the ATK2 counter reachability, the 800 ms interval) to contract-field precision (`facing`) — convergence, not a new review loop. The design decisions 1–11 were not re-opened; every repair is a reachability, arithmetic or contract-hygiene correction.
