@@ -300,10 +300,10 @@ constants:
     referenced_by:
       - design/gdd/combat.md
       - design/gdd/input-control-mapping.md
-    value: 700
+    value: 800
     unit: ms
-    notes: "Combat's derived max (the clash lock); the combined body_busy max
-      with Movement is 1200. TR-CMB-021 / TR-INP-029."
+    notes: "Combat's derived max (the clash's startup + lock: 6 + 42 ticks); the
+      combined body_busy max with Movement is 1200. TR-CMB-021 / TR-INP-029."
     added: 2026-11-12
     revised: ""
   - name: movement_worst_case_arc_ms
