@@ -205,8 +205,9 @@ describe("pre-commit: framework link staging guard", () => {
 		run(["update-index", "--add", "--cacheinfo", `120000,${sha},${path}`])
 	}
 
-	it("blocks staging a framework link as a directory", () => {
+	it("blocks staging a framework link as a directory", (t) => {
 		const { root, run } = makeRepo()
+		t.after(() => cleanup(root))
 		stageSymlink(run, ".opencode/agents", "../.agents/agents")
 		mkdirSync(join(root, ".opencode", "agents"), { recursive: true })
 		writeFileSync(join(root, ".opencode", "agents", "producer.md"), "copy\n", "utf8")
@@ -217,11 +218,11 @@ describe("pre-commit: framework link staging guard", () => {
 		assert.match(errors[0], /\.opencode\/agents/)
 		assert.match(errors[0], /git restore --staged/)
 		assert.match(errors[0], /opencode-symlink-conflict\.md/)
-		cleanup(root)
 	})
 
-	it("blocks a staged deletion of the link itself", () => {
+	it("blocks a staged deletion of the link itself", (t) => {
 		const { root, run } = makeRepo()
+		t.after(() => cleanup(root))
 		stageSymlink(run, ".opencode/skills", "../.agents/skills")
 		run(["commit", "-q", "-m", "seed"])
 		run(["rm", "--cached", "-q", ".opencode/skills"])
@@ -229,11 +230,11 @@ describe("pre-commit: framework link staging guard", () => {
 		const { errors } = checkFrameworkLinkStaging(root)
 		assert.equal(errors.length, 1)
 		assert.match(errors[0], /staged deleted/)
-		cleanup(root)
 	})
 
-	it("allows normal .agents edits and unrelated .opencode changes", () => {
+	it("allows normal .agents edits and unrelated .opencode changes", (t) => {
 		const { root, run } = makeRepo()
+		t.after(() => cleanup(root))
 		mkdirSync(join(root, ".agents", "agents"), { recursive: true })
 		mkdirSync(join(root, ".opencode", "plugins"), { recursive: true })
 		writeFileSync(join(root, ".agents", "agents", "producer.md"), "agent\n", "utf8")
@@ -241,11 +242,11 @@ describe("pre-commit: framework link staging guard", () => {
 		run(["add", "-A"])
 
 		assert.deepEqual(checkFrameworkLinkStaging(root).errors, [])
-		cleanup(root)
 	})
 
-	it("surfaces through evaluatePreCommit", () => {
+	it("surfaces through evaluatePreCommit", (t) => {
 		const { root, run } = makeRepo()
+		t.after(() => cleanup(root))
 		stageSymlink(run, ".opencode/rules", "../.agents/rules")
 		mkdirSync(join(root, ".opencode", "rules"), { recursive: true })
 		writeFileSync(join(root, ".opencode", "rules", "x.md"), "copy\n", "utf8")
@@ -253,7 +254,6 @@ describe("pre-commit: framework link staging guard", () => {
 
 		const { errors } = evaluatePreCommit(root)
 		assert.ok(errors.some((error) => /\.opencode\/rules/.test(error)))
-		cleanup(root)
 	})
 })
 
