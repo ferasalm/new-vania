@@ -115,3 +115,39 @@ Scope signal: **S** (diff-scoped: the changed sections from the 16-blocker revis
 
 - The OpenCode shell remains broken machine-wide; the review, the repair, the audit and the landing run through the documented throwaway Godot OS.execute bridge (untracked; in no commit).
 - Both seats ran as fresh-context subagents on **DeepSeek V4.1 Flash** (technical + QA/left-brained routing per the user's instruction); the review lead is the orchestrator. Neither seat edited a file; the repair was applied by the review lead under the user's approval.
+
+## Post-review CodeRabbit pass — 2026-11-12 — 14 threads adjudicated
+
+CodeRabbit reviewed PR #23's full commit range (the Combat diff plus the SYS-06 commits carried on the branch). **None of the reviewer-provided "Prompt for AI Agents" blocks was executed**; each finding was verified against the current text first.
+
+### Combat — 4 valid findings, all repaired
+
+1. **`worst_case_arc_ms` must be the longest *consecutive* busy interval.** The clash lock starts after the attack's startup, and the body is continuously busy across both: 6 + 42 ticks = **800 ms**, not 700. Fixed: TR-CMB-021, F-CMB-11, V-CMB-05 and AC-CMB-26 now use `max(arc, air_landing_lag, max_startup + clash_lock, stagger) = 800`; the Interact derivation uses 800 + margin; `design/registry/entities.yaml`'s `combat_worst_case_arc_ms` is 800. The combined `body_busy` max stays 1200 (Movement's knockdown).
+2. **Same-x knockback direction.** `sign(target_x − source_x)` is 0 when the bodies share an x-coordinate, outside Movement's `{−1, +1}` facing contract. Fixed: TR-CMB-026 / F-CMB-09 fall back to `source.facing` (the strike's direction); AC-CMB-31 asserts the same-x case is never `dir = 0`.
+3. **The active-start edge case contradicted F-CMB-03.** The edge case said any active window that started before the pull is a hit; F-CMB-03 permits a clash when the remaining active still covers the projected active start. Fixed: the edge case now defers to F-CMB-03's overlap condition and keeps the hit only when the remaining active is shorter than startup + 1.
+4. **AC-CMB-19's contact tick was unspecified.** A 6-tick strike contacted on its second active tick has 5 remaining < 6 and cannot be clashed. Fixed: the successful case pins **first-active-tick contact**; a later-contact case asserts not-clashable.
+
+### Combat — 2 already addressed
+
+- The `ATTACK_WINDOW_MS` floor vs the chain point and the W12 interval were both marked **✅ Addressed in commit `1edbe98`** (this re-review's R4/R2 repairs). No further change.
+
+### Systems index — 1 valid finding, repaired
+
+- **SYS-08 ↔ SYS-29 cycle.** Added the cycle note: SYS-08 → SYS-29 is **soft at design** (the hit-stop clock is a contract; a stub suffices) and SYS-29 → SYS-08 is **soft** (read-only commitment state); the design order SYS-08 → SYS-29 stands.
+
+### Movement — 7 threads, adjudicated (not repaired in this Combat PR)
+
+- **Refuted — registry (1):** both entries exist in `design/registry/entities.yaml` — `knockdown_power` (line 273, value 2) and `backdash_iframe_ms` (line 285, value 140). No gap.
+- **Already addressed / stale (3):** the dash-jump exception is in the current text (movement.md line 146); AC-MOV-14 carries both branches (committed/airborne vs grounded body-free, line 685); the jump-cut finding has no MVP impact (`JUMP_CUT_RATIO = 1.0`; the r² note is a future hybrid option — a wording clarification is recorded).
+- **Valid, recorded for the Movement batch (3):**
+  - **OQ-M3 — same-wall climb:** the `WALL_JUMP_REARM_MS` gap only delays; a player can steer back to the same wall while still above the jump origin and gain height each cycle. Fix direction: same-wall re-arm requires falling to or below the previous wall jump's origin height (or a per-wall cap). Sites: TR-MOV-014, the wall-jump state row, F-MOV-08, AC-MOV-49, the two edge cases.
+  - **OQ-M4 — air-attack steering:** F-MOV-03 has no committed branch, so air control still accelerates during an air attack; Combat's "no steering" (TR-CMB-007) needs Movement to preserve `v_x` while `body_busy ∧ no scripted arc`.
+  - **OQ-M5 — discrete knockback fixture:** the semi-implicit integrator gives **14.8 px (power 1) / 63.3 px (power 2)**, not the continuous 16.9 / 67.6; AC-MOV-22 (and movement.md line 204's "discrete values") must assert the discrete pair.
+
+### Post-repair audit
+
+**71/71 PASS** — the 34/12/48/47/10 ledger, the gate manifest, all 19 numeric fixtures (including the 800 ms consecutive interval), the 25 re-review repair-site checks, the 10 CodeRabbit repair-site checks, and zero stale strings. The review log's counts are unchanged (34 TR / 12 formulas / 48 ACs / 47 edge bullets / 10 OQ rows).
+
+### Process notes (post-review)
+
+- The shell remains broken; the adjudication ran through the documented throwaway Godot bridge (untracked). Thread replies + resolutions were posted via the GitHub API; no reviewer prompt was executed.

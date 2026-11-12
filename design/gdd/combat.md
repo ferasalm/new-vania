@@ -99,7 +99,7 @@ Playtesters say: "I saw it coming"; "I knew when to hit it"; "I pressed a little
 
 #### 5 · Commitments and the clock
 
-- **TR-CMB-021 — Commitments and `body_busy`.** Combat publishes **five** commitments as levels (`start_tick` through `end_tick−1`): the attack arc, the air landing lag, the clash lock, the player stagger, and the hit-stop pair. The OR is `body_busy` (F-08); Combat declares `worst_case_arc_ms = max(arc_ms, air_landing_lag_ms, clash_lock_ms, stagger_ms) = 700` at registration, re-declared on every arc edit, validated by SYS-01's TR-INP-029 rules. The combined `body_busy` max is **1200** (Movement's knockdown). *Test: the level semantics; the declaration equals the derived max (700 at defaults); the combined max is 1200; a publisher raises/clears mid-window.*
+- **TR-CMB-021 — Commitments and `body_busy`.** Combat publishes **five** commitments as levels (`start_tick` through `end_tick−1`): the attack arc, the air landing lag, the clash lock, the player stagger, and the hit-stop pair. The OR is `body_busy` (F-08); Combat declares `worst_case_arc_ms = max(arc_ms, air_landing_lag_ms, max_startup_ms + clash_lock_ms, stagger_ms) = 800` at registration (the clash lock starts after the attack's startup, and the body is continuously busy across both), re-declared on every arc edit, validated by SYS-01's TR-INP-029 rules. The combined `body_busy` max is **1200** (Movement's knockdown). *Test: the level semantics; the declaration equals the derived max (800 at defaults); the combined max is 1200; a publisher raises/clears mid-window.*
 - **TR-CMB-022 — Hit-stop and the paired commitment.** Hit-stop is SYS-29's clock; Combat pairs every source with a commitment: hit 70 ms (5 ticks; 83.3 effective), clash 90 ms (6; 100), deflect 40 ms (3; 50). Every freeze source publishes a commitment for the freeze's duration (ADR-0001's hit-stop⇒body-committed invariant); an idle body is covered by Movement's `freeze_hold`. *Test: the 5/6/3 tick conversion; no freeze exists without a published commitment; the pair survives the freeze.*
 - **TR-CMB-023 — Freeze integration.** Combat timers (arc, lock, stagger) run on `logic_tick`; a freeze holds them; Combat does not pull or start arcs during freeze; raw publications continue. The freeze is a clock, not a gate. *Test: a mid-arc freeze holds the remaining duration; no new arc starts frozen; the commitment stays published.*
 - **TR-CMB-024 — Gates.** At gate entry, Combat arcs die; no damage or motion is applied on the transition frame; held states persist; on resume the body is IDLE and nothing is queued. *Test: pause mid-arc → no damage on the transition frame; resume IDLE; no queued attack.*
@@ -107,7 +107,7 @@ Playtesters say: "I saw it coming"; "I knew when to hit it"; "I pressed a little
 #### 6 · Damage, knockback, death
 
 - **TR-CMB-025 — The damage boundary.** Combat publishes `DamageEvent {source, target, raw_damage, kind ∈ {NORMAL, COUNTER, DEFLECT, ENEMY_STRIKE}, contact_tick}`; SYS-07 owns HP, damage application, death and respawn. Combat never subtracts HP. The Combat GDD's damage values are provisional until SYS-07 ratifies the economy. *Test: a SYS-07 mock receives the event; Combat's state contains no HP field; death is SYS-07's edge.*
-- **TR-CMB-026 — The knockback order.** Combat sends `KnockbackOrder {dir, power}` to Movement: `dir = sign(target_x − source_x)` (away from the attacker), `power = strike.power` — the single strike power; the enemy contract has no separate `knockback_power`. Movement executes the motion and the lock; `KNOCKDOWN_POWER = 2` is consumed by Movement (a player hit with power ≥ 2 enters KNOCKDOWN on the hit tick; below runs KNOCKBACK). The player's ATK1/crouch/air power is 1 and ATK2 is 2 at defaults (the power knobs' safe ranges are 1–2 and 2–3). The clash-lose branch publishes no `KnockbackOrder` (TR-CMB-012). *Test: a power-2 enemy strike → knockdown; power 1 → knockback; the order's direction; the 1200 ms arc; the lose branch publishes no order.*
+- **TR-CMB-026 — The knockback order.** Combat sends `KnockbackOrder {dir, power}` to Movement: `dir = sign(target_x − source_x)` (away from the attacker; if the two x-coordinates are equal, `dir = source.facing` — the strike's direction — so the order is never 0), `power = strike.power` — the single strike power; the enemy contract has no separate `knockback_power`. Movement executes the motion and the lock; `KNOCKDOWN_POWER = 2` is consumed by Movement (a player hit with power ≥ 2 enters KNOCKDOWN on the hit tick; below runs KNOCKBACK). The player's ATK1/crouch/air power is 1 and ATK2 is 2 at defaults (the power knobs' safe ranges are 1–2 and 2–3). The clash-lose branch publishes no `KnockbackOrder` (TR-CMB-012). *Test: a power-2 enemy strike → knockdown; power 1 → knockback; the order's direction; the 1200 ms arc; the lose branch publishes no order.*
 - **TR-CMB-027 — No re-knockdown.** During KNOCKDOWN or GETUP a further hit applies damage but starts no new lock (Movement's rule); Combat may grant the 300 ms getup i-frames. *Test: a second heavy hit during GETUP deals damage, no new lock; the getup grant covers the first 300 ms.*
 
 #### 7 · The enemy strike contract
@@ -154,7 +154,7 @@ Combat's player states are orthogonal to Movement's locomotion: a Combat state i
 |---|---|---|
 | **Attack presses** | the pull at the contact/chain point/body-free tick; the arc; the clash | SYS-01: the window (200 ms override), the stamp, the custody, the supersede record |
 | **Crouch + attack** | the selection from the raw channel; the crouch hurtbox read; the low hitbox | SYS-01: the raw `crouch` channel; SYS-06: `crouch_effective` + posture-carry |
-| **`body_busy`** | the Combat commitments (attack arc, air landing lag, clash lock, stagger, hit-stop pair); the 700 ms declaration | SYS-01: the OR; SYS-06: the locomotion locks |
+| **`body_busy`** | the Combat commitments (attack arc, air landing lag, clash lock, stagger, hit-stop pair); the 800 ms declaration | SYS-01: the OR; SYS-06: the locomotion locks |
 | **Knockback** | the vector/power computation; the order | SYS-06: the motion and the lock; SYS-07: the HP/damage/death |
 | **Damage** | the `DamageEvent`; the provisional values | SYS-07: HP, damage, death, respawn |
 | **Enemy strikes** | the clash/deflect resolution; the counter/stagger orders | SYS-13: the strike contract, telegraphs, AI; SYS-14: boss rules |
@@ -273,7 +273,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 #### F-CMB-09 · knockback_order — the body's answer (TR-CMB-026)
 
-`dir = sign(target_x − source_x)` · `power = strike.power` · `KnockbackOrder {dir, power}`
+`dir = sign(target_x − source_x)` (away from the attacker; if the sign is 0, `dir = source.facing` — the strike's direction — never 0) · `power = strike.power` · `KnockbackOrder {dir, power}`
 
 **Output:** the order; Movement's F-MOV-10 executes (`d_kb` 16.9 px @ p1, 67.6 @ p2; lock 180 / 1200 ms). **Example:** a heavy at x 300 hits the player at x 340 → dir +1, power 2 → knockdown.
 
@@ -285,9 +285,9 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 #### F-CMB-11 · commitment_publication — the body's promise (TR-CMB-021)
 
-`body_busy = OR(attack_arc, air_landing_lag, clash_lock, stagger, hitstop_pair)` · `worst_case_arc_ms = max(arc_ms, air_landing_lag_ms, clash_lock_ms, stagger_ms)` · `start_tick`/`end_tick` level semantics (busy on start through end−1)
+`body_busy = OR(attack_arc, air_landing_lag, clash_lock, stagger, hitstop_pair)` · `worst_case_arc_ms = max(arc_ms, air_landing_lag_ms, max_startup_ms + clash_lock_ms, stagger_ms)` · `start_tick`/`end_tick` level semantics (busy on start through end−1)
 
-**Output:** 700 ms at defaults; the combined max with Movement is 1200. **Example:** a clash lock at 5000–5041 is busy 5000–5041 (42 ticks); `end_tick` 5042; the Interact derivation for a clash-busy body uses 700 + margin.
+**Output:** 800 ms at defaults (the clash's startup + lock); the combined max with Movement is 1200. **Example:** a clash lock at 5000–5041 is busy 5000–5041 (42 ticks); `end_tick` 5042; with the 6-tick ATK1 startup the body is continuously busy 48 ticks (800 ms); the Interact derivation for a clash-busy body uses 800 + margin.
 
 #### F-CMB-12 · combo_custody — the chain (TR-CMB-005)
 
@@ -317,7 +317,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 - **If the contact is airborne** → no clash at MVP (grounded-only); the air attack hits or whiffs. [Air clash is a VS question; the lock's physics in the air is a new rule.]
 - **If two enemies strike on the same tick** → the first contact resolves; the second resolves normally; the clash lock is not i-frames; a hit during the lock cancels it and applies the hit reaction. [The lock is mutual, not protective.]
 - **If a melee strike and a projectile land on the same tick** → the first contact resolves; the other resolves normally; the player cannot clash both. [One exchange at a time.]
-- **If the enemy's active window starts before the player's pull** → the player is late; the strike lands; no clash. [The read was late.]
+- **If the enemy's active window starts before the pull** → if it still covers the projected active start, the clash resolves (the read was early enough); if the remaining active is shorter than the startup + 1, the strike lands and no clash occurs. [F-CMB-03's overlap condition decides, not the active-start tick.]
 - **If the attack's projected active start falls after the enemy's active end** → no overlap; no clash; the enemy strike resolves; the player's attack may hit the recovery. [The windows must meet: `remaining active ≥ startup + 1`.]
 - **If a fresh press meets the contact** → the mash cost: no clash; the strike lands; the attack is cancelled. [The Fresh Press rule.]
 - **If a hold-repeat stream meets the contact** → the origin gate applies; the freshness cost is waived; the power comparison still governs. [The a11y aid is a fatigue aid, not a clash cheat.]
@@ -394,7 +394,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 | V-CMB-02 | `CLASH_MAX_AGE_TICKS = ms_to_ticks(ATTACK_WINDOW_MS)` | dev boot failure | the gate cannot outlive the window |
 | V-CMB-03 | `BACKDASH_IFRAME_MS < BACKDASH_LOCK_MS` (SYS-06) | lower IFRAME | exposure ≥ 1 tick |
 | V-CMB-04 | `GETUP_IFRAME_MS < GETUP_MS` (SYS-06) | lower GETUP_IFRAME | the getup is not free |
-| V-CMB-05 | `worst_case_arc_ms = max(arc, air_landing_lag, clash_lock, stagger)` and `≤ 1200` | dev boot failure | TR-INP-029's declaration must cover the longest lock |
+| V-CMB-05 | `worst_case_arc_ms = max(arc, air_landing_lag, max_startup + clash_lock, stagger)` and `≤ 1200` | dev boot failure | TR-INP-029's declaration must cover the longest consecutive busy interval |
 | V-CMB-06 | `COUNTER_CLASH_MULT ∈ [1.2, 2.0]` | clamp | the reward curve |
 | V-CMB-07 | `KNOCKDOWN_POWER ∈ [1, 3]` | clamp | Movement's threshold |
 | V-CMB-08 | `DEFLECT_SPEED ≥ the projectile's speed` (SYS-13) | clamp / flag | the return must outrun the orb |
@@ -505,7 +505,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 - **AC-CMB-16** [GUT] *(TR-CMB-014)* — **PROVISIONAL (OQ#7).** **GIVEN** the a11y hold-repeat on, **WHEN** the hold's origin is ≥5 ticks at the contact, **THEN** the freshness cost is waived; the power comparison still applies; a hold does not auto-win a power-2 exchange; a direct tap still pays; the origin resets on consumption.
 - **AC-CMB-17** [GUT] *(TR-CMB-015, F-CMB-10)* — **GIVEN** a player attack active window overlapping a projectile with an eligible age, **WHEN** the deflect resolves, **THEN** the projectile reverses at 360 px/s, the owner flips, the damage is the projectile's (8 at default), friendly fire applies, and the hit-stop is 40 ms.
 - **AC-CMB-18** [GUT] *(TR-CMB-015)* — **GIVEN** a fresh press at the projectile contact, **WHEN** the deflect evaluates, **THEN** no deflect occurs; the projectile hits the player; the cost is observable.
-- **AC-CMB-19** [GUT] *(TR-CMB-008/028)* — **GIVEN** an enemy strike with `active_ms = 84` (6 ticks) and another with 60 ms (4 ticks), **WHEN** the clash evaluates against the 5-tick crouch startup, **THEN** the 6-tick strike is clashable (startup + 1 = 6); the 4-tick strike is flagged unclashable; the 6-tick ATK1/ATK2 startup needs a 7-tick strike (the per-arc condition); the GDD records it.
+- **AC-CMB-19** [GUT] *(TR-CMB-008/028)* — **GIVEN** an enemy strike with `active_ms = 84` (6 ticks) contacted on its **first active tick**, and another with 60 ms (4 ticks), **WHEN** the clash evaluates against the 5-tick crouch startup, **THEN** the 6-tick strike is clashable (startup + 1 = 6); the 4-tick strike is flagged unclashable; **a 6-tick strike contacted on its second active tick has 5 remaining < 6 and is not clashable** (the later-contact case); the 6-tick ATK1/ATK2 startup needs a 7-tick strike (the per-arc condition); the GDD records it.
 - **AC-CMB-20** [GUT] *(TR-CMB-009)* — **GIVEN** no active-window overlap (or no hurtbox overlap), **WHEN** the exchange evaluates, **THEN** no clash occurs; the normal hit/whiff resolves; no power comparison runs.
 
 ### The defensive family
@@ -518,12 +518,12 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 ### Commitments, clock, gates
 
-- **AC-CMB-26** [GUT] *(TR-CMB-021, F-CMB-11)* — **GIVEN** every Combat commitment (attack arc, air landing lag, clash lock, player stagger, hit-stop pair), **WHEN** it starts and ends, **THEN** `body_busy` is true on `start_tick` through `end_tick−1` and false on `end_tick`; the declaration equals the derived max (700 at defaults; a `CLASH_LOCK_MS` edit re-declares the max); the combined max with Movement is 1200; a publisher raises/clears mid-window.
+- **AC-CMB-26** [GUT] *(TR-CMB-021, F-CMB-11)* — **GIVEN** every Combat commitment (attack arc, air landing lag, clash lock, player stagger, hit-stop pair), **WHEN** it starts and ends, **THEN** `body_busy` is true on `start_tick` through `end_tick−1` and false on `end_tick`; the declaration equals the derived max (800 at defaults; a `CLASH_LOCK_MS` edit re-declares the max); the combined max with Movement is 1200; a publisher raises/clears mid-window.
 - **AC-CMB-27** [GUT] *(TR-CMB-022, F-CMB-07)* — **GIVEN** a hit, clash and deflect, **WHEN** the hit-stop converts, **THEN** 70→5, 90→6, 40→3 ticks; every source publishes a commitment; no freeze exists without one; an idle body is covered by `freeze_hold`.
 - **AC-CMB-28** [GUT] *(TR-CMB-023)* — **GIVEN** an arc with 10 ticks remaining, **WHEN** a 6-tick hit-stop begins, **THEN** the timer holds, the commitment stays published, and the arc resumes with 10 ticks; no new arc starts frozen.
 - **AC-CMB-29** [GUT] *(TR-CMB-024)* — **GIVEN** an attack in progress, **WHEN** a gate opens, **THEN** no damage or motion is applied on the transition frame, the arc dies, and on resume COMBAT_IDLE with nothing queued.
 - **AC-CMB-30** [GUT] *(TR-CMB-025)* — **GIVEN** a hit, **WHEN** the damage resolves, **THEN** a `DamageEvent {source, target, raw_damage, kind, contact_tick}` is published to the SYS-07 mock; Combat contains no HP field; death is SYS-07's edge.
-- **AC-CMB-31** [GUT] *(TR-CMB-026, F-CMB-09)* — **GIVEN** a power-2 enemy strike, **WHEN** the knockback order is published, **THEN** `dir` is away from the attacker and `power = 2`; Movement's F-MOV-10 enters KNOCKDOWN on the hit tick; power 1 runs KNOCKBACK.
+- **AC-CMB-31** [GUT] *(TR-CMB-026, F-CMB-09)* — **GIVEN** a power-2 enemy strike, **WHEN** the knockback order is published, **THEN** `dir` is away from the attacker and `power = 2`; a same-x hit uses the attacker's facing (never `dir = 0`); Movement's F-MOV-10 enters KNOCKDOWN on the hit tick; power 1 runs KNOCKBACK.
 - **AC-CMB-32** [GUT] *(TR-CMB-027)* — **GIVEN** a second heavy hit during GETUP, **WHEN** it lands, **THEN** damage applies and no new lock starts; the getup i-frames cover the first 300 ms.
 - **AC-CMB-33** [GUT] *(TR-CMB-028)* — **GIVEN** the enemy strike contract mock, **WHEN** the fields are validated, **THEN** `power ∈ 1…3`, `active_ms ≥ 84` (6 ticks), the telegraph precedes the active, the hitbox is present, and no `knockback_power` field exists (the single `power` drives the order); the MVP answerability review (backdash · clash · crouch) is a SYS-13 gate record, not a GUT observation.
 - **AC-CMB-34** [GUT] *(TR-CMB-029)* — **GIVEN** two enemies striking the same tick, **WHEN** the resolution runs, **THEN** the first contact resolves, the second resolves normally, ties break by entity id, and a hit during the lock cancels it.
