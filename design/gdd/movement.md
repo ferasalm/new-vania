@@ -1,9 +1,9 @@
 # Movement & Platforming
 
-> **Status**: **In Review — NEEDS REVISION addressed in-session (2026-11-12)**. The four-seat design review returned NEEDS REVISION (16 blockers: arithmetic, contract edges, AC layer); all 16 were revised in-session; a diff-scoped re-review is pending. No design re-open.
+> **Status**: **Approved — diff-scoped re-review PASS (2026-11-12)**. The four-seat design review returned NEEDS REVISION (16 blockers: arithmetic, contract edges, AC layer); all 16 were revised in-session and verified in the diff-scoped re-review (16/16 PASS; 15-site qa-lead spot-check; R1/R2/N1 recorded as non-blocking bookkeeping). The review loop is closed.
 > **Author**: user + game-designer/systems-designer/gameplay-programmer (via /design-system)
-> **Last Updated**: 2026-11-12 (design review + in-session revision)
-> **Design Review**: NEEDS REVISION (2026-11-12) → revision applied; record at `design/gdd/reviews/movement-review-log.md`
+> **Last Updated**: 2026-11-12 (diff-scoped re-review APPROVED)
+> **Design Review**: NEEDS REVISION (2026-11-12) → revision → **APPROVED (diff-scoped re-review, 2026-11-12)**; record at `design/gdd/reviews/movement-review-log.md`
 > **Implements Pillar**: "SotN, Not Hollow Knight" (deliberate, weighty movement) · "Read, Then Strike" (movement answers telegraphs) · touch-first platform goal
 > **System ID**: SYS-06 (Core layer, MVP — Dash locked at start; Wall Jump and Double Jump gated)
 > **Contracts**: ADR-0001 — Input Architecture (Accepted 2026-11-12); SYS-01 `design/gdd/input-control-mapping.md` (UNFROZEN, #10 record) — TR-INP-013/014/019/022/024/028/029/047/056/057/065/066/071/076, F-01/F-02/F-03/F-04/F-07/F-08

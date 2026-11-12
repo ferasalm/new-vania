@@ -44,3 +44,27 @@ All 16 blockers were revised in `design/gdd/movement.md` on 2026-11-12. The GDD 
 
 - The OpenCode shell tool is broken machine-wide; the review and landing ran through the documented throwaway Godot OS.execute bridge (untracked; in no commit). The bridge's output capture was fixed this session: `OS.execute`'s output parameter must be an untyped `Array`, not a `PackedStringArray`.
 - The four review seats ran as fresh-context subagents; the `systems-designer`, `qa-lead` and `gameplay-programmer` seats are disclosed stand-ins (the OCGS agent types are not registered as subagents in this harness). The `game-designer` seat is real.
+
+## Re-review — 2026-11-12 — Verdict: APPROVED (diff-scoped)
+
+Scope signal: **S** (diff-scoped verification of the revision; no design re-open).
+Seats: technical seat + qa-lead spot-check (single-session synthesis; the four-seat panel was the original review). Method: the 16 blockers verified one by one against the changed text; arithmetic re-check at 30/60/120; AC traceability census; a 15-site qa-lead spot-check (claim → target → verdict).
+
+**Result: 16/16 blockers PASS.** The doctrine and the repaired text survived verification; no seat found a new blocker.
+
+**Arithmetic fixtures reproduce.** Jump apex **70.4 px**, air time **41–42 ticks**, reach **157–161 px**; hop **98 px** (14 × 7), **17-tick lock** (283.3 ms), **9-tick i-frames** (150 ms), **8-tick exposure**; dash **84 px** (12 × 7); wall jump **≈82.3 px** horizontal (continuous 83.2 px); knockback **16.9 px** @ power 1 / **67.6 px** @ power 2; crouch top **17.6 px**; derived max **1200 ms**; V-MOV-16 corner **280 ÷ 1200 × 1000 = 233.3 ≤ 250**; F-01 rate table 140 ms → 5@30 / 9@60 / 17@120.
+
+**AC traceability.** 34 TR-MOV rules · 14 formulas · 49 ACs; every TR and formula has an AC or a recorded guidance note (TR-MOV-034 → OQ#1; TR-MOV-033 exercised by AC-MOV-13); zero duplicate IDs; zero `[To be designed]`.
+
+**qa-lead spot-check — 15 sites: 12 PASS, 2 PASS-with-note, 1 note.**
+
+- **R1 (recommended, non-blocking) — AC-MOV-05 hybrid-cut values are continuous-derived.** The 60-tps semi-implicit fixture is **≈16.7 px** at `r = 0.5` and **≈34.5 px** at `r = √0.5`; the AC asserts 18.5 ± 1 / 37.0 ± 1. `JUMP_CUT_RATIO = 1.0` fixed at MVP, so the MVP path is unaffected. Fix before the hybrid knob ships: label the values continuous (design intent) or add the discrete fixtures.
+- **R2 (note) — AC-MOV-11's "64 px vertically" is the continuous apex;** the 60-tps fixture is **≈60.7 px**. Label it with the same continuous/discrete convention.
+- **N1 (note) — traceability bookkeeping:** TR-MOV-034 has no dedicated AC; OQ#1 carries the ADR brief. TR-MOV-033 is exercised by AC-MOV-13 but not cited by ID.
+
+**Verdict: APPROVED.** The GDD is Approved; the review loop is closed. R1/R2/N1 are one-clause bookkeeping items for the Movement ADR authoring — not re-open triggers, not blockers.
+
+### Process notes (re-review)
+
+- The re-review ran in the same session as the SYS-08 Combat authoring kickoff. The OpenCode shell remains broken machine-wide; git/gh ran through the documented throwaway Godot OS.execute bridge (untracked; in no commit).
+- The creative seat for SYS-08 ran as a GLM-5.3-Flash subagent (`game-designer`) with excerpts only; it returned a memo and wrote no files.
