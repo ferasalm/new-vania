@@ -1,0 +1,9 @@
+{
+  "name": "new-vania-godot-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pinned install of @coding-solo/godot-mcp so the OpenCode godot MCP server runs from a stable, version-controlled path instead of the volatile npx cache.",
+  "devDependencies": {
+    "@coding-solo/godot-mcp": "0.1.1"
+  }
+}
