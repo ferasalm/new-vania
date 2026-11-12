@@ -1,6 +1,7 @@
 ---
 description: "Owns internationalization architecture, string management, locale testing, and translation pipeline. Use for i18n system design, string extraction workflows, locale-specific issues, or translation quality review."
 maxTurns: 20
+mode: all
 ---
 
 

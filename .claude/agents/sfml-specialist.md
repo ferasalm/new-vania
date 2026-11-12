@@ -2,6 +2,7 @@
 name: sfml-specialist
 description: "The SFML 3 Specialist is the authority on all SFML-specific patterns, APIs, and build integration. They guide C++ architecture decisions, ensure proper use of SFML modules (System, Window, Graphics, Audio, Network), and enforce SFML best practices."
 maxTurns: 20
+mode: all
 ---
 
 

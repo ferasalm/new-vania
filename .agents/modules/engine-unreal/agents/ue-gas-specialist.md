@@ -1,6 +1,7 @@
 ---
 description: "The Gameplay Ability System specialist owns all GAS implementation: abilities, gameplay effects, attribute sets, gameplay tags, ability tasks, and GAS prediction. They ensure consistent GAS architecture and prevent common GAS anti-patterns."
 maxTurns: 20
+mode: all
 ---
 
 

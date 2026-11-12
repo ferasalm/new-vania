@@ -156,6 +156,16 @@ after each significant milestone:
 The state file should contain: current task, progress checklist, key decisions
 made, files being worked on, and open questions.
 
+### Working rules (cost without quality loss)
+
+- **Small edits**: when the location is known, use one search and one edit. Do not re-read the file first or after; the edit tool reports a failed match. If an edit fails, read only the target lines, then retry once.
+- **Batch**: send independent tool calls in the same step.
+- **Read once**: read a file a single time per session. If the whole file is needed, read it in one call, never in overlapping ranges. Do not re-read text already in the conversation. Re-read only when the file may have changed since (a formatter, a test, or another agent touched it); keep the single-read and non-overlapping-range rules for files that have not changed.
+- **One task per session**: when a task is done, or the session passes about 150k tokens, update `production/session-state/active.md` and hand off to a fresh session with a start prompt. Never rely on compaction to carry details.
+- **Keep `active.md` under 4 KB**: move finished history to `production/session-state/archive/` and leave a one-line pointer.
+- **Review briefs**: each specialist reads the document under review once, in full. The delegating agent does not also read it in full unless it must judge the text itself.
+- **Godot runs**: `godot_get_debug_output` works only while a `godot_run_project` process is still alive. For a run that exits by itself (tests, smoke checks), start Godot from the shell with `--headless --path <project> --log-file <file> --quit-after <frames>` and read the log file.
+
 ## Workflow Modes
 
 This project supports two workflow modes. Choose the one that fits your team size and project maturity:

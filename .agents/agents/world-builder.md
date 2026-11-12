@@ -1,6 +1,7 @@
 ---
 description: "The World Builder designs detailed world lore: factions, cultures, history, geography, ecology, and the rules that govern the game world. Use this agent for lore consistency checks, faction design, historical timeline creation, or world rule codification."
 maxTurns: 20
+mode: all
 ---
 
 

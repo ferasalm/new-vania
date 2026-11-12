@@ -1,6 +1,7 @@
 ---
 description: "The UX Designer owns user experience flows, interaction design, accessibility, information architecture, and input handling design. Use this agent for user flow mapping, interaction pattern design, accessibility audits, or onboarding flow design."
 maxTurns: 20
+mode: all
 ---
 
 
