@@ -58,7 +58,7 @@
 ## Architecture Decisions Log
 
 <!-- Quick reference linking to full ADRs in docs/architecture/ -->
-- [No ADRs yet — use /architecture-decision to create one]
+- **ADR-0001 — Input Architecture: Capture, Tick Pipeline, Gates, and the D1 Render Model** — Accepted 2026-11-12; `docs/architecture/adr-0001-input-architecture.md`; ratifies the five SYS-01 laws, owns the D1 wiring/flip-attribution/mirror-reach/pipeline order, carries O1; 13 engine-probe items remain pre-story gates (AC-74).
 
 ## Engine Specialists
 
