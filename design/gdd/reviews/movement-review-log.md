@@ -68,3 +68,7 @@ Seats: technical seat + qa-lead spot-check (single-session synthesis; the four-s
 
 - The re-review ran in the same session as the SYS-08 Combat authoring kickoff. The OpenCode shell remains broken machine-wide; git/gh ran through the documented throwaway Godot OS.execute bridge (untracked; in no commit).
 - The creative seat for SYS-08 ran as a GLM-5.3-Flash subagent (`game-designer`) with excerpts only; it returned a memo and wrote no files.
+
+### Post-approval CodeRabbit finding (PR #22) — resolved
+
+- **CR-1 — posture-carry vs commitment-entry stands.** The finding was valid: TR-MOV-016's posture-carry was unscoped and could be read as applying to a crouch-held dash/jump/hop, contradicting the commitment-entry stand. Fixed as a one-clause scoping edit: **posture-carry applies to attack commitments only**; dash, jump and hop use the commitment-entry stand (they stand her up). The Combat GDD's TR-CMB-006 was aligned in the same pass. No design re-open; the re-review verdict stands.
