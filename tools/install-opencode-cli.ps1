@@ -46,9 +46,12 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
 }
 
 # A relative -OptRoot would leak into the generated shim and break it outside
-# this directory, so resolve both roots before anything uses them.
-$OptRoot = [System.IO.Path]::GetFullPath($OptRoot)
-$BinDir  = [System.IO.Path]::GetFullPath($BinDir)
+# this directory, so resolve both roots before anything uses them. Use the
+# session-state resolver, not [IO.Path]::GetFullPath: GetFullPath resolves
+# against the process working directory, which can differ from PowerShell's
+# location after Set-Location.
+$OptRoot = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OptRoot)
+$BinDir  = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($BinDir)
 
 $package   = '@opencode/cli-windows-x64'
 $tarball   = "https://registry.npmjs.org/$package/-/cli-windows-x64-$Version.tgz"
