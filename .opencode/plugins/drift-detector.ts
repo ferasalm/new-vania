@@ -85,12 +85,12 @@ export function detectAgentDrift(projectRoot: string, filePath: string): DriftIs
     }
   }
 
-  if (fm.mode && !["primary", "subagent"].includes(fm.mode)) {
+  if (fm.mode && !["primary", "subagent", "all"].includes(fm.mode)) {
     issues.push({
       file: filePath,
       section: "frontmatter.mode",
       severity: "HIGH",
-      message: `Invalid mode '${fm.mode}' — must be 'primary' or 'subagent'`,
+      message: `Invalid mode '${fm.mode}' — must be 'primary', 'subagent' or 'all'`,
     })
   }
 
