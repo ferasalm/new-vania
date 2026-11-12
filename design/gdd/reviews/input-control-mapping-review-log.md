@@ -606,3 +606,124 @@ C1 stays ADR-routed (stands) · C4's rejection and C7's acceptance stand as reco
 
 ### Sequencing after this review
 **The FINAL ENUMERATED REPAIR in a FRESH session** (fix table: the 3 blockers + the 12 riders exactly as pinned above; the machine-audit re-run per CD ruling 5's spec; mini-proofs per fix; grep dependent sweeps; branch + PR + pre-merge cross-check; NO review in that session) → **#10 DIFF-SCOPED in a fresh session** (the final repair's diff + the audit verification only; qa-lead spot-check mandatory; NO tripwire — findings route to the post-#10 path) → **the GDD UNFREEZES on the #10 record regardless of outcome** (the adversarial loop is capped — it ends by #10) → unfreeze order: Input Architecture ADR → Acceptance (ratifies the first-Gameplay-tick delivery law, the publish-raw-every-tick law, gate-request terminality, the NB-I freeze-processing scope, the NB-J non-ack gate-entry rule; owns D1 SubViewport wiring, flip-attribution mechanism, mirror/reach-disc mechanism, pipeline order) + the QA plan completes its AC→gate ledger at the 96-unit partition → Combat/Movement GDDs (normative consumption of the crouch channel / posture handoff / gate manifest unlocks; skeletons/boundaries/dependency declarations already permitted) → SYS-32 camera GDD last.
+
+## Repair — 2026-11-12 — SYS-01 FINAL ENUMERATED REPAIR EXECUTED (branch (b)'s own authority; the 3 blockers + 12 pinned riders (a)–(l), nothing else)
+
+Scope signal: program XL (unchanged — ADR-gated); this repair S (the loop-ending set)
+Specialists: none convened — this is the fresh-session repair pass CD ruling 1 authorized (no review, no panel, no new findings). The session's CD authority is exercised only where the #9 entry delegates it: rider (a)'s live-change mechanism call.
+Summary: The pinned set was executed exactly — 3 blockers (UX B1 exposure inventory + EX-2 cross-cite · PA B-1 AC-54 scope exclusivity · GP B1 L535 blanket) and the 12 riders (a)–(l), each at its named site, subtractive (no new knobs, modes, gates, or ACs). One dependent-site clause was required by rider (a) itself (TR-INP-074's scope sentence, both sites — a live-edit re-validation pinned in AC-11 while the law still said "at config load" would have been a new cross-reference contradiction inside this very diff); it is disclosed in the edit map. The mandated machine audit re-run ran per CD ruling 5 (recorded stems + symbol-uniqueness stem + event-class membership check); the artifact is below. **The AC→gate ledger is unchanged at 96 = 67 smoke + 19 device + 3 lock + 7 VS** — no fix moves a clause between gates (AC-54 stays smoke, AC-11 stays smoke, AC-18 stays smoke, AC-50 stays device, AC-63 stays lock, AC-70 stays two device clauses). Dependent sweeps per edit are clean. Zero further riders nominated. The GDD remains FROZEN — **#10 diff-scoped is next**.
+
+### Edit map (each fix names its site; every dependent site disclosed)
+
+| # | Item | Site (post-edit line) | Exact change | Dependent site(s) |
+|---|---|---|---|---|
+| B1 | UX B1 — exposure inventory | Exposure L687; UI Requirements L715 | Added `CHIP_TAP_COMMIT` toggle + `BACKDASH_BTN_TOGGLE` to the player-facing list; re-cited "TR-INP-009/070/**037** ratified lists **plus EX-2's a11y settings**"; L715's Recalibration enumeration gained the same two toggles | L717 (Recalibration a11y settings) already listed both — the exposure triple now agrees; TR-INP-037 L182, EX-2 L760, TR-INP-008 L92 unchanged |
+| B2 | PA B-1 — AC-54 exclusivity | AC-54 L873 | Replaced "four structures … complete preallocated set; nothing else is SYS-01-owned allocation scope" with a six-structure bounded enumeration (**+ capture queue** — drain-all per tick, captures retained across the render→tick boundary; **+ gate-request queue** — raised per tick, applied at the next gate-entry phase, NB-J) under the blanket law "every SYS-01-owned hot-path structure … nothing else is SYS-01-owned allocation scope"; added the measurand-vs-scope attribution clause (PA rec 4) | AC-53 (capture-queue drain, drain-all policy), L538 + AC-59 (the gate-request queue), TR-INP-076 (raw enqueue/multi-tick retention), F-08 |
+| B3 | GP B1 — same-frame blanket | Edge Cases L535 | Applied AC-44's exact scoping: "…dropped with the buffers — age is irrelevant at entry — **scoped to same-frame presses that do not open the gate** (the gate-opening pull commits and the context transitions on that tick; no verb resolves on the transition frame after the gate request is raised — TR-INP-047(2), AC-44, AC-59)" | AC-44 L857, AC-59 L881, TR-INP-047(2) L199, L534 |
+| a | AC-11 demo config + live-change | AC-11 L812; **TR-INP-074 L521 + the Tuning Knobs preamble L595** | Pair 64/**6** dp (6 ≤ 0.1 × 64, V10) **and** live-change re-validation pinned (TR-INP-074's pairwise law on every live edit; a violating live value takes V10's clamp + rate-limited telemetry, dev assert — **the session's CD call on the clamp-vs-boot-fail mechanism: clamp, because there is no boot to fail at**) | TR-INP-074's two sites (aligned to "validated at config load **and re-validated on every live edit**"); AC-24/AC-72's config-load cases untouched |
+| b | `CLUSTER_GAP_DP` row | L650 | Rationale cell: the false "<8: hit rects collide" → "no collision at the audited table — the tightest edge clearance is 15.3 dp and gap-independent (the old rationale was stale); the 8 floor is a design minimum"; "(V14 clamps)" → "V0 clamps to the range top; V14's own resolution is boot-failure/fix-the-table, not a clamp" | V0 row L611, V14 row L613, the safe-range cell |
+| c | TR-INP-069 failure evidence | L173 (tail) | "all six pairwise gaps ≥ 84 dp at 1.5" → "all six pairwise **center distances** ≥ 84 dp at 1.5" | AC-34 L842, AC-66 L891 (84 at default knobs) |
+| d | F-01 boundary honesty | L263 | "(150 ms contract > new 141.7 ms effective)" → "(old 60-tps effective 150 > new 141.7 ms effective)" | AC-23 L827, AC-55 L874 |
+| e | AC-18 stamp budget | AC-18 L822 | "up to 2 `logic_tick`s" → "up to 2 `logic_tick`s (**p99.9 ≤ 2 and max ≤ 3**)" | TR-INP-076 L119, AC-65 L890 |
+| f | Duplicate knob row | L672 (deleted) | Removed the second `DASH_SOCKET_VISUAL_DP` row (kept L645); the symbol-uniqueness stem added to the audit (Part 2 below) | L645 (kept row), TR-INP-069's Dash socket entry |
+| g | AC-70 jank pointer | AC-70 L895 | Added "breach adjudication (hiccup vs re-run) is AC-53's ledger pointer's, not a second policy" | AC-53's "max-gate breach adjudication (hiccup/re-run policy)" L872 |
+| h | AC-50 carve-out + item 13 | AC-50 L866; engine item 13 L788 | AC-50's unqualified "at 0 every haptic is silent" → "silent **where the platform allows — the iOS carve-out is AC-70's**"; item 13's amendment target "AC-70's strength-0 silence claim" → "**AC-50's** strength-0 silence claim (AC-70 already carries the platform carve-out)" | AC-70 L895 (its own platform-qualified sentence) |
+| i | Provenance marks | Engine item 9 L784; TR-INP-077 heading L174 | Item 9's "the mechanism half is documented" → "marked `[unverified]` — no engine-reference citation for `action_press` × deadzone exists in the repo"; TR-INP-077's "engine-grounded" dropped, `[unverified — the API surface is memory-sourced: get_display_safe_area has zero matches in the repo's engine reference]` added | The annex heading's *documented* convention L775 (item 9 no longer claims it) |
+| j | F-04 Output Range | L358 | "Stick released → the held-zone half stands" → "the held-zone half **drops via the unguarded exit (release ⇒ mag 0 ⇒ ¬in_exit)**" | The F-04 state machine L337, AC-31 L838 ("release stands") |
+| k | AC-63 Q4 instrument | AC-63 L885 (Q4) | Pinned the report: "the experienced-lost-press **drop rate** (Q4 reports per session-minute) is reported alongside the negation counts" | Player Fantasy L37 ("drop rate reported alongside") |
+| l | F-10 both-fail precedence | F-10 Output Range L492 | Added "**a binding failure dominates the body wait** (TR-INP-030's entry law): a binding term failing on the same tick `body_available` is false clears the intent, never waits" | TR-INP-030 L152 ("presses with no target expire immediately"), F-08, the Output Range's own binding clause |
+
+### Mini-proofs per fix
+
+1. **B1 (UX B1).** The exposure paragraph now names all five TR-INP-037 reset-excluded a11y toggles (`TOUCH_HIT_SCALE`, `CROUCH_MODE`, `CHIP_TAP_COMMIT`, `BACKDASH_BTN_TOGGLE`, `HAPTIC_GLOBAL_STRENGTH`) and cites its sources (009/070/037 + EX-2). L715's screen enumeration carries the same two toggles as L717's settings list — the two implementers now read one inventory. The "nothing more" closure survives: every listed item resolves to TR-INP-009, TR-INP-070, TR-INP-037, or EX-2 (audit row D9).
+2. **B2 (PA B-1).** The exclusivity claim that denied the queues is gone. The enumeration now names all six SYS-01-owned structures, including the two cross-tick queues the pipeline actually runs (AC-53's first instrumented node is the capture-queue drain; the choreography's QUEUED-and-applied gate-request queue is NB-J's). The blanket law ("every SYS-01-owned hot-path structure, each preallocated and bounded") makes the obligation closed without an enumeration-is-exhaustive claim; the measurand clause separates what the monitors sample (process-wide) from what the bars gate (the named structures), so the blind-spot sentence no longer reads as a scope denial.
+3. **B3 (GP B1).** L535's universal now carries AC-44's exact scoping: the opener press is outside the dropped set by construction, and the consequent matches AC-59 ("the press consumes the prompt and the context transitions that tick") and TR-INP-047(2). The species-grep certification is in the sweeps below (zero further copies of the falsified universal; the one other "same frame the menu opens" hit is TR-INP-047's buffer-clear test, adjudicated a non-copy — an attack press does not open the menu).
+4. **(a).** The demo config is V10-legal by arithmetic (6 ≤ 6.4), so AC-11 no longer asks for a config the knob law forbids. The live-change half is pinned at the AC and at the law: TR-INP-074 now says "validated at config load **and re-validated on every live edit**" at both of its sites, and the AC names the resolution (clamp + telemetry; dev assert). No boot-fail claim is made for a live edit — there is no boot.
+5. **(b).** The row's rationale is arithmetically true: at the audited table the tightest pair's center distance is 87.32 dp and the scaled radius sum is 72 → 15.32 dp of edge clearance, independent of `CLUSTER_GAP_DP`; the 8 floor is a design minimum, stated as one. The bound citation is now V0 (range clamp 13→12) and V14's real resolution (boot failure naming the pair) is stated as what it is.
+6. **(c).** The evidence line now says "pairwise **center distances** ≥ 84" — true (87.32–151.85) and consistent with AC-34/AC-66's "≥ r₁ + r₂ + gap … 84 at default knobs". The old "gaps" reading (15.3–79.9) is no longer asserted.
+7. **(d).** The parenthetical now names the 150 ms as the OLD 60-tps effective, not a contract — F-01's own law (140 ms contract) is no longer contradicted by its own note. The rate table (9 ticks @60 = 150.0) still supports the number.
+8. **(e).** AC-18's restatement now matches TR-INP-076/AC-65 exactly ("p99.9 ≤ 2 and max ≤ 3"); the GUT half is untouched (it asserts the offer cadence, not the device budget).
+9. **(f).** One `DASH_SOCKET_VISUAL_DP` row remains (L645); the Tuning Knobs table now has 55 rows and 55 distinct symbols (Part 2). The "exactly one row" law at L621 is satisfied.
+10. **(g).** AC-70's jank clause now points at AC-53's ledger's breach adjudication instead of standing silent — one policy, one home.
+11. **(h).** AC-50's strength-0 claim is platform-qualified exactly as AC-70's is; item 13 now targets the claim that was actually unqualified. The iOS capability row and AC-70's carve-out agree.
+12. **(i).** Both provenance marks are honest: the repo's engine reference has zero matches for `action_press`, `deadzone`, and `get_display_safe_area` (verified this session), so neither site claims documentation it does not have; the annex's *documented* convention is no longer borrowed.
+13. **(j).** F-04's Output Range now agrees with its own state machine (release ⇒ ¬in_exit ⇒ the zone half drops) and with AC-31 ("release stands"); the latch half is unchanged and still correct.
+14. **(k).** The Player Fantasy's promised instrument now has a home: AC-63's Q4 row mandates the drop-rate report (Q4 reports per session-minute) alongside the negation counts. No new AC, no new gate.
+15. **(l).** F-10's Output Range now orders the both-fail tick: a binding failure dominates the body wait, which is TR-INP-030's entry law (no target ⇒ immediate expiry) and keeps the wait clause scoped to body-only failures.
+
+### THE MACHINE AUDIT RE-RUN (CD ruling 5 — full artifact)
+
+**Method.** The #8 artifact's 13 stem families re-run over the post-repair file (case-insensitive, occurrences AND lines — the #9 instrument note (a) recorded, so both are reported), plus the symbol-uniqueness stem and the event-class membership check. Raw stem counts:
+
+| Stem family | occ | lines |
+|---|---|---|
+| `consumed by` | 2 | 2 |
+| `gated by` | 2 | 2 |
+| `meets\|passes` | 10 | 9 |
+| `rides` | 19 | 17 |
+| `applies to\|applies` | 16 | 16 |
+| `excluded` | 9 | 8 |
+| `exempt` | 17 | 13 |
+| `device-executed` | 3 | 2 |
+| `default home\|defaults home` | 2 | 1 |
+| `takes no body\|does not bind` | 1 | 1 |
+| `win over\|wins over\|winning` (the corrected stem — #9 instrument note (b)) | 3 | 3 |
+| `polled first` | 3 | 3 |
+| `sole puller\|sole deadzone` | 2 | 2 |
+
+The claim inventory is the verified object, not the raw counts. **The 47-row inventory of the #8 artifact is reproduced with 46 rows byte-identical** (this repair's edits touch only the sites in the edit map; no claim site in rows A1–D8, D10, E1–E6 was edited). **Row D9's text changed and is re-verified:**
+
+| # | Claim (site → quote) | Verified against | Verdict |
+|---|---|---|---|
+| D9 | Exposure list: "Exactly the TR-INP-009/070/037 ratified lists plus EX-2's a11y settings, nothing more" — now enumerating `MIRROR`, size presets, `CLUSTER_OPACITY`, `STICK_LEASH`, `STICK_DEADZONE`, down-zone presets, `TOUCH_HIT_SCALE`, `CROUCH_MODE`, `CHIP_TAP_COMMIT`, `BACKDASH_BTN_TOGGLE`, `ATTACK_HOLD_REPEAT`, `HAPTIC_GLOBAL_STRENGTH` | TR-INP-009 (mirror, sizes, opacity, leash/deadzone, down-zone), TR-INP-070 (`TOUCH_HIT_SCALE`, `CROUCH_MODE`, `ATTACK_HOLD_REPEAT`, `HAPTIC_GLOBAL_STRENGTH`), TR-INP-037 + EX-2 (the five a11y toggles incl. the two added), L717 (the screen's own list) | **PASS(post)** |
+
+**The 12 repair-delta claims** (new normative statements this repair introduced — each verified against its target):
+
+| # | Claim (site) | Verified against | Verdict |
+|---|---|---|---|
+| F1 | AC-11 + TR-INP-074: "the pairwise law applies on every live edit, not only at config load" (L812, L521, L595) | The law's own amended sentence at both sites; V10's clamp row; AC-24/AC-72's config-load cases remain the load-time instances | PASS(post) |
+| F2 | AC-54 scope: six structures incl. capture queue (drain-all per tick) + gate-request queue (raised per tick) | AC-53's "capture-queue drain (drain-all policy)"; TR-INP-076's raw enqueue + multi-tick retention; L538/AC-59's QUEUED-and-applied rule | PASS(post) |
+| F3 | AC-70: "breach adjudication (hiccup vs re-run) is AC-53's ledger pointer's" | AC-53's "max-gate breach adjudication (hiccup/re-run policy)" in the QA plan's perf ledger | PASS(post) |
+| F4 | AC-63 Q4: drop rate reported alongside negation counts | Player Fantasy L37's "drop rate reported alongside"; TR-INP-056's reflex-class drop | PASS(post) |
+| F5 | F-10: "a binding failure dominates the body wait" (TR-INP-030's entry law) | TR-INP-030: "presses with no target expire immediately"; F-10's own binding terms | PASS(post) |
+| F6 | L535's scoping cites TR-INP-047(2)/AC-44/AC-59 | All three say the same thing (opener commits; nothing resolves after the raise) | PASS(post) |
+| F7 | AC-50: "silent where the platform allows — the iOS carve-out is AC-70's" | AC-70's iOS sentence ("if the stock API cannot be silenced, the settings copy says so") | PASS(post) |
+| F8 | Item 13: the unqualified claim is AC-50's | AC-50 L866 (now qualified); AC-70 L895 (already qualified) | PASS(post) |
+| F9 | Item 9 `[unverified]` — no repo citation for `action_press` × deadzone | Repo check: 0 matches for `action_press` and for `deadzone` under `docs/engine-reference/godot/` | PASS(post) |
+| F10 | TR-INP-077 `[unverified]` — `get_display_safe_area` memory-sourced | Repo check: 0 matches under `docs/engine-reference/godot/` | PASS(post) |
+| F11 | `CLUSTER_GAP_DP`: "V0 clamps to the range top" | V0's row ("clamp to nearest bound"); the row's safe range 8–12 | PASS(post) |
+| F12 | TR-INP-069: "pairwise center distances ≥ 84" | AC-34/AC-66 (84 at default knobs); the audited table's center distances 87.32–151.85 | PASS(post) |
+
+**Tallies: 59 claims verified — 34 PASS as-written, 23 PASS(post), 2 ADJ (A6 + D10 stand), 0 unresolvable.** (The #8 tally's 35/10/2 shifts only by D9 moving PASS → PASS(post) and the 12 delta rows arriving.)
+
+**Symbol-uniqueness stem (rider (f)'s process half):** the Tuning Knobs table parses **55 rows, 55 distinct symbols, zero duplicates**. The duplicate `DASH_SOCKET_VISUAL_DP` row is gone; the "exactly one row" law (L621) holds.
+
+**Event-class membership check (the #9 coverage hole — GD rec 2):** TR-INP-013's buffered-event class lists six members — Jump, Attack, Dash, Interact, Quick-use, backdash. Checked member-by-member against EX-1's reflex-class exception: **backdash is the sole excepted member** (EX-1: "no buffer, single-tick offer"; TR-INP-056; F-07's body-free completion; AC-39's drop-at-completion). The other five carry no exception row and buffer per F-05. The class sentence is a permission ("may be buffered") and EX-1 revokes it for backdash alone — **membership check PASSES**, with the missing inline pointer already recorded in the #9 entry's QA-plan-routed list (GD rec 2, "backdash alone is reflex-class — EX-1") — no new finding, no action here.
+
+### Dependent grep sweeps per edit (artifacts)
+
+1. **B1:** `CHIP_TAP_COMMIT|BACKDASH_BTN_TOGGLE` → 9 hits, all intended (TR-INP-037, TR-INP-068, F-09, the two knob rows, Exposure, AC-69, UI's two sites); no orphaned "nothing more" reading — the two toggles are now in all three lists.
+2. **B2:** `complete preallocated set` → 1, and it is the #9 blocker's own quotation in the status header (a statement OF the deletion); `capture queue|gate-request queue|measurand-vs-scope` → the AC-54 site only.
+3. **B3:** `exact frame a gate opens` → 1 (L535); `dropped with the buffers` → 1 (L535); `same frame the menu opens` → 1 (TR-INP-047's test, non-copy adjudicated) — **zero further copies of the falsified universal**.
+4. **(a):** `4→8 dp` → 0; `4→6 dp` → 1 (AC-11); `config load` → the law's two sites now both carry the live-edit clause.
+5. **(b):** `V14 clamps` → 0; `hit rects collide` → 1 (the corrected cell's statement of the stale rationale).
+6. **(c):** `pairwise gaps` → 0; `pairwise **center distances**` → 1.
+7. **(d):** `150 ms contract` → 0.
+8. **(e):** "up to 2 `logic_tick`s" → 1, carrying the p99.9/max clause.
+9. **(f):** `DASH_SOCKET_VISUAL_DP` rows → 1 (L645) + its two prose references; the table's symbol scan → 55/55 unique.
+10. **(g):** `breach adjudication` → 2 (AC-53's policy + AC-70's pointer).
+11. **(h):** `every haptic is silent` → 1 (AC-50, now qualified); `AC-70's strength-0` → 0.
+12. **(i):** `engine-grounded` → 0; `mechanism half is documented` → 0; `[unverified]` marks → item 9, TR-INP-077, and the pre-existing item 16.
+13. **(j):** `held-zone half stands` → 0.
+14. **(k):** `drop rate` → 2 (Player Fantasy L37 + AC-63's Q4).
+15. **(l):** `binding failure dominates` → 1 (F-10).
+
+### Ledger status
+
+**Unchanged at 96 = 67 smoke + 19 device + 3 lock + 7 VS.** No fix moves a clause between gates: AC-54 (smoke), AC-11 (smoke), AC-18 (smoke), AC-63 (lock), AC-50 (device), AC-70 (two device clause-units) all keep their memberships; the repair adds no AC and deletes no clause-unit. The QA plan's ledger derivation stands as the #9 entry recorded it (four independent derivations agree).
+
+### Stop
+
+The pinned set is complete: 3 blockers + 12 riders, zero further riders nominated, the audit artifact attached, the dependent sweeps clean, the ledger unchanged. **This session STOPS — #10 DIFF-SCOPED runs in a FRESH session** on this repair's diff + the audit verification only (qa-lead spot-check mandatory; NO tripwire — findings route to the post-#10 path, CD ruling 3), then **the GDD UNFREEZES on the #10 record regardless of outcome**.
+
+**Landing:** branch `fix/sys01-final-repair` → **PR #19** (base Main) → pre-merge cross-check (the PR diff against the pinned set: nothing extra, nothing missing) → merged. The OpenCode shell tool was broken machine-wide again this session (the same "The system cannot find the path specified" outage); the landing ran through the documented Godot OS.execute bridge pattern (throwaway bridge files — UNTRACKED, in no commit; kept until the shell works).
