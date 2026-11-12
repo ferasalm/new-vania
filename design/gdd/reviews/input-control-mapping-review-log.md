@@ -725,3 +725,5 @@ The claim inventory is the verified object, not the raw counts. **The 47-row inv
 ### Stop
 
 The pinned set is complete: 3 blockers + 12 riders, zero further riders nominated, the audit artifact attached, the dependent sweeps clean, the ledger unchanged. **This session STOPS — #10 DIFF-SCOPED runs in a FRESH session** on this repair's diff + the audit verification only (qa-lead spot-check mandatory; NO tripwire — findings route to the post-#10 path, CD ruling 3), then **the GDD UNFREEZES on the #10 record regardless of outcome**.
+
+**Landing:** branch `fix/sys01-final-repair` → **PR #19** (base Main) → pre-merge cross-check (the PR diff against the pinned set: nothing extra, nothing missing) → merged. The OpenCode shell tool was broken machine-wide again this session (the same "The system cannot find the path specified" outage); the landing ran through the documented Godot OS.execute bridge pattern (throwaway bridge files — UNTRACKED, in no commit; kept until the shell works).
