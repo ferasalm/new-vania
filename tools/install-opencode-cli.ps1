@@ -45,6 +45,11 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     throw "Version must look like 2.2.7 (got '$Version')."
 }
 
+# A relative -OptRoot would leak into the generated shim and break it outside
+# this directory, so resolve both roots before anything uses them.
+$OptRoot = [System.IO.Path]::GetFullPath($OptRoot)
+$BinDir  = [System.IO.Path]::GetFullPath($BinDir)
+
 $package   = '@opencode/cli-windows-x64'
 $tarball   = "https://registry.npmjs.org/$package/-/cli-windows-x64-$Version.tgz"
 $targetDir = Join-Path $OptRoot "opencode-$Version"
@@ -58,15 +63,24 @@ function Get-ReportedVersion {
     return $null
 }
 
+# A binary that prints the right version and then exits nonzero is not a
+# usable install, so the exit status is part of the check.
+function Get-InstalledVersion {
+    param([string]$Exe)
+    $text = (& $Exe --version) 2>$null
+    if ($LASTEXITCODE -ne 0) { return $null }
+    return (Get-ReportedVersion $text)
+}
+
 $needsDownload = $true
 if (Test-Path $targetExe) {
-    $have = (& $targetExe --version) 2>$null
-    if ((Get-ReportedVersion $have) -eq $Version) {
-        Write-Host "Already installed: $have"
+    $haveVersion = Get-InstalledVersion $targetExe
+    if ($haveVersion -eq $Version) {
+        Write-Host "Already installed: opencode v$haveVersion"
         $needsDownload = $false
     }
     else {
-        Write-Host "Existing binary reports '$have'; reinstalling."
+        Write-Host "Existing binary reports 'v$haveVersion'; reinstalling."
     }
 }
 
@@ -100,11 +114,11 @@ if ($needsDownload) {
     }
 }
 
-$reported = (& $targetExe --version) 2>$null
-if ((Get-ReportedVersion $reported) -ne $Version) {
-    throw "Installed binary reports '$reported', expected $Version."
+$reportedVersion = Get-InstalledVersion $targetExe
+if ($reportedVersion -ne $Version) {
+    throw "Installed binary reports 'v$reportedVersion', expected $Version."
 }
-Write-Host "Verified: $reported"
+Write-Host "Verified: opencode v$reportedVersion"
 
 if ($Switch) {
     if (-not (Test-Path $BinDir)) {
@@ -116,12 +130,22 @@ if ($Switch) {
         Copy-Item $shim $backup
         Write-Host "Backed up shim -> $backup"
     }
-    $shimLine = '"' + $targetExe + '" %*'
-    Set-Content -Path $shim -Encoding ASCII -Value @(
-        '@echo off'
-        "rem Pinned opencode v$Version (side-by-side install; previous versions kept under .local\opt)."
-        $shimLine
-    )
+
+    # cmd.exe expands %NAME% even inside quotes, so a literal percent in the
+    # path must be doubled. %* stays unescaped so launcher arguments forward.
+    $shimExe  = $targetExe -replace '%', '%%'
+    $shimLine = '"' + $shimExe + '" %*'
+    $content  = "@echo off`r`n" +
+                "rem Pinned opencode v$Version (side-by-side install; previous versions kept under .local\opt).`r`n" +
+                "$shimLine`r`n"
+
+    # ASCII would replace non-ASCII path characters with '?', producing a shim
+    # that cannot launch the binary it just verified. Write in the console's
+    # OEM code page, which cmd.exe reads correctly on this machine.
+    $oem = [System.Text.Encoding]::GetEncoding(
+        [System.Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage)
+    [System.IO.File]::WriteAllText($shim, $content, $oem)
+
     Write-Host "Shim now launches v$Version : $shim"
 }
 
