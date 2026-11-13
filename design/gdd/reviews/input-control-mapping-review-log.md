@@ -1006,3 +1006,37 @@ valid, all fixed in the follow-up commit):**
   **W-2 is thereby resolved in design** (the script is pinned; the authored
   test implements it). W-1's design half is likewise specified; the
   implementation watch (the harness assert) remains for the first SYS-01 story.
+
+**Addendum 2 — 2026-11-13 (the PR #36 re-review threads on the fix commits, all
+valid, all fixed):**
+- **Thread A (Major, the press1 sample order):** the ADR §10 pseudocode captured
+  `facing.value` at press1 without fixing the same-tick ordering — if Movement's
+  turn published first, the post-turn value would feed the check and contradict
+  the pre-turn rule. Fixed: the **pre-tick publication law** — the press1 sample
+  reads the last publication with `asserted_tick` strictly less than press1's
+  tick; same-tick publications (including the press1-induced turn, which
+  Movement publishes on press1's tick or the next per TR-MOV-007) never feed the
+  sample. Pinned in both TR-INP-056 and F-08's back-edge clause, and in ADR §10
+  beside the pseudocode (a dated rider, not a decision change).
+- **Thread B (Minor, the mid-band release):** the 0.25 → 0.42 → 0.39 → 0.46
+  sequence exposed a contradiction — the release-edge event text ("a fresh fall
+  from ≥ the release threshold to strictly below it") would classify the
+  0.42 → 0.39 fall as a `release1` although no arming-zone crossing occurred,
+  against transition (iv)'s crossing precondition. Fixed: the release edge is
+  scoped to **post-crossing presses** (before the first arming-zone crossing,
+  falls within the creep..arming band are wobble — the press holds; only the
+  sub-creep-exit fall retires); the worked case is stated explicitly; AC-39
+  gains the pre-crossing mid-band-fall negative case.
+- **Thread C (Major, the wall-segment identity):** the re-arm rule required "a
+  different tagged wall-border segment" but no contract provided segment
+  identity — SYS-02's query returned a bare boolean, `MoveResult` had no segment
+  field, and room data defined ids only for DOOR|PASSAGE borders. Fixed: **the
+  `wall_segment_id` identity law** — each tagged wall-border segment carries a
+  stable id in SYS-02's room data (minted at room load); the climbability query
+  widens to `wall_surface_query(point) → {climbable, wall_segment_id}` (−1
+  untagged); `MoveResult` gains `wall_segment_id` (TR-MOV-031); the re-arm
+  compares ids — the same id never re-arms early, a different id re-arms
+  immediately. Because SYS-02's GDD is APPROVED, the query widening rides as a
+  **recorded SYS-02 rider** in the systems index (the OQ-M1 pattern — it rides
+  the next SYS-02 doc touch); Movement's own `MoveResult` extension is in-scope
+  here. AC-MOV-49 gains the id phrasing + the same-id-no-early-re-arm case.

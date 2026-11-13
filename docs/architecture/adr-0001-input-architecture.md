@@ -728,6 +728,11 @@ Movement OQ-M2: this section originally said "every `logic_tick`"; value/epoch
 changes remain keyed to `logic_tick`)** (so a missed read never sees a stale
 value). The epoch increments only on a value change; the cause is the cause of that change. The input layer
 reads the publication at press1 and on every tick while the machine is armed.
+**The press1 sample is the pre-tick publication** (the 2026-11-13 rider — the
+PR #36 review): the last publication with `asserted_tick` strictly less than
+press1's tick; same-tick publications, including the press1-induced turn itself
+(Movement publishes it on press1's tick or the next), never feed the press1
+sample.
 
 **Attribution rule.**
 
