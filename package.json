@@ -8,13 +8,15 @@
     "test": "tests"
   },
   "scripts": {
-    "prepare": "node tools/git-hooks/install.mjs",
+    "prepare": "node tools/git-hooks/install.mjs && node tools/fix-opencode-symlinks.mjs",
+    "fix:symlinks": "node tools/fix-opencode-symlinks.mjs",
+    "check:symlinks": "node tools/fix-opencode-symlinks.mjs --check",
     "hooks:install": "node tools/git-hooks/install.mjs",
     "test": "npm run test:plugins && npm run test:hooks && npm run test:claude",
     "test:plugins": "node --import tsx --test .opencode/plugins/tests/test-*.mjs",
     "test:extensions": "node --import tsx --test tests/extensions/*.mjs",
     "test:omp": "node --import tsx --test tests/omp/*.mjs",
-    "test:hooks": "node --test tests/git-hooks/test-commit-msg.mjs tests/git-hooks/test-pre-commit.mjs",
+    "test:hooks": "node --test tests/git-hooks/test-commit-msg.mjs tests/git-hooks/test-pre-commit.mjs tests/git-hooks/test-fix-symlinks.mjs",
     "test:framework": "node tests/agents/validate.mjs",
     "test:modules": "node --test tests/modules/test-install-harness.mjs",
     "test:parity": "node --import tsx --test tests/e2e/test-parity.test.ts",

@@ -7,6 +7,15 @@ opencode-debug-latest.json
 fixed-debug.json
 opencode-config-verify.json
 
+# Generated .opencode mirrors — created by `npm install` (tools/fix-opencode-symlinks.mjs).
+# Never commit these: git can only store them as symlinks, and a Windows checkout
+# without Developer Mode materialises them as junctions, which git reads as a
+# deleted symlink. See docs/tooling/opencode-symlink-conflict.md.
+/.opencode/agents
+/.opencode/commands
+/.opencode/rules
+/.opencode/skills
+
 # Session data (private — contains design discussions)
 production/session-logs/
 production/session-state/

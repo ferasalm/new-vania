@@ -38,10 +38,10 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 │   └── modules/                 # 22 module sources (non-OpenCode targets)
 ├── .opencode/                   # OpenCode-specific
 │   ├── plugins/                 # TypeScript plugins (ccgs-hooks, drift-detector, changelog-generator)
-│   ├── agents/ → ../.agents/agents/   (symlink)
-│   ├── skills/ → ../.agents/skills/   (symlink)
-│   ├── commands/ → ../.agents/commands/ (symlink)
-│   ├── rules/ → ../.agents/rules/     (symlink)
+│   ├── agents/ → ../.agents/agents/   (generated link, gitignored)
+│   ├── skills/ → ../.agents/skills/   (generated link, gitignored)
+│   ├── commands/ → ../.agents/commands/ (generated link, gitignored)
+│   ├── rules/ → ../.agents/rules/     (generated link, gitignored)
 │   └── modules/                 # Module CLI + 22 OpenCode-target module sources
 ├── docs/
 │   ├── architecture/            # Architecture Decision Records (ADRs)
@@ -318,10 +318,10 @@ Before merging to `Main`, the CI must pass:
 - **Local CI mirror** (`npm run ci`): runs the same checks as both workflows
   before a push; see `tools/ci/README.md`
 - **Git hooks** (`.githooks/`, installed by `npm run hooks:install`):
-  - 14 suites, 60 tests (`npm run test:hooks`)
+  - 18 suites, 74 tests (`npm run test:hooks`)
   - `.githooks/commit-msg` enforces Conventional Commits
   - `.githooks/pre-commit` blocks credentials, conflict markers and >20 MB files,
-    verifies the `.opencode/*` redirect stubs, and runs framework validation plus
+    checks that the generated `.opencode/*` entries exist and resolve to directories, and runs framework validation plus
     workflow integrity, plugin tests, or the Claude Code mirror check when their
     paths are staged
 - **Claude Code mirror** (`npm run claude:check`): `.claude/` matches `.agents/`;
