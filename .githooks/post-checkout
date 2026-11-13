@@ -1,0 +1,10 @@
+#!/bin/sh
+# After a branch switch: restore .agents files removed through the .opencode junctions
+# and regenerate the links. $3 is 1 for a branch checkout, 0 for a file checkout.
+[ "$3" = "1" ] || exit 0
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+if ! command -v node >/dev/null 2>&1; then
+	echo "post-checkout: node not found; .agents files and .opencode links were not checked. Once node is available, run: node tools/git-hooks/post-checkout.mjs (it restores only missing files and keeps local edits)" >&2
+	exit 0
+fi
+node "$root/tools/git-hooks/post-checkout.mjs" || true

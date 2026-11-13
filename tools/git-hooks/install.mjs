@@ -15,7 +15,7 @@ import { chmodSync, existsSync } from "node:fs"
 import { join } from "node:path"
 
 const HOOKS_PATH = ".githooks"
-const HOOK_FILES = ["commit-msg", "pre-commit"]
+const HOOK_FILES = ["commit-msg", "pre-commit", "post-checkout", "post-merge"]
 
 function git(root, args, options = {}) {
 	return execFileSync("git", args, {

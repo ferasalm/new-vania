@@ -194,6 +194,7 @@ describe("pre-commit: framework link staging guard", () => {
 		const run = (args, options = {}) =>
 			execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: "pipe", ...options })
 		run(["init", "-q"])
+		run(["symbolic-ref", "HEAD", "refs/heads/test/fixture"])
 		run(["config", "user.email", "hooks@example.com"])
 		run(["config", "user.name", "Hooks Test"])
 		return { root, run }
@@ -408,6 +409,7 @@ describe("pre-commit: end-to-end in a real git repo", () => {
 		const git = (args) =>
 			execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: "pipe" })
 		git(["init", "-q"])
+		git(["symbolic-ref", "HEAD", "refs/heads/test/fixture"])
 		git(["config", "user.email", "hooks@example.com"])
 		git(["config", "user.name", "Hooks Test"])
 

@@ -30,6 +30,7 @@ Keep it short: it is loaded in every session.
 ## Git
 
 - Never commit to `Main`. One worktree per task: `git worktree add ../<repo>-<topic> -b <type>/<topic>` (forward slashes work in Git Bash, PowerShell and cmd).
+  Preferred: `npm run task:new -- <type>/<topic>` (fetches, then branches from `origin/Main`). The pre-commit hook blocks commits on `Main` and on branches that predate the generated `.opencode` links.
 - WIP commits, never a bare stash. No `reset --hard`, `clean` or force-push.
 - Move aside, never delete. Back up a config file before editing it.
 - Review = PR + CodeRabbit governor (at most 2 rounds, then ask). Backup tag before every merge.
