@@ -89,7 +89,7 @@ Non-blocking notes adopted: AC-12 split (the load axis stayed AC-12; the reconst
 | S6 | `TRANSITION_BUDget_MS` casing survived in F-RWS-07 | Corrected to `TRANSITION_BUDGET_MS` (grep-clean: 7 occurrences) |
 | S7 | `max_epoch` in V-RWS-17 was never defined | The **`max_epoch` knob row authored** (1, fixed at MVP) |
 | S8 | AC-13 cited V-RWS-17 (at-most-one) for an exactly-one claim | Re-attributed: "exactly one pinned room — TR-RWS-013's authoring, bounded by V-RWS-17" |
-| S9 | `TRUTH_BORDER` survived as a live inter-room epoch-derived kind (tested by AC-05) contradicting the zone-gate split | **Demoted**: removed from `BorderData`'s kind union (`DOOR|PASSAGE`); AC-05 tests only the live kinds; TR-RWS-007 marks it VS-reserved; the VS content list records it |
+| S9 | `TRUTH_BORDER` survived as a live inter-room epoch-derived kind (tested by AC-05) contradicting the zone-gate split | **Demoted**: removed from `BorderData`'s kind union (`DOOR\|PASSAGE`); AC-05 tests only the live kinds; TR-RWS-007 marks it VS-reserved; the VS content list records it |
 
 ## Round 3 — the re-verification (fresh session)
 
