@@ -187,7 +187,7 @@ Three laws govern every formula: **the conversion law** (ms is the contract, tic
 |---|---|---|---|
 | F-ENM-01 | phase_to_ticks | True law | `physics_tps` |
 | F-ENM-02 | clashability_margin | True law | the arc startups; `active_ticks` |
-| F-ENM-03 | punish_window | True law | the chop's tail; `ENEMY_STAGGER_MS`; F-CMB-03's `clash_tick` |
+| F-ENM-03 | punish_window | True law | the chop's tail; `STAGGER_MS` (SYS-08's lose-branch stagger — the player's 500, not the enemy's 800); ATK1's startup; F-CMB-03's `clash_tick` |
 | F-ENM-04 | counter_punish_ceiling | Derived metric | `ENEMY_STAGGER_MS`; the chain cycle |
 | F-ENM-05 | telegraph_read_lead | Threshold law | `telegraph_ms`; the age gate |
 | F-ENM-06 | decision_cadence | Threshold law | the cadence knobs |
@@ -215,12 +215,12 @@ contact C = A (the chop's active start)          # remaining 7 = ATK1's 6 + 1, e
 L = C + 6 = A + 6                                 # the CLASH-RESOLUTION tick (F-CMB-03), never the contact
 chop tail: active 7 + recovery 8 → the Warden free at A + 15
 second breath: telegraph 15 ticks → land = A + 30 = L + 24
-stagger = [L, L + 29]                             # 30 ticks from the resolution tick
+stagger = [L, L + 29]                             # 30 ticks — SYS-08's STAGGER_MS (500), the player's lose-branch stagger
 elapsed = 24 ticks = 400.0 ms — inside, always    # margin 5 ticks
 read lead = 400.0 ms ≥ 250 ms — holds, always
 ```
 
-**Output:** the punish lands at stagger-elapsed **exactly 24 ticks (400.0 ms)**, inside the 500 ms stagger (busy through 29, the land leaves 5 ticks of margin); the telegraph is visible ≥ 250 ms (its own duration) and the stagger-start-to-land lead is 400.0 ms ≥ 250. **Total cost (power 2):** `400 + 1200` = **exactly 1600.0 ms** ∈ F-HD-12's [1450, 1700]. **Why the single value:** the chop is HIGH, so the crouched attacker is whiffed (no contact, no crouch-clash); the sweep is unclashable and the second breath is context-locked; the ATK2 chain needs remaining ≥ 18 (7 ✗) — the ATK1-at-first-tick branch is the MVP's only lose, and the fixture is exact. **Example:** the lose resolves at A+6; the stagger runs A+6…A+35; the Warden frees at A+15; the second breath's telegraph runs A+15…A+29; the land at A+30 cancels the stagger's 25th busy tick and enters KNOCKDOWN.
+**Output:** the punish lands at stagger-elapsed **exactly 24 ticks (400.0 ms)**, inside the player's 500 ms lose-branch stagger (SYS-08's `STAGGER_MS` — busy through 29, the land leaves 5 ticks of margin); the telegraph is visible ≥ 250 ms (its own duration) and the stagger-start-to-land lead is 400.0 ms ≥ 250. **Total cost (power 2):** `400 + 1200` = **exactly 1600.0 ms** ∈ F-HD-12's [1450, 1700]. **Why the single value:** the chop is HIGH, so the crouched attacker is whiffed (no contact, no crouch-clash); the sweep is unclashable and the second breath is context-locked; the ATK2 chain needs remaining ≥ 18 (7 ✗) — the ATK1-at-first-tick branch is the MVP's only lose, and the fixture is exact. **Example:** the lose resolves at A+6; the stagger runs A+6…A+35; the Warden frees at A+15; the second breath's telegraph runs A+15…A+29; the land at A+30 cancels the stagger's 25th busy tick and enters KNOCKDOWN.
 
 #### F-ENM-04 · counter_punish_ceiling — the reward window (TR-ENM-018)
 

@@ -187,23 +187,33 @@ formulas:
       - design/gdd/enemy-ai-telegraphs.md
       - design/gdd/health-damage.md
     variables:
-      - chop_active_ticks
-      - chop_recovery_ticks
-      - jab_telegraph_ticks
-      - enemy_stagger_ms
-    output_range: [24, 24]
+      - chop_active_ms
+      - chop_recovery_ms
+      - jab_telegraph_ms
+      - stagger_ms (the player's lose-branch stagger — SYS-08's STAGGER_MS 500; not the enemy's ENEMY_STAGGER_MS 800)
+      - atk1_startup_ms
+      - physics_tps
+    output_range: [0, 30]
     expression: "lose L = contact + startup (F-CMB-03's clash_tick = projected_active_start);
-      the chop's tail (7 + 8 = 15 ticks) frees the Warden at A+15; the second
-      breath's telegraph 15 ticks → land A+30 = L+24; stagger [L, L+29]"
+      the chop's tail (active 7 + recovery 8 = 15 ticks at 60 tps) frees the
+      Warden; the second breath's telegraph 15 ticks runs from the first free
+      tick; the land = first_free + 15 = L + 24 ticks at 60 tps; the bound is
+      the player's stagger [L, L + stagger_ticks - 1]"
     notes: "SYS-13's F-ENM-03, consumed by SYS-07's F-HD-12 (the lose-branch
-      follow-up economics). The land is at stagger-elapsed exactly 24 ticks =
-      400.0 ms — inside the 500 ms stagger (margin 5); the read lead 400 ms
-      ≥ 250; the total 400 + 1200 = 1600.0 ms ∈ F-HD-12's [1450, 1700]. The
-      lose cause is the heavy chop (the roster's one clashable power-2 strike);
-      the crouch attack never clashes it (HIGH band whiffs the crouched
-      attacker), so the losing branch is unique and the fixture is exact."
+      follow-up economics). At 60 tps the land is stagger-elapsed exactly 24
+      ticks = 400.0 ms, inside the 500 ms stagger (margin 5); the read lead
+      400 ms >= 250 (SYS-13's telegraph floor); the total 400 + 1200 =
+      1600.0 ms in F-HD-12's [1450, 1700]. RATE LAW: the ms window (400.0 ms)
+      is the promise — at any other rate every phase re-derives by the
+      never-stingy ceil (F-ENM-01), the output_range is the stagger-tick
+      bound (stagger_ticks = ceil(500 x tps / 1000)), and the design
+      guarantee (the land inside the stagger, the lead >= 250 ms) holds in
+      ms at every rate. The lose cause is the heavy chop (the roster's one
+      clashable power-2 strike); the crouch attack never clashes it (the
+      HIGH band whiffs the crouched attacker), so the losing branch is
+      unique and the fixture is exact."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-13 (CodeRabbit minors: the stagger bound is the player's STAGGER_MS, not ENEMY_STAGGER_MS; the rate law stated — the ms window is the contract, the ticks derive)"
 
   - name: ms_to_ticks
     status: active
