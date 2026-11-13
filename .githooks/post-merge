@@ -2,7 +2,7 @@
 # After a merge or pull: same repair as post-checkout.
 root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 if ! command -v node >/dev/null 2>&1; then
-	echo "post-merge: node not found; .agents files and .opencode links were not checked. If files are missing, run: git restore .agents && node tools/fix-opencode-symlinks.mjs" >&2
+	echo "post-merge: node not found; .agents files and .opencode links were not checked. Once node is available, run: node tools/git-hooks/post-checkout.mjs (it restores only missing files and keeps local edits)" >&2
 	exit 0
 fi
 node "$root/tools/git-hooks/post-checkout.mjs" || true
