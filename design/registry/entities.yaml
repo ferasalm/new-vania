@@ -203,17 +203,21 @@ formulas:
       follow-up economics). At 60 tps the land is stagger-elapsed exactly 24
       ticks = 400.0 ms, inside the 500 ms stagger (margin 5); the read lead
       400 ms >= 250 (SYS-13's telegraph floor); the total 400 + 1200 =
-      1600.0 ms in F-HD-12's [1450, 1700]. RATE LAW: the ms window (400.0 ms)
-      is the promise — at any other rate every phase re-derives by the
-      never-stingy ceil (F-ENM-01), the output_range is the stagger-tick
-      bound (stagger_ticks = ceil(500 x tps / 1000)), and the design
+      1600.0 ms in F-HD-12's [1450, 1700]. JOINT BOUND (V-ENM-17): the
+      inside-the-stagger guarantee requires STAGGER_MS >= 401 ms (validated
+      at registration against SYS-08's knob; Combat's permitted range
+      minimum 350 fails the boot with the punish rule on - the land would
+      fall outside). RATE LAW: the ms window (400.0 ms) is the promise — at
+      any other rate every phase re-derives by the never-stingy ceil
+      (F-ENM-01), the output_range is the stagger-tick bound
+      (stagger_ticks = ceil(stagger_ms x tps / 1000)), and the design
       guarantee (the land inside the stagger, the lead >= 250 ms) holds in
       ms at every rate. The lose cause is the heavy chop (the roster's one
       clashable power-2 strike); the crouch attack never clashes it (the
       HIGH band whiffs the crouched attacker), so the losing branch is
       unique and the fixture is exact."
     added: 2026-11-13
-    revised: "2026-11-13 (CodeRabbit minors: the stagger bound is the player's STAGGER_MS, not ENEMY_STAGGER_MS; the rate law stated — the ms window is the contract, the ticks derive)"
+    revised: "2026-11-13 (CodeRabbit minors: the stagger bound is the player's STAGGER_MS, not ENEMY_STAGGER_MS; the rate law stated — the ms window is the contract, the ticks derive; the joint bound V-ENM-17 added — STAGGER_MS >= 401 ms)"
 
   - name: ms_to_ticks
     status: active
