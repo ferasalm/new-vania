@@ -1,0 +1,16 @@
+docs(sys01): resolve the PR #36 CodeRabbit threads
+
+- Thread 1 (Major): the F-07/F-08 creep-entry transition law - the press holds
+  (sub-threshold residence is never a release), the continuous deepening never
+  re-keys press1_tick, the neutral retirement resets to IDLE (NOT a release1;
+  V16's intent preserved), the boundary case completes normally; the release
+  edge gains event semantics (W-1's design half); the machine line names the
+  asymmetric edges; AC-39 gains the creep-tap-pair negative case
+- Thread 2 (Minor): TR-MOV-014's re-arm requires a different WALL_CLIMBABLE
+  tagged wall-border segment - untagged segments neither re-arm nor reset the
+  gap (state-table row, F-MOV-08 note, AC-MOV-49 aligned)
+- Thread 3 (Major): AC-MOV-42 gains the full firing script with tick values
+  (press1 tick 1 creep entry; release1 tick 8 arming-zone exit; press2 tick 12
+  arming entry, 11 <= 17; body free) + the flick-shape-alone negative +
+  F-07/F-08 citations - W-2 resolved in design
+- Review log: the landing record's addendum records all three resolutions

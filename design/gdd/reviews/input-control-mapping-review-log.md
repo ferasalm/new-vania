@@ -971,3 +971,38 @@ bookkeeping closes. Two **implementation watches** recorded as obligations:
 closed, O1 is resolved, and the recorded amendments are landed. **SYS-32
 Camera & Framing GDD is next** (it consumes SYS-29's `ShakeRequest` schema and
 SYS-02's ratified room-bounds contract).
+
+**Addendum — 2026-11-13 (post-spot-check; the PR #36 CodeRabbit threads, all
+valid, all fixed in the follow-up commit):**
+- **Thread 1 (Major, F-07/F-08):** the creep press1's state transitions were
+  undefined — a creep press1 sits below the default release threshold, so level
+  sampling would manufacture `release1` from residence. Fixed: the back-edge
+  clause gains the **creep-entry transition law** — (i) the press holds
+  (sub-threshold residence is never a release); (ii) the continuous deepening
+  never re-keys `press1_tick` and never counts as press2; (iii) the **neutral
+  retirement** — a sub-creep-exit fall before any arming-zone crossing resets
+  to IDLE and retires the press1, NOT a `release1` (creep-tap · pause ·
+  creep-tap cannot complete — V16's intent preserved in the default regime);
+  (iv) the boundary case — an arming-zone crossing followed by an
+  arming-release fall is a genuine `release1`, and the next arming entry is a
+  legitimate press2. The release-edge clause gains the **event-semantics law**
+  (W-1's design half; the harness assert remains the implementation watch); the
+  reset condition references the retirement; the machine line names the
+  asymmetric edges (press1 = the first back-direction entry, press2 = the
+  arming entry); AC-39 gains the creep-tap-pair negative case.
+- **Thread 2 (Minor, TR-MOV-014):** the re-arm clause's "a different wall"
+  allowed an untagged adjacent wall to re-arm — bypassing the anti-ladder gap
+  and contradicting SYS-02's rule (room-world-structure.md: an untagged segment
+  neither re-arms nor resets the gap). Fixed: re-arm requires a **different
+  `WALL_CLIMBABLE`-tagged wall-border segment** (or a ground touch); the
+  state-table `wall_jump_available` row, F-MOV-08's Output Range note, and
+  AC-MOV-49 (which gains the untagged-adjacent-wall case) all carry the rule.
+- **Thread 3 (Major, AC-MOV-42):** the GIVEN trace lacked the release + second
+  press F-07 requires to complete the pattern. Fixed: the AC specifies the full
+  firing script with tick values (press1 = tick 1's creep entry; the tick-4
+  walk crossing = a later same-sign entry; release1 = tick 8's arming-zone exit
+  event; press2 = tick 12's arming entry, 11 ≤ the 17-tick window; body free at
+  completion) + the flick-shape-alone negative + the F-07/F-08 citations.
+  **W-2 is thereby resolved in design** (the script is pinned; the authored
+  test implements it). W-1's design half is likewise specified; the
+  implementation watch (the harness assert) remains for the first SYS-01 story.
