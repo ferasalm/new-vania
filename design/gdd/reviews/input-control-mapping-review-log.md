@@ -888,3 +888,226 @@ were made; the GDD remains **UNFROZEN**. Next: **Combat/Movement GDDs** (normati
 consumption of the crouch channel / posture handoff / gate manifest is unlocked)
 → SYS-32 camera GDD last. The QA plan's smoke gate executes only after the
 probe register closes (AC-74).
+
+---
+
+## Landing record — 2026-11-13 — O1 resolved + the OQ-M1 press1-creep amendment
+
+Scope signal: S (a landing record with its two mandated verifications — **not a
+review**; the #10 record remains the authority; no new review rounds). Landed on
+branch `docs/sys01-o1-and-sync` from origin/Main `d8b96f0`.
+
+**O1 — RESOLVED.** AC-18's stamp-budget head (SYS-01 GDD L822) corrected from
+"up to 2 `logic_tick`s" to **"up to 3 `logic_tick`s"** while its parenthetical
+"p99.9 ≤ 2 **and** max ≤ 3" stands — the ratified budget (TR-INP-076 / AC-65 /
+QA plan). AC-65 and TR-INP-076 untouched; the QA plan's Carries header, ledger
+row 19, and the §5.10/§11 O1 paragraphs annotated RESOLVED.
+
+**OQ-M1 — the SYS-01 press1-creep amendment LANDED** (Movement OQ row 11; the
+one-clause edit was due before the first SYS-06 implementation story):
+TR-INP-056 and F-08's back-edge clause now define **press1 = the chain's first
+back-direction entry** — on analog rigs the creep-band entry when the flick
+crosses creep before walk (a slow back flick enters creep first; the creep turn
+must not pre-empt the classification), on keyboard/d-pad the binding press
+directly — with the **true-back check reading the facing published before the
+press1-induced turn** (same-tick turns do not feed the check). The walk-band
+crossing that follows is a later same-sign entry; press2/re-arms still complete
+against the active arming zone (the WALK band by default; V16's clamp
+untouched). AC-MOV-42's xfail trace is un-xfailed (movement.md annotated;
+TR-MOV-007's cross-contract note records the landing).
+
+**OQ-M2 — the ADR-0001 §10 cadence erratum APPLIED** (Movement OQ row 12): §10
+now reads "re-asserts **raw every `physics_tick`, including during freeze** —
+R3/§8 (erratum 2026-11-13)"; value/epoch changes remain keyed to `logic_tick`;
+the FacingPublication contract and the attribution rule untouched; a dated note
+added to Last Verified.
+
+**TR-MOV-014 rider — LANDED** (rode this Movement doc touch as recorded):
+wall slide/jump requires wall contact on a `WALL_CLIMBABLE`-tagged wall-border
+segment (the climbability query is SYS-02's room-data surface query and is wall
+slide/jump's input).
+
+**Row sync (the SYS-29 answered amendments riding the systems-index sync,
+per juice-feedback.md L537):** SYS-01 row — OQ#7 answered (haptics event
+qualification: none beyond the mapped three at MVP, TR-JCE-012) + the
+**proven-140 combo-value row** recorded (the 140 ms proven window; Combat's
+200 ms attack window is the recorded per-verb override); SYS-06 row — OQ row 10
+answered (the Leap-Stone grant cue + the double-jump tell, TR-JCE-021) + the
+rider + OQ-M2; SYS-07 row — the damage-number lifetime ages on `logic_tick`
+(TR-JCE-024); SYS-32 row — the SYS-01 gate marked satisfied (authoring next).
+
+**Verification 1 — the machine audit re-run (24 stems).** Same species as the
+#8/#9/#10 audits (cross-reference membership, symbol consistency, residue
+purge), scoped to this change set: **23/24 PASS**. The single FAIL (stem C5)
+was a **stem-phrasing artifact**: the audit expected the QA plan's budget in
+the "`logic_tick`s" form while the plan states it in the comma form
+("p99.9 ≤ 2, max ≤ 3") — the qa-lead spot-check re-derived and confirmed the
+five budget sites (TR-INP-076 L119, AC-65 L890, AC-18 L822, QA plan L11, this
+log's #10 record) assert the identical budget {p99.9 ≤ 2} ∧ {max ≤ 3};
+**substance-consistent, no document defect.**
+
+**Verification 2 — the qa-lead spot-check: PASS (4/4 change sets + bookkeeping,
+no blockers).** Rulings: (a) O1's head/parenthetical/AC-65/TR-INP-076/QA-plan
+five-way budget consistency closes; (b) **V16 ruled COHERENT** under the
+amendment — V16 governs the promoted fallback's zone placement; in the default
+regime a creep press1 can never *complete* the pattern (press2 requires an
+arming-zone entry with a release event strictly between), the excursion
+patterns that fire did so identically pre-amendment, and AC-64's false-fire
+bar + AC-39 remain the enforcement; (c) the ADR erratum is byte-scoped to the
+cadence paragraph + the Last Verified note; (d) the rider narrows the
+population without contradicting F-MOV-08/AC-MOV-11/AC-MOV-49; (e) the index
+bookkeeping closes. Two **implementation watches** recorded as obligations:
+- **W-1 (release-edge event semantics):** after a creep-band press1 at
+  magnitude < 0.40 the machine sits in BACK1 with the release predicate already
+  level-true; the F-07 harness must consume the release as an **event** (a fresh
+  ≥ 0.40 → < 0.40 transition, or the tap's actual release), never level-sampled
+  per tick — add the assert to the F-07 harness and the AC-39 case list when
+  the first SYS-01 implementation story authors them.
+- **W-2 (AC-MOV-42 test script):** the AC's GIVEN describes the flick shape
+  only; a single slow flick cannot fire under F-07 and must not — pin the full
+  script (release + second flick) when the AC-MOV-42 test is authored.
+
+**Sequencing:** the SYS-01 gate for SYS-32 is satisfied — the review loop is
+closed, O1 is resolved, and the recorded amendments are landed. **SYS-32
+Camera & Framing GDD is next** (it consumes SYS-29's `ShakeRequest` schema and
+SYS-02's ratified room-bounds contract).
+
+**Addendum — 2026-11-13 (post-spot-check; the PR #36 CodeRabbit threads, all
+valid, all fixed in the follow-up commit):**
+- **Thread 1 (Major, F-07/F-08):** the creep press1's state transitions were
+  undefined — a creep press1 sits below the default release threshold, so level
+  sampling would manufacture `release1` from residence. Fixed: the back-edge
+  clause gains the **creep-entry transition law** — (i) the press holds
+  (sub-threshold residence is never a release); (ii) the continuous deepening
+  never re-keys `press1_tick` and never counts as press2; (iii) the **neutral
+  retirement** — a sub-creep-exit fall before any arming-zone crossing resets
+  to IDLE and retires the press1, NOT a `release1` (creep-tap · pause ·
+  creep-tap cannot complete — V16's intent preserved in the default regime);
+  (iv) the boundary case — an arming-zone crossing followed by an
+  arming-release fall is a genuine `release1`, and the next arming entry is a
+  legitimate press2. The release-edge clause gains the **event-semantics law**
+  (W-1's design half; the harness assert remains the implementation watch); the
+  reset condition references the retirement; the machine line names the
+  asymmetric edges (press1 = the first back-direction entry, press2 = the
+  arming entry); AC-39 gains the creep-tap-pair negative case.
+- **Thread 2 (Minor, TR-MOV-014):** the re-arm clause's "a different wall"
+  allowed an untagged adjacent wall to re-arm — bypassing the anti-ladder gap
+  and contradicting SYS-02's rule (room-world-structure.md: an untagged segment
+  neither re-arms nor resets the gap). Fixed: re-arm requires a **different
+  `WALL_CLIMBABLE`-tagged wall-border segment** (or a ground touch); the
+  state-table `wall_jump_available` row, F-MOV-08's Output Range note, and
+  AC-MOV-49 (which gains the untagged-adjacent-wall case) all carry the rule.
+- **Thread 3 (Major, AC-MOV-42):** the GIVEN trace lacked the release + second
+  press F-07 requires to complete the pattern. Fixed: the AC specifies the full
+  firing script with tick values (press1 = tick 1's creep entry; the tick-4
+  walk crossing = a later same-sign entry; release1 = tick 8's arming-zone exit
+  event; press2 = tick 12's arming entry, 11 ≤ the 17-tick window; body free at
+  completion) + the flick-shape-alone negative + the F-07/F-08 citations.
+  **W-2 is thereby resolved in design** (the script is pinned; the authored
+  test implements it). W-1's design half is likewise specified; the
+  implementation watch (the harness assert) remains for the first SYS-01 story.
+
+**Addendum 2 — 2026-11-13 (the PR #36 re-review threads on the fix commits, all
+valid, all fixed):**
+- **Thread A (Major, the press1 sample order):** the ADR §10 pseudocode captured
+  `facing.value` at press1 without fixing the same-tick ordering — if Movement's
+  turn published first, the post-turn value would feed the check and contradict
+  the pre-turn rule. Fixed: the **pre-tick publication law** — the press1 sample
+  reads the last publication with `asserted_tick` strictly less than press1's
+  tick; same-tick publications (including the press1-induced turn, which
+  Movement publishes on press1's tick or the next per TR-MOV-007) never feed the
+  sample. Pinned in both TR-INP-056 and F-08's back-edge clause, and in ADR §10
+  beside the pseudocode (a dated rider, not a decision change).
+- **Thread B (Minor, the mid-band release):** the 0.25 → 0.42 → 0.39 → 0.46
+  sequence exposed a contradiction — the release-edge event text ("a fresh fall
+  from ≥ the release threshold to strictly below it") would classify the
+  0.42 → 0.39 fall as a `release1` although no arming-zone crossing occurred,
+  against transition (iv)'s crossing precondition. Fixed: the release edge is
+  scoped to **post-crossing presses** (before the first arming-zone crossing,
+  falls within the creep..arming band are wobble — the press holds; only the
+  sub-creep-exit fall retires); the worked case is stated explicitly; AC-39
+  gains the pre-crossing mid-band-fall negative case.
+- **Thread C (Major, the wall-segment identity):** the re-arm rule required "a
+  different tagged wall-border segment" but no contract provided segment
+  identity — SYS-02's query returned a bare boolean, `MoveResult` had no segment
+  field, and room data defined ids only for DOOR|PASSAGE borders. Fixed: **the
+  `wall_segment_id` identity law** — each tagged wall-border segment carries a
+  stable id in SYS-02's room data (minted at room load); the climbability query
+  widens to `wall_surface_query(point) → {climbable, wall_segment_id}` (−1
+  untagged); `MoveResult` gains `wall_segment_id` (TR-MOV-031); the re-arm
+  compares ids — the same id never re-arms early, a different id re-arms
+  immediately. Because SYS-02's GDD is APPROVED, the query widening rides as a
+  **recorded SYS-02 rider** in the systems index (the OQ-M1 pattern — it rides
+  the next SYS-02 doc touch); Movement's own `MoveResult` extension is in-scope
+  here. AC-MOV-49 gains the id phrasing + the same-id-no-early-re-arm case.
+
+**Addendum 3 — 2026-11-13 (the round-3 re-review of the round-2 fix commit, all
+valid, all fixed):**
+- **Thread D (Minor, the rider's home):** the `wall_segment_id` rider text was
+  recorded under **SYS-07's** row (the edit anchor error) — the query owner
+  (SYS-02) would not find its own contract there. Fixed: moved verbatim to
+  **SYS-02's dependency-map row** (with the registry pointer); SYS-07's row
+  keeps only its own TR-JCE-024 sync.
+- **Thread D2 (Minor, the registry):** `wall_surface_query` /
+  `wall_segment_id` crossed the SYS-02 → Movement boundary unregistered.
+  Fixed: **`wall_surface_query` registered in `design/registry/entities.yaml`**
+  as a SYS-02 `published_contract` consumed by Movement (TR-MOV-014/TR-MOV-031),
+  with the **PENDING-RIDER note** stating TR-RWS-024 still reads the narrower
+  `→ climbable` shape — the registry presents the mismatch as open, never
+  resolved.
+- **Thread E (Major, the publication contract):** the pre-tick sample rule
+  requires `asserted_tick`, but the ADR's `FacingPublication` declaration lacked
+  the field — an implementation of that declaration could not select the
+  required publication. Fixed: the **`asserted_tick` field added** (its clock:
+  the `physics_tick` of the last assertion; one raw re-assertion per
+  `physics_tick` per R3/§8) + the **two-slot publication-store retention law**
+  (the current tick's publication + the immediately previous tick's — exactly
+  the pre-tick sample's requirement; older publications not retained). This is
+  a **contract alignment** with Movement's TR-MOV-006 (which already declared
+  the field), recorded in the Last Verified block — the previous "the
+  FacingPublication contract is untouched" sentence is superseded.
+
+**Addendum 4 — 2026-11-13 (the round-4 re-review of the round-3 fix commit, all
+valid, all fixed):**
+- **Thread F (Minor, the id uniqueness scope):** "minted at room load" did not
+  state the uniqueness scope — per-room minting could hand two tagged segments
+  in different rooms the same id, and Movement would then treat them as one
+  segment (the second wall's contact would not re-arm immediately). Fixed: the
+  **uniqueness law** — `wall_segment_id` is **unique across the whole world**;
+  ids are never reused across rooms (a world-lifetime counter at zone load; a
+  `(room_id, segment_index)` composite satisfies this at VS streaming); the
+  acceptance rides the clause — a **cross-room uniqueness fixture** (two tagged
+  segments in different rooms mint different ids) joins SYS-02's AC set when the
+  rider lands. Stated in the SYS-02 rider, the registry entry's values + notes,
+  and Movement's TR-MOV-014 test line.
+- **Thread G (Major, the sample cutoff's clock):** the sample rule compared
+  `asserted_tick` (a `physics_tick`) against `press1_tick` (a `logic_tick`) —
+  the two clocks diverge under freeze (logic stalls, physics assertions
+  continue), so every retained publication could sit at or after the frozen
+  logic tick and the strict comparison would find **no sample**, refusing a
+  valid gesture. Fixed: the pseudocode captures **`press1_physics_tick =
+  current_physics_tick`** at press1 and the cutoff compares against it —
+  `asserted_tick` strictly less than **`press1_physics_tick`**; `press1_tick`
+  stays on the logic clock for the flip-attribution window. Corrected at all
+  three statement sites (the ADR §10 rider + the pseudocode + the retention
+  note, and both GDD sites: TR-INP-056 + F-08), with the divergence rationale
+  stated.
+
+**Addendum 5 — 2026-11-13 (the round-5 re-review of the round-4 fix commit;
+one Minor, fixed; plus the process defect this round exposed):**
+- **The process defect:** the round-5 thread was INVISIBLE to the thread-count
+  checks — every earlier check queried `reviewThreads(first: 10)` and this PR
+  had accumulated exactly 10 threads by round 4, so the 11th (round 5's) was
+  off-page while GitHub's merge gate (required_conversation_resolution) saw it.
+  The correct query is unbounded (first: 50+); all future thread checks on this
+  project use it.
+- **Thread H (Minor, the rider's owner + gate):** the `wall_segment_id` rider
+  named no owner and no hard landing gate — "the next SYS-02 doc touch" is
+  dateless, and until the touch lands an implementation following SYS-02's
+  approved TR-RWS-024 (`→ climbable`) cannot obtain the id AC-MOV-49 needs.
+  Fixed: **owner: lead-programmer** (SYS-02's owner per the systems index);
+  **the landing gate: the SYS-02 touch — the widened query, the id field in
+  room data, and the cross-room uniqueness fixture — must land before the first
+  wall-jump story** (mirroring the Movement-side gate). Stated in the SYS-02
+  rider, the registry entry's notes, and Movement's TR-MOV-014 identity-contract
+  note (which now also states the interim consequence explicitly).

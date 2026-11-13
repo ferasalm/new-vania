@@ -142,6 +142,34 @@ entities:
     added: 2026-11-13
     revised: ""
 
+  - name: wall_surface_query
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+      - design/gdd/movement.md
+    kind: published_contract
+    published_by: SYS-02 Room & World Structure
+    consumed_by: SYS-06 Movement (TR-MOV-014's re-arm comparison · TR-MOV-031's MoveResult.wall_segment_id)
+    values: "wall_surface_query(point) → {climbable, wall_segment_id} · wall_segment_id = -1 for an
+      untagged contact · the id is stable per WALL_CLIMBABLE-tagged wall-border segment, minted
+      at room load · UNIQUE ACROSS THE WHOLE WORLD — ids are never reused across rooms (a
+      world-lifetime counter at zone load; a (room_id, segment_index) composite satisfies this at
+      VS streaming) · Movement compares ids for the re-arm (the same id never re-arms early), never
+      geometry"
+    notes: "PENDING RIDER (2026-11-13, the OQ-M1 pattern — rides the next SYS-02 doc touch):
+      TR-RWS-024 still reads `wall_surface_query(point) → climbable`; the widened
+      {climbable, wall_segment_id} signature is Movement's recorded dependency
+      (TR-MOV-014/TR-MOV-031), not yet in the SYS-02 GDD — the mismatch is open
+      until that touch lands. The acceptance rides the clause: a cross-room
+      uniqueness fixture (two tagged segments in different rooms mint different
+      ids) joins SYS-02's AC set with the rider. Owner: lead-programmer (SYS-02's
+      owner per the systems index). Landing gate: the SYS-02 touch — the widened
+      query, the id field in room data, and the cross-room uniqueness fixture —
+      must land before the first wall-jump story."
+    added: 2026-11-13
+    revised: ""
+
   - name: dual_truth_model
     status: active
     source: design/gdd/room-world-structure.md
