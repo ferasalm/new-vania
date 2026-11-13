@@ -1,0 +1,5 @@
+#!/bin/sh
+# After a merge or pull: same repair as post-checkout.
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+command -v node >/dev/null 2>&1 || exit 0
+node "$root/tools/git-hooks/post-checkout.mjs" || true

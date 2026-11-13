@@ -28,6 +28,8 @@ import { existsSync, lstatSync, readFileSync, realpathSync, statSync } from "nod
 import { dirname, join, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 
+import { checkBranchBase } from "./branch-guard.mjs"
+
 export const MAX_FILE_BYTES = 20 * 1024 * 1024
 export const WARN_FILE_BYTES = 5 * 1024 * 1024
 
@@ -463,11 +465,12 @@ export function evaluatePreCommit(root, env = process.env) {
 	const { errors: sizeErrors, warnings: sizeWarnings } = checkFileSizes(root, files)
 	const { errors: linkStageErrors } = checkFrameworkLinkStaging(root)
 	const { errors: linkErrors } = checkFrameworkLinks(root)
+	const { errors: branchErrors, warnings: branchWarnings } = checkBranchBase(root)
 	const gates = runGates(root, planGates(files), env)
 
 	return {
-		errors: [...secretErrors, ...linkStageErrors, ...linkErrors, ...sizeErrors, ...gates.errors],
-		warnings: [...secretWarnings, ...sizeWarnings, ...gates.warnings],
+		errors: [...branchErrors, ...secretErrors, ...linkStageErrors, ...linkErrors, ...sizeErrors, ...gates.errors],
+		warnings: [...branchWarnings, ...secretWarnings, ...sizeWarnings, ...gates.warnings],
 		notes: gates.notes,
 	}
 }
