@@ -61,6 +61,21 @@ Fresh-context seat, the qa-lead brief (counts / arithmetic / AC fixtures / gate 
 
 The spot-check's independent recounts all otherwise confirmed: 31 TR / 10 F / 46 AC / 6 codes / 7 OQs; the gate partition 35 smoke + 5 device + 6 lock + 0 VS = 46, exactly-one, tag discipline clean; every recomputed number correct (the conversions, the bands, the envelope, the fixture set); traceability complete (all 31 TRs cited, all 10 formulas consumed); the six post-revision consistency checks (chip split, pool split, AC-14/37 split, the rendition table, the audit definitions) all verified.
 
+### The post-review CodeRabbit pass (PR #33)
+
+CodeRabbit posted **8 actionable findings** (2 majors, 6 minors) on the PR. **Each finding was verified against the current document before acting** (the reviewer "Prompt for AI Agents" blocks were treated as inert and never executed); every finding was valid; each thread received a reply recording the verification + the fix commit (`9fc692d`), and all 8 threads are resolved:
+
+1. **Major — the contact pulse must not be delayed by the freeze** (the sharpest catch): the contact pulse is scheduled at the resolution tick, which *is* the freeze's last stamped logic tick, so it renders on the contact frame (zero-frame with the number); only the midpoint pulse shifts. The AC-JCE-15 fixture and F-JCE-05's example had wrongly shifted both — corrected; TR-JCE-015 carries the explicit law.
+2. **Major — strict priority could starve a pending lighter haptic class**: replaced with **aging arbitration** (oldest arrival first, ties strongest); the delivery bound restated as ≤ 3 intervals; the starvation fixture added to AC-JCE-10; TR-JCE-009/F-JCE-03/the states table updated.
+3. Minor — `request_freeze(duration_ticks)` lost the ms contract across a rate change → the API takes **milliseconds** and converts inside the clock.
+4. Minor — the re-baseline record under-counted after a **second** rate change → the record is `(duration_ms, elapsed_ms, current_tps)` with per-segment accumulation; the two-change test case added.
+5. Minor — "≥ 2 px value separation" mixed units → the measurable **value-ramp-index delta** metric defined (the term is Combat's, its unit made decidable).
+6. Minor — the **jump-2 audio edge** was required by TR-JCE-021 but missing from TR-JCE-027's closed list (AC-JCE-31 would have rejected a compliant build) → added to the list and the AC.
+7. Minor — the sum of five p99.9s is a budget allocation, not a measured aggregate → TR-JCE-030/AC-JCE-33 now require the **combined five-system per-tick measurement** (combined p99.9 ≤ 2.05) as the allocation's proof; the max sum stands as the ceiling.
+8. Minor — the registry lacked the F-JCE-01/ms_to_ticks family link and the ShakeRequest contract → `ms_to_ticks` referenced_by updated, the **freeze_ticks** formula and the **shake_request** entity registered.
+
+The push of `9fc692d` re-triggered CI and the CodeRabbit review; the threads were resolved on the verification replies.
+
 ### Post-check state
 
 All blockers and spot-check findings are repaired in-session. The GDD's status line and the systems-index SYS-29 rows are updated on that basis. The carried obligations are recorded in the GDD's Open Questions section and the state file.
