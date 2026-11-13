@@ -136,6 +136,11 @@ entities:
       (480×270), centered by floor(slack ÷ 2) when smaller · the handoff is atomic at the swap
       tick (published on BoundsPort before the camera's first tick — the camera never straddles
       two rooms) · room min extent 30×17 tiles (480×272 px) unless framing-zone-registered"
+    notes: "SYS-32's hard upstream. The framing zones at MVP: the Denial arena
+      Rect2(3200, 0, 640, 352) and the reveal Rect2(1312, 176, 160, 96). The bounds read
+      rides SYS-32's own envelope entry when it joins."
+    added: 2026-11-13
+    revised: ""
   # 2026-11-14 (camera-framing.md APPROVED): the camera publication contract
   # registered — SYS-32's sole downstream channel (TR-CAM-015).
   - name: camera_publication_contract
@@ -155,10 +160,10 @@ entities:
       extent rides Movement's TR-MOV-028 rider (position + hurtbox_extent) · one-way; no
       consumer write-back; the camera never pre-clamps or pre-shakes SYS-24's value ·
       the memory shape: a preallocated slot, no consumer retention past its own tick"
-    notes: "SYS-32's hard upstream. The framing zones at MVP: the Denial arena
-      Rect2(3200, 0, 640, 352) and the reveal Rect2(1312, 176, 160, 96). The bounds read
-      rides SYS-32's own envelope entry when it joins."
-    added: 2026-11-13
+    notes: "SYS-32's sole downstream channel (TR-CAM-015). A missing/invalid
+      hurtbox_extent publishes on_screen = false for that tick (the conservative
+      default for SYS-24) + telemetry, and rides the missing-position freeze path."
+    added: 2026-11-14
     revised: ""
 
   - name: wall_surface_query
