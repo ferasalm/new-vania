@@ -32,7 +32,7 @@ const TYPE_CATEGORIES = ["feat", "fix", "perf", "refactor", "revert", "docs", "t
 
 function git(projectRoot: string, args: string[]): string {
   try {
-    const result = spawnSync("git", args, { encoding: "utf8", cwd: projectRoot, stdio: ["pipe", "pipe", "ignore"], timeout: 15000 })
+    const result = spawnSync("git", args, { encoding: "utf8", cwd: projectRoot, stdio: ["pipe", "pipe", "ignore"], timeout: 15000, windowsHide: true })
     return result.stdout.trim()
   } catch {
     return ""
