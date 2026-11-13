@@ -50,6 +50,51 @@ last_updated: "2026-11-13"
 #   (health, damage, drops, faction, etc.)
 
 entities:
+  - name: enemy_strike_contract
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/combat.md
+      - design/gdd/health-damage.md
+    kind: published_contract
+    published_by: SYS-13 Enemy AI & Telegraphs
+    consumed_by: SYS-08 Combat (the exchange resolution — the probe, the clash matrix, the orders) · SYS-07 (the damage stamp from the power table)
+    values: "EnemyStrike {strike_id, archetype_id, power 1-3, telegraph_ms, active_ms,
+      recovery_ms, hitbox {shape RECT, reach_px, band_floor_px, band_ceiling_px},
+      facing -1|+1 (locked at the telegraph's first tick), unclashable, source_entity,
+      display_name} · EnemyProjectile {projectile_id, owner_entity, damage 8,
+      power_band 1, telegraph_ms 350, launch_tick, speed_px_s 170, hitbox 12x12,
+      band [14,26], recovery_ms 250, lifetime_ms 3000, unclashable (type-constant),
+      deflectable, display_name}"
+    notes: "Ratifies TR-CMB-028's required fields exactly plus the six enumerated
+      additions; NO damage field (SYS-07's table stamps raw_damage at Combat's
+      contact), no knockback field (the single power drives F-CMB-09 +
+      KNOCKDOWN_POWER), no i-frame field, soul_class lives on the archetype
+      (the HealthProfile). Bands are closed intervals [floor, ceiling]; HIGH
+      floors > 26.4 (V-ENM-13 binds every legal CROUCH_HURTBOX_RATIO pair)."
+    added: 2026-11-13
+    revised: ""
+
+  - name: enemy_archetype_roster
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/health-damage.md
+    kind: entity_set
+    values: "HUSK T1 hp30 award15 soul_class HUMAN (the quick swat) · SPITTER T2
+      hp60 award35 soul_class DEMONIC (the charge orb — its only attack) ·
+      WARDEN T3 hp120 award70 soul_class CYBORG (the tall overhead, the heavy
+      chop, the low sweep, the second breath)"
+    notes: "SYS-07's OQ#11 resolved. MACHINE unassigned at MVP (recorded). The
+      awards ride SYS-07's XP_T1/T2/T3 keyed on the tier SYS-13 assigns. The
+      chop is the roster's one clashable power-2 strike (the lose cause —
+      V-ENM-14); the sweep is the one authored unclashable strike (80 ms < 84,
+      the denied lean). Poise: Warden telegraph_active; Husk/Spitter none."
+    added: 2026-11-13
+    revised: ""
+
   - name: shake_request
     status: active
     source: design/gdd/juice-feedback.md
@@ -135,6 +180,31 @@ items: []
 # Optional: expression (the actual formula), notes
 
 formulas:
+  - name: punish_window
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/health-damage.md
+    variables:
+      - chop_active_ticks
+      - chop_recovery_ticks
+      - jab_telegraph_ticks
+      - enemy_stagger_ms
+    output_range: [24, 24]
+    expression: "lose L = contact + startup (F-CMB-03's clash_tick = projected_active_start);
+      the chop's tail (7 + 8 = 15 ticks) frees the Warden at A+15; the second
+      breath's telegraph 15 ticks → land A+30 = L+24; stagger [L, L+29]"
+    notes: "SYS-13's F-ENM-03, consumed by SYS-07's F-HD-12 (the lose-branch
+      follow-up economics). The land is at stagger-elapsed exactly 24 ticks =
+      400.0 ms — inside the 500 ms stagger (margin 5); the read lead 400 ms
+      ≥ 250; the total 400 + 1200 = 1600.0 ms ∈ F-HD-12's [1450, 1700]. The
+      lose cause is the heavy chop (the roster's one clashable power-2 strike);
+      the crouch attack never clashes it (HIGH band whiffs the crouched
+      attacker), so the losing branch is unique and the fixture is exact."
+    added: 2026-11-13
+    revised: ""
+
   - name: ms_to_ticks
     status: active
     source: design/gdd/input-control-mapping.md
@@ -206,6 +276,112 @@ formulas:
 # Required fields: name, status, source, referenced_by, value, unit, added
 
 constants:
+  - name: enemy_stagger_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/enemy-ai-telegraphs.md
+    value: 800
+    unit: ms
+    notes: "The counter-clash's enemy stagger (48 ticks at 60 tps). Per
+      TR-CMB-010 the value is SYS-13's (Combat's table carries the knob row;
+      SYS-13 owns the value and the behavior — TR-ENM-018). The window grants
+      the chain's answer: the chain cycle is 37 ticks; the counter+chain
+      ceiling is 60 = T2's pool at defaults (81 at ATK 132) — flagged for
+      playtest (SYS-13's OQ-ENM-4)."
+    added: 2026-11-13
+    revised: ""
+  - name: warden_overhead_active_ms
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/combat.md
+    value: 350
+    unit: ms
+    notes: "The tall overhead's active window (21 ticks) — the long-active
+      power-1 heavy TR-CMB-028 requires so the ATK2 chain counter is reachable:
+      remaining-from-contact ≥ 18 in the worst case, authored 21 (3-tick
+      margin). Combat's AC-CMB-12 consumes the guarantee."
+    added: 2026-11-13
+    revised: ""
+  - name: enemy_telegraph_floor_ms
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/health-damage.md
+      - design/gdd/combat.md
+    value: 250
+    unit: ms
+    notes: "The read's minimum breath (15 ticks) — V-ENM-01: every authored
+      telegraph ≥ the floor; the punish's read lead (stagger-start → land)
+      must also clear it (F-ENM-03). SYS-07's OQ#4 consumed this guarantee;
+      the press-window math (F-ENM-05) shows the floor admits the full 5–12
+      age band."
+    added: 2026-11-13
+    revised: ""
+  - name: spitter_orb_damage
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/combat.md
+    value: 8
+    unit: hp
+    notes: "The charge orb's damage — its own registered value (TR-CMB-015's
+      prototype default), NOT a strike-table row. The deflected orb keeps this
+      damage with the owner flipped (friendly fire — TR-HD-019); a deflected
+      kill publishes killer_id = player."
+    added: 2026-11-13
+    revised: ""
+  - name: spitter_orb_speed_px_s
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/combat.md
+    value: 170
+    unit: px/s
+    notes: "The orb's travel (2.833 px/tick at 60 tps); V-CMB-08 validated —
+      DEFLECT_SPEED 360 ≥ 170. The intercept: ATK1's 28 px reach covers an orb
+      up to 45 px away at contact (F-ENM-07)."
+    added: 2026-11-13
+    revised: ""
+  - name: enemy_reach_table
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+    value: "26 / 34 / 30 / 40 / 30"
+    unit: px
+    notes: "The melee reaches (swat / tall overhead / heavy chop / low sweep /
+      second breath) — provisional per Combat OQ#4's resolution; the art pass
+      pins the pixels. The backdash hop (98 px) exits every reach. V-ENM-15:
+      the second breath's reach ≥ the chop's."
+    added: 2026-11-13
+    revised: ""
+  - name: six_system_perf_envelope
+    status: active
+    source: design/gdd/enemy-ai-telegraphs.md
+    referenced_by:
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/juice-feedback.md
+      - design/gdd/health-damage.md
+      - design/gdd/combat.md
+    value: "2.30 / 6.10"
+    unit: "ms p99.9 / ms max"
+    notes: "The MVP gameplay-tick envelope's third record: 1.00 (SYS-01) +
+      0.30 (SYS-06) + 0.30 (SYS-08) + 0.25 (SYS-07) + 0.20 (SYS-29) + 0.25
+      (SYS-13, W14) = 2.30 p99.9; max 2.0+1.0+1.0+0.75+0.60+0.75 = 6.10.
+      Extends OQ-J2's five-system 2.05/5.35 (which extended OQ#19's
+      four-system 1.85/4.75). The sum is the budget allocation; the combined
+      soak's measurement is the proof. QA-plan re-record: OQ-ENM-2 (qa-lead,
+      before the first SYS-13 story)."
+    added: 2026-11-13
+    revised: ""
+
   - name: intent_window_ms
     status: active
     source: design/gdd/input-control-mapping.md
