@@ -172,3 +172,30 @@ describe("new-task", () => {
 		assert.throws(() => createTask(root, "fix/demo", { fetch: false }), /already exists/)
 	})
 })
+
+describe("branch-guard: tracked copies below a link path", () => {
+	it("blocks a branch that tracks a regular file below a link path", (t) => {
+		const root = makeRepo(t)
+		git(root, ["checkout", "-q", "-b", "chore/copied"])
+		mkdirSync(join(root, ".opencode", "agents"), { recursive: true })
+		writeFileSync(join(root, ".opencode", "agents", "item.md"), "copy\n")
+		git(root, ["add", "-f", ".opencode/agents/item.md"])
+
+		assert.deepEqual(trackedLinks(root), [".opencode/agents"])
+		assert.match(checkBranchBase(root).errors[0], /predates the generated \.opencode links/)
+		assert.deepEqual(repairAfterCheckout(root).created, [])
+	})
+
+	it("reports link failures from createTask without throwing", (t) => {
+		const root = makeRepo(t)
+		rmSync(join(root, ".agents", "rules"), { recursive: true })
+		git(root, ["add", "-A"])
+		git(root, ["commit", "-q", "--no-verify", "-m", "drop rules"])
+		git(root, ["update-ref", "refs/remotes/origin/Main", "HEAD"])
+
+		const { dir, linkFailures } = createTask(root, "fix/nolinks", { fetch: false })
+		assert.equal(existsSync(dir), true)
+		assert.equal(linkFailures.length, 1)
+		assert.match(linkFailures[0], /rules: canonical source/)
+	})
+})

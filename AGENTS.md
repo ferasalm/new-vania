@@ -318,7 +318,7 @@ Before merging to `Main`, the CI must pass:
 - **Local CI mirror** (`npm run ci`): runs the same checks as both workflows
   before a push; see `tools/ci/README.md`
 - **Git hooks** (`.githooks/`, installed by `npm run hooks:install`):
-  - 21 suites, 86 tests (`npm run test:hooks`)
+  - 22 suites, 88 tests (`npm run test:hooks`)
   - Start every task with `npm run task:new -- <type>/<topic>`: it fetches, then creates a worktree and
     branch from `origin/Main`. `.githooks/pre-commit` blocks commits on `Main` and on branches that
     predate the generated `.opencode` links

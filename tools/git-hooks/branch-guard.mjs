@@ -34,12 +34,15 @@ export function currentBranch(root) {
 	return tryGit(root, ["symbolic-ref", "--short", "-q", "HEAD"]) || null
 }
 
-/** Link paths that the index still tracks as entries (the pre-generated layout). */
+/**
+ * Link paths that the index still tracks: either the path itself (a symlink
+ * entry, the pre-generated layout) or any file below it (a committed copy).
+ */
 export function trackedLinks(root) {
-	const out = tryGit(root, ["ls-files", "--", ...LINK_PATHS])
+	const out = tryGit(root, ["ls-files", "-z", "--", ...LINK_PATHS])
 	if (!out) return []
-	const listed = new Set(out.split("\n").map((line) => line.trim()))
-	return LINK_PATHS.filter((path) => listed.has(path))
+	const listed = out.split("\0").filter(Boolean)
+	return LINK_PATHS.filter((path) => listed.some((file) => file === path || file.startsWith(`${path}/`)))
 }
 
 /**

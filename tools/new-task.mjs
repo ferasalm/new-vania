@@ -50,7 +50,8 @@ export function planTask(root, name) {
 
 /**
  * Create the worktree and branch from `origin/Main`.
- * @returns {{ branch: string, dir: string, base: string }}
+ * `linkFailures` is non-empty when the worktree exists but its links could not be generated.
+ * @returns {{ branch: string, dir: string, base: string, linkFailures: string[] }}
  */
 export function createTask(root, name, { fetch = true } = {}) {
 	const { branch, dir } = planTask(root, name)
@@ -64,8 +65,8 @@ export function createTask(root, name, { fetch = true } = {}) {
 	if (!base) throw new Error(`${BASE_REF} is not available. Run: git fetch origin`)
 
 	git(root, ["worktree", "add", "--quiet", dir, "-b", branch, BASE_REF])
-	ensureLinks(dir)
-	return { branch, dir, base }
+	const { failures } = ensureLinks(dir)
+	return { branch, dir, base, linkFailures: failures }
 }
 
 function main() {
@@ -77,9 +78,16 @@ function main() {
 		process.exit(1)
 	}
 	try {
-		const { branch, dir, base } = createTask(root, name, { fetch: !args.includes("--no-fetch") })
+		const { branch, dir, base, linkFailures } = createTask(root, name, { fetch: !args.includes("--no-fetch") })
 		console.log(`✔ Created ${branch} from ${BASE_REF} (${base})`)
 		console.log(`  Worktree: ${dir}`)
+		if (linkFailures.length > 0) {
+			// The worktree and branch exist; only the links are missing. Do not ask for a retry.
+			for (const failure of linkFailures) console.error(`  ✗ ${failure}`)
+			console.error(`✖ task:new: the worktree was created, but its .opencode links were not.`)
+			console.error(`  Repair: cd "${dir}", then run "node tools/fix-opencode-symlinks.mjs".`)
+			process.exit(1)
+		}
 		console.log(`  Next: cd "${dir}", then run "npm install" there if you need the tests or hooks that use tsx.`)
 	} catch (error) {
 		console.error(`✖ task:new: ${error.message}`)
