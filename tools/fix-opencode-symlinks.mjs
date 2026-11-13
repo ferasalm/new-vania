@@ -28,6 +28,9 @@ export const LINKS = ["agents", "commands", "skills", "rules"]
 
 const STUB_RE = /^\.\.[\\/]\.agents[\\/][a-z-]+\s*$/i
 
+/** States that `createLink` may overwrite. Anything else is left untouched. */
+const REPLACEABLE = new Set(["missing", "stub-file", "broken-symlink", "ok-symlink"])
+
 /** @returns {"missing"|"ok-symlink"|"broken-symlink"|"ok-directory"|"stub-file"|"unknown-file"|"unknown"} */
 export function classifyLink(linkPath) {
 	if (!fs.existsSync(linkPath)) return "missing"
@@ -53,6 +56,11 @@ function createLink(root, name) {
 	const targetRel = path.join("..", ".agents", name)
 	const targetAbs = path.join(root, ".agents", name)
 
+	// Replace only what this tool owns: a missing path, a recognised stub or a symlink.
+	const state = classifyLink(linkPath)
+	if (!REPLACEABLE.has(state)) {
+		throw new Error(`refusing to replace .opencode/${name} (${state}); move it aside and re-run`)
+	}
 	fs.rmSync(linkPath, { force: true, recursive: false })
 	try {
 		fs.symlinkSync(targetRel, linkPath, process.platform === "win32" ? "junction" : "dir")
@@ -65,15 +73,17 @@ function createLink(root, name) {
 
 /**
  * Ensure every mirror exists and resolves.
- * @returns {{ ok: boolean, actions: string[], failures: string[] }}
+ * `pending` lists the links a dry run found in need of repair; it is empty after a real run.
+ * @returns {{ ok: boolean, actions: string[], failures: string[], pending: string[] }}
  */
 export function ensureLinks(root, { dryRun = false } = {}) {
 	const actions = []
 	const failures = []
+	const pending = []
 	const opencode = path.join(root, ".opencode")
 
 	if (!fs.existsSync(opencode)) {
-		return { ok: false, actions, failures: [".opencode/ is missing"] }
+		return { ok: false, actions, failures: [".opencode/ is missing"], pending }
 	}
 
 	for (const name of LINKS) {
@@ -90,12 +100,18 @@ export function ensureLinks(root, { dryRun = false } = {}) {
 			actions.push(`${name}: ok (materialised directory, not a link)`)
 			continue
 		}
+		// Not ours: a regular file that is not a recognised stub, or another file type. Keep it.
+		if (!REPLACEABLE.has(state)) {
+			failures.push(`${name}: .opencode/${name} is an unrecognised file (${state}); move it aside and re-run`)
+			continue
+		}
 		if (!fs.existsSync(targetAbs) || !fs.statSync(targetAbs).isDirectory()) {
 			failures.push(`${name}: canonical source .agents/${name} does not exist`)
 			continue
 		}
 		if (dryRun) {
 			actions.push(`${name}: would create link -> .agents/${name} (was ${state})`)
+			pending.push(name)
 			continue
 		}
 		try {
@@ -106,7 +122,7 @@ export function ensureLinks(root, { dryRun = false } = {}) {
 		}
 	}
 
-	return { ok: failures.length === 0, actions, failures }
+	return { ok: failures.length === 0, actions, failures, pending }
 }
 
 function main() {
@@ -121,14 +137,16 @@ function main() {
 	}
 
 	console.log("Checking .opencode/{agents,commands,skills,rules}...\n")
-	const { ok, actions, failures } = ensureLinks(root, { dryRun: dryRun || check })
+	const { ok, actions, failures, pending } = ensureLinks(root, { dryRun: dryRun || check })
 
 	for (const action of actions) console.log(`  ${action.startsWith("ok") ? "✓" : "→"} ${action}`)
 	for (const failure of failures) console.error(`  ✗ ${failure}`)
 
 	if (check) {
-		console.log(ok ? "\nLinks are healthy." : "\nLinks are missing or broken; run `npm run fix:symlinks`.")
-		process.exit(ok ? 0 : 1)
+		// Healthy means nothing failed and nothing is waiting for repair.
+		const healthy = ok && pending.length === 0
+		console.log(healthy ? "\nLinks are healthy." : "\nLinks are missing or broken; run `npm run fix:symlinks`.")
+		process.exit(healthy ? 0 : 1)
 	}
 	console.log(
 		dryRun

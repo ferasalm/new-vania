@@ -318,10 +318,10 @@ Before merging to `Main`, the CI must pass:
 - **Local CI mirror** (`npm run ci`): runs the same checks as both workflows
   before a push; see `tools/ci/README.md`
 - **Git hooks** (`.githooks/`, installed by `npm run hooks:install`):
-  - 14 suites, 60 tests (`npm run test:hooks`)
+  - 18 suites, 74 tests (`npm run test:hooks`)
   - `.githooks/commit-msg` enforces Conventional Commits
   - `.githooks/pre-commit` blocks credentials, conflict markers and >20 MB files,
-    verifies the generated `.opencode/*` links, and runs framework validation plus
+    checks that the generated `.opencode/*` entries exist and resolve to directories, and runs framework validation plus
     workflow integrity, plugin tests, or the Claude Code mirror check when their
     paths are staged
 - **Claude Code mirror** (`npm run claude:check`): `.claude/` matches `.agents/`;

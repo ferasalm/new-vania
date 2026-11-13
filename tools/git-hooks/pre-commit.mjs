@@ -213,8 +213,9 @@ export function checkFileSizes(root, files, thresholds = {}) {
 }
 
 /**
- * Verify `.opencode/<name>` redirects (symlinks on POSIX, text stubs on Windows
- * checkouts) still resolve to their canonical `.agents/` target.
+ * Check that each `.opencode/<name>` entry exists and resolves to a directory
+ * (a junction or symlink), or is a redirect stub whose target exists. It does not
+ * require the target to be the canonical `.agents/<name>` path.
  * @returns {{ errors: string[], warnings: string[] }}
  */
 export function checkFrameworkLinks(root) {
