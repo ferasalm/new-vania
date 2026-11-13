@@ -8,6 +8,16 @@
 - **Scope signal**: L (7 formulas, 8 probe items, the Camera & Framing ADR expected downstream).
 - **Status: repairs NOT yet applied.** This entry is the repair worklist.
 
+## Review #1 — Resolution record (2026-11-14)
+
+- **Repairs applied** (commits `6c5aedc` + `e548c06`): all 25 blockers + the recommended fold-ins per this entry's fixes, and all 13 Reconciliation notes applied with the arithmetic re-verified in-session (α=18 with the falling-phase `MAX_STEP_H` exemption — a terminal fall's target advances 1.667·f = 25 px/tick at the 900 px/s ceiling, over the 12-px cap; AC-CAM-21's RM-04/06 fixture: D = 96, gap 7200 h, seeded at the pre-landing falling target, capped first tick, truncating ×0.82 tail, snap tick 26; RM-03's ≤ 2-px reveal residue; the arena ease 24 ticks from (3440, 217); the standing flip = 2×LOOKAHEAD = 64 px; the cap reaches at gap ≥ 6667 / clips at ≥ 6673).
+- **qa-lead spot-check #1 (mandatory, deepseek routing)**: FAIL → one blocker (AC-CAM-22's map edges `015→15/18b/20`, `04→…09b`) + 3 notes repaired (`e548c06`) → **PASS**.
+- **Re-verification round 1** (fresh seats, diff-scoped): QA seat **CLEAN**; technical seat **NEEDS REVISION** (2: the `F-CAM-04→21` map edge; the continuity clause vs the mid-room adopt re-clamp); creative seat **NEEDS REVISION** (1: C2's thumb-band set — the authored-constraint pricing, the SYS-24 hold-mode row, the touch-rig duty, the margin — had not been applied) → all repaired (`7e62ec4`, incl. the 24-px vertical staging-band margin: y [65, 287]).
+- **qa-lead spot-check #2** on that delta: **PASS** (3 nit-grade notes fixed at `46a8f11`).
+- **Re-verification round 2**: creative **CLEAN** · QA **CLEAN** · technical **NEEDS REVISION** (1 clause: the SYS-24 hold-mode cell's "the frame is static" premise is false during the approach pan) → repaired (`b259703`: the pan-subphase qualification + the lease's logic-tick game-time clause + the AC-CAM-12a advance-tick phrasing + OQ-CAM-8's ship-k/adopt-bound additions).
+- **Round 3**: the scoped spot-check **PASS** + the technical confirmation **CLEAN**; the creative and QA seats' round-2 CLEAN verdicts stand. The remaining nit-grade one-liners applied at landing.
+- **Final verdict: APPROVED** (2026-11-14). The GDD header carries the full trail; the landing sync (systems index + registry) and the PR to `Main` follow.
+
 ### CREATIVE seat (4 blocking · 8 recommended · 4 notes)
 
 1. **[BLOCKING] C1 — The Whole Fall's promise fails at the GDD's own fall speeds; three lag statements contradict.** F-CAM-04's "steady-state lag = 10·f hundredths, inside the half-view for f ≤ 13" omits the bias ramp's compounding (the falling target descends at f + ⅔f = 1.667f, so lag compounds worse); the doc's own cap claim ("> 7.2 px/tick") already uses the compounded speed; at f = 9.8–13 the cap binds and on a screen-length fall her body exits the frame's bottom — the look-down's purpose inverted. Falsifies contract term 2, the anchor, and P4. Fix: (a) correct the lag law; (b) record SYS-06's fall-speed ceiling as a consumed contract the anchor's promise conditions on; or (c) a fall-phase gain. **Must be reconciled with T1/T9 together (see the reconciliation notes).** Also reword TR-CAM-007's "the tween is already converged — the merge" (conflates converged bias with unconverged position — the 72-px landing retarget IS the lag made visible).
