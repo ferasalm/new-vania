@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-12"
+last_updated: "2026-11-13"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -414,6 +414,43 @@ constants:
     notes: "SYS-07's enemy-strike damage for power 3 (the heavy tier).
       TR-HD-003 / F-HD-01."
     added: 2026-11-12
+    revised: ""
+  - name: hitstop_hit_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/juice-feedback.md
+    value: 70
+    unit: ms
+    notes: "The hit hit-stop; converts to 5 physics ticks (83.3 ms
+      effective) by SYS-29's F-JCE-01 ceil law. Every freeze source pairs
+      a body commitment. TR-CMB-022 / TR-JCE-003."
+    added: 2026-11-13
+    revised: ""
+  - name: hitstop_clash_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/juice-feedback.md
+    value: 90
+    unit: ms
+    notes: "The clash hit-stop; 6 physics ticks (100.0 ms effective).
+      TR-CMB-022 / TR-JCE-003."
+    added: 2026-11-13
+    revised: ""
+  - name: hitstop_deflect_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/juice-feedback.md
+    value: 40
+    unit: ms
+    notes: "The deflect hit-stop; 3 physics ticks (50.0 ms effective).
+      TR-CMB-015/022 / TR-JCE-003."
+    added: 2026-11-13
     revised: ""
 
 # Example:
