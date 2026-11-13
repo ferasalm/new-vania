@@ -297,6 +297,7 @@ formulas:
     referenced_by:
       - design/gdd/input-control-mapping.md
       - design/gdd/juice-feedback.md
+      - design/gdd/camera-framing.md
     variables:
       - window_ms
       - physics_tps
@@ -448,6 +449,8 @@ constants:
       the second breath's reach ≥ the chop's."
     added: 2026-11-13
     revised: ""
+  # 2026-11-14 (camera-framing.md): 2.30 / 6.10 -> 2.45 / 6.55 — SYS-32 joined
+  # with its own entry (0.15 / 0.45); the composition is now seven-system.
   - name: six_system_perf_envelope
     status: active
     source: design/gdd/enemy-ai-telegraphs.md
@@ -457,19 +460,23 @@ constants:
       - design/gdd/health-damage.md
       - design/gdd/combat.md
       - design/gdd/room-world-structure.md
-    value: "2.30 / 6.10"
+      - design/gdd/camera-framing.md
+    value: "2.45 / 6.55"
     unit: "ms p99.9 / ms max"
-    notes: "The MVP gameplay-tick envelope's third record: 1.00 (SYS-01) +
-      0.30 (SYS-06) + 0.30 (SYS-08) + 0.25 (SYS-07) + 0.20 (SYS-29) + 0.25
-      (SYS-13, W14) = 2.30 p99.9; max 2.0+1.0+1.0+0.75+0.60+0.75 = 6.10.
-      Extends OQ-J2's five-system 2.05/5.35 (which extended OQ#19's
-      four-system 1.85/4.75). The sum is the budget allocation; the combined
-      soak's measurement is the proof. QA-plan re-record: OQ-ENM-2 (qa-lead,
-      before the first SYS-13 story). SYS-02 explicitly does NOT join
+    notes: "The MVP gameplay-tick envelope's fourth record (the name is the
+      registry's historical handle; the composition is now SEVEN-system):
+      1.00 (SYS-01) + 0.30 (SYS-06) + 0.30 (SYS-08) + 0.25 (SYS-07) + 0.20
+      (SYS-29) + 0.25 (SYS-13, W14) + 0.15 (SYS-32, TR-CAM-017) = 2.45 p99.9;
+      max 2.0+1.0+1.0+0.75+0.60+0.75+0.45 = 6.55. Extends the six-system
+      2.30/6.10 (which extended OQ-J2's five-system 2.05/5.35, which extended
+      OQ#19's four-system 1.85/4.75). The sum is the budget allocation; the
+      combined soak's measurement is the proof (the QA-plan sync's gate:
+      owner qa-lead, the AC-JCE-33 methodology at seven co-running systems;
+      the Camera GDD's OQ-CAM-8 / AC-CAM-17). SYS-02 explicitly does NOT join
       (no dedicated per-tick loop; the not-join and the re-open condition are
       printed in its GDD's TR-RWS-027; recorded for the QA-plan sync, OQ-RWS-6)."
     added: 2026-11-13
-    revised: ""
+    revised: 2026-11-13
 
   - name: intent_window_ms
     status: active
