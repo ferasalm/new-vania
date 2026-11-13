@@ -142,6 +142,27 @@ entities:
     added: 2026-11-13
     revised: ""
 
+  - name: wall_surface_query
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+      - design/gdd/movement.md
+    kind: published_contract
+    published_by: SYS-02 Room & World Structure
+    consumed_by: SYS-06 Movement (TR-MOV-014's re-arm comparison · TR-MOV-031's MoveResult.wall_segment_id)
+    values: "wall_surface_query(point) → {climbable, wall_segment_id} · wall_segment_id = -1 for an
+      untagged contact · the id is stable per WALL_CLIMBABLE-tagged wall-border segment, minted
+      at room load · Movement compares ids for the re-arm (the same id never re-arms early), never
+      geometry"
+    notes: "PENDING RIDER (2026-11-13, the OQ-M1 pattern — rides the next SYS-02 doc touch):
+      TR-RWS-024 still reads `wall_surface_query(point) → climbable`; the widened
+      {climbable, wall_segment_id} signature is Movement's recorded dependency
+      (TR-MOV-014/TR-MOV-031), not yet in the SYS-02 GDD — the mismatch is open
+      until that touch lands."
+    added: 2026-11-13
+    revised: ""
+
   - name: dual_truth_model
     status: active
     source: design/gdd/room-world-structure.md

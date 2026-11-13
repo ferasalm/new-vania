@@ -1040,3 +1040,29 @@ valid, all fixed):**
   **recorded SYS-02 rider** in the systems index (the OQ-M1 pattern — it rides
   the next SYS-02 doc touch); Movement's own `MoveResult` extension is in-scope
   here. AC-MOV-49 gains the id phrasing + the same-id-no-early-re-arm case.
+
+**Addendum 3 — 2026-11-13 (the round-3 re-review of the round-2 fix commit, all
+valid, all fixed):**
+- **Thread D (Minor, the rider's home):** the `wall_segment_id` rider text was
+  recorded under **SYS-07's** row (the edit anchor error) — the query owner
+  (SYS-02) would not find its own contract there. Fixed: moved verbatim to
+  **SYS-02's dependency-map row** (with the registry pointer); SYS-07's row
+  keeps only its own TR-JCE-024 sync.
+- **Thread D2 (Minor, the registry):** `wall_surface_query` /
+  `wall_segment_id` crossed the SYS-02 → Movement boundary unregistered.
+  Fixed: **`wall_surface_query` registered in `design/registry/entities.yaml`**
+  as a SYS-02 `published_contract` consumed by Movement (TR-MOV-014/TR-MOV-031),
+  with the **PENDING-RIDER note** stating TR-RWS-024 still reads the narrower
+  `→ climbable` shape — the registry presents the mismatch as open, never
+  resolved.
+- **Thread E (Major, the publication contract):** the pre-tick sample rule
+  requires `asserted_tick`, but the ADR's `FacingPublication` declaration lacked
+  the field — an implementation of that declaration could not select the
+  required publication. Fixed: the **`asserted_tick` field added** (its clock:
+  the `physics_tick` of the last assertion; one raw re-assertion per
+  `physics_tick` per R3/§8) + the **two-slot publication-store retention law**
+  (the current tick's publication + the immediately previous tick's — exactly
+  the pre-tick sample's requirement; older publications not retained). This is
+  a **contract alignment** with Movement's TR-MOV-006 (which already declared
+  the field), recorded in the Last Verified block — the previous "the
+  FacingPublication contract is untouched" sentence is superseded.

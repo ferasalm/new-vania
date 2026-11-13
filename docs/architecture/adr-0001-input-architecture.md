@@ -20,8 +20,13 @@ SYS-01 GDD at Main `af39307` (the #10 record).
 
 2026-11-13 — §10 cadence erratum applied (Movement OQ-M2): `facing` re-asserts
 raw every `physics_tick` (R3/§8); the section's original "every `logic_tick`"
-wording corrected. No decision changes; the FacingPublication contract is
-untouched.
+wording corrected. No decision changes. Same day, the PR #36 review added two
+dated riders: the **pre-tick press1 sample law** (the last publication with
+`asserted_tick` strictly less than press1's tick; same-tick publications never
+feed the sample) and the **`FacingPublication` contract alignment** — the
+declaration gains `asserted_tick` + the two-slot publication-store retention,
+matching Movement's TR-MOV-006 (which already declared the field). Contract
+alignment, not a behavior change.
 
 ## Decision Makers
 
@@ -720,7 +725,18 @@ class FacingPublication:
     var epoch: int          # increments on every change; never reused
     var cause: int          # INPUT_TURN / KNOCKBACK / WALL_TURN / HOP / SCRIPTED
     var changed_tick: int   # logic_tick of the change
+    var asserted_tick: int  # physics_tick of the last assertion (one raw
+                            # re-assertion per physics_tick per R3/§8)
 ```
+
+**Publication store retention.** The store is a **two-slot buffer** — the current
+tick's publication plus the immediately previous tick's — which is exactly the
+retention the pre-tick press1 sample needs (the sample reads the last publication
+with `asserted_tick` strictly less than the target tick; one raw re-assertion per
+`physics_tick`, so two slots suffice; older publications are not retained).
+`asserted_tick` aligns this declaration with Movement's TR-MOV-006 contract
+(which already declares the field) — a contract alignment, not a behavior change
+(the 2026-11-13 PR #36 rider).
 
 **Publication cadence.** SYS-06 publishes on every change **and re-asserts raw
 every `physics_tick`, including during freeze — R3/§8 (erratum 2026-11-13,
