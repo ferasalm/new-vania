@@ -123,6 +123,46 @@ entities:
     added: 2026-11-11
     revised: ""
 
+  - name: room_bounds_contract
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    kind: published_contract
+    published_by: SYS-02 Room & World Structure
+    consumed_by: SYS-32 Camera & Framing (the bounds are the camera's default limits — "room limits first")
+    values: "RoomBounds {room_id, rect_px (tile-multiple, world px — the per-room bound; NOT per-zone),
+      spawn_anchors, framing_zones} · F-RWS-02: limit = rect edges when the room ≥ the view
+      (480×270), centered by floor(slack ÷ 2) when smaller · the handoff is atomic at the swap
+      tick (published on BoundsPort before the camera's first tick — the camera never straddles
+      two rooms) · room min extent 30×17 tiles (480×272 px) unless framing-zone-registered"
+    notes: "SYS-32's hard upstream. The framing zones at MVP: the Denial arena
+      Rect2(3200, 0, 640, 352) and the reveal Rect2(1312, 176, 160, 96). The bounds read
+      rides SYS-32's own envelope entry when it joins."
+    added: 2026-11-13
+    revised: ""
+
+  - name: dual_truth_model
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    kind: published_contract
+    published_by: SYS-02 Room & World Structure
+    consumed_by: SYS-09 (the palette render) · SYS-10 (the mutations) · SYS-11 (the seam placement) · SYS-03 (the serialization)
+    values: "truth_epoch (int, monotonic non-decreasing; 0 = reality A, 1 = reality B at MVP;
+      max_epoch 1) + truth_flags (a registered table — sanctum_log_read at MVP) + the mutation
+      registry Mutation {set_id, room_id, from_epoch, to_epoch, effects} · the material lookup
+      PALETTE_MAP[epoch_pin(zone) ?? epoch(tick)][zone.material_rule] · one TileMap per room,
+      byte-identical across epochs (sealed, never absent) · exactly ONE mechanical mutation set
+      at MVP (REVEAL_CISTERN) · the arena's epoch_pin: 0 pocket (V-RWS-17: at most one per zone)"
+    notes: "The doctrine's data home: same geometry, wrong world. MetSys layers are NOT the
+      truth dimension (layer 0 only at MVP). Save sources (five families): doors_opened,
+      truth_flags, truth_epoch, memories_collected, cells_discovered — store sources, derive
+      targets; MetSys's save Dictionary is a written derived target, never an independent path."
+    added: 2026-11-13
+    revised: ""
+
 # Example (remove when first real entry is added):
 #
 # entities:
@@ -388,6 +428,7 @@ constants:
       - design/gdd/juice-feedback.md
       - design/gdd/health-damage.md
       - design/gdd/combat.md
+      - design/gdd/room-world-structure.md
     value: "2.30 / 6.10"
     unit: "ms p99.9 / ms max"
     notes: "The MVP gameplay-tick envelope's third record: 1.00 (SYS-01) +
@@ -396,7 +437,9 @@ constants:
       Extends OQ-J2's five-system 2.05/5.35 (which extended OQ#19's
       four-system 1.85/4.75). The sum is the budget allocation; the combined
       soak's measurement is the proof. QA-plan re-record: OQ-ENM-2 (qa-lead,
-      before the first SYS-13 story)."
+      before the first SYS-13 story). SYS-02 explicitly does NOT join
+      (no dedicated per-tick loop; the not-join and the re-open condition are
+      printed in its GDD's TR-RWS-027; recorded for the QA-plan sync, OQ-RWS-6)."
     added: 2026-11-13
     revised: ""
 
@@ -683,6 +726,110 @@ constants:
     unit: ms
     notes: "The deflect hit-stop; 3 physics ticks (50.0 ms effective).
       TR-CMB-015/022 / TR-JCE-003."
+    added: 2026-11-13
+    revised: ""
+
+  - name: tile_px
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: 16
+    unit: px
+    notes: "The one tile grid (SYS-02's TR-RWS-002) — every authored geometry rect is a
+      whole-tile multiple; the normalization audit's data home; STEP_HEIGHT 16 = the tile
+      height (Movement's V-MOV-08). Fixed, not tunable."
+    added: 2026-11-13
+    revised: ""
+
+  - name: cell_in_game_size_px
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: 640
+    unit: px
+    notes: "The MetSys cell's in-game size (40×40 tiles) — one room = one cell (V-RWS-04);
+      the pair law (V-RWS-16) keeps ROOM_MIN_TILES inside it."
+    added: 2026-11-13
+    revised: ""
+
+  - name: room_min_tiles
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: "30x17"
+    unit: tiles
+    notes: "The room minimum extent (480×272 px) — the 480×270 view fits with 2 px of
+      vertical scroll; a smaller room must be framing-zone-registered (F-RWS-08)."
+    added: 2026-11-13
+    revised: ""
+
+  - name: door_open_ms
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: 700
+    unit: ms
+    notes: "The door's scripted arc (42 ticks at 60 tps; the swap at T+21, the 22nd tick;
+      busy through T+41, free at T+42). Declared ≤ SCRIPTED_MAX_MS 1200 (V-RWS-13) so
+      Movement's derived worst_case_arc_ms stands. Playtest: OQ-RWS-1."
+    added: 2026-11-13
+    revised: ""
+
+  - name: reveal_arc_ms
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: 700
+    unit: ms
+    notes: "The backtrack reveal's first-crossing arc (42 ticks; intra-room — no swap; the
+      framing trigger fires). The same declaration law as DOOR_OPEN_MS (V-RWS-13).
+      Playtest: OQ-RWS-1."
+    added: 2026-11-13
+    revised: ""
+
+  - name: transition_budget_ms
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: 50
+    unit: ms
+    notes: "The non-resident first-entry load's wall-clock guard (the zone-2+ path; never
+      exercised at MVP — all six rooms are resident and the activation swap is asserted
+      ≤ 16 ms = one tick). Estimator: SYS-01 QA §5.3's nearest-rank with n ≥ 1,000."
+    added: 2026-11-13
+    revised: ""
+
+  - name: rematerialize_budget_ms
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+    value: 100
+    unit: ms
+    notes: "The zone flip's re-material budget (all rooms re-materialize within the flip's
+      freeze) — provisional against OQ-J1's FLIP_FREEZE_MS (SYS-09/10's)."
+    added: 2026-11-13
+    revised: ""
+
+  - name: env_void_damage
+    status: active
+    source: design/gdd/room-world-structure.md
+    referenced_by:
+      - design/gdd/room-world-structure.md
+      - design/gdd/health-damage.md
+    value: "hp_max"
+    unit: hp (sentinel)
+    notes: "The pit's ENVIRONMENT event payload (SYS-02's F-RWS-05): raw_damage = hp_max
+      (100 at the default profile), source = ENV (entity id 0), kind = ENVIRONMENT — the
+      pairing TR-HD-002 demands; the i-frame/defense bypass is TR-HD-018's law; through the
+      death edge + DeathRecord. Hazards never write HP. Release gate (OQ-RWS-4): the pit and
+      the module revive must not co-ship until last_grounded_safe_pos is ratified."
     added: 2026-11-13
     revised: ""
 
