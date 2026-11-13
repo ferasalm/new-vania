@@ -136,6 +136,25 @@ entities:
       (480×270), centered by floor(slack ÷ 2) when smaller · the handoff is atomic at the swap
       tick (published on BoundsPort before the camera's first tick — the camera never straddles
       two rooms) · room min extent 30×17 tiles (480×272 px) unless framing-zone-registered"
+  # 2026-11-14 (camera-framing.md APPROVED): the camera publication contract
+  # registered — SYS-32's sole downstream channel (TR-CAM-015).
+  - name: camera_publication_contract
+    status: active
+    source: design/gdd/camera-framing.md
+    referenced_by:
+      - design/gdd/camera-framing.md
+    kind: published_contract
+    published_by: SYS-32 Camera & Framing
+    consumed_by: SYS-24 HUD (the thumb-coverage caps — live reads, never cached) · SYS-10/SYS-11 (the hold announcements + the per-tick `active_hold` staging)
+    values: "The 9-field publication, every physics tick from activation: {mode (follow |
+      hold_zone | reveal_hold), view_rect_px (Rect2i half-open), player_screen_px (int art px,
+      view-relative, post-camera-clamp, pre-shake, unclamped to the view), on_screen (bool —
+      the body's hurtbox-extent test against view_rect_px), authority (the 8-value ladder
+      instrument), shake_offset_px, active_hold {zone_id, hold_point_px, start_tick} | null,
+      bounds_generation, tick (the physics-tick stamp)} · the input dependency: the hurtbox
+      extent rides Movement's TR-MOV-028 rider (position + hurtbox_extent) · one-way; no
+      consumer write-back; the camera never pre-clamps or pre-shakes SYS-24's value ·
+      the memory shape: a preallocated slot, no consumer retention past its own tick"
     notes: "SYS-32's hard upstream. The framing zones at MVP: the Denial arena
       Rect2(3200, 0, 640, 352) and the reveal Rect2(1312, 176, 160, 96). The bounds read
       rides SYS-32's own envelope entry when it joins."
@@ -563,10 +582,13 @@ constants:
     referenced_by:
       - design/gdd/movement.md
       - design/gdd/combat.md
+      - design/gdd/camera-framing.md
     value: 44
     unit: px
     notes: "Body hurtbox height; the crouch hurtbox is stand_height ×
-      crouch_hurtbox_ratio. F-MOV-11; Combat consumes the crouched hurtbox."
+      crouch_hurtbox_ratio. F-MOV-11; Combat consumes the crouched hurtbox;
+      the camera's hurtbox_extent input (the TR-MOV-028 rider) selects
+      standing/crouched via crouch_effective."
     added: 2026-11-12
     revised: ""
   - name: crouch_hurtbox_ratio
@@ -575,6 +597,7 @@ constants:
     referenced_by:
       - design/gdd/movement.md
       - design/gdd/combat.md
+      - design/gdd/camera-framing.md
     value: 0.6
     unit: ratio
     notes: "Crouch height ratio; top drop 17.6 px at defaults. The high-attack
