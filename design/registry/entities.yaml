@@ -204,10 +204,14 @@ formulas:
       ticks = 400.0 ms, inside the 500 ms stagger (margin 5); the read lead
       400 ms >= 250 (SYS-13's telegraph floor); the total 400 + 1200 =
       1600.0 ms in F-HD-12's [1450, 1700]. JOINT BOUND (V-ENM-17): the
-      inside-the-stagger guarantee requires STAGGER_MS >= 401 ms (validated
-      at registration against SYS-08's knob; Combat's permitted range
-      minimum 350 fails the boot with the punish rule on - the land would
-      fall outside). RATE LAW: the ms window (400.0 ms) is the promise — at
+      inside-the-stagger guarantee is validated in converted ticks at the
+      configured rate — stagger_ticks >= chop_active_ticks +
+      chop_recovery_ticks + jab_telegraph_ticks - atk1_startup_ticks + 1
+      (every phase converting by F-ENM-01); at 60 tps this is
+      STAGGER_MS >= 401 ms (validated at registration against SYS-08's knob;
+      Combat's permitted range minimum 350 fails the boot with the punish
+      rule on - the land would fall outside); 401 ms is the 60-tps example,
+      not a rate-independent bound. RATE LAW: the ms window (400.0 ms) is the promise — at
       any other rate every phase re-derives by the never-stingy ceil
       (F-ENM-01), the output_range is the stagger-tick bound
       (stagger_ticks = ceil(stagger_ms x tps / 1000)), and the design
