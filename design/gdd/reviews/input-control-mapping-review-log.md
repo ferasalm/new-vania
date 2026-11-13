@@ -1066,3 +1066,29 @@ valid, all fixed):**
   a **contract alignment** with Movement's TR-MOV-006 (which already declared
   the field), recorded in the Last Verified block — the previous "the
   FacingPublication contract is untouched" sentence is superseded.
+
+**Addendum 4 — 2026-11-13 (the round-4 re-review of the round-3 fix commit, all
+valid, all fixed):**
+- **Thread F (Minor, the id uniqueness scope):** "minted at room load" did not
+  state the uniqueness scope — per-room minting could hand two tagged segments
+  in different rooms the same id, and Movement would then treat them as one
+  segment (the second wall's contact would not re-arm immediately). Fixed: the
+  **uniqueness law** — `wall_segment_id` is **unique across the whole world**;
+  ids are never reused across rooms (a world-lifetime counter at zone load; a
+  `(room_id, segment_index)` composite satisfies this at VS streaming); the
+  acceptance rides the clause — a **cross-room uniqueness fixture** (two tagged
+  segments in different rooms mint different ids) joins SYS-02's AC set when the
+  rider lands. Stated in the SYS-02 rider, the registry entry's values + notes,
+  and Movement's TR-MOV-014 test line.
+- **Thread G (Major, the sample cutoff's clock):** the sample rule compared
+  `asserted_tick` (a `physics_tick`) against `press1_tick` (a `logic_tick`) —
+  the two clocks diverge under freeze (logic stalls, physics assertions
+  continue), so every retained publication could sit at or after the frozen
+  logic tick and the strict comparison would find **no sample**, refusing a
+  valid gesture. Fixed: the pseudocode captures **`press1_physics_tick =
+  current_physics_tick`** at press1 and the cutoff compares against it —
+  `asserted_tick` strictly less than **`press1_physics_tick`**; `press1_tick`
+  stays on the logic clock for the flip-attribution window. Corrected at all
+  three statement sites (the ADR §10 rider + the pseudocode + the retention
+  note, and both GDD sites: TR-INP-056 + F-08), with the divergence rationale
+  stated.

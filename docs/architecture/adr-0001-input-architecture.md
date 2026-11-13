@@ -22,8 +22,10 @@ SYS-01 GDD at Main `af39307` (the #10 record).
 raw every `physics_tick` (R3/§8); the section's original "every `logic_tick`"
 wording corrected. No decision changes. Same day, the PR #36 review added two
 dated riders: the **pre-tick press1 sample law** (the last publication with
-`asserted_tick` strictly less than press1's tick; same-tick publications never
-feed the sample) and the **`FacingPublication` contract alignment** — the
+`asserted_tick` strictly less than `press1_physics_tick` — the physics clock
+captured at press1; `press1_tick` stays on the logic clock for attribution;
+same-tick publications never feed the sample) and the **`FacingPublication`
+contract alignment** — the
 declaration gains `asserted_tick` + the two-slot publication-store retention,
 matching Movement's TR-MOV-006 (which already declared the field). Contract
 alignment, not a behavior change.
@@ -732,7 +734,9 @@ class FacingPublication:
 **Publication store retention.** The store is a **two-slot buffer** — the current
 tick's publication plus the immediately previous tick's — which is exactly the
 retention the pre-tick press1 sample needs (the sample reads the last publication
-with `asserted_tick` strictly less than the target tick; one raw re-assertion per
+with `asserted_tick` strictly less than `press1_physics_tick` — the physics clock
+captured at press1; `press1_tick` stays on the logic clock for the flip-attribution
+window; one raw re-assertion per
 `physics_tick`, so two slots suffice; older publications are not retained).
 `asserted_tick` aligns this declaration with Movement's TR-MOV-006 contract
 (which already declares the field) — a contract alignment, not a behavior change
@@ -745,8 +749,13 @@ changes remain keyed to `logic_tick`)** (so a missed read never sees a stale
 value). The epoch increments only on a value change; the cause is the cause of that change. The input layer
 reads the publication at press1 and on every tick while the machine is armed.
 **The press1 sample is the pre-tick publication** (the 2026-11-13 rider — the
-PR #36 review): the last publication with `asserted_tick` strictly less than
-press1's tick; same-tick publications, including the press1-induced turn itself
+PR #36 review; the cutoff's clock corrected the same day — the round-4 review):
+the last publication with `asserted_tick` strictly less than
+**`press1_physics_tick`** — the **physics** clock reading captured at press1
+(`press1_tick` stays on the **logic** clock for the flip-attribution window;
+the two clocks diverge under freeze, where `logic_tick` stalls while physics
+assertions continue — a logic-clock cutoff would find no sample and refuse a
+valid gesture). Same-tick publications, including the press1-induced turn itself
 (Movement publishes it on press1's tick or the next), never feed the press1
 sample.
 
@@ -757,6 +766,7 @@ on press1:
     press1_facing = facing.value
     press1_epoch  = facing.epoch
     press1_tick   = current_logic_tick
+    press1_physics_tick = current_physics_tick   # the sample cutoff's clock
 
 while machine != IDLE and not fired:
     if facing.epoch > press1_epoch:
