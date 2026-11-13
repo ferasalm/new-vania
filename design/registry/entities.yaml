@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-12"
+last_updated: "2026-11-13"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -50,6 +50,22 @@ last_updated: "2026-11-12"
 #   (health, damage, drops, faction, etc.)
 
 entities:
+  - name: shake_request
+    status: active
+    source: design/gdd/juice-feedback.md
+    referenced_by:
+      - design/gdd/juice-feedback.md
+    kind: published_contract
+    published_by: SYS-29 Juice & Feedback
+    consumed_by: SYS-32 Camera & Framing (executes + clamps)
+    values: "ShakeRequest {magnitude_px <= SHAKE_MAX_PX (3), duration_ms, source, tick} + the cancel variant (the SCREEN_SHAKE toggle-off path)"
+    notes: "The MVP envelope is the clash family only (clash 3/120,
+      counter 3/120, lose 2/80 — provisional, OQ-J4). SYS-29 publishes;
+      SYS-32 executes the offset and clamps to its room limits; no camera
+      writes exist in JuiceCore."
+    added: 2026-11-13
+    revised: ""
+
   - name: facing
     status: active
     source: design/gdd/input-control-mapping.md
@@ -124,6 +140,7 @@ formulas:
     source: design/gdd/input-control-mapping.md
     referenced_by:
       - design/gdd/input-control-mapping.md
+      - design/gdd/juice-feedback.md
     variables:
       - window_ms
       - physics_tps
@@ -131,8 +148,30 @@ formulas:
     expression: "window_ticks = ceil(window_ms * physics_tps / 1000)"
     notes: "Never-stingy law: effective duration always >= window_ms (ceil).
       140ms@60 -> 9 ticks (150ms effective). Rate-scaling: ms is the contract,
-      ticks derived; re-baseline ages through ms on rate change. GDD F-01."
+      ticks derived; re-baseline ages through ms on rate change. GDD F-01.
+      SYS-29's freeze conversion (F-JCE-01) is this family applied to the
+      physics rate with max(1, ceil) and accumulated-elapsed re-baselining."
     added: 2026-11-11
+    revised: "2026-11-13 (SYS-29 references the family; F-JCE-01 noted)"
+  - name: freeze_ticks
+    status: active
+    source: design/gdd/juice-feedback.md
+    referenced_by:
+      - design/gdd/juice-feedback.md
+      - design/gdd/movement.md
+      - design/gdd/combat.md
+    variables:
+      - duration_ms
+      - physics_tps
+    output_range: [1, 65535]
+    expression: "freeze_ticks = max(1, ceil(duration_ms * physics_tps / 1000))"
+    notes: "The freeze conversion (SYS-29 F-JCE-01): ms is the contract,
+      ticks derived on the physics rate (logic_tick is the counter being
+      stopped). Pending sources re-baseline from the accumulated-elapsed
+      record (duration_ms, elapsed_ms, current_tps) on a rate change.
+      Consumers: SYS-01 (the clock law), SYS-06/SYS-08 (the freeze
+      integration)."
+    added: 2026-11-13
     revised: ""
 
 # Example:
@@ -414,6 +453,43 @@ constants:
     notes: "SYS-07's enemy-strike damage for power 3 (the heavy tier).
       TR-HD-003 / F-HD-01."
     added: 2026-11-12
+    revised: ""
+  - name: hitstop_hit_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/juice-feedback.md
+    value: 70
+    unit: ms
+    notes: "The hit hit-stop; converts to 5 physics ticks (83.3 ms
+      effective) by SYS-29's F-JCE-01 ceil law. Every freeze source pairs
+      a body commitment. TR-CMB-022 / TR-JCE-003."
+    added: 2026-11-13
+    revised: ""
+  - name: hitstop_clash_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/juice-feedback.md
+    value: 90
+    unit: ms
+    notes: "The clash hit-stop; 6 physics ticks (100.0 ms effective).
+      TR-CMB-022 / TR-JCE-003."
+    added: 2026-11-13
+    revised: ""
+  - name: hitstop_deflect_ms
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/juice-feedback.md
+    value: 40
+    unit: ms
+    notes: "The deflect hit-stop; 3 physics ticks (50.0 ms effective).
+      TR-CMB-015/022 / TR-JCE-003."
+    added: 2026-11-13
     revised: ""
 
 # Example:
