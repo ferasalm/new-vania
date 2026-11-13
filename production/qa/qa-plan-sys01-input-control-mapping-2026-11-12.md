@@ -7,9 +7,10 @@
 **Authority**: SYS-01 GDD #10 diff-scoped record (`PASS WITH RECORDED
 OBLIGATIONS`; review loop closed at #10; GDD unfrozen) + ADR-0001 (Accepted
 2026-11-12)
-**Carries**: **O1** — AC-18's stamp-budget head ("up to 2") vs its parenthetical
-("p99.9 ≤ 2 and max ≤ 3"); the ratified budget is **p99.9 ≤ 2, max ≤ 3**; the
-AC-65 protocol below measures it.
+**Carries**: **O1 — RESOLVED 2026-11-13**: AC-18's stamp-budget head corrected to
+"up to 3 `logic_tick`s"; the ratified budget is **p99.9 ≤ 2, max ≤ 3**; the
+AC-65 protocol below measures it (the resolution is verified by the machine
+audit re-run + qa-lead spot-check recorded in the SYS-01 review log).
 **Hard gate**: the 16-item engine register (AC-74) must close before the first
 implementation story. The ledger may be printed now; the smoke gate executes
 after the register closes.
@@ -96,7 +97,7 @@ record); this plan is the fifth and prints the full enumeration.
 | 16 | AC-15 | whole AC | MVP smoke | GUT |  |
 | 17 | AC-16 | whole AC | MVP smoke | GUT |  |
 | 18 | AC-17 | whole AC | MVP smoke | GUT |  |
-| 19 | AC-18 | whole AC | MVP smoke | GUT | O1 — head/parenthetical; AC-65 measures |
+| 19 | AC-18 | whole AC | MVP smoke | GUT | O1 RESOLVED 2026-11-13 (head corrected to "up to 3"); AC-65 measures |
 | 20 | AC-19 | whole AC | MVP smoke | GUT |  |
 | 21 | AC-20 | whole AC | MVP smoke | GUT |  |
 | 22 | AC-21 | whole AC | MVP smoke | GUT |  |
@@ -676,10 +677,12 @@ mode. Breach adjudication is §5.5's, not a second policy.
   build); remediation on breach is ADR-owned (stamp-policy amendment or
   dispatch-pipeline escalation, OQ#1).
 
-**O1.** AC-18's head says "up to 2"; its parenthetical says "p99.9 ≤ 2 and max ≤
-3". The **ratified budget is the parenthetical**: p99.9 ≤ 2, max ≤ 3. AC-18's
+**O1 (RESOLVED 2026-11-13).** AC-18's head **said** "up to 2" while its parenthetical said "p99.9 ≤ 2 and max ≤
+3". The **ratified budget is the parenthetical**: p99.9 ≤ 2, max ≤ 3. The head is
+corrected to "up to 3 `logic_tick`s" (the audit re-run + qa-lead spot-check in
+the SYS-01 review log). AC-18's
 GUT test asserts the offer cadence, not the budget; AC-65's device half measures
-the budget. The GDD's one-clause correction is tracked in §11; it does not change
+the budget. The correction does not change
 the measurement.
 
 ### 5.11 GUT half vs device half summary
@@ -1120,9 +1123,11 @@ green; the other smoke units are not optional. Checklist:
 
 ## 11 · O1 register — the carried obligation
 
-**O1 (AC-18).** The stamp-budget head says "arrival→stamp may consume up to 2
-`logic_tick`s" while its own parenthetical says "p99.9 ≤ 2 **and** max ≤ 3".
-The clause disagrees with itself.
+**O1 (AC-18) — RESOLVED 2026-11-13.** The stamp-budget head **said** "arrival→stamp may consume up to 2
+`logic_tick`s" while its own parenthetical said "p99.9 ≤ 2 **and** max ≤ 3".
+The clause disagreed with itself; the head is corrected to "up to 3
+`logic_tick`s" (verified by the machine audit re-run + qa-lead spot-check in the
+SYS-01 review log). Historical record below.
 
 | Field | Value |
 |---|---|

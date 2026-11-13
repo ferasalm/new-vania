@@ -18,6 +18,11 @@ newer Accepted ADR, this ADR reverts to `Proposed` and is superseded explicitly.
 2026-11-12 — verified against Godot 4.7.2 engine-reference snapshots and the
 SYS-01 GDD at Main `af39307` (the #10 record).
 
+2026-11-13 — §10 cadence erratum applied (Movement OQ-M2): `facing` re-asserts
+raw every `physics_tick` (R3/§8); the section's original "every `logic_tick`"
+wording corrected. No decision changes; the FacingPublication contract is
+untouched.
+
 ## Decision Makers
 
 | Seat | Role in this decision |
@@ -717,9 +722,11 @@ class FacingPublication:
     var changed_tick: int   # logic_tick of the change
 ```
 
-**Publication cadence.** SYS-06 publishes on every change **and re-asserts every
-`logic_tick`** (so a missed read never sees a stale value). The epoch increments
-only on a value change; the cause is the cause of that change. The input layer
+**Publication cadence.** SYS-06 publishes on every change **and re-asserts raw
+every `physics_tick`, including during freeze — R3/§8 (erratum 2026-11-13,
+Movement OQ-M2: this section originally said "every `logic_tick`"; value/epoch
+changes remain keyed to `logic_tick`)** (so a missed read never sees a stale
+value). The epoch increments only on a value change; the cause is the cause of that change. The input layer
 reads the publication at press1 and on every tick while the machine is armed.
 
 **Attribution rule.**

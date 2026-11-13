@@ -888,3 +888,86 @@ were made; the GDD remains **UNFROZEN**. Next: **Combat/Movement GDDs** (normati
 consumption of the crouch channel / posture handoff / gate manifest is unlocked)
 → SYS-32 camera GDD last. The QA plan's smoke gate executes only after the
 probe register closes (AC-74).
+
+---
+
+## Landing record — 2026-11-13 — O1 resolved + the OQ-M1 press1-creep amendment
+
+Scope signal: S (a landing record with its two mandated verifications — **not a
+review**; the #10 record remains the authority; no new review rounds). Landed on
+branch `docs/sys01-o1-and-sync` from origin/Main `d8b96f0`.
+
+**O1 — RESOLVED.** AC-18's stamp-budget head (SYS-01 GDD L822) corrected from
+"up to 2 `logic_tick`s" to **"up to 3 `logic_tick`s"** while its parenthetical
+"p99.9 ≤ 2 **and** max ≤ 3" stands — the ratified budget (TR-INP-076 / AC-65 /
+QA plan). AC-65 and TR-INP-076 untouched; the QA plan's Carries header, ledger
+row 19, and the §5.10/§11 O1 paragraphs annotated RESOLVED.
+
+**OQ-M1 — the SYS-01 press1-creep amendment LANDED** (Movement OQ row 11; the
+one-clause edit was due before the first SYS-06 implementation story):
+TR-INP-056 and F-08's back-edge clause now define **press1 = the chain's first
+back-direction entry** — on analog rigs the creep-band entry when the flick
+crosses creep before walk (a slow back flick enters creep first; the creep turn
+must not pre-empt the classification), on keyboard/d-pad the binding press
+directly — with the **true-back check reading the facing published before the
+press1-induced turn** (same-tick turns do not feed the check). The walk-band
+crossing that follows is a later same-sign entry; press2/re-arms still complete
+against the active arming zone (the WALK band by default; V16's clamp
+untouched). AC-MOV-42's xfail trace is un-xfailed (movement.md annotated;
+TR-MOV-007's cross-contract note records the landing).
+
+**OQ-M2 — the ADR-0001 §10 cadence erratum APPLIED** (Movement OQ row 12): §10
+now reads "re-asserts **raw every `physics_tick`, including during freeze** —
+R3/§8 (erratum 2026-11-13)"; value/epoch changes remain keyed to `logic_tick`;
+the FacingPublication contract and the attribution rule untouched; a dated note
+added to Last Verified.
+
+**TR-MOV-014 rider — LANDED** (rode this Movement doc touch as recorded):
+wall slide/jump requires wall contact on a `WALL_CLIMBABLE`-tagged wall-border
+segment (the climbability query is SYS-02's room-data surface query and is wall
+slide/jump's input).
+
+**Row sync (the SYS-29 answered amendments riding the systems-index sync,
+per juice-feedback.md L537):** SYS-01 row — OQ#7 answered (haptics event
+qualification: none beyond the mapped three at MVP, TR-JCE-012) + the
+**proven-140 combo-value row** recorded (the 140 ms proven window; Combat's
+200 ms attack window is the recorded per-verb override); SYS-06 row — OQ row 10
+answered (the Leap-Stone grant cue + the double-jump tell, TR-JCE-021) + the
+rider + OQ-M2; SYS-07 row — the damage-number lifetime ages on `logic_tick`
+(TR-JCE-024); SYS-32 row — the SYS-01 gate marked satisfied (authoring next).
+
+**Verification 1 — the machine audit re-run (24 stems).** Same species as the
+#8/#9/#10 audits (cross-reference membership, symbol consistency, residue
+purge), scoped to this change set: **23/24 PASS**. The single FAIL (stem C5)
+was a **stem-phrasing artifact**: the audit expected the QA plan's budget in
+the "`logic_tick`s" form while the plan states it in the comma form
+("p99.9 ≤ 2, max ≤ 3") — the qa-lead spot-check re-derived and confirmed the
+five budget sites (TR-INP-076 L119, AC-65 L890, AC-18 L822, QA plan L11, this
+log's #10 record) assert the identical budget {p99.9 ≤ 2} ∧ {max ≤ 3};
+**substance-consistent, no document defect.**
+
+**Verification 2 — the qa-lead spot-check: PASS (4/4 change sets + bookkeeping,
+no blockers).** Rulings: (a) O1's head/parenthetical/AC-65/TR-INP-076/QA-plan
+five-way budget consistency closes; (b) **V16 ruled COHERENT** under the
+amendment — V16 governs the promoted fallback's zone placement; in the default
+regime a creep press1 can never *complete* the pattern (press2 requires an
+arming-zone entry with a release event strictly between), the excursion
+patterns that fire did so identically pre-amendment, and AC-64's false-fire
+bar + AC-39 remain the enforcement; (c) the ADR erratum is byte-scoped to the
+cadence paragraph + the Last Verified note; (d) the rider narrows the
+population without contradicting F-MOV-08/AC-MOV-11/AC-MOV-49; (e) the index
+bookkeeping closes. Two **implementation watches** recorded as obligations:
+- **W-1 (release-edge event semantics):** after a creep-band press1 at
+  magnitude < 0.40 the machine sits in BACK1 with the release predicate already
+  level-true; the F-07 harness must consume the release as an **event** (a fresh
+  ≥ 0.40 → < 0.40 transition, or the tap's actual release), never level-sampled
+  per tick — add the assert to the F-07 harness and the AC-39 case list when
+  the first SYS-01 implementation story authors them.
+- **W-2 (AC-MOV-42 test script):** the AC's GIVEN describes the flick shape
+  only; a single slow flick cannot fire under F-07 and must not — pin the full
+  script (release + second flick) when the AC-MOV-42 test is authored.
+
+**Sequencing:** the SYS-01 gate for SYS-32 is satisfied — the review loop is
+closed, O1 is resolved, and the recorded amendments are landed. **SYS-32
+Camera & Framing GDD is next** (it consumes SYS-29's `ShakeRequest` schema and
+SYS-02's ratified room-bounds contract).
