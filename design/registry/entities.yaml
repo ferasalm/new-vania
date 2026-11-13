@@ -163,7 +163,10 @@ entities:
       (TR-MOV-014/TR-MOV-031), not yet in the SYS-02 GDD — the mismatch is open
       until that touch lands. The acceptance rides the clause: a cross-room
       uniqueness fixture (two tagged segments in different rooms mint different
-      ids) joins SYS-02's AC set with the rider."
+      ids) joins SYS-02's AC set with the rider. Owner: lead-programmer (SYS-02's
+      owner per the systems index). Landing gate: the SYS-02 touch — the widened
+      query, the id field in room data, and the cross-room uniqueness fixture —
+      must land before the first wall-jump story."
     added: 2026-11-13
     revised: ""
 

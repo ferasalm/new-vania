@@ -1092,3 +1092,22 @@ valid, all fixed):**
   three statement sites (the ADR §10 rider + the pseudocode + the retention
   note, and both GDD sites: TR-INP-056 + F-08), with the divergence rationale
   stated.
+
+**Addendum 5 — 2026-11-13 (the round-5 re-review of the round-4 fix commit;
+one Minor, fixed; plus the process defect this round exposed):**
+- **The process defect:** the round-5 thread was INVISIBLE to the thread-count
+  checks — every earlier check queried `reviewThreads(first: 10)` and this PR
+  had accumulated exactly 10 threads by round 4, so the 11th (round 5's) was
+  off-page while GitHub's merge gate (required_conversation_resolution) saw it.
+  The correct query is unbounded (first: 50+); all future thread checks on this
+  project use it.
+- **Thread H (Minor, the rider's owner + gate):** the `wall_segment_id` rider
+  named no owner and no hard landing gate — "the next SYS-02 doc touch" is
+  dateless, and until the touch lands an implementation following SYS-02's
+  approved TR-RWS-024 (`→ climbable`) cannot obtain the id AC-MOV-49 needs.
+  Fixed: **owner: lead-programmer** (SYS-02's owner per the systems index);
+  **the landing gate: the SYS-02 touch — the widened query, the id field in
+  room data, and the cross-room uniqueness fixture — must land before the first
+  wall-jump story** (mirroring the Movement-side gate). Stated in the SYS-02
+  rider, the registry entry's notes, and Movement's TR-MOV-014 identity-contract
+  note (which now also states the interim consequence explicitly).
