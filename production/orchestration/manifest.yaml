@@ -95,8 +95,8 @@ lanes:
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
     status: SYNC
     dependencies: [SYS-09, SYS-10, SYS-29, SYS-11]
-    review_state: "GDD APPROVED (2026-11-14 — the GLM creative rerun's trail; 39 TR-AUD / 7 F-AUD / 7 V-AUD / 32 ACs). The header's Status line still reads In Review — the audio-director countersign is the recorded pending item; the lane flips it at the merge. SYNC IN FLIGHT — the sync PR is open; PR #46 waits on it."
-    next_action: "Merge the SYS-04 sync PR (pinned to its head); then the orchestrator squash-merges PR #46 at 391dd18 and records the landing hash."
+    review_state: "GDD APPROVED (2026-11-14 — the GLM creative rerun's trail; 39 TR-AUD / 7 F-AUD / 7 V-AUD / 32 ACs). The header's Status line still reads In Review — the audio-director countersign is the recorded pending item; the lane flips it at the merge. SYNC LANDED — PR #48 merged at dd33658; the row, the four registry entries and the SYS-02 reciprocal are on Main."
+    next_action: "The orchestrator squash-merges PR #46 at 391dd18 (pinned); the lane flips the GDD header's In Review at that merge, and the landing hash is recorded."
 
   - id: SYS-15
     title: "Cache Stations & Death-as-Story"
