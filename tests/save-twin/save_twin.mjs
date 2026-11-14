@@ -222,8 +222,18 @@ function atomicWrite(dir, slot, bytes, opts = {}) {
   if (tmpHash !== tmpEnv.state_hash) throw new Error('SAVE_FAILED_VERIFY');
   if (existsSync(sav)) renameSync(sav, bak);                                  // 4. rotate the previous good file
   renameSync(tmp, sav);                                                       // 5. the commit point
-  const rb = JSON.parse(readFileSync(sav, 'utf8'));                           // 6. the read-back verify
-  if (stateHash(rb.schema_version, rb.payload) !== rb.state_hash) throw new Error('SAVE_FAILED_VERIFY');
+  if (opts.corruptAfterCommit) writeFileSync(sav, 'garbage', 'utf8');         // inject a step-6 fault
+  let ok = false;
+  try {                                                                        // 6. the read-back verify
+    const rb = JSON.parse(readFileSync(sav, 'utf8'));
+    ok = stateHash(rb.schema_version, rb.payload) === rb.state_hash;
+  } catch { ok = false; }
+  if (!ok) {
+    // THE STEP-6 ROLLBACK (TR-SAV-010): the previous generation returns to .sav;
+    // with no .bak (a first write) the unverified .sav is deleted -> the slot is EMPTY.
+    if (existsSync(bak)) renameSync(bak, sav); else rmSync(sav);
+    throw new Error('SAVE_FAILED_VERIFY');
+  }
   return sav;
 }
 
@@ -435,6 +445,23 @@ check('WRITE-verify-temp', 'step 3: a temp whose hash does not verify aborts bef
   try { atomicWrite(S, 'vt', envelope(FIX.post_flip, '2'), { corruptTemp: true }); } catch (e) { threw = /SAVE_FAILED_VERIFY/.test(e.message); }
   assert(threw, 'the verify did not fire');
   assert(readFileSync(join(S, 'vt.sav')).equals(before), 'the good file was touched');
+});
+check('WRITE-verify-readback', 'step 6: a post-commit verify failure rolls back to the PREVIOUS generation', () => {
+  atomicWrite(S, 'rb', envelope(FIX.pre_flip, '1'));
+  const gen1 = readFileSync(join(S, 'rb.sav'));
+  let threw = false;
+  try { atomicWrite(S, 'rb', envelope(FIX.post_flip, '2'), { corruptAfterCommit: true }); } catch (e) { threw = /SAVE_FAILED_VERIFY/.test(e.message); }
+  assert(threw, 'the step-6 verify did not fire');
+  assert(readFileSync(join(S, 'rb.sav')).equals(gen1), 'the previous generation was not restored');
+  const v = integrityVerdict(readFileSync(join(S, 'rb.sav'), 'utf8'));
+  assert(v.code === 'ACCEPT', 'the rolled-back file does not validate');
+  assert(pendingFlip(restoreDefaults(v.env.payload.world)) === false, 'the wrong state was restored (the unverified new one won)');
+});
+check('WRITE-readback-first', 'step 6 on a first write (no .bak): the unverified .sav is deleted -> the slot is EMPTY', () => {
+  let threw = false;
+  try { atomicWrite(S, 'rb2', envelope(FIX.pre_flip, '1'), { corruptAfterCommit: true }); } catch (e) { threw = /SAVE_FAILED_VERIFY/.test(e.message); }
+  assert(threw, 'the verify did not fire');
+  assert(!existsSync(join(S, 'rb2.sav')), 'the unverified file was left in place');
 });
 
 // ---------------------------------------------------------------- report
