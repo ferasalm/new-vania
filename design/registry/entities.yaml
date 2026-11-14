@@ -199,6 +199,7 @@ entities:
     source: design/gdd/room-world-structure.md
     referenced_by:
       - design/gdd/room-world-structure.md
+      - design/gdd/dual-reality-state.md
     kind: published_contract
     published_by: SYS-02 Room & World Structure
     consumed_by: SYS-09 (the palette render) · SYS-10 (the mutations) · SYS-11 (the seam placement) · SYS-03 (the serialization)
@@ -213,6 +214,69 @@ entities:
       truth_flags, truth_epoch, memories_collected, cells_discovered — store sources, derive
       targets; MetSys's save Dictionary is a written derived target, never an independent path."
     added: 2026-11-13
+    revised: "2026-11-14 (SYS-09 consumes the model as read-only data — the palette render; dual-reality-state.md joins referenced_by)"
+
+# 2026-11-14 (dual-reality-state.md authored — S1-002a): SYS-09's contracts registered.
+  - name: flip_trigger_contract
+    status: active
+    source: design/gdd/dual-reality-state.md
+    referenced_by:
+      - design/gdd/dual-reality-state.md
+    kind: published_contract
+    published_by: SYS-09 Dual-Reality State & Rendering
+    consumed_by: SYS-10 (the epoch write on the flip_epoch_boundary signal) · SYS-29 (the freeze request + the tear trigger) · SYS-04 (the ambient composition — contract-first, the audit's IP-7) · SYS-05 (the Reading-close upstream edge)
+    values: "The E1–E7 edge table (TR-DR-004): flip_begin at R · freeze_open at τ0 ·
+      epoch_swap at τ0 (never before freeze_open) · ambient_shift pinned to epoch_swap's
+      tick · rematerial_done = the τ0 frame (R+1) · glitch_window [τ0, τ0+N+the 120 ms
+      decay tail) · freeze_close at the R+N→R+N+1 boundary · flip_complete at R+N+1 ·
+      guarantees G1–G7 (one atomic store + same-tick derivation; monotonic single-shot;
+      deferred-but-invisible; re-material inside the freeze; pin/reveal integrity; the
+      flash law; totality and order)"
+    notes: "The batch's Day-3 contract-first publication (SYS-04 composes against this
+      table and nothing else). SYS-10's handshake: request → flip_epoch_boundary signal →
+      one atomic store at τ0 (SYS-02's law verbatim). A policy change is a contract
+      revision, never a silent shift (G7)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: epoch0_tell_registry
+    status: active
+    source: design/gdd/dual-reality-state.md
+    referenced_by:
+      - design/gdd/dual-reality-state.md
+    kind: published_contract
+    published_by: SYS-09 Dual-Reality State & Rendering
+    consumed_by: SYS-10 (the semantic linkage — TR-DR-010's co-ownership) · SYS-28 (the telegraph-text surface, bound to the fantasy's contract term 2 — never inventory/name/confirm)
+    values: "Per-room rows {room_id, anchor_rect (tile-aligned), tell_type ∈
+      {SYMMETRY, DEAD_CONDUIT, ERROR_CODE}, novelty_kind ∈ {STATE_DELTA, RE_READING},
+      novelty_ref} — MVP allocation 1/1/2/1/1/0 (RM-01…06; the arena = 0); stateless
+      (no tell state is ever saved or read); tells render epoch-0-only in the truth-A
+      table's own members"
+    notes: "User decision D-6's named MVP requirement (the audit's IP-2). The elicitable
+      target is RM-03's conduit termination (the MVP gate-2 tell-noticing probe measures
+      it); the no-geometry law holds with the registry loaded; the novelty list is closed
+      with the frozen room set."
+    added: 2026-11-14
+    revised: ""
+
+  - name: dual_reality_palette_tables
+    status: active
+    source: design/gdd/dual-reality-state.md
+    referenced_by:
+      - design/gdd/dual-reality-state.md
+    kind: published_contract
+    published_by: SYS-09 Dual-Reality State & Rendering
+    consumed_by: SYS-11 (the PROV_LIM_* ramp — the shared source for the wing + the seam materials) · SYS-29 (PROV_GLITCH_ACCENT consumed by name)
+    values: "One table, three groups: the reality-A slots (PROV_A_*) · the reality-B
+      slots (PROV_B_*; B_SEAL dormant at MVP) · the liminal ramp (PROV_LIM_*) +
+      PROV_GLITCH_ACCENT + PROV_GRIEF_TINT (overlay anchor, not a member) +
+      PROV_SIGIL_RED (reserved, lord presence only); every entry {hex, status:
+      PLACEHOLDER|PINNED, source}; the isomorphism law — same slots at the same
+      placements, a re-skin is a table swap over unchanged coordinates"
+    notes: "Hexes are PLACEHOLDER through the greybox MVP; PINNED is required before
+      content ship (the art-bible pass upgrades in place). No hex literals in SYS-09
+      code (V-DR-05)."
+    added: 2026-11-14
     revised: ""
 
 # Example (remove when first real entry is added):
@@ -322,6 +386,7 @@ formulas:
       - design/gdd/input-control-mapping.md
       - design/gdd/juice-feedback.md
       - design/gdd/camera-framing.md
+      - design/gdd/dual-reality-state.md
     variables:
       - window_ms
       - physics_tps
@@ -333,7 +398,7 @@ formulas:
       SYS-29's freeze conversion (F-JCE-01) is this family applied to the
       physics rate with max(1, ceil) and accumulated-elapsed re-baselining."
     added: 2026-11-11
-    revised: "2026-11-13 (SYS-29 references the family; F-JCE-01 noted)"
+    revised: "2026-11-13 (SYS-29 references the family; F-JCE-01 noted); 2026-11-14 (SYS-09's F-DR-02 rate law cites the F-01 rule; dual-reality-state.md joins referenced_by)"
   - name: freeze_ticks
     status: active
     source: design/gdd/juice-feedback.md
@@ -341,6 +406,7 @@ formulas:
       - design/gdd/juice-feedback.md
       - design/gdd/movement.md
       - design/gdd/combat.md
+      - design/gdd/dual-reality-state.md
     variables:
       - duration_ms
       - physics_tps
@@ -353,7 +419,7 @@ formulas:
       Consumers: SYS-01 (the clock law), SYS-06/SYS-08 (the freeze
       integration)."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-14 (SYS-09's flip conversion F-DR-02 is the family applied to the flip freeze; dual-reality-state.md joins referenced_by)"
 
 # Example:
 #
@@ -485,6 +551,7 @@ constants:
       - design/gdd/combat.md
       - design/gdd/room-world-structure.md
       - design/gdd/camera-framing.md
+      - design/gdd/dual-reality-state.md
     value: "2.45 / 6.55"
     unit: "ms p99.9 / ms max"
     notes: "The MVP gameplay-tick envelope's fourth record (the name is the
@@ -498,9 +565,12 @@ constants:
       owner qa-lead, the AC-JCE-33 methodology at seven co-running systems;
       the Camera GDD's OQ-CAM-8 / AC-CAM-17). SYS-02 explicitly does NOT join
       (no dedicated per-tick loop; the not-join and the re-open condition are
-      printed in its GDD's TR-RWS-027; recorded for the QA-plan sync, OQ-RWS-6)."
+      printed in its GDD's TR-RWS-027; recorded for the QA-plan sync, OQ-RWS-6).
+      SYS-09 explicitly does NOT join either (the event-driven flip; the
+      event-cached material resolution; the not-join + re-open condition printed
+      in its GDD's performance-envelope ruling — recorded 2026-11-14)."
     added: 2026-11-13
-    revised: 2026-11-13
+    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system)"
 
   - name: intent_window_ms
     status: active
@@ -853,13 +923,14 @@ constants:
     source: design/gdd/room-world-structure.md
     referenced_by:
       - design/gdd/room-world-structure.md
+      - design/gdd/dual-reality-state.md
     value: 700
     unit: ms
     notes: "The backtrack reveal's first-crossing arc (42 ticks; intra-room — no swap; the
       framing trigger fires). The same declaration law as DOOR_OPEN_MS (V-RWS-13).
       Playtest: OQ-RWS-1."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-14 (SYS-09's feel ladder + the flip/reveal non-overlap reference the arc; dual-reality-state.md joins referenced_by)"
 
   - name: transition_budget_ms
     status: active
@@ -879,12 +950,13 @@ constants:
     source: design/gdd/room-world-structure.md
     referenced_by:
       - design/gdd/room-world-structure.md
+      - design/gdd/dual-reality-state.md
     value: 100
     unit: ms
     notes: "The zone flip's re-material budget (all rooms re-materialize within the flip's
       freeze) — provisional against OQ-J1's FLIP_FREEZE_MS (SYS-09/10's)."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-14 (SYS-09 executes + asserts the budget inside the flip — F-DR-06's runway invariant validates the pairing; OQ-J1 resolved; dual-reality-state.md joins referenced_by)"
 
   - name: env_void_damage
     status: active
@@ -900,6 +972,58 @@ constants:
       death edge + DeathRecord. Hazards never write HP. Release gate (OQ-RWS-4): the pit and
       the module revive must not co-ship until last_grounded_safe_pos is ratified."
     added: 2026-11-13
+    revised: ""
+
+# 2026-11-14 (dual-reality-state.md): OQ-J1's values authored (SYS-09).
+  - name: flip_freeze_ms
+    status: active
+    source: design/gdd/dual-reality-state.md
+    referenced_by:
+      - design/gdd/dual-reality-state.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/juice-feedback.md
+    value: 300
+    unit: ms
+    notes: "The flip's freeze beat (18 ticks at 60 tps; safe range [240, 600]) —
+      OQ-J1's consumption: authored in SYS-09's GDD with printed fixtures (F-DR-02),
+      inside SYS-02's REMATERIALIZE_BUDGET_MS 100 (F-DR-06's runway invariant: the
+      strict mechanical floor > 100, the practical nominal floor 240, the 150
+      relaxation conditional on PR-DR-02's sweep ≤ 64 ms). A request_freeze source on
+      SYS-29's clock (&\"truth_flip\", FREEZE_HOLD). Provisional until playtest
+      (OQ-DR-9)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: flip_glitch_mag
+    status: active
+    source: design/gdd/dual-reality-state.md
+    referenced_by:
+      - design/gdd/dual-reality-state.md
+      - design/gdd/juice-feedback.md
+    value: 0.6
+    unit: ratio (amplitude)
+    notes: "The tear's amplitude-only magnitude (safe range [0.4, 0.8]; no flash
+      frequency ever scales with it — F-DR-04's channels: tear 5 art px, desat 0.6,
+      jitter 2 px, scanlines 4 px @ alpha 0.36). The ≥ 0.75 band turns the aftershock
+      beat on (off at the default). OQ-J1's consumption (SYS-29's TR-JCE-017 trigger
+      takes mag)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: flash_min_interval_ms
+    status: active
+    source: design/gdd/dual-reality-state.md
+    referenced_by:
+      - design/gdd/dual-reality-state.md
+      - design/gdd/juice-feedback.md
+    value: 350
+    unit: ms
+    notes: "The flash law's minimum interval (SYS-29's TR-JCE-022 ≤ 3 flashes/s
+      enforced): any two flashes from any source ≥ 350 ms apart ⟹ ≤ 3 per any sliding
+      1000 ms window; the tick encoding is rate-derived (FLASH_MIN_INTERVAL_TICKS —
+      21 at 60 tps, 16 at 45; V-DR-04: never a universal tick floor). Fixed compliance
+      value, not tunable (F-DR-03)."
+    added: 2026-11-14
     revised: ""
 
 # Example:
