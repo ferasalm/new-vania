@@ -319,7 +319,7 @@ entities:
       - design/gdd/world-mutation-epochs.md
     kind: published_contract
     published_by: SYS-10 World Mutation & Epochs
-    consumed_by: SYS-10's trigger chain (TR-WME-003) · SYS-02's registered flag table (the V-RWS-05 membership check)
+    consumed_by: SYS-10's trigger chain (TR-WME-003); validated against SYS-02's registered flag table (V-RWS-05) at boot
     values: "{flag_name → set_id} — one row at MVP: sanctum_log_read → REVEAL_CISTERN"
     notes: "SYS-10-private; SYS-02's Mutation record shape untouched (a trigger field there would
       be a published-contract revision for a private concern). The flag-set edge signal (SYS-02's
@@ -359,11 +359,12 @@ entities:
       E_to) derived at load (F-WME-01); the absent flag key reads unset; epoch 1 ∧ flag unset =
       integrity violation (dev assert + telemetry; truth B stands — no repair, no clamp); epoch
       out of range → reconciliation aborts into SYS-03's refusal path; the deferral-gap re-fire is
-      the first store of that save's lifetime, not a second flip (G8)"
+      the first store of that save's lifetime, not a second flip (the same-logical-flip
+      doctrine — SYS-09's G2 + AC-DR-08)"
     notes: "Contract-first for SYS-03's authoring (the E4 law precedent). The real-file save
-      round-trip twin is SYS-03's authoring gate (the carried obligation). Session cap: at most
-      one choreography per session — a same-session re-cross is a consumed no-op + rate-limited
-      telemetry (the cap-gated standing predicate); a new-session re-cross re-fires legally."
+      round-trip twin is SYS-03's authoring gate (the carried obligation). The re-fire is
+      unconditional per the derived predicate (SYS-09's AC-DR-08 — no session cap; the batch
+      pilot withdrew the cap, 2026-11-14)."
     added: 2026-11-14
     revised: ""
 
