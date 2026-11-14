@@ -414,8 +414,9 @@ entities:
       equals the W/E cells minus fixtures/M4; P4 hue distance >= 40 deg from every A/B member and
       the grief tint, hue in [255,325]; P5 C(T_i) <= 0.5*C(grief); G = four ramp members + grief
       present/C >= 0.01 + non-empty A/B + the mask equality + the placement hash + a non-empty
-      feasible interval. The admission record hashes the ramp/grief/placement/constants (F-SMB-04);
-      a present-but-unratified tint is a boot failure."
+      feasible interval. The admission record hashes the ramp/grief/placement/constants/tint/A-B hues
+      (F-SMB-04); a tint with a null record or `PURPLE_ENABLED` false is the present-but-unratified
+      boot failure."
     notes: "The test runs CI-only (TR-SMB-010); a failed test -> tint null (grey default), not a boot
       failure. The ramp's L gaps must be >= 0.09 for a guaranteed P2 pass (OQ-4). The key-level vs
       pixel-level reading of SYS-09's AC-DR-15 is OQ-2; the band's capture inclusion is OQ-3."

@@ -96,6 +96,8 @@ Three law families govern SYS-11's math: **the sampling law** (the depth field d
 
 #### F-SMB-01 · depth_field + step_map — the sampling rule (TR-SMB-004)
 
+The `depth_field` formula is defined as:
+
 `d(row_y) = clamp((row_y − origin_row) ÷ float(span_intervals), 0.0, 1.0)`
 `fill_step(d) = 1 + clamp(floor(d × 3), 0, 2)`
 `frame_step(d) = clamp(fill_step(d) + SEAM_SIDE_OFFSET, 0, 3)`
@@ -135,6 +137,8 @@ At `SEAM_SIDE_OFFSET = 0`, the W/E = the fill steps (MID/PALE/PALE/LIGHT/LIGHT);
 
 #### F-SMB-02 · band_rect + band_cells — the clip (TR-SMB-002)
 
+The `band_rect` formula is defined as:
+
 Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ threshold.rect_tiles`; a violation is a boot failure naming `rm03_partition`, never a quantized clip. `threshold.rect_px` and `opening_rect_px` are F-RWS-01 conversions (`TILE_PX` 16, RM-03's origin (1280,0)).
 `band_rect = threshold.rect_px.intersection(opening_rect_px)`
 `band_cells = cells(band_rect)` if `band_rect.has_area()` else `∅`
@@ -158,6 +162,8 @@ Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ thres
 
 #### F-SMB-03 · visible(seg, e) — per-segment derivation (TR-SMB-003)
 
+The `seam_visibility` formula is defined as:
+
 `visible(seg, e) = (seg == BAND) ? gate_open(rm03_partition, e) : zone_materialize(cold_corridor, e)`
 `boot_ok = ∀e ∈ [0, max_epoch]: gate_open(rm03_partition, e) == zone_materialize(cold_corridor, e)`
 
@@ -177,7 +183,9 @@ Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ thres
 
 #### F-SMB-04 · accept(contract) — the version + staleness guard (TR-SMB-001/005)
 
-`accept(c) = (c.schema_version == SEAM_SCHEMA_VERSION) ∧ (c.admission_record == null ∨ (c.admission_record.predicate_version == ADMISSION_VERSION ∧ c.admission_record.ramp_hash == hash(PROV_LIM_*) ∧ c.admission_record.grief_hash == hash(PROV_GRIEF_TINT) ∧ c.admission_record.placement_hash == hash(mask ∪ placement set) ∧ c.admission_record.constants_hash == hash(P1–P5 constants)))`
+The `seam_contract_accept` formula is defined as:
+
+`accept(c) = (c.schema_version == SEAM_SCHEMA_VERSION) ∧ (c.tint == null ∨ (c.tint.admission_record != null ∧ c.tint.admission_record.predicate_version == ADMISSION_VERSION ∧ c.tint.admission_record.ramp_hash == hash(PROV_LIM_*) ∧ c.tint.admission_record.grief_hash == hash(PROV_GRIEF_TINT) ∧ c.tint.admission_record.placement_hash == hash(mask ∪ placement set) ∧ c.tint.admission_record.constants_hash == hash(P1–P5 constants) ∧ c.tint.admission_record.tint_hash == hash(tint_by_step ∪ alpha_by_row) ∧ c.tint.admission_record.hue_hash == hash(A ∪ B)))`
 
 **Variables:**
 
@@ -185,18 +193,22 @@ Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ thres
 |---|---|---|---|---|
 | contract version | `c.schema_version` | int | [1, ∞) | the contract's version |
 | reader version | `SEAM_SCHEMA_VERSION` | const int | 1 | the reader's version |
-| admission record | `c.admission_record` | null \| record | — | the CI-produced admission |
+| admission record | `c.tint.admission_record` | null \| record | — | the CI-produced admission, nested inside `tint` |
 | predicate version | `predicate_version` | int | [1, ∞) | the P1–P5 version |
 | admission version | `ADMISSION_VERSION` | const int | 1 | the reader's predicate version |
 | ramp hash | `ramp_hash` | hash | — | the `PROV_LIM_*` table's content hash |
 | grief hash | `grief_hash` | hash | — | the grief tint's content hash |
 | placement hash | `placement_hash` | hash | — | the admitted mask + placement set's content hash |
 | constants hash | `constants_hash` | hash | — | the P1–P5 constants' content hash |
+| tint hash | `tint_hash` | hash | — | the admitted `tint_by_step ∪ alpha_by_row` content hash |
+| hue hash | `hue_hash` | hash | — | the A ∪ B hue sets' content hash |
 
 **Output Range:** bool; `false` → boot failure naming the contract, never a silent fallback.
-**Example:** schema 1 + record null → accept (grey default); schema 2 → fail; schema 1 with a record whose `ramp_hash` predates the art-bible re-pin → fail → grey until CI re-admits. This is the guard that stops a purple admitted against PLACEHOLDER hexes from shipping after the ramp is pinned. The applied tint requires `PURPLE_ENABLED ∧` a valid record ∧ the art-bible ratification; the record is necessary, not sufficient. A tint present with the knob false is the present-but-unratified boot failure.
+**Example:** schema 1 + tint null → accept (grey default); schema 1 + tint present + record null → fail (the present-but-unratified boot failure); schema 2 → fail; schema 1 with a record whose `ramp_hash` predates the art-bible re-pin → fail → grey until CI re-admits. This is the guard that stops a purple admitted against PLACEHOLDER hexes from shipping after the ramp is pinned. The applied tint requires `PURPLE_ENABLED ∧` a valid record ∧ the art-bible ratification; the record is necessary, not sufficient. A tint present with the knob false is the present-but-unratified boot failure.
 
 #### F-SMB-05 · admit(tint) — the admission predicate (TR-SMB-005)
+
+The `seam_tint_admission` formula is defined as:
 
 `admit = P1 ∧ P2 ∧ P3 ∧ P4 ∧ P5 ∧ G`
 
@@ -228,11 +240,13 @@ Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ thres
 **Constants:** `ADM_C_SLACK` 0.035 · `ADM_C_ABS` 0.045 · `ADM_L_TOL` 0.02 · `ADM_C_DESAT` 0.005 · `ADM_L_GAP_MIN` 0.05 · `ADM_HUE_SEP_DEG` 40 · `ADM_HUE_BAND` [255, 325] · `ADM_ALPHA_MAX` 0.5 · `ADM_GRIEF_C_MIN` 0.01.
 
 **Output Range:** bool. `false` → `tint = null` (the grey default ships), **not** a boot failure; the boot failure is reserved for a present-but-unratified tint (TR-SMB-005). **The ramp precondition:** `|L(R_i) − L(R_{i+1})| ≥ ADM_L_GAP_MIN + 2 × ADM_L_TOL = 0.09` for a guaranteed pass at the stated tolerances; at a 0.05 gap only edge values pass, so the art bible must pin the ramp's L gaps ≥ 0.09 or the D-gap clause relaxes to ≥ 0.01 — recorded as an OQ.
-**Examples:** a lavender-grey candidate `C=0.040, L=0.62`, ramp C 0.02–0.03 / L 0.45–0.75 → P1 `0.040 ≤ min(0.055, 0.045)` pass; P2 pass; P3 pass; P4 hue 275° → nearest A 180° = 95°, nearest B 35° = 120° (circular), pass; P5 grief C 0.18 → `0.040 ≤ 0.09` pass; G pass → **admitted**. A magenta `C=0.12` fails P1; a blue-violet `h=250°` fails P4's band; a warm mauve `h=330°` fails P4's band; a missing grief tint fails G. The vacuity guards: `C(D(T_i)) ≤ 0.005` is tested on a **defined** desaturation transform (not the achromatic projection, which is 0 by construction); P4's A/B sets include the dormant members; P5 binds only when `C(grief) < 0.09` — add a fixture at `C(grief)=0.08` so the clause is exercised.
+**Examples:** a per-step lavender-grey candidate `C=[0.040,0.040,0.040,0.040]`, `L=[0.41,0.51,0.62,0.73]` against the ramp `C=0.02–0.03`, `L=[0.40,0.50,0.61,0.72]` → P1 `0.040 ≤ min(0.055, 0.045)` pass; P2 `|ΔL|=0.01`, the D-L gaps 0.10/0.11/0.11 ≥ 0.05 pass; P3 pass; P4 hue 275° → nearest A 180° = 95°, nearest B 35° = 120° (circular), grief 0° = 85°, pass; P5 grief C 0.18 → `0.040 ≤ 0.09` pass; G pass → **admitted**. A magenta `C=0.12` fails P1; a blue-violet `h=250°` fails P4's band; a warm mauve `h=330°` fails P4's band; a missing grief tint fails G. The vacuity guards: `C(D(T_i)) ≤ 0.005` is tested on a **defined** desaturation transform (not the achromatic projection, which is 0 by construction); P4's A/B sets include the dormant members; P5 binds only when `C(grief) < 0.09` — add a fixture at `C(grief)=0.08` so the clause is exercised.
 
 #### F-SMB-06 · tint_alpha — the quantized depth tint (TR-SMB-005)
 
-`alpha_by_row[k] = floor(ADM_ALPHA_MAX × d(k) × 255) / 255`, k = 0..4 (rows 12..16)
+The `seam_tint_alpha` formula is defined as:
+
+`alpha_by_row[k] = floor(ADM_ALPHA_MAX × d(origin_row + 1 + k) × 255) / 255`, k = 0..4 (rows 12..16 at MVP)
 `cell_alpha(c,r) = alpha_by_row[r − 12]` if `(c,r) ∈ mask`, else 0
 `row_color(c,r) = tint_by_step[frame_step(d(r))]`
 
@@ -243,7 +257,7 @@ The array length is `span_intervals` (5 at MVP); a reused room's arrays follow i
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
 | max alpha | `ADM_ALPHA_MAX` | float | [0, 0.5] | the tint's ceiling |
-| row depth | `d(k)` | float | {0.2, 0.4, 0.6, 0.8, 1.0} | rows 12–16 |
+| row depth | `d(origin_row + 1 + k)` | float | {0.2, 0.4, 0.6, 0.8, 1.0} | rows 12–16 at MVP |
 | per-row alpha | `alpha_by_row` | float[5] | [0, 127/255] | floor-quantized |
 | tint mask | `mask` | set<(int,int)> | 0–10 cells | W/E cells minus fixtures/M4 |
 | per-step tint | `tint_by_step` | OKLCH color[4] | per-step | the admitted colors |
@@ -255,8 +269,10 @@ The array length is `span_intervals` (5 at MVP); a reused room's arrays follow i
 
 #### F-SMB-07 · feasible_hue_interval — the diagnostic (TR-SMB-005)
 
+The `seam_feasible_hue` formula is defined as:
+
 `feasible_hue_interval = ADM_HUE_BAND \ ⋃_{a∈A} arc(h(a), ADM_HUE_SEP_DEG) \ ⋃_{b∈B} arc(h(b), ADM_HUE_SEP_DEG) \ arc(h(grief), ADM_HUE_SEP_DEG)` (circular)
-`arc(h, r) = [h − r, h + r] mod 360`
+`arc(h, r) = (h − r, h + r) mod 360` (open endpoints; a hue exactly r away remains feasible)
 
 **Variables:**
 
@@ -268,7 +284,7 @@ The array length is `span_intervals` (5 at MVP); a reused room's arrays follow i
 | separation | `ADM_HUE_SEP_DEG` | deg | 40 | the minimum distance |
 | feasible interval | `feasible_hue_interval` | set<deg> | ⊆ [255,325] | the remaining hues |
 
-**Output Range:** a possibly empty set. **Empty → the purple is closed** (grey default) — a decision, not a test failure; record it as the feasibility diagnostic. **Example:** A {180,190,200,210} → union [140,250]; B {20,35,45,350} → union [310,85] (wrap); at `h(grief)=0` the grief arc [320,40] does not overlap; `[255,325] \ [140,250] \ [310,85] = [250,310]` → non-empty; a B member at 300 would remove [260,340] and leave [250,260].
+**Output Range:** a possibly empty set. **Empty → the purple is closed** (grey default) — a decision, not a test failure; record it as the feasibility diagnostic. **Example:** A {180,190,200,210} → union [140,250]; B {20,35,45,350} → union [310,85] (wrap); at `h(grief)=0` the grief arc [320,40] does not overlap; `[255,325] \ [140,250] \ [310,85] = [255,310)` → non-empty; a B member at 300 would remove [260,340] and leave [255,260).
 
 ## Edge Cases
 
@@ -389,10 +405,10 @@ The array length is `span_intervals` (5 at MVP); a reused room's arrays follow i
 | VR-SMB-03 | **Coursing is the only texture.** One 1px course line per 16px tile at ΔL −0.05 (same hue; derived shade, not a member), full width, bottom edge; phase-aligned with the hall (world y ≡ 0 mod 16). Zero vertical joints (max 1-in-2 stagger); zero bevels/highlights/cracks/chips/carvings/ribs/plates/iconography; outline-free. Max 2 values per tile. | TR-DR-012; TR-SMB-012; the concept's pack normalization |
 | VR-SMB-04 | **The frame is a return, not a border.** W/E reuse the fill's tiles one step down per row at the default `SEAM_SIDE_OFFSET` −1 (DEEP/MID/MID/PALE/PALE; the offset is a knob, F-SMB-01), same coursing, no outline/bevel, never lighter than the fill (`SEAM_SIDE_OFFSET` ≤ 0). North = MID = band, no line; band + north merge into a 32px threshold plane. The top-corner one-step is a 16×16 corner shadow. The missing S frame is load-bearing (a 4-sided frame reads as a picture/door). The only admitted hue is the bounded frame tint (VR-SMB-08), never a unique hue on the band or north row. | TR-SMB-004; F-SMB-01; `SEAM_SIDE_OFFSET` |
 | VR-SMB-05 | **The band is MID at MVP.** `SEAM_BAND_STEP` = MID; the PALE arm is not exercised without a playtest signal (a pale strip on the walkable floor is a pointing device). The clip boundary to the hall's material carries zero 1px edge treatment; the material change is the edge. | TR-SMB-002; F-SMB-02; `SEAM_BAND_STEP` |
-| VR-SMB-06 | **The pale end is a plane, not a glow.** Terminal LIGHT rows span the full 160px width; no radial falloff, center hotspot, halo, or bloom. The far plane is the value maximum (L 0.72, C ≤ 0.008). The south termination (SYS-09's fill/zone) continues the terminal step with no ledge lip/exit notch/lit strip — a consumed visual note for SYS-09's next doc touch. | TR-DR-012; TR-SMB-012 |
+| VR-SMB-06 | **The pale end is a plane, not a glow.** The terminal fill's LIGHT rows span the full 128px interior width; the 16px W/E frame cells stay PALE (the return). No radial falloff, center hotspot, halo, or bloom. The far plane is the value maximum (L 0.72, C ≤ 0.008). The south termination (SYS-09's fill/zone) continues the terminal step with no ledge lip/exit notch/lit strip — a consumed visual note for SYS-09's next doc touch. | TR-DR-012; TR-SMB-012 |
 | VR-SMB-07 | **The grief tint is chroma-max, value-subordinate.** C 0.12–0.18; L 0.55–0.68 (below LIGHT); ≤ 1/3 of M4's lit pixels, ≤ ~1% of the wing's area; zero spill; no additive/bloom/halo/pulse; M4's anchor only; hue in the warm rose/ember band [330,20] (circular), distinct from A's cyan/teal, B's amber/wine, and `PROV_SIGIL_RED`; the art bible pins the exact hue. M4's body L ≤ 0.50 against LIGHT (≥ 2 steps). **The five-errand grief wash excludes the seam region** — otherwise epoch-invariance and the "one color" law both break. | TR-DR-012; AC-DR-15; F-SMB-05 P5 |
 | VR-SMB-08 | **The optional purple is a static depth tint, not a bridge.** W/E only, 10 cells max, per-step colors, alpha monotone/floor-quantized, `ADM_ALPHA_MAX` target ≤ 0.30 (formula ceiling 0.5; max 76/255 at target), source C 0.025–0.043, rendered C 0.010–0.018 (≤ 0.025 at the ceiling), hue in F-SMB-07's interval, ΔL ≤ `ADM_L_TOL` 0.02, alpha 0 at band/north/fill/fixtures/M4. No texture, no animation, no time uniform, epoch-invariant. | TR-SMB-005; F-SMB-05/06/07 |
-| VR-SMB-09 | **The 2-second read is negative-identifiability.** Forced choice A / B / neither + failure catch (door/portal/loading/unfinished/corrupted); reveal framing at epoch 1 (B surround) and epoch 0 (A-wall); 1:1 + device scale; n ≥ 5; ≥ 4/5 "neither"; 0 failure reads; stable across all six rows. | the concept's 2-second test; TR-SMB-012; SYS-09's F3 anti-code |
+| VR-SMB-09 | **The 2-second read is negative-identifiability.** Forced choice A / B / neither + failure catch (door/portal/loading/unfinished/corrupted); reveal framing at epoch 1 (B surround) and epoch 0 (A-wall); 1:1 + device scale; n ≥ 5; epoch 1 ≥ 4/5 "neither", epoch 0 ≥ 4/5 "A"; 0 failure reads; stable across all six rows. | the concept's 2-second test; TR-SMB-012; SYS-09's F3 anti-code |
 | VR-SMB-10 | **Membership.** Post-E4 wing = 4 ramp members + 4 course shades + grief at M4 + entity colors; no other hue family, with the admitted frame tint (VR-SMB-08) as the sole bounded exception, subordinated to M4's grief (P5). Epoch 0 = the hall's A-wall, zero `PROV_LIM_*`, zero seam keys. The corridor has no GLOW/ACCENT/HAZARD role — only values; that is what keeps it from being a fifth palette. | AC-DR-15; V-SMB-03 |
 
 ### Audio
@@ -444,8 +460,8 @@ Coverage: **12 TR-SMB rules · 7 F-SMB formulas · 7 V-SMB invariants · 32 ACs 
 - **AC-SMB-04a** [GUT] *(TR-SMB-003; F-SMB-03)* — **GIVEN** the epoch-domain predicate fixtures, **WHEN** the boot equivalence runs, **THEN** `gate_open ⟺ zone_materialize` for all `e ∈ [0,max_epoch]`; the e=2 desync (a synthetic `TruthPort` at `max_epoch=2`: agree at 1, split at 2) fails the boot naming `REVEAL_CISTERN`.
 - **AC-SMB-04b** [GUT] *(TR-SMB-001/003; F-SMB-03)* — **GIVEN** a stale authored `visible_at_epoch_gte` or a null derived min, **WHEN** the validator runs, **THEN** the boot fails naming `REVEAL_CISTERN`; the derived value = `min{e : both predicates true}`.
 - **AC-SMB-05** [GUT] *(TR-SMB-004; F-SMB-01)* — **GIVEN** the depth-field fixtures, **WHEN** F-SMB-01 runs at rows 10–16, **THEN** the printed table reproduces exactly (band/north MID; row 12 DEEP/MID; 13 MID/PALE; 14 MID/PALE; 15 PALE/LIGHT; 16 PALE/LIGHT); the float division, clamp, and pins are asserted; the adjacent-step delta ≤ 1 across the band/north/W/E boundaries (the door/trigger guard); a room reuse with array lengths ≠ `span_intervals` (sized to the contract's own span) fails the boot.
-- **AC-SMB-06** [GUT] *(TR-SMB-005; F-SMB-05/06)* — **GIVEN** the F-SMB-05 worked example (per-step C≈0.040, L 0.62, h 275°; ramp C 0.02–0.03 / L 0.45–0.75; grief C 0.18), **WHEN** the admission and alpha run, **THEN** each P1–P5/G boolean is asserted true, `admit=true`; the tint is static (no time uniform), frame W/E only, alpha 0 at band/north/fill/fixtures/M4; the floor array = `[25,51,76,102,127]/255`; the cell mask equals the expected set.
-- **AC-SMB-07a** [GUT] *(TR-SMB-005; F-SMB-05/06/07)* — **GIVEN** each P1–P5/G negative (magenta C=0.12; hue 250°; hue 330°; missing grief; all-zero alpha; 128/255 rounding; empty feasible interval; the P5 binding case `C(grief)=0.08` with a candidate `C(T)=0.045` (P1 passes at equality; P5 fails); the P2 D-gap failure), **WHEN** the admission runs, **THEN** `admit=false`, `tint=null`, the grey default ships with no code change; the empty interval is recorded as the purple-closed decision, not a failure; F-SMB-07's non-empty arithmetic is asserted at [250,310] and [250,260] (B at 300).
+- **AC-SMB-06** [GUT] *(TR-SMB-005; F-SMB-05/06)* — **GIVEN** the F-SMB-05 worked example (per-step C≈0.040, L=[0.41,0.51,0.62,0.73], h 275°; ramp C 0.02–0.03 / L=[0.40,0.50,0.61,0.72]; grief C 0.18), **WHEN** the admission and alpha run, **THEN** each P1–P5/G boolean is asserted true, `admit=true`; the tint is static (no time uniform), frame W/E only, alpha 0 at band/north/fill/fixtures/M4; the floor array = `[25,51,76,102,127]/255`; the cell mask equals the expected set.
+- **AC-SMB-07a** [GUT] *(TR-SMB-005; F-SMB-05/06/07)* — **GIVEN** each P1–P5/G negative (magenta C=0.12; hue 250°; hue 330°; missing grief; all-zero alpha; 128/255 rounding; empty feasible interval; the P5 binding case `C(grief)=0.08` with a candidate `C(T)=0.045` (P1 passes at equality; P5 fails); the P2 D-gap failure), **WHEN** the admission runs, **THEN** `admit=false`, `tint=null`, the grey default ships with no code change; the empty interval is recorded as the purple-closed decision, not a failure; F-SMB-07's non-empty arithmetic is asserted at [255,310) and [255,260) (B at 300).
 - **AC-SMB-07b** [GUT] *(TR-SMB-005; F-SMB-04)* — **GIVEN** a present tint with a null/missing admission record, any of the four hash mismatches (ramp/grief/placement/constants), or a schema/predicate version mismatch, **WHEN** `accept()` runs, **THEN** the boot fails naming the contract; a null record accepts the grey default.
 - **AC-SMB-08** [GUT] *(TR-SMB-006)* — **GIVEN** the tell fixtures (enabled, disabled, zero-entry), **WHEN** the seam composites, **THEN** the seam records are bit-identical across all three; zero seam tell entries; RM-03's count = SYS-09's allocation; the render order is seam-before-tell; no unique hue/edge/pulse on the band/north row at epoch ≥1; the admitted frame tint is the sole bounded exception.
 - **AC-SMB-09** [LINT] *(TR-SMB-006/008/011)* — **GIVEN** the static audits (scan roots `src/seam/` and `src/world/`'s seam adapter; banned symbols: `Input`, `SceneTree`, `Time`, `RenderingServer`, camera API, prompt/VFX/audio/HUD symbols, `active_hold`), **WHEN** they run from source, **THEN** zero hits; the seam is hold-blind.
@@ -461,10 +477,10 @@ Coverage: **12 TR-SMB rules · 7 F-SMB formulas · 7 V-SMB invariants · 32 ACs 
 - **AC-SMB-15** [LINT] *(TR-SMB-011/012)* — **GIVEN** the hidden-passage probe (scan roots `src/seam/` and `src/world/`'s seam adapter), **WHEN** it runs, **THEN** zero seam interactables/interaction volumes/breakables; the full not-do list (no fade/wipe/dissolve/animation/seam interactable/no hex/no new `material_rule`/no SYS-02 zone split) is asserted.
 - **AC-SMB-16** [GUT] *(TR-SMB-003/007)* — **GIVEN** a VS second flip and a mid-arc flip request, **WHEN** the seam resolves, **THEN** it persists epoch-invariant; the deferral materializes at the completion boundary; no partial band.
 - **AC-SMB-17** [GUT] *(TR-SMB-006)* — **GIVEN** the hold fixtures (start/end), **WHEN** the render-state record is compared, **THEN** start = end; zero seam deltas; the seam is hold-blind (pre-arm hold detection is SYS-32's TR-CAM-013).
-- **AC-SMB-18** [LINT] *(the traceability audit)* — **GIVEN** the GDD file (scan root `design/gdd/seam-borders.md`; the citation token is the literal `*(TR-SMB-0xx` / `*(F-SMB-0xx` in the AC line, counted from the parsed file), **WHEN** the audit runs, **THEN** every TR-SMB-001..012 and F-SMB-01..07 is cited by ≥1 AC; the AC count = 32; the gate partition = 25+3+4+0.
+- **AC-SMB-18** [LINT] *(the traceability audit)* — **GIVEN** the GDD file (scan root `design/gdd/seam-borders.md`; parse the complete citation list inside each AC's `*(…)*` block; every `TR-SMB-*` and `F-SMB-*` identifier is recognized wherever it appears, not only at the prefix), **WHEN** the audit runs, **THEN** every TR-SMB-001..012 and F-SMB-01..07 is cited by ≥1 AC; the AC count = 32; the gate partition = 25+3+4+0.
 - **AC-SMB-19** [DEVICE] *(TR-SMB-002/003/006)* — **GIVEN** the epoch-0 capture, **WHEN** it is diffed against the contract-deleted control and the enclosing hall's A-wall reference, **THEN** the band + wing are byte-identical; zero liminal pixels; the RM-03 tell renders; no seam key is asserted here (AC-02's GUT job).
 - **AC-SMB-20** [DEVICE] *(TR-SMB-003/004/012)* — **GIVEN** the post-E4 capture and the load-sequence captures (epoch 0/1, first rendered frame), **WHEN** it is diffed against the grey-ramp golden, **THEN** the band = MID, the W/E step colors match, the fill's material keys are SYS-09's (membership; the row sampling is OQ-7), the adjacent-step delta ≤ 1 at the band boundary (no distinct edge), and repeated post-E4 captures hash-equal (static tint). The purple visual fallback is carried to OQ-1 (no admitted purple exists at MVP).
-- **AC-SMB-21** [DEVICE] *(VR-SMB-09; the 2-second test)* — **GIVEN** the reveal framing at epoch 1 (B surround) and the epoch-0 A-wall, at 1:1 and the device scale, **WHEN** ≥5 cold viewers (no prior exposure to this build or design; not team members) run the forced choice A / B / neither + failure catch (door/portal/loading/unfinished/corrupted) on each wing row 11–16, **THEN** ≥4/5 code "neither" and zero code a failure read; "stable" = each row's modal choice is "neither" and zero failure reads per row; κ is per-tester (SYS-01 AC-63); the referent rule is SYS-32's P3.
+- **AC-SMB-21** [DEVICE] *(VR-SMB-09; the 2-second test)* — **GIVEN** the reveal framing at epoch 1 (B surround) and the epoch-0 A-wall, at 1:1 and the device scale, **WHEN** ≥5 cold viewers (no prior exposure to this build or design; not team members) run the forced choice A / B / neither + failure catch (door/portal/loading/unfinished/corrupted) on each wing row 11–16, **THEN** at epoch 1 ≥4/5 code "neither" (the liminal read), at epoch 0 ≥4/5 code "A" (the hall's A-wall; identifying it as A is correct), and zero code a failure read at either epoch; "stable" = each row's modal choice is the expected read and zero failure reads per row; κ is per-tester (SYS-01 AC-63); the referent rule is SYS-32's P3.
 - **AC-SMB-22** [PLAYTEST] *(TR-SMB-012; the fantasy)* — **GIVEN** ≥5 eligible testers (entered the wing post-flip with the band+frame on screen, undirected), **WHEN** the coded rubric runs (SYS-01 AC-63; 3-of-5; κ ≥ 0.7; the referent rule), **THEN** ≥3/5 code `between/neither/quiet/held`; 0/5 code any seam-read token (`door/portal/loading/unfinished/secret passage/hidden`) or palette-identity token (`purple/glowing/different color/fifth color`); ≤2/5 code any incidental quality token (`broken/glitch/bug/out of place`); a failure re-runs the coded set with a fresh facilitator; top up if <3 eligible.
 - **AC-SMB-23** [PLAYTEST] *(TR-SMB-006/011)* — **GIVEN** the free-play log, **WHEN** it is coded, **THEN** zero Interact presses in the seam region and zero unprompted "how do I open it" utterances; the seam is never treated as interactable.
 - **AC-SMB-24** [PLAYTEST] *(TR-SMB-012)* — **GIVEN** the free-play log, **WHEN** it is coded, **THEN** ≥3/5 code grey continuity (`same grey/matches the corridor/blends`); 0/5 code any palette-identity token (`purple/glowing/different color/fifth color`); ≤2/5 code `out of place`; at MVP defaults the purple tokens are vacuous — the AC scopes to grey continuity (the purple's own gate is OQ-1).
