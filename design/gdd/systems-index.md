@@ -35,7 +35,7 @@
 | SYS-21 | Reality-Law Progression | Feature | No (VS: first law) | SYS-10, SYS-16 | game-designer |
 | SYS-22 | Story-Revealing Item | Feature | No (Alpha) | SYS-17, SYS-10 | narrative-director |
 | SYS-23 | Variety Bosses | Feature | No (Alpha) | SYS-14 | game-designer |
-| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01, SYS-06 (state read-only; no touch geometry), SYS-32 | ui-programmer |
+| SYS-24 | HUD | Presentation | Yes (minimal) | SYS-08, SYS-07, SYS-01, SYS-06 (state read-only; no touch geometry), SYS-32, SYS-03 (the refusal/load-result surfaces + the slot-list metadata) | ui-programmer |
 | SYS-25 | Map / Minimap / Fog-of-War | Presentation | Yes (the pause room-grid: discovered cells + unexplored-doorway ticks; full map/minimap/fog VS) | SYS-02, SYS-10, SYS-03 (reads `cells_discovered` + the save round-trip) | ui-programmer |
 | SYS-26 | Sanctuary Menus (Inventory/Contracts/Essence) | Presentation | No (VS) | SYS-17, SYS-18, SYS-19 | ui-programmer |
 | SYS-27 | Memory Gallery & Bestiary | Presentation | No (VS) | SYS-20, SYS-13 | narrative-director + ui-programmer |
@@ -81,7 +81,7 @@
 
 ### Presentation
 
-- SYS-24 HUD → depends on SYS-08, SYS-07, SYS-01, SYS-32 (touch dispatcher + hit-rect registration, z-order load-bearing; thumb-coverage caps from the camera; red-disciplined per REVIEW.md). **SYS-32's publication-law note (2026-11-14, the Camera GDD APPROVED): the input is the 9-field publication every physics tick from activation — `player_screen_px` (view-relative, post-camera-clamp, pre-shake, unclamped to the view), `on_screen` (the hurtbox-extent test), `view_rect_px` (Rect2i half-open), `bounds_generation`; SYS-24 derives from the live value, never cached (world-still ≠ screen-still during a hold pan; the hold-mode contract: the frame's anchor is fixed after the approach, the pan moves ≤ 12 px/tick at MVP)**
+- SYS-24 HUD → depends on SYS-08, SYS-07, SYS-01, SYS-32 (touch dispatcher + hit-rect registration, z-order load-bearing; thumb-coverage caps from the camera; red-disciplined per REVIEW.md) and **SYS-03** (the refusal surface, the load-result surface, and the slot-list metadata — SYS-03 publishes, SYS-05 flows, SYS-24 renders). **SYS-32's publication-law note (2026-11-14, the Camera GDD APPROVED): the input is the 9-field publication every physics tick from activation — `player_screen_px` (view-relative, post-camera-clamp, pre-shake, unclamped to the view), `on_screen` (the hurtbox-extent test), `view_rect_px` (Rect2i half-open), `bounds_generation`; SYS-24 derives from the live value, never cached (world-still ≠ screen-still during a hold pan; the hold-mode contract: the frame's anchor is fixed after the approach, the pan moves ≤ 12 px/tick at MVP)**
 - SYS-25 Map / Minimap / Fog-of-War → depends on SYS-02, SYS-10, SYS-03 (reads the `cells_discovered` save family + the save round-trip — IP-14's foundation order); **benchmark-audit rider (2026-11-14, user decision D-4)**: the pause room-grid (discovered cells + unexplored-doorway ticks) is MVP-promoted — authoring on the MVP path after SYS-02/SYS-03 **(the pin flip landed 2026-11-14, IP-19)**; the published pause surface to SYS-24 is part of SYS-25's first-pass review scope (review-doctrine condition 4); the SYS-01 `open_map` reservation (Reserved-VS, touch pause-tab, PROVISIONAL) and its knob row activate at SYS-25's authoring
 - SYS-26 Sanctuary Menus → depends on SYS-17, SYS-18, SYS-19
 - SYS-27 Memory Gallery & Bestiary → depends on SYS-20, SYS-13
