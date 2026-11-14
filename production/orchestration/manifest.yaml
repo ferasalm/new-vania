@@ -81,8 +81,8 @@ lanes:
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
     status: AUTHORING
     dependencies: [SYS-02, SYS-09, SYS-10]
-    review_state: "not-started"
-    next_action: "Author the GDD; land the real-file round-trip twin as the authoring gate."
+    review_state: "GDD APPROVED (2026-11-14; the real-file twin 32/32 PASS; 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs). SYNC IN FLIGHT — the sync PR #47 is open; PR #45 (GDD + twin) waits on it."
+    next_action: "Merge the sync PR #47 (pinned to its head); then the orchestrator squash-merges PR #45 at 08a0a12 and records the landing hash."
 
   - id: SYS-04
     title: "Audio Core — flip contract, ambient_shift, no-duck"
