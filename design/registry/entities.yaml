@@ -324,7 +324,7 @@ entities:
     notes: "SYS-10-private; SYS-02's Mutation record shape untouched (a trigger field there would
       be a published-contract revision for a private concern). The flag-set edge signal (SYS-02's
       threshold surface) is the chain's input; request-presence is the sequencer eligibility test
-      (the E1 clarification rider)."
+      (the E1 clarification rider (iii): request-presence ∧ the GAMEPLAY context gate)."
     added: 2026-11-14
     revised: ""
 
@@ -359,8 +359,8 @@ entities:
       E_to) derived at load (F-WME-01); the absent flag key reads unset; epoch 1 ∧ flag unset =
       integrity violation (dev assert + telemetry; truth B stands — no repair, no clamp); epoch
       out of range → reconciliation aborts into SYS-03's refusal path; the deferral-gap re-fire is
-      the first store of that save's lifetime, not a second flip (the same-logical-flip
-      doctrine — SYS-09's G2 + AC-DR-08)"
+      the first store of that load, not a second flip (the same-logical-flip doctrine —
+      SYS-09's G2 + AC-DR-08)"
     notes: "Contract-first for SYS-03's authoring (the E4 law precedent). The real-file save
       round-trip twin is SYS-03's authoring gate (the carried obligation). The re-fire is
       unconditional per the derived predicate (SYS-09's AC-DR-08 — no session cap; the batch
