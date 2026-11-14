@@ -10,9 +10,10 @@
    Generated`) matches the `manifest.yaml` row for the lane. If not, **stop** and
    ask the orchestrator to regenerate.
 2. The worktree exists and `git status --short` is clean (or only the lane's own
-   in-flight files). The lane branch is based on `origin/Main`
-   (`git merge-base --is-ancestor origin/Main HEAD`); HEAD need not be the base
-   tip — a resumed branch may carry checkpoint commits.
+   in-flight files). The lane branch is based on the verified base SHA passed in
+   the launch message (`git merge-base --is-ancestor <base_sha> HEAD`); if no SHA
+   is passed, use the `origin/Main` ref. HEAD need not be the base tip — a
+   resumed branch may carry checkpoint commits.
 3. `production/orchestration/STATE.md` does not mark the lane `BLOCKED`.
 4. The shared-file lock is not held by another lane for the files this lane
    needs. (The lane never writes the shared files; this is only a read check.)

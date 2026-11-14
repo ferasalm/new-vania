@@ -41,8 +41,9 @@ For each launch:
 3. Refresh the lane worktree **before** validating: `git fetch origin`, then
    `git merge origin/Main` (fast-forward when possible; a plain merge is safe on
    a resumed lane branch with checkpoint commits — never rebase a pushed lane
-   branch). The base check is ancestry
-   (`git merge-base --is-ancestor origin/Main HEAD`), not the tip. The runner
+   branch). Record the verified base SHA (`git rev-parse origin/Main`) and pass
+   it in the launch message; the base check is ancestry against that SHA
+   (`git merge-base --is-ancestor <base_sha> HEAD`), not the tip. The runner
    reads the prompt, manifest, and `STATE.md` **from the lane worktree**; never
    run on a stale copy.
 4. Render + validate **inside the lane worktree**: if the manifest `prompt_hash`
@@ -51,6 +52,7 @@ For each launch:
    spawn on a stale body or an unrendered lane.
 5. Spawn the lane runner (a nested subagent or a parallel chat) with:
    - the lane worktree path,
+   - the verified base SHA (`git rev-parse origin/Main`),
    - `production/orchestration/prompts/lanes/<ID>.md` **inside that worktree**,
    - `production/orchestration/prompts/lane-runner.md` **inside that worktree**,
    - the instruction: work only in the worktree; write
