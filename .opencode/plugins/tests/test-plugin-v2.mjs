@@ -129,11 +129,15 @@ for (const [name, module] of Object.entries(modulePlugins)) {
 
 it("uses the plural V2 plugin key and registers all three local plugins", () => {
   const config = JSON.parse(fs.readFileSync(new URL("../../../opencode.json", import.meta.url), "utf8"))
-  assert.deepEqual(config.plugins, [
+  // Package plugins (e.g. superpowers) may be added alongside the local ones;
+  // the invariant is that every local OCGS plugin is registered via the plural key.
+  for (const plugin of [
     "./.opencode/plugins/ccgs-hooks.ts",
     "./.opencode/plugins/drift-detector.ts",
     "./.opencode/plugins/changelog-generator.ts",
-  ])
+  ]) {
+    assert.ok(config.plugins.includes(plugin), `opencode.json must register ${plugin}`)
+  }
   assert.equal(Object.hasOwn(config, "plugin"), false)
 })
 

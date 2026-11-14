@@ -1,10 +1,11 @@
 # Orchestration State — the single live state/log
 
-> **Updated**: 2026-11-14 (setup chat)
-> **Main**: `e8b194d` — SYS-11 Seam Borders squash-merged (PR #43)
+> **Updated**: 2026-11-15 (tooling/ops chat)
+> **Main**: `66ae957` — SYS-03 Save & Serialization squash-merged (PR #45)
 > **Mode**: parallel GDD/pre-production lanes; nested topology; WIP-limited.
 > **Source of truth**: `manifest.yaml`. **Paste source**: `prompts/NEXT.md`.
-> **Operating manual**: `README.md`.
+> **Operating manual**: `README.md`. **Tooling**: `TOOLING.md`.
+> **Context budget**: `CONTEXT-POLICY.md` (soft 250k / hard 350k).
 
 ## 1. Landing receipt — SYS-11 Seam Borders (verified 2026-11-14)
 
@@ -36,9 +37,11 @@
 
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
-| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
-| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | SYNC (landed; PR #45's merge pending) | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
-| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | SYNC (in flight; PR #46 waits on the sync) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
+| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING (GLM rerun complete `bda8d96`; D-ORCH-01/02 open) | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
+| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
+| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
+| SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **QUEUED** — prompt rendered (`85701ea84621`) | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
+| SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **QUEUED** — prompt rendered (`e2e9a0f20532`) | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
 lane runners write their reports to `production/session-state/lane-<ID>-report.md`
@@ -108,34 +111,35 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **The user pastes `prompts/NEXT.md`** in a fresh fast-run chat. It is the
-   orchestrator loop; it reads this file + the manifest and launches the next
-   lane(s).
-2. **ART-BIBLE lane** — resolve OQ-1 (the purple) as the first item; then the
-   palette/grief pins; then the 9 sections; then the asset-spec handoff.
-3. **SYS-03 lane** — the GDD and the sync have landed; the orchestrator
-   squash-merges PR #45 at `08a0a12` (pinned) and records the landing hash.
-4. **SYS-04 lane** — the sync is in flight (the SYS-04 sync PR); once it merges,
-   the orchestrator squash-merges PR #46 at `391dd18`, and the lane flips the GDD
-   header's `In Review` at that merge (the audio-director countersign).
-5. **When a review slot frees** — start SYS-15 or SYS-28 (the next queued MVP
-   GDDs). Do not start SYS-16/SYS-17 until SYS-07-REWORK lands.
-6. **Batch the user decisions** — D-ORCH-01/02 (art bible) and D-ORCH-03
-   (SYS-07 rework). Do not interrupt for soft blockers.
+1. **The user pastes `prompts/NEXT.md`** (v2.0.0, hash `555c18812b03`) in a fresh
+   chat. It is the mode-agnostic handoff + orchestrator loop; it reads this file +
+   the manifest and launches the next lane(s).
+2. **Launch SYS-15 and SYS-28** — both `QUEUED`, both prompts rendered
+   (`85701ea84621` / `e2e9a0f20532`), both GLM creative lanes. Two review slots are
+   free; the sync lock is `none`. Start both within the 3-runner limit.
+3. **ART-BIBLE lane** — D-ORCH-01 (the purple) and D-ORCH-02 (palette/grief pins)
+   await the user; the lane resumes when they are decided.
+4. **SYS-04 header** — the audio-director countersign; then flip the GDD header
+   `In Review` → `APPROVED` (or downgrade the index row). A user decision.
+5. **Keep SYS-16/SYS-17 BLOCKED** on SYS-07-REWORK (D-ORCH-03). Do not launch.
+6. **Batch the user decisions** — D-ORCH-01/02, D-ORCH-03, CR-AUD-01/02. Do not
+   interrupt for soft blockers.
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: ART-BIBLE, SYS-03, SYS-04 (authoring; each in its own worktree).
-**Queued**: SYS-15, SYS-28, SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25,
-SYS-07-REWORK; SYS-16/SYS-17 blocked on SYS-07-REWORK.
+**Running**: ART-BIBLE (authoring; D-ORCH-01/02 pending).
+**Landed**: SYS-03 `66ae957` (PR #45), SYS-04 `ba07158` (PR #46).
+**Queued**: SYS-15, SYS-28 (next; prompts rendered), SYS-14, SYS-05, SYS-24,
+SYS-12, SYS-20, SYS-25, SYS-07-REWORK; SYS-16/SYS-17 blocked on SYS-07-REWORK.
 **Support**: ADR-DRAFT (standby, parallel), QA-PLAN (standby), SYNC-LANE
 (standby, single writer).
 **User must decide**: D-ORCH-01 (the purple / SYS-02 line 36), D-ORCH-02 (the
 palette/grief pins), D-ORCH-03 (the SYS-07 rework package). The art-bible
 direction approval is the one-click action that unblocks the most.
-**Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml`;
-do not author; launch the next lane runner(s) within the WIP limits; update this
-file at every lane boundary; batch decisions; stop only on a hard blocker.
+**Next orchestrator chat**: paste `NEXT.md` (v2.0.0, `555c18812b03`); read this
+file + `manifest.yaml`; do not author; launch SYS-15/SYS-28 within the WIP limits;
+update this file at every lane boundary; batch decisions; stop only on a hard
+blocker or the 350k hard trigger.
 
 ## 11. Sync receipt — SYS-03 Save & Serialization (in flight)
 
@@ -199,3 +203,33 @@ file at every lane boundary; batch decisions; stop only on a hard blocker.
   in `6392f84` (the bullet's "no dependencies" opening; the stale lane phases in
   STATE/review-queue), 1 rebutted (the `audio-core.md` path is absent until
   PR #46 lands — the protocol's sync-before-GDD order, the SYS-03 precedent).
+
+## 13. Tooling landing — modules, plugins, context policy (2026-11-15)
+
+- **Modules audited, not reinstalled**: 22 installed @ 0.6.0 for OpenCode. The five
+  non-Godot engine modules (`engine-unity`, `engine-unreal`, `engine-sfml3`,
+  `engine-raylib`, `engine-bevy`) are installed but unused; **kept** (13 inert
+  agent files, no MCP/hooks) with a one-click removal path in `TOOLING.md` §1.1.
+  No removal decision has been made.
+- **DCP** `@tarquinen/opencode-dcp` **3.2.0**, installed with
+  `opencode plugin add @tarquinen/opencode-dcp@latest` → global
+  `~/.config/opencode/opencode.json`. Project config `.opencode/dcp.jsonc`:
+  `minContextLimit 250000`, `maxContextLimit 350000`. `/dcp` and
+  `/dcp-compress [focus]` verified present; the context-limit nudge fires
+  in-session.
+- **Superpowers** `superpowers@git+https://github.com/obra/superpowers.git` at
+  commit **`22f0b46`**, in project `opencode.json` → `plugins`. The git-backed
+  Windows install worked; no npm fallback needed. 15 skills load via the native
+  `skill` tool.
+- **Combined load verified**: `opencode plugin list` shows 5 plugins (3 OCGS local
+  + DCP 3.2.0 + Superpowers `22f0b46`); a standalone run logs all five loading.
+- **Guide**: `TOOLING.md` — inventory, commands, when-to-use table, the
+  OCGS↔Superpowers division of labour, model routing, a 10-minute walkthrough and
+  three exercises.
+- **Context policy**: `CONTEXT-POLICY.md` — soft 250k / hard 350k, three handoff
+  modes, the measured harness thresholds (OpenCode auto-compaction at ~898,576
+  tokens via `compaction.buffer: 150000`).
+- **Prompts**: `orchestrator-loop.md` rewritten to v2.0.0 as the mode-agnostic
+  handoff prompt; `prompts/handoff.md` added as the template; `NEXT.md`
+  re-rendered (hash `555c18812b03`); `SYS-15.md` and `SYS-28.md` rendered
+  (`85701ea84621`, `e2e9a0f20532`).
