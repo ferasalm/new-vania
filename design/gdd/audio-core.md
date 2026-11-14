@@ -58,7 +58,7 @@ Defaults: N = 18 (`FLIP_FREEZE_MS` 300 at 60 tps); the fixture's R = 100, τ0 = 
 | E3b | `ambient_shift` | τ0 (pinned to E3) | SYS-10 | **The receding-first order** (§D.2): target set = RM-01..RM-05 exactly; excluded = RM-06; `to_epoch` selects the arriving bed (CR-AUD-01; the MVP default 1); the sounding bed's recede begins at τ0; the arriving bed's first audible sample ≥ the release boundary; zero arena-bed orders | the old air draws in | arena-bed orders; any arrival before E6; any order before τ0 |
 | E4 | `rematerial_done` | R+1 frame | SYS-09 | **Sync point only** — no sound keyed to E4; the tear is already sounding | none | a second tear hit |
 | E5 | `glitch_window` | [τ0, τ0 + 26) | SYS-29 | **The tear layer** (§D.4): the beat-aligned transient at τ0 + the body through the window + the 120 ms decay tail; the flip's only one-shot; the reserved voice. **Abort path**: the degenerate form (no transient, no success beats), the tail runs | the tear | any second one-shot inside the window |
-| E6 | `freeze_close` | 118→119 boundary | SYS-29 | **The release boundary**: the gate lifts; the arriving bed **may** begin (never before); the arrival fades in | the new air arrives | any arrival before this tick; a release stinger |
+| E6 | `freeze_close` | 118→119 boundary | SYS-29 | **The release boundary**: the gate lifts; the arriving bed **may** begin (never before; for the room the player occupies at the release boundary — the arena gets none, edge case #1); the arrival fades in | the new air arrives | any arrival before this tick; a release stinger |
 | E7 | `flip_complete` | 119 | SYS-09 | **Resume**: the gameplay one-shots resume; the arrival fade continues as a voice envelope to `arrive_end` (134) | the world is other | a completion sting/fanfare |
 
 ### C.2 · The guarantees as consumed
@@ -84,7 +84,7 @@ Defaults: N = 18 (`FLIP_FREEZE_MS` 300 at 60 tps); the fixture's R = 100, τ0 = 
 ### C.4 · The requirements
 
 - **TR-AUD-001 — Consume E1–E7 verbatim.** The composition surface is SYS-09's table and nothing else: no edge added, removed, or re-timed; the audio obligation at each edge is the one printed in §C.1. A change is a contract-revision request. *Test: the **edge trace** equals the published set exactly, in order, once per run; the **order trace** contains exactly one `ambient_shift` record per run; a diff of the consumed edge names against TR-DR-004 is empty.*
-- **TR-AUD-002 — The publisher map; SYS-04 publishes no gameplay or state event.** E1/E4/E7 are SYS-09's; E2/E5/E6 are SYS-29's; E3b is SYS-10's; the room activation is SYS-02's. The core subscribes at the node adapter and emits no cross-system gameplay/state event. The two read-only surfaces (the tuning read for SYS-24, the event-metadata read for captions) are ports, named in §G.8's allowlist. *Test: the adapter's subscription list equals the publisher map; a grep for cross-system calls from `src/audio/` matches only the allowlist.*
+- **TR-AUD-002 — The publisher map; SYS-04 publishes no gameplay or state event.** E1/E4/E7 are SYS-09's; E2/E5/E6 are SYS-29's; E3b is SYS-10's; the room activation is SYS-02's; the load-complete is SYS-03's (its payload carries `restored_epoch` — CR-AUD-02's request). The core subscribes at the node adapter and emits no cross-system gameplay/state event. The two read-only surfaces (the tuning read for SYS-24, the event-metadata read for captions) are ports, named in §G.8's allowlist. *Test: the adapter's subscription list equals the publisher map; a grep for cross-system calls from `src/audio/` matches only the allowlist.*
 - **TR-AUD-003 — Epoch-blindness.** The audio core never reads `truth_epoch`, the mutation registry, or any truth flag; it consumes E3b and the E-edges only. The MVP's monotone 0→1 assumption is a **config constant** (`MVP_FLIP_TO_EPOCH = 1`, boot-validated), not a state read, and it is removed when CR-AUD-01 lands. *Test: the static audit finds zero truth-state symbols in the core; a stubbed-bed run produces the identical order trace with the truth state replaced by a poisoned sentinel.*
 - **TR-AUD-004 — The closed list is closed.** The only one-shot emissions are the thirteen voices of §E; zero UI voices, zero per-press popups, zero stochastic ambience one-shots. *Test: the runtime registration scan and the static audit both find exactly thirteen registered one-shot IDs; a menu press emits nothing.*
 - **TR-AUD-005 — The death duck is consumed, not designed.** `duck_request {bus, dB, hold}` with `bus ∈ {MUSIC}`, `dB ∈ [−12, 0]`, `hold ∈ {UNTIL_OFFLINE_EXIT}`; `DEATH_DUCK_DB = −6` (ratified, §H.3); published once per death; released on the offline exit (reconstruct or revive). *Test: the fixture publishes exactly one request and one release per death; the request's three fields are the only fields.*
@@ -100,7 +100,7 @@ Defaults: N = 18 (`FLIP_FREEZE_MS` 300 at 60 tps); the fixture's R = 100, τ0 = 
 |---|---|---|---|
 | `IDLE` | nominal gameplay | the room's bed at nominal gain; the score playing; the gate open | E1 → `ARMED` |
 | `ARMED` | E1 (R) | unchanged, audibly; the bed table + the tear resident; the order record built | E2 → `HELD`; E2 lost → the gate failsafe (§G.8) |
-| `HELD` | E2 (τ0) | the gate closed; the sounding bed's recede running (if in the target set); the tear sounding | E6 → `RELEASED`; the abort's force-release → `DEGRADED` — **precedence: the force-release wins**; the derived E6 closes the bracket as an event, never as a state transition |
+| `HELD` | E2 (τ0) | the gate closed (the failsafe opens it from outside — the E6-lost path); the sounding bed's recede running (if in the target set); the tear sounding | E6 → `RELEASED`; the abort's force-release → `DEGRADED` — **precedence: the force-release wins**; the E6-lost failsafe → `IDLE` (§G.8's recovery: the gate opens at `GATE_FAILSAFE_MS`, the bed holds at the floor, the arrival never starts); the derived E6 closes the bracket as an event, never as a state transition |
 | `RELEASED` | E6 | the gate open; the arrival fading in; E7 marks the gameplay resume (the fade continues as a voice envelope) | `arrive_end` (134) → `IDLE` |
 | `DEGRADED` | the abort's force-release | the gate open; zero orders; the degenerate tear + tail | the tail clears → `IDLE`; the resume's R′ ≥ the tail-clear (SYS-10's rider (i)) |
 
@@ -125,7 +125,7 @@ Seven clauses, all testable:
 ### D.3 · The freeze brackets (AR-AUD-02)
 
 - **The bracket** = `[E2, E6)` = 18 ticks = 300.0 ms at defaults; moved only by an admitted extension.
-- **The gate**: gameplay one-shots **drop, never queue**. A queue would replay stale sounds at release — a burst; a drop is honest. Counter + telemetry.
+- **The gate**: gameplay one-shots **drop, never queue**. A queue would replay stale sounds at release — a burst; a drop is honest. Counter + telemetry. A room-entry request inside the bracket is dropped with the rest; the mismatch persists to the next room entry (K.2 #14).
 - **The licensed exception**: the flip's own tear at τ0. The bracket forbids *foreign* one-shots, not the event itself. E5's τ0 sits inside the bracket; the reconciliation is named here, not implied.
 - **Loops**: no restart, no loop-point jump. The only loop-graph motion is the sounding bed's recede.
 - **No snapshot change that reads as a beat**: zero mix-snapshot changes across [E1, E7]; the score is untouched (no stinger, no score duck, no transition).
@@ -208,7 +208,7 @@ Ten SYS-29 edges → eleven voices (the clash pair) + two flip tear voices.
 | `EV_FLIP_TEAR` | SYS-09 E5 | τ0, the flip's own voice | SFX (reserved) | P0 | 1 | latch per run | 1 (signature) | 400 ms |
 | `EV_FLIP_TEAR_ABORT` | SYS-09 E5 (degenerate) | τ0 on the abort path; no transient | SFX (reserved) | P0 | 1 | latch per run | 1 | the tail |
 
-**The variation law.** Variants are round-robin with **no immediate repeat**; pitch randomization is ±1 semitone *within* a band and never applied to a signature. The clash pair, the heal, the death, the revive, the level-up, the memory chime, and the tear are **signatures** — one variant, zero pitch drift, because their identity is the meaning. Selection is deterministic under a fixed seed (a replay reproduces the draw sequence). The signatures' repeat-exposure tolerance across a session (the memory chime's 1200 ms bell fired on every cache save above all) is a sound-bible-pass assessment; the one-variant law stands.
+**The variation law.** Variants are round-robin with **no immediate repeat**; pitch randomization is ±1 semitone *within* a band and never applied to a signature or the clash pair. The heal, the death, the revive, the level-up, the memory chime, and the tear are **signatures** — one variant, zero pitch drift, because their identity is the meaning. The clash pair keeps its three variants **and shares the zero-drift law without being a signature** — the pair reads as one gesture, and a drifting component would fracture the contact→midpoint shape. Selection is deterministic under a fixed seed (a replay reproduces the draw sequence). The signatures' repeat-exposure tolerance across a session (the memory chime's 1200 ms bell fired on every cache save above all) is a sound-bible-pass assessment; the one-variant law stands.
 
 **The asset arithmetic.** 25 one-shot files (4 + 3 + 3 + 2 + 1 + 1 + 1 + 1 + 1 + 3 + 3 + 1 + 1 = 25; the damage bands are runtime pitch shifts, not extra files) + 3 beds + 1 score = **29 audio files** at MVP.
 
@@ -221,7 +221,7 @@ Ten SYS-29 edges → eleven voices (the clash pair) + two flip tear voices.
 - **TR-AUD-019 — The revive boot and the level-up print.** The boot on the restore-module draw; the print on the level-up edge. The **reconstruct** path carries no voice (it is not in the closed list); its offline exit only releases the duck. *Test: the revive fixture emits one boot; the reconstruct fixture emits zero voices and one duck release; the level-up fixture emits one print.*
 - **TR-AUD-020 — The memory chime.** Audio-led (TR-JCE-021), once per pickup, fired by the memory pickup (SYS-20) or the cache's MEMORY CACHED (SYS-15); the Leap-Stone grant reuses the voice; no haptic, no flash. *Test: one chime per pickup; one per cache MEMORY CACHED; a latched re-read re-chimes zero times; the grant fires one chime.*
 - **TR-AUD-021 — The jump-2 and defeat ticks.** The double-jump takeoff and the enemy defeat; the first jump and an enemy's death-sting carry neither. *Test: the double-jump fixture emits one jump-2 and the first jump none; an enemy death emits one defeat tick and zero sting audio.*
-- **TR-AUD-038 — The variation law.** Round-robin with no immediate repeat; ±1 semitone within a band; zero drift on the signatures; deterministic under a fixed seed. *Test: the seeded 40-draw fixture per voice — no adjacent repeat, |Δst| ≤ 1, zero drift on the eight signatures, the draw sequence identical on replay.*
+- **TR-AUD-038 — The variation law.** Round-robin with no immediate repeat; ±1 semitone within a band; zero drift on the signatures and the clash pair; deterministic under a fixed seed. *Test: the seeded 40-draw fixture per voice — no adjacent repeat on the multi-variant voices, |Δst| ≤ 1, zero drift on the six signatures and the clash pair, the draw sequence identical on replay.*
 
 ---
 
@@ -230,6 +230,8 @@ Ten SYS-29 edges → eleven voices (the clash pair) + two flip tear voices.
 ### F.1 · The bed table
 
 Three beds, one per truth plus the arena's invariant hum. The bed is per **room**; the wing is not a room.
+
+**The bed resolution's epoch source (CR-AUD-02).** The core never reads the truth state. In-session, each room's bed derives from the core's own consumed-event state: epoch-0 beds at boot, shifted for the target rooms by the flip's E3b order. A **load** is the one case the derived state cannot cover (a save made after the flip restores epoch 1 and replays no flip edges): the **load-complete event's payload carries the restored epoch** (`restored_epoch` — SYS-03's save data, consumed as event data at the adapter, the CR-AUD-01 pattern), and the core applies it to the derived map at the load-complete tick, so the first room entry after a load resolves the epoch-correct bed. **CR-AUD-02** records the request to SYS-03's authoring (SYS-03 is Not Started — the payload rides its design); until it lands, a post-flip load boots on the derived epoch-0 state, the recorded gap the request closes before the first audio story.
 
 | Room | Epoch 0 | Epoch 1 | Notes |
 |---|---|---|---|
@@ -253,7 +255,7 @@ At MVP a bed is a **single continuous loop asset** that carries its own texture.
 
 ### F.4 · The requirements
 
-- **TR-AUD-022 — The bed table.** Three beds; the room→bed map of §F.1; `AMB_ARENA_STEEL_HUM` is RM-06's at both epochs; the score is global. *Test: the table resolves every room at both epochs; the arena's bed ID is epoch-independent; the wing resolves to RM-03's bed.*
+- **TR-AUD-022 — The bed table.** Three beds; the room→bed map of §F.1; `AMB_ARENA_STEEL_HUM` is RM-06's at both epochs; the score is global; the epoch source is §F.1's rule (the derived consumed-event state in-session; the load-complete payload's `restored_epoch` after a load). *Test: the table resolves every room at both epochs; the arena's bed ID is epoch-independent; the wing resolves to RM-03's bed; the load-complete fixture applies `restored_epoch` to the derived map and the post-flip-load room entry plays the epoch-1 bed.*
 - **TR-AUD-023 — Beds only, no stochastic detail.** Zero one-shot emissions from the ambience layer; a bed's texture lives inside its loop asset. *Test: the ambience layer's registration list contains loops only; a 10,000-tick soak emits zero ambience one-shots.*
 - **TR-AUD-024 — The seam's exemption from the room-entry path.** The seam threshold is not a room boundary: a room-activation zone at the threshold produces zero crossfades, and the wing's traversal produces zero graph deltas (the room-entry crossfade fires only at a real room entry). *Test: the threshold fixture's audio-graph delta is empty; a normal room entry crossfades; a filter/volume snapshot of the wing equals RM-03's.*
 - **TR-AUD-025 — The transition law.** The only bed transition at the flip is the turnover (AR-AUD-01); room-to-room transitions are a crossfade owned by the room-entry path (SYS-02's room activation, consumed at the adapter), never a restart and never a duck. *Test: a room-entry fixture crossfades without a restart; the flip fixture reproduces §D.2.*
@@ -279,7 +281,7 @@ At MVP a bed is a **single continuous loop asset** that carries its own texture.
 
 ### G.3 · Voice pools and the cap
 
-`allocated = SFX_POOL + AMB_POOL + MUSIC 1 + FLIP 1 + UI 0` = 12 + 4 + 1 + 1 + 0 = **18** of a **20 hard cap** (2 slack). The turnover needs two beds simultaneously (the receding bed and the arriving bed). The theoretical instant worst case on the SFX bus is 15 voices (damage 2 + clash 2 + deflect 2 + heal 1 + death 1 + revive 1 + level-up 1 + memory 1 + jump-2 2 + defeat 2), which the 12-slot pool resolves by the steal rule (P3 first) — the realistic worst case is a clash + a flurry + a heal, and 12 covers it. `VOICE_CAP` must be ≥ `allocated`; a config where it is not is a boot failure.
+`allocated = SFX_POOL + AMB_POOL + MUSIC 1 + FLIP 1 + UI 0` = 12 + 4 + 1 + 1 + 0 = **18** of a **20 hard cap** (2 slack). The turnover needs two beds simultaneously (the receding bed and the arriving bed). The theoretical instant worst case on the SFX bus is 15 voices (damage 2 + clash 2 + deflect 2 + heal 1 + death 1 + revive 1 + level-up 1 + memory 1 + jump-2 2 + defeat 2), which the 12-slot pool resolves by the steal rule (P3 first) — the realistic worst case is a clash + a flurry + a heal, and 12 covers it. `VOICE_CAP` must be ≥ `allocated` and ≤ the 20-voice hard cap; a config outside that span is a config-load rejection (a boot failure).
 
 ### G.4 · The steal rule
 
@@ -330,6 +332,7 @@ The six-system envelope join is recorded as **NOT-JOIN** at MVP (the SYS-09 prec
 | `AUD_DUCK_RELEASE_BACKSTOP` | `{tick, reason}` | 1 per death |
 | `AUD_GATE_FAILSAFE` | `{tick, bracket_ms}` | 1 per run |
 | `AUD_GATE_DROP` | `{event_id, tick}` | counted (not ringed) |
+| `AUD_LOAD_MISSING` | `{tick}` | 1 per run |
 
 | Missing input | Owner | The audio's behaviour |
 |---|---|---|
@@ -337,13 +340,14 @@ The six-system envelope join is recorded as **NOT-JOIN** at MVP (the SYS-09 prec
 | **E2** never arrives | SYS-29 | the state never enters `HELD`; the gate never closes; one record; the gate failsafe is armed from E1 |
 | **E3b** never arrives while E2/E5/E6/E7 do | SYS-10 (its emission) | the bed stays put; one record; a dev assert in dev builds; **no self-shift** (the epoch is not read) |
 | **E5** never arrives | SYS-29 | the flip is silent (no tear); one record; the choreography proceeds |
-| **E6** never arrives | SYS-29 | **the gate failsafe**: the gate opens at `GATE_FAILSAFE_MS` (700 ms = the 600 ms max freeze + 100 ms margin) after E2; one `AUD_GATE_FAILSAFE` record; the arrival is not started (no release boundary) |
+| **E6** never arrives | SYS-29 | **the gate failsafe**: the gate opens at `GATE_FAILSAFE_MS` (700 ms = the 600 ms max freeze + 100 ms margin) after E2; one `AUD_GATE_FAILSAFE` record; the arrival is not started (no release boundary); the state exits `HELD` → `IDLE` without a `RELEASED` entry; the bed holds at `AMB_RECEDE_FLOOR_DB` and zero new orders are emitted; the next room entry re-applies the room's bed at nominal (the normal room-entry path, on the derived epoch-correct state — §F.1) |
 | **E7** never arrives | SYS-09 | the state exits `RELEASED` at `arrive_end` regardless; one record |
 | The tear asset missing | SYS-04's content pipeline | the flip is silent; one `AUD_ASSET_MISSING` record; the choreography proceeds |
 | The duck's bus missing | SYS-04's bus table | the request is dropped; one record; **never a silent Master duck** |
 | The duck's release edge lost | SYS-15's screen lifetime | the offline screen's tree-exit is the backstop; one `AUD_DUCK_RELEASE_BACKSTOP` record |
 | A gameplay one-shot requested inside the bracket | SYS-04's gate | dropped; `AUD_GATE_DROP` increments; never queued |
 | The score asset missing | SYS-04's content pipeline | the score is silent; one `AUD_ASSET_MISSING` record; every other law holds |
+| The load-complete never arrives | SYS-03/SYS-05's flow | the derived state stands unchanged (boot-epoch beds); one `AUD_LOAD_MISSING` record |
 
 ### G.9 · The requirements
 
@@ -362,7 +366,7 @@ The six-system envelope join is recorded as **NOT-JOIN** at MVP (the SYS-09 prec
 
 ### H.1 · The nominal mix and the priority classes
 
-The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under both. The classes and the steal rule are §G.4's. The mix's job is to keep the **transient band** (the one-shots) clear of the **sustained low-mid** (the beds) — a static carve of the beds around the one-shots' fundamentals is the audio-director's palette pass, not this document's.
+The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score sits between them — under the one-shots, a shade over the beds (the score is the player's constant; the air is the world's). The classes and the steal rule are §G.4's. The mix's job is to keep the **transient band** (the one-shots) clear of the **sustained low-mid** (the beds) — a static carve of the beds around the one-shots' fundamentals is the audio-director's palette pass, not this document's.
 
 ### H.2 · Masking and headroom
 
@@ -386,7 +390,7 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 ### H.5 · The requirements
 
 - **TR-AUD-034 — The nominal mix and the classes.** The §G.1 volumes; the four classes; the steal rule. *Test: the mix table matches; the class assignment of every voice matches §E.2.*
-- **TR-AUD-035 — The masking and headroom law.** The beds ≥ 6 dB under the one-shots; the limiter is the only master effect; the tear and the death never clip. *Test: the device mix measurement; the limiter's gain-reduction high-water on the loudest fixture.*
+- **TR-AUD-035 — The masking and headroom law.** The beds ≥ 6 dB under the one-shots; the limiter is the only master effect; the tear and the death never clip. *Test: the device mix measurement; the limiter's gain-reduction high-water ≤ 3 dB (provisional) on the loudest fixture.*
 - **TR-AUD-036 — The death duck, ratified.** −6 dB, 120/240 ms, the hold, both exits. *Test: AC-AUD-10's fixture; the [−12, 0] range enforced at config load.*
 - **TR-AUD-037 — The accessibility surface.** MONO; the three sliders and the group map; the caption-metadata read; no unique-meaning audio. *Test: the settings fixture; the mono run's channel-collapse assertion; the metadata read's presence on every event.*
 
@@ -412,7 +416,7 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 
 `band = 1 + int(amount ≥ BAND_2_MIN) + int(amount ≥ BAND_3_MIN)` · `BAND_2_MIN = ATK1_DAMAGE` · `BAND_3_MIN = ATK2_DAMAGE` · `pitch_st = {B1: 0, B2: +3, B3: +6}`
 
-**Variables:** `amount` int ≥ 1 (a 0-damage event publishes no edge); `ATK1_DAMAGE`/`ATK2_DAMAGE` int — SYS-08's arc symbols (10/20 at the provisional table), **never literals**, so the SYS-07-REWORK re-derivation moves the bands with the arcs; `band` int ∈ {1, 2, 3}; `pitch_st` the band's runtime pitch shift. **Output:** the band and its shift; adjacent bands are ≥ 3 semitones apart (the audible-separation floor on a phone speaker). **Scope:** the amount is any damage edge — the player's arcs and the received strikes 6/12/20 (TR-HD-003) and tiers 30/60/120 (TR-HD-006) — so received damage maps onto the same three bands; the thresholds stay arc-anchored. A Gate 2 ear check on the +3 st floor is carried to the sound-bible pass: if the bands blur by ear, the fix is the floor, never more voices. **Examples (the provisional arcs):** 8 → B1; 10 → B2 (+3 st); 15 → B2; 20 → B3 (+6 st); 30 → B3.
+**Variables:** `amount` int ≥ 1 (a 0-damage event publishes no edge); `ATK1_DAMAGE`/`ATK2_DAMAGE` int — SYS-08's arc symbols (10/20 at the provisional table), **never literals**, so the SYS-07-REWORK re-derivation moves the bands with the arcs; `band` int ∈ {1, 2, 3}; `pitch_st` the band's runtime pitch shift. **Output:** the band and its shift; adjacent bands are ≥ 3 semitones apart **at nominal pitch** (the audible-separation floor on a phone speaker; the ±1 st within-band draw narrows the worst case to 1 st — the band's meaning is the printed amount, and the pitch is a reinforcement, never the sole carrier). **Scope:** the amount is any damage edge — the player's arcs and the received strikes 6/12/20 (TR-HD-003) and tiers 30/60/120 (TR-HD-006) — so received damage maps onto the same three bands; the thresholds stay arc-anchored. A Gate 2 ear check on the +3 st floor is carried to the sound-bible pass: if the bands blur by ear, the fix is the floor, never more voices. **Examples (the provisional arcs):** 8 → B1; 10 → B2 (+3 st); 15 → B2; 20 → B3 (+6 st); 30 → B3.
 
 ### F-AUD-04 · duck_envelope — the death beat
 
@@ -430,7 +434,7 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 
 ### F-AUD-06 · order_trace_hash — the replay's audio half
 
-`h = FNV-1a(canonical_bytes(records))` over the ordered records `{tick, edge_id, to_epoch, target_rooms[], excluded[], recede_ms, arrive_not_before_tick}`, in emission order, **integer-encoded** (ticks and ms as ints; `to_epoch` int; no floats; room IDs sorted). A record with no rooms (never emitted at MVP) encodes empty arrays as zero-length.
+`h = FNV-1a(canonical_bytes(records))` over the ordered records `{tick, edge_id, to_epoch, target_rooms[], excluded[], recede_ms, arrive_not_before_tick}`, in emission order, **integer-encoded** (ticks and ms as ints; `to_epoch` int; no floats; room IDs sorted). A record with no rooms (never emitted at MVP) encodes empty arrays as zero-length. **Both timestamps encode relative to the run's raise tick** — `tick` and `arrive_not_before_tick` are hashed as `value − raise_tick` (`R` for a fresh flip, `R′` for a latched resume), so equivalent schedules produce identical hashes across the fresh and resumed runs (AC-AUD-05); `recede_ms` is a duration and is already relative.
 
 **Variables:** the record list; the 32-bit hash. **Output:** a deterministic hash; the fresh flip's hash ≡ the latched resume's post-resume span (compared from R′). **The stub-bed hash** = the same hash over a run with the bed table stubbed to a single ID — the secondary check for AC-AUD-03. **Example:** the fixture's fresh run and the abort→resume run produce the same hash over the compared span; a one-tick drift in the order's `tick` changes it.
 
@@ -470,14 +474,14 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 - **AC-AUD-10** [GUT] *(TR-AUD-005/036, F-AUD-04)* — **GIVEN** the death and the offline exit, **WHEN** the duck runs on the wall clock, **THEN** exactly one request publishes (−6 dB, Music, held), the attack is 8 ticks, the release is 15 ticks, and both the reconstruct and revive exits release it; a second request in the same life fails.
 - **AC-AUD-11** [GUT] *(TR-AUD-028/029, F-AUD-05)* — **GIVEN** the §G.4 fixtures, **WHEN** the budget resolves, **THEN** the arithmetic reproduces from the knobs (18 of 20), a `VOICE_CAP` below the allocation is a boot failure, the steal order is **P3 → P2 → drop** (P0 and the P1 signatures are never stolen), and the drop path is reached only when P0/P1 remain.
 - **AC-AUD-12** [GUT] *(TR-AUD-022)* — **GIVEN** the six rooms at both epochs, **WHEN** the bed table resolves, **THEN** RM-01..RM-05 map A→B, RM-06 maps to the same invariant bed at both epochs, and the wing resolves to RM-03's bed.
-- **AC-AUD-13** [GUT] *(TR-AUD-006/033)* — **GIVEN** the missing-input injections of §G.8 (E1, E2, E3b, E5, E6, E7, the tear asset, the duck bus, the duck release, the bracket request, the score asset), **WHEN** each runs, **THEN** each produces its named record ID and behaviour, and no injection produces a synthesized substitute (the E3b omission leaves the bed put; the E6 omission opens the gate at `GATE_FAILSAFE_MS`).
+- **AC-AUD-13** [GUT] *(TR-AUD-006/033)* — **GIVEN** the missing-input injections of §G.8 (E1, E2, E3b, E5, E6, E7, the tear asset, the duck bus, the duck release, the bracket request, the score asset, the load-complete), **WHEN** each runs, **THEN** each produces its named record ID and behaviour, and no injection produces a synthesized substitute (the E3b omission leaves the bed put; the E6 omission opens the gate at `GATE_FAILSAFE_MS`, exits `HELD` → `IDLE` without a `RELEASED` entry, holds the bed at the floor, starts no arrival, and the next room entry re-applies the room's bed at nominal; the load-complete omission leaves the derived state standing).
 - **AC-AUD-14** [GUT] *(TR-AUD-033, F-AUD-06)* — **GIVEN** the fixture set (the default flip, the abort, the latched resume, the extension, the missing-input run), **WHEN** the telemetry drains, **THEN** the edge trace and the order trace are emitted once, the duck counter = 1 per death, the steal/gate-drop/missing-input counters equal their fixture counts, and the ring never exceeds 256 records.
 - **AC-AUD-15** [GUT] *(TR-AUD-004/023)* — **GIVEN** the runtime registration scan, **WHEN** it sweeps the emissions, **THEN** exactly thirteen one-shot IDs exist, zero UI voices exist, and a 10,000-tick soak emits zero ambience one-shots.
 - **AC-AUD-16** [GUT] *(TR-AUD-027)* — **GIVEN** the flip window, **WHEN** the snapshot and score are audited, **THEN** the snapshot hash is unchanged, the score's gain and playhead state are unchanged across [E1, E7], and zero score ducks exist.
 - **AC-AUD-17** [LINT] *(TR-AUD-005, V-AUD-01)* — **GIVEN** the source, **WHEN** the one-duck audit runs, **THEN** exactly one **application site** of the duck exists in `src/audio/` (the publication is SYS-29's), no hit-stop/flip/seam/reveal-hold/pause source calls it, and the request's schema has exactly three fields.
 - **AC-AUD-18** [LINT] *(TR-AUD-004, V-AUD-02)* — **GIVEN** the source, **WHEN** the closed-list audit runs, **THEN** exactly the thirteen voices are registered, and zero popup/voice/menu-click emissions exist.
 - **AC-AUD-19** [LINT] *(TR-AUD-002/003, V-AUD-04)* — **GIVEN** the source, **WHEN** the seam audit runs, **THEN** the core contains no `Input`/`Time`/`SceneTree`/`RenderingServer`/truth-state symbol, the adapter's subscriptions equal the publisher map, and a grep for cross-system calls from `src/audio/` matches only the §G.8 allowlist (the tuning read, the event-metadata read).
-- **AC-AUD-20** [DEVICE] *(TR-AUD-034/035)* — **GIVEN** the Pixel 6a reference SKU, **WHEN** the mix runs, **THEN** the beds sit ≥ 6 dB under the one-shots, the limiter's gain reduction stays within the bar on the loudest fixture, and no fixture clips.
+- **AC-AUD-20** [DEVICE] *(TR-AUD-034/035)* — **GIVEN** the Pixel 6a reference SKU, **WHEN** the mix runs, **THEN** the beds sit ≥ 6 dB under the one-shots, the limiter's gain-reduction high-water stays ≤ 3 dB on the loudest fixture (provisional; the sound-bible pass may re-pin), and no fixture clips.
 - **AC-AUD-21** [DEVICE] *(TR-AUD-032, PROVISIONAL on OQ-AUD-6)* — **GIVEN** the release-like build on the reference SKU, **WHEN** the budget run measures, **THEN** disk ≤ 10 MB, runtime ≤ 16 MB, the voice high-water ≤ 20, and the core's tick is within p99.9 ≤ 0.10 ms / max ≤ 0.30 ms (the tick bar provisional).
 - **AC-AUD-22** [DEVICE] *(TR-AUD-037)* — **GIVEN** the settings surface SYS-24 renders, **WHEN** MONO and the three sliders are exercised, **THEN** MONO collapses every bus to mono, the Ambience and UI buses follow the SFX slider's group, and every slider's range is honoured.
 - **AC-AUD-23** [PLAYTEST] *(TR-AUD-008/010/039, the Player Fantasy)* — **GIVEN** ≥ 5 eligible testers from the Gate 2 cohort (the SYS-09 AC-DR-25 precedent; 3-of-5 pass), **WHEN** the AC-SMB-22 coding protocol runs (a free-play log first, then the elicitor; κ ≥ 0.7; top-up below 3 eligible), **THEN** ≥ 3/5 use the pass token set {air changed, bed turned over, the room sounds different} for the flip; the fail set {a sound effect played, a stinger, the sound cut out, the audio broke} fails the code outright. The probe also runs at Gate 1 on the core-slice cohort so a failed turnover surfaces early.
@@ -487,7 +491,7 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 - **AC-AUD-27** [GUT] *(TR-AUD-014/024/025)* — **GIVEN** the seam and room-entry fixtures, **WHEN** the crossings run, **THEN** the threshold crossing and the wing's traversal produce zero graph deltas (no crossfade, filter, layer, restart, gain, snapshot), a normal room entry crossfades without a restart, and the wing's bed equals RM-03's.
 - **AC-AUD-28** [GUT] *(TR-AUD-030)* — **GIVEN** the loop fixture, **WHEN** the turnover runs, **THEN** the arrival is a first start at the release boundary with its start gain at `AMB_RECEDE_FLOOR_DB`, the sounding loop's playhead advances monotonically across [E2, E6], and no loop restart flag is set.
 - **AC-AUD-29** [GUT] *(TR-AUD-009/015/018/020/036, §K.2)* — **GIVEN** the edge-case fixtures (#5 `REDUCED_FLASH` mid-hold, #6 a damage event in the death-latch tick, #9 an enemy defeat during the death beat, #12 the pause/map screen, #14 a room-entry request inside the bracket), **WHEN** each runs, **THEN** #5 changes zero audio events, #6 sounds both voices (≤ 2) and ducks once, #9 sounds the defeat tick with the music ducked and the ambience not, #12 changes zero bus gains and issues zero ducks, and #14 is **dropped** at the gate with the counter incremented.
-- **AC-AUD-30** [GUT] *(TR-AUD-038)* — **GIVEN** the fixed seed, **WHEN** 40 draws per voice run, **THEN** no adjacent repeat occurs, |Δst| ≤ 1 within a band, the eight signatures show zero drift, and the draw sequence is identical on replay.
+- **AC-AUD-30** [GUT] *(TR-AUD-038)* — **GIVEN** the fixed seed, **WHEN** 40 draws per voice run, **THEN** no adjacent repeat occurs on the multi-variant voices, |Δst| ≤ 1 within a band, the six signatures and the clash pair show zero drift, and the draw sequence is identical on replay.
 - **AC-AUD-31** [DEVICE] *(TR-AUD-039)* — **GIVEN** the Pixel 6a speaker at the default volume, **WHEN** the bed-contrast fixture runs, **THEN** ≥ 4 of 5 listeners name the truth from the bed alone within 10 s, both house beds are audible, and the arena hum is distinguishable from both.
 - **AC-AUD-32** [LINT] *(TR-AUD-031/037)* — **GIVEN** the import audit, **WHEN** it reads every asset, **THEN** the format/channels/rate/loop/peak match §G.6, and the event-metadata read is present on every registered voice and bed.
 
@@ -509,7 +513,7 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 | `AMB_RECEDE_FLOOR_DB` | −60 | [−60, −24] | effectively silence; the held breath; the arrival's start gain | SYS-04 |
 | `SFX_POOL` | 12 | [12, 16] | covers the realistic worst case (a clash + a flurry + a heal); the theoretical 15 is handled by the steal rule | SYS-04 |
 | `AMB_POOL` | 4 | [2, 6] | two sounding during a turnover + slack | SYS-04 |
-| `VOICE_CAP` | 20 | [18, 24] | ≥ the derived allocation (18) + 2 slack; the mobile ceiling | SYS-04 / technical-director |
+| `VOICE_CAP` | 20 | [18, 20] | ≥ the derived allocation (18) + 2 slack; the 20-voice hard cap is the mobile ceiling, so the range's top is the cap itself | SYS-04 / technical-director |
 | `GATE_FAILSAFE_MS` | 700 | [600, 1200] | the 600 ms max freeze + 100 ms margin; the only failure SYS-04 contains itself | SYS-04 |
 | `AUDIO_DISK_BUDGET_MB` | 10 | [6, 16] | 3.7 MB at MVP + VS headroom | technical-director |
 | `AUDIO_RUNTIME_BUDGET_MB` | 16 | [8, 24] | ~10% of the 150 MB ceiling | technical-director |
@@ -531,7 +535,7 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 11. **E3b lost while the rest of the sequence fires** → the bed stays put; one record; a dev assert; no self-shift. [TR-AUD-033.]
 12. **The pause/map screen** → zero ducks, zero bus-gain changes; the audio continues (SYS-25's surface owns the pause). [AC-AUD-29.]
 13. **The score asset missing** → silent score; every other law holds; one record. [TR-AUD-033.]
-14. **A room-entry request during the bracket** → the gate **drops** it (never queues, never defers); the counter increments; the room's bed change applies at the next room entry after E6. [TR-AUD-009; AC-AUD-29.]
+14. **A room-entry request during the bracket** → the gate **drops** it (never queues, never defers); the counter increments; the room's bed change applies at the next room entry after E6. A dropped room-entry bed mismatch persists until that next room entry; the E6 arrival serves the room the player occupies at the release boundary, and if that room is the arena no arrival is ordered (the steel hum continues — edge case #1). [TR-AUD-009; AC-AUD-29.]
 
 ### K.3 · Dependencies
 
@@ -544,12 +548,15 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 | SYS-07 Health & Damage | upstream (hard) | `DamageNumber`/`HealEdge`/`DeathEdge`/`DefeatEvent`; **the SYS-07-REWORK re-derives the arc symbols F-AUD-03 consumes** | APPROVED 2026-11-12; the rework queued |
 | SYS-08 Combat | upstream (hard) | the clash pair's publication; the hit-stop pairing; the arc damage symbols | APPROVED 2026-11-12 |
 | SYS-02 Room & World | upstream (hard) | the six-room fixture; RM-06 = the arena; the room activation | APPROVED 2026-11-13 |
+| SYS-03 Save & Serialization | upstream (soft) | the load-complete event's `restored_epoch` payload (CR-AUD-02's request; SYS-03 is Not Started — the request rides its authoring) | Not Started |
 | SYS-15 / SYS-20 | downstream (soft) | the offline screen's lifetime (the duck's hold); the memory-pickup / MEMORY CACHED triggers | Not Started |
 | SYS-24 HUD | downstream (soft) | the settings surface (MONO + three sliders) | Not Started |
 | ADR-DRAFT | support | the audio ADR (the mechanism choices: bus effects, snapshot implementation, the voice pool, the Ogg gapless loop + stereo→mono probes) | STANDBY |
 | The sound bible | support | the palette's realisation (the `PROV_AUD_*` upgrade) + the bed-contrast pass (TR-AUD-039) | not authored |
 
 **CR-AUD-01 — the contract-revision request (SYS-10).** E3b's payload is undefined in the published contract. The audio core needs `to_epoch` (or `arrive_bed_id`) on E3b to select the arriving bed without reading the epoch. Until it lands, the MVP uses the config constant `MVP_FLIP_TO_EPOCH = 1` (the monotone 0→1 assumption, boot-validated). Recorded for the batch; **not blocking** the document.
+
+**CR-AUD-02 — the contract-revision request (SYS-03, Not Started).** The load-complete event's payload must carry the restored epoch (`restored_epoch`) so the audio's bed derivation covers a post-flip load without reading the truth state (§F.1's epoch-source rule). In-session paths are covered by the derived state; the post-load path is the recorded gap. Recorded for SYS-03's authoring; **not blocking** the document.
 
 **The missing-input failure paths** are §G.8's table; every consumed edge names its owner there.
 
@@ -568,4 +575,4 @@ The §G.1 volumes: the beds sit ≥ 6 dB under the one-shots; the score under bo
 
 ---
 
-**Counts**: 39 TR-AUD · 7 F-AUD · 7 V-AUD · 32 ACs (22 GUT · 4 LINT · 4 DEVICE · 2 PLAYTEST; the gate manifest 26 smoke · 4 device · 2 MVP-lock · 0 VS) · 14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role rows · 29 audio files · 1 contract-revision request (CR-AUD-01).
+**Counts**: 39 TR-AUD · 7 F-AUD · 7 V-AUD · 32 ACs (22 GUT · 4 LINT · 4 DEVICE · 2 PLAYTEST; the gate manifest 26 smoke · 4 device · 2 MVP-lock · 0 VS) · 14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role rows · 29 audio files · 2 contract-revision requests (CR-AUD-01, CR-AUD-02).

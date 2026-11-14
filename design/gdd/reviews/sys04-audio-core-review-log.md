@@ -302,3 +302,84 @@ files · 1 contract-revision request (CR-AUD-01).
 - **The GLM rerun's gate trail is complete.** The document stops here. The sync
   request, the PR, and the one CodeRabbit pass follow in the lane loop; the
   merge waits for the sync to land (the orchestrator + the sync lane).
+
+## 2026-11-14 — PR #46 + the one CodeRabbit pass (triage + dispositions)
+
+- **PR**: `#46` opened `--base Main` (the gate trail + the sync status in the
+  body). The lane's **one CodeRabbit pass** ran (profile ASSERTIVE): **12
+  actionable comments** (6 Major, 6 Minor) + a summarized review.
+- **Dispositions** (every finding triaged; one fix commit; the threads resolved
+  with these records):
+  1. **Major — the epoch/bed source for room entry + the post-flip load** —
+     **APPLIED (CR-AUD-02)**. Verified: SYS-02's room-activation surface
+     (TR-RWS-010) carries no epoch/bed field, and a post-flip load replays no
+     flip edges, so the derived state cannot cover it. Fix: §F.1's epoch-source
+     rule (in-session = the derived consumed-event state; a load = the
+     load-complete payload's `restored_epoch`, consumed as event data at the
+     adapter — the CR-AUD-01 pattern); TR-AUD-002's publisher map gains
+     SYS-03's load-complete; TR-AUD-022's test gains the load-complete fixture;
+     §G.8 gains the failure row + `AUD_LOAD_MISSING`; §K.3 gains the SYS-03
+     (upstream, soft) row; **CR-AUD-02** records the request to SYS-03's
+     authoring (SYS-03 is Not Started — a design-order request, not a frozen
+     edit). Counts: the CR line 1 → 2.
+  2. **Major — the clash pair named a signature with 3 variants** —
+     **APPLIED**. §E.2's law: the signatures are the six one-variant voices
+     (heal, death, revive, level-up, memory, tear); the clash pair keeps its
+     three variants and shares the zero-drift law as a named pair clause.
+     TR-AUD-038 + AC-AUD-30 recount: "the eight signatures" → "the six
+     signatures and the clash pair". Variant/file counts untouched.
+  3. **Major — the E6-lost failsafe leaves the bed at the floor with the state
+     stuck in HELD** — **APPLIED**. The HELD row gains the failsafe exit
+     (`HELD` → `IDLE`, no `RELEASED` entry); §G.8's E6 row gains the recovery
+     (the bed holds at the floor, zero new orders, the next room entry
+     re-applies the room's bed at nominal); AC-AUD-13's E6 clause extends with
+     the same assertions; K.2 gains edge case #15. No new AC, no count change.
+  4. **Major — the formula template ("variable tables", a "prescribed
+     opening")** — **REBUTTED**. The cited guideline ("always begin each
+     formula with this exact structure") does not exist in the repo's framework
+     docs (`docs/framework/coding-standards.md`, `docs/framework/templates/*`);
+     the governing quality bar (the lane prompt's, mirroring the landed
+     SYS-02/07/09/10/11 GDDs) is "variables with types + ranges, an Output
+     clause, worked examples" — all seven F-AUD formulas comply inline, and the
+     landed corpus is the template's precedent. No reformat.
+  5. **Major — `VOICE_CAP` range [18, 24] vs the 20 hard cap** — **APPLIED**.
+     K.1's range → [18, 20]; §G.3 gains the upper bound ("a config outside the
+     span is a config-load rejection").
+  6. **Major — AC-AUD-30's no-adjacent-repeat on single-variant voices** —
+     **APPLIED**. The condition qualifies to the multi-variant voices in both
+     AC-AUD-30 and TR-AUD-038's test.
+  7. **Minor — §H.1's "the score under both" vs Music −6 > Ambience −9** —
+     **APPLIED**. §H.1's ordering sentence corrected to match §G.1 (the score
+     sits between them: under the one-shots, a shade over the beds).
+  8. **Minor — the ±1 st variation vs the "≥ 3 st apart" claim** — **APPLIED**.
+     F-AUD-03's Output clause qualifies the floor as nominal (the worst case
+     with the within-band draw is 1 st; the printed amount carries the band's
+     meaning).
+  9. **Minor — AC-AUD-20's "within the bar" limiter threshold** — **APPLIED**.
+     A numeric bar pinned in AC-AUD-20 and TR-AUD-035's test: the limiter's
+     gain-reduction high-water ≤ 3 dB on the loudest fixture (provisional; the
+     sound-bible pass may re-pin).
+  10. **Minor — edge case #14's dropped room-entry bed + the arena at E6** —
+      **APPLIED**. K.2 #14 states the drop policy (the mismatch persists to the
+      next room entry), the E6 arrival serves the room the player occupies at
+      the release boundary, and the arena gets no arrival; §D.3's gate bullet
+      and §C.1's E6 obligation carry the same clause.
+  11. **Major — F-AUD-06's absolute timestamps break the fresh/resume hash
+      equality** — **APPLIED**. Both timestamps encode relative to the run's
+      raise tick (`R` / `R′`); `recede_ms` is already relative.
+  12. **Minor — the SYS-02/SYS-04 dependency direction (the report's line
+      140)** — **APPLIED**. Verified: SYS-02's "explicit non-dependency" for
+      SYS-04 (`room-world-structure.md:370`) is **direction-correct** — SYS-02
+      consumes nothing from SYS-04 and authors no audio edges; SYS-04 is a
+      downstream consumer of the room fixture + the room activation. The
+      report's §1.1 row gains the direction note, and the sync request's
+      systems-index updates gain the reciprocal downstream-consumer entry on
+      SYS-02's side (SYS-02's own line-371 rule routes it to the index at
+      completion — the frozen GDD itself is not edited).
+- **Counts after the batch**: 39 TR-AUD · 7 F-AUD · 7 V-AUD · 32 ACs (22 GUT ·
+  4 LINT · 4 DEVICE · 2 PLAYTEST; 26 smoke · 4 device · 2 MVP-lock · 0 VS) ·
+  14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role rows · 29 audio
+  files · **2 contract-revision requests (CR-AUD-01, CR-AUD-02)**.
+- **Confirm pass**: the batch is Major-class (findings 1/3/11), so the lane
+  loop's confirm CodeRabbit pass runs after the fix commit.
+- **Next**: the thread resolutions + the confirm pass.
