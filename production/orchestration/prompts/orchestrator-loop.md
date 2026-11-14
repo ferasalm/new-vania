@@ -38,15 +38,21 @@ For each launch:
 1. The lane is `QUEUED` or `AUTHORING` in the manifest; dependencies are met.
 2. The worktree exists (`npm run task:new -- <branch>` if not) and is on a fresh
    `origin/Main`.
-3. The lane prompt header matches the manifest hash. If not, run
-   `node tools/orchestration/render-prompts.mjs --lane <ID>` and re-check.
-4. Spawn the lane runner (a nested subagent or a parallel chat) with:
+3. Run `node tools/orchestration/render-prompts.mjs --check` **before spawning**.
+   If it fails, run `node tools/orchestration/render-prompts.mjs --lane <ID>` and
+   re-check. Do not spawn on a stale body.
+4. Ensure the lane worktree is at the merged kit revision (`git fetch origin` +
+   `git merge --ff-only origin/Main`). The runner reads the prompt, manifest, and
+   `STATE.md` **from the lane worktree** — the same files `--check` verified. If
+   the worktree predates the kit, fast-forward it first; never run on a stale
+   copy.
+5. Spawn the lane runner (a nested subagent or a parallel chat) with:
    - the lane worktree path,
-   - `production/orchestration/prompts/lanes/<ID>.md`,
-   - `production/orchestration/prompts/lane-runner.md`,
+   - `production/orchestration/prompts/lanes/<ID>.md` **inside that worktree**,
+   - `production/orchestration/prompts/lane-runner.md` **inside that worktree**,
    - the instruction: work only in the worktree; write
      `production/session-state/lane-<ID>-report.md`; return the report.
-5. Update the manifest status to `AUTHORING`; update `STATE.md`.
+6. Update the manifest status to `AUTHORING`; update `STATE.md`.
 
 Do not launch SYS-16/SYS-17 before SYS-07-REWORK lands. Do not start
 `/create-architecture`, `/create-control-manifest`, `/create-epics`,
@@ -75,7 +81,9 @@ ADRs in parallel instead.
 - The admin merge is otherwise pre-authorized: if the ONLY blocker is the
   required review (0 unresolved threads, all required checks green), run one
   `gh pr merge --squash --delete-branch --admin` and record the bypass in the
-  landing receipt. Any other blocker is diagnosed, not bypassed.
+  landing receipt. Pin the merge to the verified head SHA (`gh pr view <n>
+  --json headRefOid` immediately before merging); if the head moved, re-run the
+  checks. Any other blocker is diagnosed, not bypassed.
 
 ## 6. Prompt discipline
 

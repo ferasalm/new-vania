@@ -75,8 +75,10 @@ Only the **sync lane** edits:
 - `design/gdd/systems-index.md`
 
 Every other lane prepares a **sync request** in its report: the exact entries,
-the index row, and the diff summary. The orchestrator queues the request in
-`review-queue.md` and sets `shared_file_lock` in `STATE.md`. The sync lane:
+the index row, and the diff summary. The SYNC-LANE is the designated writer; the
+shared-contract prohibition applies to every other lane. The orchestrator queues
+the request in `review-queue.md` and sets `shared_file_lock` in `STATE.md`. The
+sync lane:
 
 1. Acquires the lock.
 2. `git fetch origin` + `git rebase origin/Main` immediately before the edit.
@@ -156,7 +158,9 @@ when the gate record exists.
 
 The landed GDDs are frozen: SYS-01, SYS-02, SYS-06, SYS-07, SYS-08, SYS-09,
 SYS-10, SYS-11, SYS-13, SYS-29, SYS-32, and the game concept. A change is a
-**contract-revision request** in `decisions.md`, batched for the user. No silent
+**contract-revision request** in `decisions.md`, batched for the user. A
+recorded, user-approved revision (the decision ID in `decisions.md`) is the only
+way a lane edits a frozen document; the commit names the decision ID. No silent
 edits.
 
 Never touch `design/gdd/world-mutation-epochs.md`,
@@ -173,8 +177,10 @@ Never touch `design/gdd/world-mutation-epochs.md`,
   `../new-vania-<topic>` from a fresh `origin/Main`.
 - **Admin-merge pre-authorization**: if the ONLY blocker is the required review
   (0 unresolved threads, all required checks green), the user pre-authorizes one
-  `gh pr merge --squash --delete-branch --admin`. Record the bypass in the
-  landing receipt. Any other blocker is diagnosed, not bypassed.
+  `gh pr merge --squash --delete-branch --admin`. Pin the merge to the verified
+  head SHA (`gh pr view <n> --json headRefOid` immediately before merging); if
+  the head moved, re-run the checks. Record the bypass in the landing receipt.
+  Any other blocker is diagnosed, not bypassed.
 
 ## 11. File map
 

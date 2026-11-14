@@ -19,21 +19,21 @@ next:
   kind: orchestrator
   path: production/orchestration/prompts/orchestrator-loop.md
   version: "1.0.0"
-  hash: "dac7aa43370f"
+  hash: "68a792c92d87"
 
 support_prompts:
   - id: lane-runner
     path: production/orchestration/prompts/lane-runner.md
     version: "1.0.0"
-    hash: "0922bf346101"
+    hash: "bca91b6b912d"
   - id: sync-lane
     path: production/orchestration/prompts/sync-lane.md
     version: "1.0.0"
-    hash: "81b478716d52"
+    hash: "ee0c5ba8190b"
   - id: orchestrator-loop
     path: production/orchestration/prompts/orchestrator-loop.md
     version: "1.0.0"
-    hash: "dac7aa43370f"
+    hash: "68a792c92d87"
   - id: cd-gate
     path: production/orchestration/prompts/seat-briefs/cd-gate.md
     version: "1.0.0"
@@ -63,7 +63,7 @@ lanes:
     worktree_state: planned
     prompt_path: production/orchestration/prompts/lanes/ART-BIBLE.md
     prompt_version: "1.0.0"
-    prompt_hash: "a8bd12d12f2c"
+    prompt_hash: "fe36c9a4acd2"
     status: AUTHORING
     dependencies: []
     review_state: "art-director + creative-director + user approval; asset-spec handoff"
@@ -76,7 +76,7 @@ lanes:
     worktree_state: planned
     prompt_path: production/orchestration/prompts/lanes/SYS-03.md
     prompt_version: "1.0.0"
-    prompt_hash: "047ee6a40c3b"
+    prompt_hash: "8fbc08eec5c0"
     status: AUTHORING
     dependencies: [SYS-02, SYS-09, SYS-10]
     review_state: "not-started"
@@ -89,7 +89,7 @@ lanes:
     worktree_state: planned
     prompt_path: production/orchestration/prompts/lanes/SYS-04.md
     prompt_version: "1.0.0"
-    prompt_hash: "98024752df5d"
+    prompt_hash: "4e689924ac17"
     status: AUTHORING
     dependencies: [SYS-09, SYS-10, SYS-29, SYS-11]
     review_state: "not-started"
@@ -105,8 +105,10 @@ lanes:
     prompt_hash: "pending"
     status: QUEUED
     dependencies: [SYS-03, SYS-05, SYS-07]
+    dependencies_waived: [SYS-03, SYS-05]
+    dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring (the review-doctrine pending-obligation ledger)."
     review_state: "not-started"
-    next_action: "Starts when a three-seat review slot frees."
+    next_action: "Starts when a three-seat review slot frees; consume SYS-03/SYS-05 as pre-shaped and ratify at authoring."
 
   - id: SYS-28
     title: "Narrative Presentation — logs, briefings, telegraph text"
@@ -118,8 +120,10 @@ lanes:
     prompt_hash: "pending"
     status: QUEUED
     dependencies: [SYS-05, SYS-10, SYS-09]
+    dependencies_waived: [SYS-05]
+    dependency_note: "SYS-05 is a pre-shaped contract; ratify at authoring."
     review_state: "not-started"
-    next_action: "Starts when a three-seat review slot frees."
+    next_action: "Starts when a three-seat review slot frees; consume SYS-05 as pre-shaped and ratify at authoring."
 
   - id: SYS-14
     title: "Grief-Boss Framework — Denial state"
@@ -183,8 +187,10 @@ lanes:
     prompt_hash: "pending"
     status: QUEUED
     dependencies: [SYS-03, SYS-05]
+    dependencies_waived: [SYS-03, SYS-05]
+    dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring."
     review_state: "not-started"
-    next_action: "Starts when a review slot frees."
+    next_action: "Starts when a review slot frees; consume SYS-03/SYS-05 as pre-shaped and ratify at authoring."
 
   - id: SYS-25
     title: "Map / Minimap / Fog-of-War — pause room-grid"
@@ -208,7 +214,8 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     status: QUEUED
-    dependencies: [SYS-07, SYS-16, SYS-17]
+    dependencies: [SYS-07]
+    gates: [SYS-16, SYS-17]
     review_state: "contract-revision request — user approval required before edits"
     next_action: "Prepare the rework package; batch the contract revision; do not edit until approved."
 

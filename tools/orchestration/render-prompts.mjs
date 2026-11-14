@@ -120,10 +120,9 @@ function setBlockField(text, startMarker, endMarker, field, value) {
 	if (start < 0) fail(`manifest block not found: ${startMarker}`)
 	const end = endMarker ? text.indexOf(endMarker, start + startMarker.length) : text.length
 	const slice = text.slice(start, end < 0 ? text.length : end)
-	const updated = slice.replace(new RegExp(`^(    |  )${field}: ".*"$`, "m"), (line) =>
-		line.replace(/".*"$/, `"${value}"`),
-	)
-	if (updated === slice) fail(`field ${field} not found in ${startMarker}`)
+	const fieldRe = new RegExp(`^(    |  )${field}: ".*"$`, "m")
+	if (!fieldRe.test(slice)) fail(`field ${field} not found in ${startMarker}`)
+	const updated = slice.replace(fieldRe, (line) => line.replace(/".*"$/, `"${value}"`))
 	return text.slice(0, start) + updated + text.slice(end < 0 ? text.length : end)
 }
 
@@ -172,6 +171,11 @@ function verifyLane(id, lane, shared, blocks) {
 	const file = read(path.join(ROOT, lane.prompt_path))
 	const headerHash = (file.match(/^Hash: ([0-9a-f]{12})$/m) ?? [])[1]
 	if (headerHash !== expected) fail(`lane ${id}: header hash ${headerHash} != master hash ${expected}`)
+	const fields = { Lane: id, Branch: lane.branch, Worktree: lane.worktree, Version: lane.prompt_version }
+	for (const [key, value] of Object.entries(fields)) {
+		const actual = (file.match(new RegExp(`^${key}: (.*)$`, "m")) ?? [])[1]
+		if (actual !== String(value)) fail(`lane ${id}: header ${key} ${actual} != manifest ${value}`)
+	}
 	if (lane.prompt_hash !== expected) fail(`lane ${id}: manifest hash ${lane.prompt_hash} != master hash ${expected}`)
 	const body = file.slice(file.indexOf("-->\n\n") + 5)
 	if (hash(body) !== expected) fail(`lane ${id}: body hash != master hash ${expected}`)
@@ -229,7 +233,7 @@ function main() {
 	manifest = parseManifest(manifestText)
 
 	// Lane prompts.
-	const targets = laneArg ? [laneArg] : all ? [...blocks.keys()] : DEFAULT_LANES
+	const targets = nextOnly ? [] : laneArg ? [laneArg] : all ? [...blocks.keys()] : DEFAULT_LANES
 	for (const id of targets) {
 		const lane = manifest.lanes.get(id)
 		if (!lane) fail(`lane ${id} is not in the manifest`)

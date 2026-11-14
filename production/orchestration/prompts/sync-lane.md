@@ -73,21 +73,33 @@ git push origin chore/sync-shared-files
 One commit per lane sync, or one batched commit if the queue is small and the
 diff is coherent. Reference the lane ID and the GDD path in the body.
 
-## 5. Update the manifest + STATE
+## 5. Record the receipt (hold the lock)
 
 1. Update the lane's `review_state` and `next_action` in
    `production/orchestration/manifest.yaml` (the orchestrator may do this; the
    sync lane records the receipt).
-2. In `STATE.md`: add the sync receipt (date, lane, files, commit hash), release
-   `shared_file_lock: none`, and move the request out of the queue.
+2. In `STATE.md`: add the sync receipt (date, lane, files, commit hash). **Keep**
+   `shared_file_lock: SYNC-LANE` and **keep** the request in the queue until the
+   sync PR merges.
 3. If the sync is the last gate before merge, tell the orchestrator; the lane
    runner merges its PR after the sync lands.
 
-## 6. PR
+## 6. PR + merge, then release
 
 The sync branch is a normal PR `--base Main`; squash-merge after all checks are
 green. The admin merge is pre-authorized only for the required-review case
-(0 unresolved threads, all required checks green); record the bypass.
+(0 unresolved threads, all required checks green); record the bypass. Pin the
+merge to the verified head SHA (`gh pr view <n> --json headRefOid` immediately
+before merging); if the head moved, re-run the checks.
+
+**Only after the merge succeeds**:
+
+1. Release `shared_file_lock: none` in `STATE.md`.
+2. Remove the request from `review-queue.md` §5.
+3. Record the landing hash in the sync receipt.
+
+A failed or blocked sync PR keeps the lock and the request in place for retry;
+never drop a failed request.
 
 ## 7. Hard rules
 

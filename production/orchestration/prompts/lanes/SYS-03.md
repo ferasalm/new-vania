@@ -3,7 +3,7 @@ Lane: SYS-03
 Branch: docs/sys03-save-serialization
 Worktree: ../new-vania-sys03-save-serialization
 Version: 1.0.0
-Hash: 047ee6a40c3b
+Hash: 8fbc08eec5c0
 Source: production/orchestration/lane-kickoff-master.md
 Generated: 2026-11-14
 -->
@@ -44,8 +44,10 @@ The landed GDDs are frozen: SYS-01, SYS-02, SYS-06, SYS-07, SYS-08, SYS-09,
 SYS-10, SYS-11, SYS-13, SYS-29, SYS-32, and the game concept. A change to one of
 their contracts is a **contract-revision request** in
 `production/orchestration/decisions.md` — batched for the user, never a silent
-edit. Record the request in your lane report and continue on the parts that do
-not depend on it.
+edit. A **recorded, user-approved** revision (the decision ID in `decisions.md`)
+is the only way a lane edits a frozen document; the commit names the decision
+ID. No approval = no edit. Record the request in your lane report and continue
+on the parts that do not depend on it.
 
 Never touch `design/gdd/world-mutation-epochs.md`,
 `design/gdd/dual-reality-state.md`, their review logs, or `docs/sys10-world-mutation`.
@@ -55,7 +57,9 @@ Never touch `design/gdd/world-mutation-epochs.md`,
 `design/registry/entities.yaml` and `design/gdd/systems-index.md` are written
 **only** by the sync lane. You prepare a sync request (the exact entries/rows and
 the diff) in your lane report; the orchestrator queues it; the sync lane applies
-it serially on a fresh `origin/Main`. Do not edit either file yourself.
+it serially on a fresh `origin/Main`. Do not edit either file yourself. The only
+exception is the **SYNC-LANE**, which is the designated writer and applies the
+queued diffs.
 
 ### The authoring loop (GDD lanes)
 
