@@ -3,8 +3,13 @@
   "plugins": [
     "./.opencode/plugins/ccgs-hooks.ts",
     "./.opencode/plugins/drift-detector.ts",
-    "./.opencode/plugins/changelog-generator.ts"
+    "./.opencode/plugins/changelog-generator.ts",
+    "superpowers@git+https://github.com/obra/superpowers.git"
   ],
+  "compaction": {
+    "auto": true,
+    "buffer": 150000
+  },
   "commands": {
     "hybrid-prototype": {
       "template": "Run the hybrid-prototype skill: load .agents/skills/hybrid-prototype/SKILL.md and follow the fast-lane prototype workflow. Concept: $ARGUMENTS",
