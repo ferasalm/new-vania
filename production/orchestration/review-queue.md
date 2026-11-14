@@ -42,7 +42,8 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-03 Save & Serialization | `save_contract` · `save_roundtrip_twin` | SYS-03 row → APPROVED · design order #11 · the Foundation bullet · the 10 bidirectional-consistency corrections | 2026-11-14 | **IN PROGRESS** (lock held by SYNC-LANE; request `lane-SYS-03-report.md` §10) |
+| 1 | SYS-03 Save & Serialization | `save_contract` · `save_roundtrip_twin` | SYS-03 row → APPROVED · design order #11 · the Foundation bullet · the 10 bidirectional-consistency corrections | 2026-11-14 | **DONE** — PR #47 merged at `50a9a93` (head `07f9b27`); 3 threads (2 applied, 1 rebutted) |
+| 2 | SYS-04 Audio Core | `audio_bus_contract` · `ambient_bed_contract` · `audio_edge_list` · `duck_request_contract` · the `flip_trigger_contract` append | SYS-04 row → APPROVED (+ the recorded header condition) · design order #16 · the Foundation bullet · the SYS-02 reciprocal · the enumeration Dependencies column | 2026-11-14 | **IN PROGRESS** (lock held by SYNC-LANE; request `lane-SYS-04-report.md`) |
 
 The sync lane acquires the lock in `STATE.md`, rebases on `origin/Main`
 immediately before the edit, applies serially, validates, commits, pushes,
