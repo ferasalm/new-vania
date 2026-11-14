@@ -200,6 +200,7 @@ entities:
     referenced_by:
       - design/gdd/room-world-structure.md
       - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
     kind: published_contract
     published_by: SYS-02 Room & World Structure
     consumed_by: SYS-09 (the palette render) · SYS-10 (the mutations) · SYS-11 (the seam placement) · SYS-03 (the serialization)
@@ -222,6 +223,7 @@ entities:
     source: design/gdd/dual-reality-state.md
     referenced_by:
       - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
     kind: published_contract
     published_by: SYS-09 Dual-Reality State & Rendering
     consumed_by: SYS-10 (the epoch write on the flip_epoch_boundary signal) · SYS-29 (the freeze request + the tear trigger) · SYS-04 (the ambient composition — contract-first, the audit's IP-7) · SYS-05 (the Reading-close upstream edge)
@@ -235,15 +237,19 @@ entities:
     notes: "The batch's Day-3 contract-first publication (SYS-04 composes against this
       table and nothing else). SYS-10's handshake: request → flip_epoch_boundary signal →
       one atomic store at τ0 (SYS-02's law verbatim). A policy change is a contract
-      revision, never a silent shift (G7)."
+      revision, never a silent shift (G7). 2026-11-14 (S1-002b): SYS-10 ratifies the contract
+      verbatim — no amendment to the success path; the three riders (the latched-resume state;
+      the commit-abort failure family; the E1 request-presence clarification) ride the batch
+      publication as contract additions (the G7-sanctioned path)."
     added: 2026-11-14
-    revised: ""
+    revised: "2026-11-14 (SYS-10 ratifies verbatim — S1-002b; the three riders ride the batch publication)"
 
   - name: epoch0_tell_registry
     status: active
     source: design/gdd/dual-reality-state.md
     referenced_by:
       - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
     kind: published_contract
     published_by: SYS-09 Dual-Reality State & Rendering
     consumed_by: SYS-10 (the semantic linkage — TR-DR-010's co-ownership) · SYS-28 (the telegraph-text surface, bound to the fantasy's contract term 2 — never inventory/name/confirm)
@@ -264,6 +270,7 @@ entities:
     source: design/gdd/dual-reality-state.md
     referenced_by:
       - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
     kind: published_contract
     published_by: SYS-09 Dual-Reality State & Rendering
     consumed_by: SYS-11 (the PROV_LIM_* ramp — the shared source for the wing + the seam materials) · SYS-29 (PROV_GLITCH_ACCENT consumed by name)
@@ -275,7 +282,88 @@ entities:
       placements, a re-skin is a table swap over unchanged coordinates"
     notes: "Hexes are PLACEHOLDER through the greybox MVP; PINNED is required before
       content ship (the art-bible pass upgrades in place). No hex literals in SYS-09
-      code (V-DR-05)."
+      code (V-DR-05). OQ-DR-8's ruling (S1-002b): PROV_B_HAZARD/PROV_B_SEAL stay dormant
+      at MVP — named table members no mechanic references; a B-side effect is a G7
+      contract revision, recorded not implemented."
+    added: 2026-11-14
+    revised: "2026-11-14 (OQ-DR-8's ruling recorded — S1-002b: B_HAZARD/B_SEAL dormant at MVP)"
+
+# 2026-11-14 (world-mutation-epochs.md authored — S1-002b): SYS-10's contracts registered.
+  - name: mutation_registry_contract
+    status: active
+    source: design/gdd/world-mutation-epochs.md
+    referenced_by:
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/room-world-structure.md
+    kind: published_contract
+    published_by: SYS-10 World Mutation & Epochs
+    consumed_by: SYS-02 (the readers derive from the epoch — the registry validates the claims) · SYS-09 (the tell lint's delta namespace)
+    values: "Mutation {set_id, room_id, from_epoch, to_epoch, effects} in SYS-02's shape · exactly
+      ONE mechanical set at MVP: REVEAL_CISTERN (RM-03, 0→1) with GATE_OPEN(rm03_partition) ·
+      ZONE_MATERIALIZE(cold_corridor) · INTERACT_EXPOSE(M4) · the closed MVP effect vocabulary =
+      three types (a fourth is a G7 contract revision) · the closure check (every INTERACT_EXPOSE
+      target inside a zone materialized by the same set or behind a gate opened by the same set —
+      boot-enforced, V-WME-03) · INTERACT_EXPOSE is reach, never activate (taken-ness lives in
+      memories_collected; the effect is the AC-DR-05 throw point)"
+    notes: "SYS-02's V-RWS-07 count + SYS-10's V-WME-01/02/03 lints enforce the scoping twice.
+      The shape's home stays SYS-02 (dual_truth_model); this entry is the MVP allocation +
+      vocabulary. OQ-DR-8's ruling: no B-side effect ships at MVP — PROV_B_HAZARD/PROV_B_SEAL
+      stay dormant table members."
+    added: 2026-11-14
+    revised: ""
+
+  - name: mutation_threshold_table
+    status: active
+    source: design/gdd/world-mutation-epochs.md
+    referenced_by:
+      - design/gdd/world-mutation-epochs.md
+    kind: published_contract
+    published_by: SYS-10 World Mutation & Epochs
+    consumed_by: SYS-10's trigger chain (TR-WME-003) · SYS-02's registered flag table (the V-RWS-05 membership check)
+    values: "{flag_name → set_id} — one row at MVP: sanctum_log_read → REVEAL_CISTERN"
+    notes: "SYS-10-private; SYS-02's Mutation record shape untouched (a trigger field there would
+      be a published-contract revision for a private concern). The flag-set edge signal (SYS-02's
+      threshold surface) is the chain's input; request-presence is the sequencer eligibility test
+      (the E1 clarification rider)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: tell_delta_namespace
+    status: active
+    source: design/gdd/world-mutation-epochs.md
+    referenced_by:
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/dual-reality-state.md
+    kind: published_contract
+    published_by: SYS-10 World Mutation & Epochs
+    consumed_by: SYS-09 (the tell registry's cross-ref lint — one-directional at the ref→delta level)
+    values: "delta_id = \"<set_id>.<effect_type>.<target>\" — the MVP registry yields exactly three:
+      REVEAL_CISTERN.GATE_OPEN.rm03_partition · REVEAL_CISTERN.ZONE_MATERIALIZE.cold_corridor ·
+      REVEAL_CISTERN.INTERACT_EXPOSE.M4 · uniqueness boot-enforced"
+    notes: "Level note: SYS-09's 'bidirectional and closed' traceability is the room-novelty→tell
+      level (TR-DR-007); this namespace's one-directional lint is the ref→delta level — the two
+      compose (TR-DR-010's union). Delta coverage is deliberately NOT required (the anti-saturation
+      law)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: epoch_mutation_reconciliation
+    status: active
+    source: design/gdd/world-mutation-epochs.md
+    referenced_by:
+      - design/gdd/world-mutation-epochs.md
+    kind: published_contract
+    published_by: SYS-10 World Mutation & Epochs
+    consumed_by: SYS-03 (the serialization surface — unchanged; the corrupted-save refusal path) · SYS-09 (the E4 law's logical state)
+    values: "OQ-DR-2's answer: NO pending-flip save field — pending(s) = s.flags[T] ∧ (s.epoch <
+      E_to) derived at load (F-WME-01); the absent flag key reads unset; epoch 1 ∧ flag unset =
+      integrity violation (dev assert + telemetry; truth B stands — no repair, no clamp); epoch
+      out of range → reconciliation aborts into SYS-03's refusal path; the deferral-gap re-fire is
+      the first store of that save's lifetime, not a second flip (G8)"
+    notes: "Contract-first for SYS-03's authoring (the E4 law precedent). The real-file save
+      round-trip twin is SYS-03's authoring gate (the carried obligation). Session cap: at most
+      one choreography per session — a same-session re-cross is a consumed no-op + rate-limited
+      telemetry (the cap-gated standing predicate); a new-session re-cross re-fires legally."
     added: 2026-11-14
     revised: ""
 
@@ -421,6 +509,42 @@ formulas:
     added: 2026-11-13
     revised: "2026-11-14 (SYS-09's flip conversion F-DR-02 is the family applied to the flip freeze; dual-reality-state.md joins referenced_by)"
 
+  - name: pending_flip
+    status: active
+    source: design/gdd/world-mutation-epochs.md
+    referenced_by:
+      - design/gdd/world-mutation-epochs.md
+    variables:
+      - s.flags[T] (the restored threshold flag; absent key reads false)
+      - s.epoch (the restored truth_epoch; [0, max_epoch])
+      - E_to (the bound set's to_epoch — 1 at MVP)
+    output_range: [0, 1]
+    expression: "pending(s) = s.flags[T] AND (s.epoch < E_to)"
+    notes: "F-WME-01 — the reconciliation predicate (never stored, never serialized; the
+      load-time reconcile's decision). Out-of-range epoch aborts before the predicate.
+      No ms operand — no rate-dependent conversion in SYS-10's own math (the flip's
+      ms/tick conversion is SYS-09's F-DR-02 family)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: delta_id
+    status: active
+    source: design/gdd/world-mutation-epochs.md
+    referenced_by:
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/dual-reality-state.md
+    variables:
+      - set_id (the registry's set id)
+      - effect_type (GATE_OPEN | ZONE_MATERIALIZE | INTERACT_EXPOSE)
+      - target (the room-data id — boot-resolved)
+    output_range: [3, 3]
+    expression: "delta_id = \"<set_id>.<effect_type>.<target>\""
+    notes: "F-WME-02 — the tell-linkage namespace (a naming law, not arithmetic; the MVP
+      output is exactly three unique keys). Uniqueness boot-enforced; consumers: SYS-09's
+      cross-ref lint (one-directional — refs must resolve, deltas need no tell)."
+    added: 2026-11-14
+    revised: ""
+
 # Example:
 #
 # formulas:
@@ -552,6 +676,7 @@ constants:
       - design/gdd/room-world-structure.md
       - design/gdd/camera-framing.md
       - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
     value: "2.45 / 6.55"
     unit: "ms p99.9 / ms max"
     notes: "The MVP gameplay-tick envelope's fourth record (the name is the
@@ -568,9 +693,12 @@ constants:
       printed in its GDD's TR-RWS-027; recorded for the QA-plan sync, OQ-RWS-6).
       SYS-09 explicitly does NOT join either (the event-driven flip; the
       event-cached material resolution; the not-join + re-open condition printed
-      in its GDD's performance-envelope ruling — recorded 2026-11-14)."
+      in its GDD's performance-envelope ruling — recorded 2026-11-14). SYS-10
+      explicitly does NOT join either (the event-driven mutation state — the edge
+      signal, the one-store transaction, the load-phase reconcile; the not-join +
+      re-open condition printed in TR-WME-011 — recorded 2026-11-14, S1-002b)."
     added: 2026-11-13
-    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system)"
+    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system); 2026-11-14 (SYS-10's not-join recorded — S1-002b)"
 
   - name: intent_window_ms
     status: active
