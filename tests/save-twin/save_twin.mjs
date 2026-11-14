@@ -25,6 +25,7 @@ import { join } from 'node:path';
 const CURRENT_SCHEMA_VERSION = 1;
 const MAX_EPOCH = 1; // SYS-02's max_epoch at MVP
 const TRIGGER_FLAG = 'sanctum_log_read';
+const REGISTERED_FLAGS = new Set([TRIGGER_FLAG]); // the registered truth table (V-RWS-05)
 const THRESHOLD_EPOCH = 1; // REVEAL_CISTERN.to_epoch
 const GAME_VERSION = '0.1.0';
 
@@ -33,15 +34,19 @@ const WORLD_KEYS = ['cells_discovered', 'doors_opened', 'memories_collected', 't
 const PAYLOAD_KEYS_BY_VERSION = { 1: ['world'] };
 
 // ---------------------------------------------------------------- canonical form (F-SAV-01)
-function canon(v) {
+// ONLY the three outer family arrays are sets. A coordinate pair's inner order is DATA:
+// sorting [[1,0]] to [[0,1]] would silently turn one discovered cell into another.
+const SET_ARRAYS = new Set(['doors_opened', 'memories_collected', 'cells_discovered']);
+
+function canon(v, key) {
   if (Array.isArray(v)) {
-    const items = v.map(canon);
-    items.sort(); // the family arrays are sets: canonical order is the element's canonical string
+    const items = v.map((e) => canon(e)); // the element's canon: a pair keeps its order
+    if (key && SET_ARRAYS.has(key)) items.sort(); // sort the set arrays' elements only
     return '[' + items.join(',') + ']';
   }
   if (v !== null && typeof v === 'object') {
     const keys = Object.keys(v).sort();
-    return '{' + keys.map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+    return '{' + keys.map((k) => JSON.stringify(k) + ':' + canon(v[k], k)).join(',') + '}';
   }
   if (typeof v === 'number') {
     if (!Number.isInteger(v)) throw new Error('REFUSE_FLOAT'); // the no-floats law
@@ -109,12 +114,15 @@ function normalize(payload) {
       out.world.cells_discovered.push([Number(pair[0]) | 0, Number(pair[1]) | 0]); // the coercion
     }
   }
-  // truth_flags: a dict of bools
+  // truth_flags: a dict of bools, and every NAME must be registered at this version
   if ('truth_flags' in world) {
     if (typeof world.truth_flags !== 'object' || world.truth_flags === null || Array.isArray(world.truth_flags)) {
       return { ok: false, code: 'REFUSE_TYPE' };
     }
-    for (const [k, v] of Object.entries(world.truth_flags)) if (typeof v !== 'boolean') return { ok: false, code: 'REFUSE_TYPE' };
+    for (const [k, v] of Object.entries(world.truth_flags)) {
+      if (!REGISTERED_FLAGS.has(k)) return { ok: false, code: 'REFUSE_UNKNOWN_KEY' }; // an unregistered flag is a schema violation
+      if (typeof v !== 'boolean') return { ok: false, code: 'REFUSE_TYPE' };
+    }
     out.world.truth_flags = { ...world.truth_flags };
   }
   // truth_epoch: an int in [0, max_epoch]
@@ -257,7 +265,25 @@ check('RT-hash-stable', 'a re-save of an unchanged state hashes identically (the
   assert(a.saved_at_utc !== b.saved_at_utc, 'the fixture did not vary the timestamp');
 });
 
-check('CANON-order', 'canonical form: key insertion order and array order do not change the hash', () => {
+check('RT-content', 'the restored content is EXACTLY the written content (coordinate pairs keep their order)', () => {
+  const written = FIX.post_flip.world;
+  const v = integrityVerdict(envelope(FIX.post_flip, 'x'));
+  assert(v.code === 'ACCEPT', v.code);
+  const restored = restoreDefaults(v.env.payload.world);
+  const norm = (a) => a.map((p) => p.join(',')).sort().join('|'); // outer set order normalised, pair order preserved
+  assert(norm(restored.cells_discovered) === norm(written.cells_discovered), 'the cell set changed');
+  assert(restored.cells_discovered.some((p) => p[0] === 1 && p[1] === 0), 'the [1,0] cell was lost (a nested sort)');
+  assert(JSON.stringify(restored.doors_opened.slice().sort()) === JSON.stringify(written.doors_opened.slice().sort()), 'the doors changed');
+  assert(JSON.stringify(restored.memories_collected) === JSON.stringify(written.memories_collected), 'the memories changed');
+});
+
+check('CANON-pair', 'the canonical form preserves a coordinate pair\'s inner order ([1,0] != [0,1])', () => {
+  const a = { world: { ...FIX.pre_flip.world, cells_discovered: [[1, 0]] } };
+  const b = { world: { ...FIX.pre_flip.world, cells_discovered: [[0, 1]] } };
+  assert(stateHash(1, a) !== stateHash(1, b), 'a nested sort collapsed two distinct cells');
+});
+
+check('CANON-order', 'canonical form: key insertion order and the set arrays\' element order do not change the hash', () => {
   const a = { world: { truth_epoch: 0, truth_flags: {}, doors_opened: ['b2', 'b1'], memories_collected: [], cells_discovered: [[0, 1], [0, 0]] } };
   const b = { world: { cells_discovered: [[0, 0], [0, 1]], doors_opened: ['b1', 'b2'], memories_collected: [], truth_flags: {}, truth_epoch: 0 } };
   assert(stateHash(1, a) === stateHash(1, b), 'canonicalization is not order-independent');
@@ -311,6 +337,12 @@ check('COR-unknown-key', 'corrupted: a pending_flip key -> REFUSE_UNKNOWN_KEY (n
 check('COR-cache-at-v1', 'corrupted: a cache key at v1 -> REFUSE_UNKNOWN_KEY (registered but absent until v2)', () => {
   const p = join(S, 'cache1.sav');
   writeFileSync(p, envelope({ world: { ...FIX.pre_flip.world }, cache: {} }, 'x'), 'utf8');
+  assert(integrityVerdict(readFileSync(p, 'utf8')).code === 'REFUSE_UNKNOWN_KEY', 'wrong code');
+});
+
+check('COR-unregistered-flag', 'corrupted: an unregistered truth-flag name -> REFUSE_UNKNOWN_KEY', () => {
+  const p = join(S, 'flag.sav');
+  writeFileSync(p, envelope({ world: { ...FIX.pre_flip.world, truth_flags: { sanctum_log_consumed: true } } }, 'x'), 'utf8');
   assert(integrityVerdict(readFileSync(p, 'utf8')).code === 'REFUSE_UNKNOWN_KEY', 'wrong code');
 });
 

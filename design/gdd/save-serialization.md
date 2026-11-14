@@ -1,6 +1,6 @@
 # Save & Serialization
 
-> **Status**: **APPROVED (2026-11-14 — lane SYS-03).** Gate trail: the authoring gate — the **real-file round-trip twin, 29/29 PASS** (`tests/save-twin/save_twin.mjs`; the format-contract half, the engine half story-gated — OQ-SAV-1 (a)) · **CD-GDD-ALIGN APPROVED** (0 blockers, 7 recommendations applied) · the three-seat review **NEEDS REVISION** (creative 1 + technical 8 + QA 12) → all 21 blockers repaired in-session → **qa-lead spot-check #1 FAIL** (6 bookkeeping defects) → all repaired → **spot-check #2 PASS** → **final micro-check PASS** (zero blockers; the document is not reopened). Review record: `design/gdd/reviews/sys03-save-serialization-review-log.md`. Counts: **26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs (22 GUT + 2 LINT + 2 DEVICE + 0 PLAYTEST; smoke 24)**. The engine-path twin + the Save & Serialization ADR are the two named story-gated obligations.
+> **Status**: **APPROVED (2026-11-14 — lane SYS-03).** Gate trail: the authoring gate — the **real-file round-trip twin, 32/32 PASS** (`tests/save-twin/save_twin.mjs`; the format-contract half, the engine half story-gated — OQ-SAV-1 (a)) · **CD-GDD-ALIGN APPROVED** (0 blockers, 7 recommendations applied) · the three-seat review **NEEDS REVISION** (creative 1 + technical 8 + QA 12) → all 21 blockers repaired in-session → **qa-lead spot-check #1 FAIL** (6 bookkeeping defects) → all repaired → **spot-check #2 PASS** → **final micro-check PASS** (zero blockers; the document is not reopened). Review record: `design/gdd/reviews/sys03-save-serialization-review-log.md`. Counts: **26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs (22 GUT + 2 LINT + 2 DEVICE + 0 PLAYTEST; smoke 24)**. The engine-path twin + the Save & Serialization ADR are the two named story-gated obligations.
 > **Author**: lead-programmer + systems-designer (lane SYS-03, authoring session)
 > **Last Updated**: 2026-11-14
 > **Implements Pillar**: "One World, Two Truths" — the persistence half: the world's truth outlives the session, and the file is a record of it, never a repair of it.
@@ -137,7 +137,7 @@ SYS-03 publishes `register_namespace(owner, shape, migration_step)`; the boot va
 **TR-SAV-009 — The canonical serialization.** The canonical form is both the hash's input and the file's payload bytes:
 
 1. Object keys sorted by byte order, at every level.
-2. Arrays that are semantically **sets** sorted by their element's canonical string (the three family arrays; `doors_opened`, `memories_collected`, `cells_discovered`).
+2. **Only the three outer family arrays are sets**, sorted by their element's canonical string (`doors_opened`, `memories_collected`, `cells_discovered`). **A coordinate pair's inner order is data** — sorting `[[1,0]]` to `[[0,1]]` would silently turn one discovered cell into another (the twin's `CANON-pair`).
 3. Integers in decimal, no leading zeros, no exponent form. **No floats** (TR-SAV-006).
 4. Strings JSON-escaped per the standard; booleans `true`/`false`; no `null` (an absent key is the only "nothing").
 5. No insignificant whitespace inside the payload.
@@ -192,7 +192,7 @@ Each slot has `<slot>.sav` + `<slot>.bak` under `user://saves/`. **No timer-base
 
 *Test: a request at tick 100 inside a window closing at 118 → `t_write` 118 and the snapshot carries epoch 1; the abort case and the deferral gap both restore as `{0, flag set}` (AC-SAV-11; the twin's `REC-b`).*
 
-**TR-SAV-014 — The worker thread and the shutdown path.** One dedicated `Thread`, created at boot and joined at shutdown; a **one-deep job queue** (the in-flight write plus at most one pending per slot). The completion is a result record drained at the next tick boundary. **The game thread never waits on the worker during gameplay** — a write in flight never blocks a second request (it queues). **The one legal exception:** on the close request the close-save is written **synchronously** (there is no frame to miss; the file is ≤ 2 KB; the dev assert bound is `SAVE_JOIN_TIMEOUT_MS` 250 ms). A close-save that cannot land is not a failure the player sees — the last autosave from the station ack is the fallback.
+**TR-SAV-014 — The worker thread and the shutdown path.** One dedicated `Thread`, created at boot and joined at shutdown; a **one-deep job queue** (the in-flight write plus at most one pending per slot). The completion is a result record drained at the next tick boundary. **The game thread never waits on the worker during gameplay** — a write in flight never blocks a second request (it queues). **The one legal exception:** on the close request the close-save is written **synchronously** (there is no frame to miss; the file is ≤ 2 KB; the dev assert bound is `SAVE_JOIN_TIMEOUT_MS` 250 ms). **The close-save and the freeze:** if `flip_sources_active` is non-empty at the close request, the close-save is **skipped** — a synchronous snapshot there would capture the mid-choreography state that V-SAV-05 and E4 forbid — and the last station autosave is the fallback (one telemetry record). A close-save that cannot land is not a failure the player sees.
 
 *Test: a frame-time probe during a save shows no game-thread stall (AC-SAV-12); the close-save lands on a device (AC-SAV-23).*
 
@@ -270,7 +270,7 @@ Each slot has `<slot>.sav` + `<slot>.bak` under `user://saves/`. **No timer-base
 
 *Test: the refusal matrix — each code's fixture, and the file's bytes identical after the attempt (AC-SAV-17); the save-failure matrix (AC-SAV-09).*
 
-**TR-SAV-021 — The `.bak` fallback.** On a primary failure other than `REFUSE_ABSENT` and `REFUSE_SCHEMA_AHEAD`, the load retries the `.bak`. If the `.bak` loads, the session continues from it, one telemetry record (`bak_loaded`) is emitted, and the surface reports that the previous save was recovered. If the `.bak` also fails → the refusal (the primary's code is reported; the `.bak`'s code is telemetry). A `REFUSE_SCHEMA_AHEAD` primary does **not** try the `.bak` — the `.bak` is older and would silently downgrade the session, which is exactly the lie the refusal exists to prevent.
+**TR-SAV-021 — The `.bak` fallback.** On a primary failure other than `REFUSE_ABSENT` and `REFUSE_SCHEMA_AHEAD`, the load retries the `.bak`. If the `.bak` loads, **the verified `.bak` is promoted to `<slot>.sav` before the slot returns to `OK`** (a file-level recovery — the same operation as the boot sweep). Without the promotion the corrupt primary would sit at `.sav` and the next write would rotate it over the good `.bak`, so a failed commit would leave two bad files. The session continues from the recovered state, one telemetry record (`bak_loaded`) is emitted, and the surface reports that the previous save was recovered. If the `.bak` also fails → the refusal (the primary's code is reported; the `.bak`'s code is telemetry). A `REFUSE_SCHEMA_AHEAD` primary does **not** try the `.bak` — the `.bak` is older and would silently downgrade the session, which is exactly the lie the refusal exists to prevent.
 
 *Test: the primary corrupt → the `.bak` loads; both corrupt → the refusal; a schema-ahead primary → no `.bak` attempt (AC-SAV-18).*
 
@@ -288,7 +288,7 @@ Each slot has `<slot>.sav` + `<slot>.bak` under `user://saves/`. **No timer-base
 | `cells_discovered` | `[]` | no cells discovered |
 | **`truth_epoch`** | **refuse** (`REFUSE_MISSING_EPOCH`) | the truth is **not defaultable** — a zero would be a repair write |
 
-*Test: the absent-key matrix — the three arrays default to `[]`, `truth_flags` to `{}` with every registered flag unset, and the absent epoch refuses (AC-SAV-19; the twin's `ABS-defaults`).*
+*Test: the absent-key matrix — the three arrays default to `[]`, `truth_flags` to `{}` with every registered flag unset, and the absent epoch refuses (AC-SAV-19; the twin's `ABS-defaults`). The defaults are applied at restore, never before the hash (TR-SAV-026 step 4).*
 
 **TR-SAV-024 — The reconciliation handoff (SYS-03's half of TR-WME-006).** Five obligations:
 
@@ -319,7 +319,7 @@ Each slot has `<slot>.sav` + `<slot>.bak` under `user://saves/`. **No timer-base
 1. Walk the parsed payload against the **schema's declared types** — not heuristically — **and apply the same integral check to the envelope's `schema_version`** (it is parsed as a float too).
 2. For each key declared `int`: accept the parsed number iff it is **integral** (`x = floor(x)`) and inside its declared range; **coerce it to int**. A non-integral number → `REFUSE_FLOAT`.
 3. For each key declared non-integer (string/bool/array/dict): a number → `REFUSE_TYPE`.
-4. A declared key absent → the absent-key default (TR-SAV-023). An undeclared key → `REFUSE_UNKNOWN_KEY` (the shape check).
+4. **The absence is preserved through the hash.** A declared key absent stays absent in the normalized payload — materializing the defaults there would change the hash input and turn a valid sparse file into `REFUSE_HASH_MISMATCH`. **The defaults are applied at restore, after the hash** (TR-SAV-023). An undeclared key → `REFUSE_UNKNOWN_KEY` (the shape check); a `truth_flags` **name** not in the registered table → `REFUSE_UNKNOWN_KEY` (an unregistered flag is a schema violation, not a value).
 
 **Why this is not a repair write:** it converts the engine's *representation* into the schema's *declared type*; it changes no value. A value the schema cannot represent exactly (a fraction) refuses. The pass is idempotent and total over the schema.
 
@@ -432,7 +432,7 @@ Three laws govern SYS-03's formulas: **the record law** (the hash covers the rec
 |---|---|
 | `pre_flip` | `bf18d435e92b3c420ee909d2229e830cae4fbf97a9d4072b59848760d174a5e8` |
 | `deferral_gap` | `e3f7a6a05783c3e441cbc6ceb3dc37271d5fb2c2d93799e31e79cb212188de1e` |
-| `post_flip` | `b32836039f0c6ff11e2a866dd742befff00885cdd7bd50ad44383103bb729c74` |
+| `post_flip` | `05b1e48e3823ac3d444f6c5428b1365efca337e3cebf5673207114e51fdffe37` |
 
 The `pre_flip` canonical payload: `{"world":{"cells_discovered":[[0,0],[0,1]],"doors_opened":["b1","b2"],"memories_collected":[],"truth_epoch":0,"truth_flags":{"sanctum_log_read":false}}}`.
 
@@ -465,7 +465,7 @@ The `pre_flip` canonical payload: `{"world":{"cells_discovered":[[0,0],[0,1]],"d
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
 | the request tick | `t_req` | int (tick) | ≥ 0 | the tick the intent was recorded |
-| the freeze predicate | `flip_sources_active(t)` | bool | {true, false} | SYS-29's `FreezeState`: `&"truth_flip"` or any `&"truth_flip_ext_n"` active |
+| the active freeze sources | `flip_sources_active(t)` | set of source ids | ⊆ {`truth_flip`, `truth_flip_ext_1`, `truth_flip_ext_2`} | SYS-29's `FreezeState`: the flip-scoped sources active at `t`; **the empty set is the writable state** |
 | the worst-case hold | `N_max` | int (tick) | ≥ 1 | **consumed from SYS-09** — `worst_case_hold_ticks`, the base hold plus the two admitted extension spans (F-DR-05/06's cap). 18 at the defaults; the extension spans are SYS-09's numbers |
 | the snapshot tick | `t_write` | int (tick) or `⊥` | `t_req ≤ t_write ≤ t_req + N_max`, or `⊥` | the first unfrozen tick — where the snapshot reads the store |
 
@@ -496,7 +496,15 @@ The `pre_flip` canonical payload: `{"world":{"cells_discovered":[[0,0],[0,1]],"d
 
 **Why the mechanical scan precedes the hash:** a float, a non-integer version, or a missing `state_hash` cannot be canonicalized, so "integrity before interpretation" must mean *mechanical well-formedness first, semantic interpretation after*. Rows 0–2 are the minimum needed to compute a hash; row 3 is the integrity gate; rows 4–8 are the interpretation. **`MIGRATE` is an output, not a refusal** — a legitimately older file must pass this function and hand to TR-SAV-019's chain.
 
-**Variables:** `bytes` (the file's bytes) · the intermediate parses · `max_epoch` (SYS-02's config, 1 at MVP) · the result (a decision).
+**Variables:**
+
+| Variable | Symbol | Type | Range | Description |
+|---|---|---|---|---|
+| the file's bytes | `bytes` | byte string | any | the slot's `.sav` (or `.bak`) content |
+| the parsed envelope | `env` | dict or `⊥` | — | the JSON parse's result; `⊥` on a parse failure |
+| the schema's declared types | `schema@v` | type table | — | the per-key type/range table for the file's version (TR-SAV-026's input) |
+| the restored epoch's ceiling | `max_epoch` | int | 1 at MVP | SYS-02's config — the range check's upper bound |
+| the result | the decision | enum | `ACCEPT` · `MIGRATE` · 9 refusal codes | the load machine's next step |
 
 **Output Range:** `ACCEPT` · `MIGRATE` · **nine** refusal codes. `REFUSE_ABSENT` and `REFUSE_UNREADABLE` are decided **before** bytes exist (TR-SAV-020) and are not outputs of this formula. **The order's work:** a truncated file is `REFUSE_TRUNCATED`, never `REFUSE_HASH_MISMATCH` (the hash cannot be computed); a version edit is `REFUSE_HASH_MISMATCH` (the version is hashed), so `REFUSE_SCHEMA_AHEAD` is reached only by a **legitimately written** newer file; a hand-edited epoch with a recomputed hash is `REFUSE_EPOCH_RANGE` (integrity is not authenticity — the no-clamp law is the last line). **Examples:** the twin's `COR-*` set — every negative fixture yields its named code and leaves the file byte-identical.
 
@@ -672,7 +680,7 @@ SYS-03 publishes; SYS-05 flows; SYS-24 renders. The requirements below are what 
 - **AC-SAV-15** `[GUT]` *(TR-SAV-018/026, F-SAV-04)* — **GIVEN** the corrupted set, **WHEN** each loads, **THEN** the truncated file yields `REFUSE_TRUNCATED` (not `REFUSE_HASH_MISMATCH`), a non-integer version yields `REFUSE_SCHEMA_INVALID`, and the order is parse → normalize → hash → gate → shape → range.
 - **AC-SAV-16** `[GUT]` *(TR-SAV-019, F-SAV-02)* — **GIVEN** the synthetic `CURRENT = 3` harness and its registered steps, **WHEN** the chain runs below the gate, **THEN** `v1→v3` composes, the rename **preserves the value** (`sanctum_log_read: true` → `sanctum_log_consumed: true`), and a contiguity gap fails the boot; **AND** a `v0` file is refused at the gate (AC-SAV-17's fixture), never migrated.
 - **AC-SAV-17** `[GUT]` *(TR-SAV-020/022, F-SAV-04)* — **GIVEN** a named fixture for **every** code — `ABSENT`, `UNREADABLE`, `TRUNCATED`, `HASH_MISMATCH`, `SCHEMA_AHEAD`, `SCHEMA_INVALID`, `UNKNOWN_KEY` (including the `pending_flip` key), `MISSING_EPOCH`, `EPOCH_RANGE`, `TYPE`, `FLOAT` — **WHEN** each loads, **THEN** the named code is published, the file's bytes are identical afterwards, and the slot's expected state matches: `ABSENT` → `EMPTY`; a `.bak`-recoverable failure → `OK` after the recovery; a terminal failure (both files fail) → `REFUSED_READ_ONLY`.
-- **AC-SAV-18** `[GUT]` *(TR-SAV-021)* — **GIVEN** a corrupt primary with a good `.bak`, **WHEN** the load runs, **THEN** the `.bak` loads, `bak_loaded` fires, and the slot returns to `OK`; **AND** both files corrupt → the refusal reporting **the primary's code** (the `.bak`'s code is telemetry); **AND** a `REFUSE_SCHEMA_AHEAD` primary never attempts the `.bak`.
+- **AC-SAV-18** `[GUT]` *(TR-SAV-021)* — **GIVEN** a corrupt primary with a good `.bak`, **WHEN** the load runs, **THEN** the `.bak` loads, **the verified `.bak` is promoted to `.sav` before the slot returns to `OK`**, `bak_loaded` fires, and a subsequent failed write cannot leave two bad files; **AND** both files corrupt → the refusal reporting **the primary's code** (the `.bak`'s code is telemetry); **AND** a `REFUSE_SCHEMA_AHEAD` primary never attempts the `.bak`.
 - **AC-SAV-19** `[GUT]` *(TR-SAV-023)* — **GIVEN** each absent-key fixture, **WHEN** the load runs, **THEN** the **three arrays** (`doors_opened`, `memories_collected`, `cells_discovered`) default to `[]`, `truth_flags` defaults to `{}` with every registered flag unset, and the absent `truth_epoch` refuses with `REFUSE_MISSING_EPOCH`. *(The twin's `ABS-defaults`.)*
 - **AC-SAV-20** `[GUT]` *(TR-SAV-024)* — **GIVEN** the five states (a)–(e), **WHEN** each restores, **THEN** (a) restores with no request and no flip; (b) derives pending true, publishes the request **before `load_complete`**, and its replay hash equals the fresh flip's; (c) restores epoch 1 with no re-fire; (d) is restored as-is with SYS-10's assert and truth B standing; (e) is refused **before SYS-10 is called**; **AND** `restore_complete` precedes `load_complete` in every case.
 - **AC-SAV-21** `[GUT]` *(TR-SAV-025)* — **GIVEN** a failure injected mid-restore, **WHEN** the load aborts, **THEN** the live store is untouched and the refusal publishes; **AND** a second concurrent load is rejected (one load at a time globally); the restore's cost is a non-gating ≤ 1 ms probe.
@@ -680,7 +688,7 @@ SYS-03 publishes; SYS-05 flows; SYS-24 renders. The requirements below are what 
 
 ### The engine model, the twin, and the static audits
 
-- **AC-SAV-23** `[DEVICE]` *(TR-SAV-011/014/016)* — **GIVEN** a real device, **WHEN** the app is backgrounded and terminated after a station ack (iOS) / quit (desktop) / stopped (Android), **THEN** the suspension/close-save lands where the platform delivers the event **and the restored state equals the state at the ack** (the background-kill survival); **AND** the last station autosave is the fallback when the event is not delivered; **AND** a close request arriving while a write is in flight completes the in-flight write first.
+- **AC-SAV-23** `[DEVICE]` *(TR-SAV-011/014/016)* — **GIVEN** a real device, **WHEN** the app is backgrounded and terminated after a station ack (iOS) / quit (desktop) / stopped (Android), **THEN** the suspension/close-save lands where the platform delivers the event **and the restored state equals the state at the ack** (the background-kill survival); **AND** the last station autosave is the fallback when the event is not delivered; **AND** a close request arriving while a write is in flight completes the in-flight write first; **AND** a close request arriving while `flip_sources_active` is non-empty **skips** the close-save (no mid-choreography snapshot) and falls back to the last station autosave.
 - **AC-SAV-24** `[GUT]` *(TR-SAV-001/008/009/018/019/023/024 — the `epoch_mutation_reconciliation` registry entry)* — **GIVEN** the four required fixtures (pre-flip, deferral-gap, post-flip, corrupted) plus the migration set, **WHEN** the **reference** real-file round-trip twin runs (write → close → reload → state-hash compare), **THEN** every fixture passes and the run's output is recorded in the gate record. **Label: reference twin only** — the engine-path twin is a **story-gated obligation** (the first SYS-03 implementation story) under the same fixtures, and that story's AC is scheduled at its authoring.
 - **AC-SAV-25** `[GUT]` *(TR-SAV-026, V-SAV-09)* — **GIVEN** a parsed payload in which a schema-declared integer arrives as a non-integral number, **WHEN** the normalization pass runs, **THEN** it refuses `REFUSE_FLOAT`; **AND** an integral value normalizes identically (the hash is unchanged); **AND** the pass is idempotent. *(The reference twin tests the refusal and the identity; the engine fixture — a real `JSON.parse_string` result — is story-gated.)*
 - **AC-SAV-26** `[LINT]` *(V-SAV-03/04/07, TR-SAV-016/022)* — **GIVEN** the persistence and adapter modules, **WHEN** the static audits run, **THEN** zero derived-target symbols are stored (V-SAV-03), every write goes through the temp+rename path (V-SAV-04), no slot carries a binding key (V-SAV-07), no persistence module calls a UI API, and every path string comes from the one path helper.
@@ -694,13 +702,13 @@ SYS-03 publishes; SYS-05 flows; SYS-24 renders. The requirements below are what 
 | **Playtest** | — | **0** |
 | **Total** | | **26** |
 
-**The twin's gate record (the authoring gate).** `node tests/save-twin/save_twin.mjs` → **29/29 PASS** on 2026-11-14 (the format-contract half: canonicalization, the hash, the schema gate, the migration chain below the gate, the number-normalization pass, the integrity verdict, the absent-key defaults, F-WME-01, and the atomic write's six-step failure paths — all on real files). **The split, named honestly:** the engine half (Godot `FileAccess`/`JSON`, the number-normalization pass on a real parse, `user://`, the worker `Thread`) is a **story-gated obligation** under the same fixtures — the first SYS-03 implementation story must run the twin in-engine and attach its verdict to the story's evidence. The reason: the authoring worktree has no Godot binary, no `project.godot`, and an empty `src/` (OQ-SAV-1 option (a), user-approved 2026-11-14).
+**The twin's gate record (the authoring gate).** `node tests/save-twin/save_twin.mjs` → **32/32 PASS** on 2026-11-14 (the format-contract half: canonicalization, the hash, the schema gate, the migration chain below the gate, the number-normalization pass, the integrity verdict, the absent-key defaults, F-WME-01, and the atomic write's six-step failure paths — all on real files). **The split, named honestly:** the engine half (Godot `FileAccess`/`JSON`, the number-normalization pass on a real parse, `user://`, the worker `Thread`) is a **story-gated obligation** under the same fixtures — the first SYS-03 implementation story must run the twin in-engine and attach its verdict to the story's evidence. The reason: the authoring worktree has no Godot binary, no `project.godot`, and an empty `src/` (OQ-SAV-1 option (a), user-approved 2026-11-14).
 
 ## Open Questions
 
 | ID | Question | Status | Owner / when |
 |---|---|---|---|
-| **OQ-SAV-1** | The twin's execution vehicle | **RESOLVED 2026-11-14 (user)** — option (a): the Node reference twin at authoring (run: **29/29 PASS**, post-repair) + the engine-path twin at the first SYS-03 story, same fixtures | lead-programmer; the story gate |
+| **OQ-SAV-1** | The twin's execution vehicle | **RESOLVED 2026-11-14 (user)** — option (a): the Node reference twin at authoring (run: **32/32 PASS**, post-repair) + the engine-path twin at the first SYS-03 story, same fixtures | lead-programmer; the story gate |
 | **OQ-SAV-2** | The slot model | **RESOLVED 2026-11-14 (user)** — `auto` + `manual_1`; the count is a registered constant, not a knob | lead-programmer |
 | **OQ-SAV-3** | The file format | **RESOLVED 2026-11-14 (user)** — canonical JSON + SHA-256; no encryption at MVP | lead-programmer; the security audit may reopen |
 | **OQ-SAV-4** | The autosave/manual split | **RESOLVED 2026-11-14 (user)** — no timer; `auto` writes on the station ack + the app's suspension/close **event**. **Refinement applied at the repair pass (flagged for the user's nod):** the event set is `{station ack, desktop quit, Android onStop, iOS application-paused}` — iOS's background-kill path is the most common exit on the primary platform, and a station-only trigger would make the Player Fantasy's anchor 2 platform-conditional. Still an event set, never a timer | lead-programmer; SYS-15 ratifies the station trigger at its authoring |
