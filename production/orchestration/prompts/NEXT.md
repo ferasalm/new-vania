@@ -2,7 +2,7 @@
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
 Version: 1.0.0
-Hash: ac99a85cc043
+Hash: 59bd4d1e755c
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-14
 -->
@@ -50,8 +50,10 @@ For each launch:
 3. Refresh the lane worktree **before** validating: `git fetch origin`, then
    `git merge origin/Main` (fast-forward when possible; a plain merge is safe on
    a resumed lane branch with checkpoint commits — never rebase a pushed lane
-   branch). The runner reads the prompt, manifest, and `STATE.md` **from the lane
-   worktree**; never run on a stale copy.
+   branch). The base check is ancestry
+   (`git merge-base --is-ancestor origin/Main HEAD`), not the tip. The runner
+   reads the prompt, manifest, and `STATE.md` **from the lane worktree**; never
+   run on a stale copy.
 4. Render + validate **inside the lane worktree**: if the manifest `prompt_hash`
    is `pending`, run `node tools/orchestration/render-prompts.mjs --lane <ID>`
    first; then `node tools/orchestration/render-prompts.mjs --check`. Do not
@@ -74,7 +76,12 @@ ADRs in parallel instead.
 - Update `STATE.md`: the lane's phase, the review queue, the lock, the blockers,
   the last landings, the next actions.
 - Update `manifest.yaml`: the lane's `status`, `review_state`, `next_action`,
-  `prompt_hash` (if regenerated).
+  `prompt_hash` (if regenerated). Commit the regenerated
+  `production/orchestration/prompts/lanes/<ID>.md` in the same change, so
+  `--check` passes from a fresh checkout.
+- Land the `STATE.md`/`manifest.yaml` update on `origin/Main` through a branch +
+  PR (or the sync lane) before the next launch's refresh; never push to `Main`
+  directly.
 - Move the sync request into `review-queue.md` §5; the sync lane applies it.
 - When a review slot frees, start the next queued lane.
 - When a lane merges, write the landing receipt in `STATE.md` and refresh
