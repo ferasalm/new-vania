@@ -38,14 +38,14 @@ For each launch:
 1. The lane is `QUEUED` or `AUTHORING` in the manifest; dependencies are met.
 2. The worktree exists (`npm run task:new -- <branch>` if not) and is on a fresh
    `origin/Main`.
-3. Refresh the lane worktree **before** validating: `git fetch origin`, then
-   `git merge origin/Main` (fast-forward when possible; a plain merge is safe on
+3. Refresh the lane worktree **before** validating: `git fetch origin`, capture
+   the base SHA (`git rev-parse origin/Main`), then merge that captured SHA
+   (`git merge <base_sha>`; fast-forward when possible; a plain merge is safe on
    a resumed lane branch with checkpoint commits — never rebase a pushed lane
-   branch). Record the verified base SHA (`git rev-parse origin/Main`) and pass
-   it in the launch message; the base check is ancestry against that SHA
-   (`git merge-base --is-ancestor <base_sha> HEAD`), not the tip. The runner
-   reads the prompt, manifest, and `STATE.md` **from the lane worktree**; never
-   run on a stale copy.
+   branch). Pass the same captured SHA in the launch message; the base check is
+   ancestry against that SHA (`git merge-base --is-ancestor <base_sha> HEAD`),
+   not the tip. The runner reads the prompt, manifest, and `STATE.md` **from the
+   lane worktree**; never run on a stale copy.
 4. Render + validate **inside the lane worktree**: if the manifest `prompt_hash`
    is `pending`, run `node tools/orchestration/render-prompts.mjs --lane <ID>`
    first; then `node tools/orchestration/render-prompts.mjs --check`. Do not

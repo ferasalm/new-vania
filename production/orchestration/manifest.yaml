@@ -19,7 +19,7 @@ next:
   kind: orchestrator
   path: production/orchestration/prompts/orchestrator-loop.md
   version: "1.0.0"
-  hash: "3afeca3575df"
+  hash: "abe4b60af4d1"
 
 support_prompts:
   - id: lane-runner
@@ -33,7 +33,7 @@ support_prompts:
   - id: orchestrator-loop
     path: production/orchestration/prompts/orchestrator-loop.md
     version: "1.0.0"
-    hash: "3afeca3575df"
+    hash: "abe4b60af4d1"
   - id: cd-gate
     path: production/orchestration/prompts/seat-briefs/cd-gate.md
     version: "1.0.0"
