@@ -1,7 +1,8 @@
 # Orchestration State — the single live state/log
 
 > **Updated**: 2026-11-15 (tooling/ops chat)
-> **Main**: `66ae957` — SYS-03 Save & Serialization squash-merged (PR #45)
+> **Main**: `b99ed48` — tooling landing: modules audited, DCP + Superpowers,
+> 350k context policy (PR #51)
 > **Mode**: parallel GDD/pre-production lanes; nested topology; WIP-limited.
 > **Source of truth**: `manifest.yaml`. **Paste source**: `prompts/NEXT.md`.
 > **Operating manual**: `README.md`. **Tooling**: `TOOLING.md`.
@@ -103,6 +104,7 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | Tooling (modules, DCP, Superpowers, 350k policy) | `b99ed48` | #51 | verified this chat; guide + policy landed |
 | 2026-11-14 | SYS-11 Seam Borders | `e8b194d` | #43 | verified this chat; lane state preserved |
 | 2026-11-14 | SYS-10 World Mutation & Epochs | `5b2a1f9` | #42 | batch co-review pilot |
 | 2026-11-14 | SYS-09 Dual-Reality State & Rendering | `778b35d` | #41 | APPROVED gated on S1-007 probe |
@@ -206,6 +208,10 @@ blocker or the 350k hard trigger.
 
 ## 13. Tooling landing — modules, plugins, context policy (2026-11-15)
 
+- **Landed**: **`b99ed48`** — `chore(tooling): audit modules, install DCP +
+  Superpowers, adopt the 350k policy (#51)`, squash-merged 2026-11-15 with the
+  head pinned at `c5b902d`. All 6 checks green; CodeRabbit passed; 3 threads
+  (2 initial + 1 confirm) all applied and resolved; **no admin merge needed**.
 - **Modules audited, not reinstalled**: 22 installed @ 0.6.0 for OpenCode. The five
   non-Godot engine modules (`engine-unity`, `engine-unreal`, `engine-sfml3`,
   `engine-raylib`, `engine-bevy`) are installed but unused; **kept** (13 inert
