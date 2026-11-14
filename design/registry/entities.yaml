@@ -386,7 +386,7 @@ entities:
       frame{north{rect, step}, west{rect, step_by_row[]}, east{rect, step_by_row[]}},
       depth_field{origin_row, span_intervals}, fixtures[], visible_at_epoch_gte (derived),
       tint: null | {kind, tint_by_step[4], alpha_by_row[], mask_cells,
-      admission_record{ramp_hash, grief_hash, placement_hash, constants_hash}}} · zero collision
+      admission_record{ramp_hash, grief_hash, placement_hash, constants_hash, tint_hash, alpha_hash, hue_hash}}} · zero collision
       fields · the band keys on GATE_OPEN(rm03_partition); the frame keys on
       ZONE_MATERIALIZE(cold_corridor) · step indices 0..3, never hexes · d = clamp((row_y -
       origin_row)/span_intervals, 0, 1); fill_step = 1 + clamp(floor(3d),0,2); frame_step =
