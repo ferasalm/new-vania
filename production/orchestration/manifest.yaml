@@ -19,21 +19,21 @@ next:
   kind: orchestrator
   path: production/orchestration/prompts/orchestrator-loop.md
   version: "1.0.0"
-  hash: "68a792c92d87"
+  hash: "ac99a85cc043"
 
 support_prompts:
   - id: lane-runner
     path: production/orchestration/prompts/lane-runner.md
     version: "1.0.0"
-    hash: "bca91b6b912d"
+    hash: "dc84c6b5a731"
   - id: sync-lane
     path: production/orchestration/prompts/sync-lane.md
     version: "1.0.0"
-    hash: "ee0c5ba8190b"
+    hash: "a89e47164854"
   - id: orchestrator-loop
     path: production/orchestration/prompts/orchestrator-loop.md
     version: "1.0.0"
-    hash: "68a792c92d87"
+    hash: "ac99a85cc043"
   - id: cd-gate
     path: production/orchestration/prompts/seat-briefs/cd-gate.md
     version: "1.0.0"

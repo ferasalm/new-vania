@@ -177,10 +177,10 @@ Never touch `design/gdd/world-mutation-epochs.md`,
   `../new-vania-<topic>` from a fresh `origin/Main`.
 - **Admin-merge pre-authorization**: if the ONLY blocker is the required review
   (0 unresolved threads, all required checks green), the user pre-authorizes one
-  `gh pr merge --squash --delete-branch --admin`. Pin the merge to the verified
-  head SHA (`gh pr view <n> --json headRefOid` immediately before merging); if
-  the head moved, re-run the checks. Record the bypass in the landing receipt.
-  Any other blocker is diagnosed, not bypassed.
+  `gh pr merge --squash --delete-branch --admin --match-head-commit <sha>`.
+  Pass the verified head SHA to `--match-head-commit`; GitHub rejects the merge
+  if the head moved. Record the bypass in the landing receipt. Any other blocker
+  is diagnosed, not bypassed.
 
 ## 11. File map
 

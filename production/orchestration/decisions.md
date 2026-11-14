@@ -69,10 +69,10 @@
 
 - **Admin-merge pre-authorization** (future lane PRs): if the ONLY blocker is the
   required review (0 unresolved threads, all required checks green), the user
-  pre-authorizes **one** `gh pr merge --squash --delete-branch --admin` per lane
-  PR. Pin the merge to the verified head SHA (`gh pr view <n> --json headRefOid`
-  immediately before merging); if the head moved, re-run the checks. Record the
-  bypass in the landing receipt. Any other blocker is diagnosed, not bypassed.
+  pre-authorizes **one** `gh pr merge --squash --delete-branch --admin
+  --match-head-commit <sha>` per lane PR. Pass the verified head SHA; GitHub
+  rejects the merge if the head moved. Record the bypass in the landing receipt.
+  Any other blocker is diagnosed, not bypassed.
 - **Checkpoint commits**: the user pre-authorizes small conventional checkpoint
   commits + pushes within a lane branch. No commits on `Main`; no force-push.
 - **Batched cadence**: one CodeRabbit pass per landed milestone; triage in one

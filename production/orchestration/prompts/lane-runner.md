@@ -108,9 +108,10 @@ lane applies it.
 4. Merge only after the sync lands and all required checks are green. Squash-merge
    (`gh pr merge --squash --delete-branch`). If the ONLY blocker is the required
    review (0 unresolved threads, all required checks green), the admin merge is
-   pre-authorized — use it once and record the bypass. Pin the merge to the
-   verified head SHA (`gh pr view <n> --json headRefOid` immediately before
-   merging); if the head moved, re-run the checks and the review dispositions.
+   pre-authorized — use it once and record the bypass. Bind the merge to the
+   verified head SHA with `--match-head-commit <sha>` (`gh pr view <n> --json
+   headRefOid` immediately before merging); GitHub rejects the merge if the head
+   moved. If it moved, re-run the checks and the review dispositions.
 5. Write the landing receipt (the squash hash) in the lane report and in
    `STATE.md` (the orchestrator writes STATE).
 

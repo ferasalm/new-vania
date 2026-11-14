@@ -38,14 +38,15 @@ For each launch:
 1. The lane is `QUEUED` or `AUTHORING` in the manifest; dependencies are met.
 2. The worktree exists (`npm run task:new -- <branch>` if not) and is on a fresh
    `origin/Main`.
-3. Run `node tools/orchestration/render-prompts.mjs --check` **before spawning**.
-   If it fails, run `node tools/orchestration/render-prompts.mjs --lane <ID>` and
-   re-check. Do not spawn on a stale body.
-4. Ensure the lane worktree is at the merged kit revision (`git fetch origin` +
-   `git merge --ff-only origin/Main`). The runner reads the prompt, manifest, and
-   `STATE.md` **from the lane worktree** — the same files `--check` verified. If
-   the worktree predates the kit, fast-forward it first; never run on a stale
-   copy.
+3. Refresh the lane worktree **before** validating: `git fetch origin`, then
+   `git merge origin/Main` (fast-forward when possible; a plain merge is safe on
+   a resumed lane branch with checkpoint commits — never rebase a pushed lane
+   branch). The runner reads the prompt, manifest, and `STATE.md` **from the lane
+   worktree**; never run on a stale copy.
+4. Render + validate **inside the lane worktree**: if the manifest `prompt_hash`
+   is `pending`, run `node tools/orchestration/render-prompts.mjs --lane <ID>`
+   first; then `node tools/orchestration/render-prompts.mjs --check`. Do not
+   spawn on a stale body or an unrendered lane.
 5. Spawn the lane runner (a nested subagent or a parallel chat) with:
    - the lane worktree path,
    - `production/orchestration/prompts/lanes/<ID>.md` **inside that worktree**,
@@ -80,10 +81,10 @@ ADRs in parallel instead.
   art-bible direction decision, or a required-review refusal on a future lane PR.
 - The admin merge is otherwise pre-authorized: if the ONLY blocker is the
   required review (0 unresolved threads, all required checks green), run one
-  `gh pr merge --squash --delete-branch --admin` and record the bypass in the
-  landing receipt. Pin the merge to the verified head SHA (`gh pr view <n>
-  --json headRefOid` immediately before merging); if the head moved, re-run the
-  checks. Any other blocker is diagnosed, not bypassed.
+  `gh pr merge --squash --delete-branch --admin --match-head-commit <sha>` and
+  record the bypass in the landing receipt. Pass the verified head SHA; GitHub
+  rejects the merge if the head moved. Any other blocker is diagnosed, not
+  bypassed.
 
 ## 6. Prompt discipline
 

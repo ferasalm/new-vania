@@ -88,9 +88,10 @@ diff is coherent. Reference the lane ID and the GDD path in the body.
 
 The sync branch is a normal PR `--base Main`; squash-merge after all checks are
 green. The admin merge is pre-authorized only for the required-review case
-(0 unresolved threads, all required checks green); record the bypass. Pin the
-merge to the verified head SHA (`gh pr view <n> --json headRefOid` immediately
-before merging); if the head moved, re-run the checks.
+(0 unresolved threads, all required checks green); record the bypass. Bind the
+merge to the verified head SHA with `--match-head-commit <sha>` (`gh pr view <n>
+--json headRefOid` immediately before merging); GitHub rejects the merge if the
+head moved.
 
 **Only after the merge succeeds**:
 
