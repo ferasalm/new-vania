@@ -37,8 +37,8 @@
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
 | ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
-| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | AUTHORING | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
-| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | AUTHORING | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
+| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | SYNC (landed; PR #45's merge pending) | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
+| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | SYNC (in flight; PR #46 waits on the sync) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
 lane runners write their reports to `production/session-state/lane-<ID>-report.md`
@@ -113,10 +113,11 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
    lane(s).
 2. **ART-BIBLE lane** — resolve OQ-1 (the purple) as the first item; then the
    palette/grief pins; then the 9 sections; then the asset-spec handoff.
-3. **SYS-03 lane** — author the save GDD; the real-file round-trip twin is the
-   authoring gate.
-4. **SYS-04 lane** — author the audio GDD; consume E1–E7 verbatim; pin the
-   no-duck law.
+3. **SYS-03 lane** — the GDD and the sync have landed; the orchestrator
+   squash-merges PR #45 at `08a0a12` (pinned) and records the landing hash.
+4. **SYS-04 lane** — the sync is in flight (the SYS-04 sync PR); once it merges,
+   the orchestrator squash-merges PR #46 at `391dd18`, and the lane flips the GDD
+   header's `In Review` at that merge (the audio-director countersign).
 5. **When a review slot frees** — start SYS-15 or SYS-28 (the next queued MVP
    GDDs). Do not start SYS-16/SYS-17 until SYS-07-REWORK lands.
 6. **Batch the user decisions** — D-ORCH-01/02 (art bible) and D-ORCH-03

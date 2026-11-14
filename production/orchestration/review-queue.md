@@ -19,8 +19,9 @@ queue).
 | Lane | Document | Phase | Owner | Prompt |
 |---|---|---|---|---|
 | ART-BIBLE | `design/art/art-bible.md` | AUTHORING | art-director + creative-director | v1.0.0 |
-| SYS-03 | `design/gdd/save-serialization.md` | AUTHORING | lead-programmer + systems-designer | v1.0.0 |
-| SYS-04 | `design/gdd/audio-core.md` | AUTHORING | sound-designer + audio-director | v1.0.0 |
+
+SYS-03 and SYS-04 left this queue: both GDDs are authored and both lanes are in
+`SYNC` (§5). Their merges are the orchestrator's, after their syncs land.
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
 
