@@ -36,7 +36,12 @@ Verified evidence (file:line, read 2026-11-14 on `docs/review-levers`):
   'consumed by / gated by / meets / rides / applies to / excluded / device-executed' claim … the
   cross-reference surface (79 ACs, ~50 membership claims) has outgrown per-fix human sweeps." Its
   artifact is a 47-row inventory, 35 PASS / 10 PASS(post) / 2 ADJ (L552). This ticket productizes
-  exactly that check.
+  the audit's **ID-resolution half** (membership of ID tokens in their owning files). The audit's
+  *claim-placement* half — whether each "consumed by / gated by / meets / rides / applies to /
+  excluded / device-executed" claim places an AC under the right gate — is **not covered in v1**:
+  Area 2's exactly-once union check catches count-level gate errors only, not placement errors,
+  and placement semantics stay with the seats until the v2 membership-claim checker exists
+  (see *Out of scope / sequencing*).
 - **Arithmetic defects survive a PASS.** `design/gdd/reviews/combat-review-log.md` L79: the
   diff-scoped re-review returned "5 blockers (2 regressions … , **3 arithmetic/range defects**)";
   L106: the qa-lead spot-check still had to recompute "6/6 arithmetic fixtures … gate manifest
@@ -47,10 +52,12 @@ Verified evidence (file:line, read 2026-11-14 on `docs/review-levers`):
   **SYS-02** "qa-lead spot-check FAIL at 9 defects"; **SYS-13** "FAIL at 4 blockers"; **SYS-29**
   "FAIL at 1 blocking fixture defect + 5 repairs"; **SYS-32** "FAIL at 1 map defect → repaired →
   PASS; the diff-scoped re-verification rounds 1–3".
-- **Citation-membership defects are real and cheap to catch.** Audit § 3 **C-1** (L131): Gemini cited
-  `V-RWS-04` for `cells_discovered`; `V-RWS-04` is the one-room-one-cell law
-  (`design/gdd/room-world-structure.md` L334) and the source family is `TR-RWS-025`. A resolver
-  answers this without a seat.
+- **Citation-semantics defects are real — and they are the seats' to catch.** Audit § 3
+  **C-1** (L131): Gemini cited `V-RWS-04` for `cells_discovered`; `V-RWS-04` *exists* (the
+  one-room-one-cell law, `design/gdd/room-world-structure.md` L334), so Area 1's membership
+  check would resolve it fine — the defect was the wrong *family* for the fact, and the
+  qa-lead citation spot-check caught it. Area 1 catches what a resolver can: the
+  **unresolvable** citation. Semantic mismatches stay with the seats (see *Non-goals*).
 - **The input shape varies — the validator must not assume.** 6 of 8 GDD bodies carry a canonical
   `### Gate manifest` table with a printed `a + b + c + d = N` (camera L545/555, combat L565/575,
   enemy L494/504, health L596/606, juice L511/521, room L483/493). `movement.md` has **no** manifest;
@@ -240,7 +247,10 @@ The 0.5 d spec is already spent (S1-006).
   (the corpus is 8 bodies today; SYS-09/10/15/28/04 are in flight), or immediately before SYS-16/17
   authoring so the gear GDDs land pre-flighted.
 - **v2 backlog (not this ticket)**: populate-and-consume `docs/architecture/tr-registry.yaml`;
-  review-log arithmetic (the 96-unit species where it is printed in logs); a rider registry to make
+  review-log arithmetic (the 96-unit species where it is printed in logs); the **membership-claim
+  placement checker** (the audit's claim half: each "consumed by / gated by / meets / rides /
+  applies to / excluded / device-executed" claim's AC membership extracted and compared with its
+  authoritative source — so a valid AC under the wrong gate FAILs); a rider registry to make
   area 3(c) table-driven; `--fix` is **not** on any roadmap.
 
 ---

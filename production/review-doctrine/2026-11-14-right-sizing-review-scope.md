@@ -33,9 +33,11 @@ merges the *review surface*, never the ownership or the depth.
   lines are required — a joint PASS alone is not sign-off (producer condition 1).
 - **Later batch (not this sprint)**: SYS-16 + SYS-17 — the same consume-chain shape (17
   depends on 16), and the gear layer is one design surface per user decision D-1. SYS-18
-  joins only if it is actually in the same window (producer condition 7). Scheduled only
-  after the pilot's evaluation (§ 4) — the producer's conditions are blocking for this
-  batch.
+  joins only if it is actually in the same window (producer condition 7). Scheduled
+  **only after the pilot's evaluation (§ 4) passes every pre-registered threshold (§ 4
+  item 1)** — a failed threshold keeps this batch blocked until § 4's pre-registered
+  failure action (item 9) records the producer's decision; the producer's conditions are
+  blocking for this batch.
 
 ### Mechanism B — Diff-scoped first-pass default for leaf nodes (lever 4)
 
@@ -123,11 +125,11 @@ mandatory qa-lead spot-checks on any repaired text.
 
 ---
 
-## 4. Pilot evaluation & rollback — pre-registered (producer's 7 conditions, binding)
+## 4. Pilot evaluation & rollback — pre-registered (the producer's conditions, binding; the Mechanism A baseline + the failure action added 2026-11-14 per the producer's recorded decision)
 
 1. **Pre-registered pass/fail thresholds** (recorded here *before* SYS-09's review starts):
    - **Mechanism A**: at least one round and at least half a day per document saved, with
-     **zero escaped blockers**.
+     **zero escaped blockers** — measured against the pre-registered baseline (item 8).
    - **Mechanism B**: no increase in escaped blockers against the **house diff-scoped
      precedent** (Combat 16/16, Movement 16/16, SYS-01 #10) at or under two rounds — *not*
      the SYS-02/29/32 whole-document baselines; comparing a leaf first-pass to a bottleneck
@@ -147,6 +149,34 @@ mandatory qa-lead spot-checks on any repaired text.
 7. **Later batch = SYS-16 + SYS-17** (SYS-18 only if in-window; SYS-23 stays out until it
    enters a window); and the § 2 wording fix is recorded ("bottleneck depth and the batched
    surface compose" — no one reads the batch as a scope downgrade).
+8. **Mechanism A baseline (pre-registered and frozen at this recording, before SYS-09's
+   review starts).** The comparison is the prior-doctrine counterfactual for the pair — two
+   separate whole-document adversarial first-pass loops, one per document, each at
+   bottleneck depth with fresh seats, its own mandatory qa-lead spot-check, and its own
+   re-verification rounds. The counterfactual is parameterized by the lower of the two
+   recorded comparable loops: SYS-02's three numbered passes (three-seat round, spot-check,
+   re-verification) recorded in one session on 2026-11-13, with SYS-32's longer loop (three
+   review rounds, two interleaved spot-checks, and a closing scoped confirmation,
+   2026-11-13→14) recorded beside it but never used to raise the baseline — a pair baseline
+   of six numbered rounds and two elapsed days. The threshold passes only if the joint
+   SYS-09+SYS-10 log closes at four or fewer numbered rounds and at most one elapsed day,
+   measured on the same clock for both sides (first review dispatch to the final
+   per-document verdict, repairs included, authoring excluded; the batch's elapsed runs to
+   the later of the two final verdicts), with the log recording per-document round counts
+   and elapsed days so each document's saved share is attributable; the pair total is the
+   binding measure. Zero escaped blockers is absolute — a blocker first found after a
+   document's final per-document APPROVED verdict, by any downstream review, gate,
+   implementation, or automated check, fails A regardless of the savings. *(Arithmetic
+   check: baseline 6 rounds / 2 days; pass ≤ 4 rounds / ≤ 1 day — a 3-round, 1-day batch
+   saves 3 rounds / 1 day = 1.5 rounds / 0.5 day per document, passes; a 4-round, 1-day
+   batch passes at the line; a 5-round or >1-day batch fails.)*
+9. **Failure action (pre-registered).** A failed Mechanism A threshold keeps the SYS-16+17
+   batch blocked — no review dispatch for either document — until the pilot-evaluation
+   entry that rides the next retrospective records the producer's failure decision: extend
+   the pilot with a second measured batch under this same baseline and threshold (no
+   re-baselining after results), re-scope the SYS-16+17 batch, or revert the doctrine per
+   condition 6. The batch stays blocked until that entry exists, whichever option is
+   chosen.
 
 The producer signs the pilot with these recorded and **prices its results at the
 evaluation**; the milestone re-estimate (S1-001) must not bank the doctrine's savings as
