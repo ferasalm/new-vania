@@ -49,15 +49,17 @@ inside their own worktree.
 - **Three-seat review**: 0 of 2 slots in use (the first three lanes are still
   authoring). Next review slot: the first lane to reach CD GATE.
 - **CodeRabbit**: 0 of 1 in flight.
-- **Shared-file writer**: idle; lock free. First sync request will come from the
-  first lane to finish authoring.
+- **Shared-file writer**: **SYNC-LANE active** — SYS-03's request is queued
+  (`review-queue.md` §5, order 1, IN PROGRESS).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — the sync lane is idle. The lock is acquired in this
-file by the sync lane before any edit to `design/registry/entities.yaml` or
-`design/gdd/systems-index.md`.
+`shared_file_lock: SYNC-LANE` — acquired **2026-11-14** by the sync lane for the
+**SYS-03 Save & Serialization** request (`lane-SYS-03-report.md` §10). The two
+shared files (`design/registry/entities.yaml`, `design/gdd/systems-index.md`) are
+write-locked to the sync lane until the sync PR merges; the lock is released only
+after the merge, in a separate release PR.
 
 ## 5. Blockers
 
@@ -132,3 +134,26 @@ direction approval is the one-click action that unblocks the most.
 **Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml`;
 do not author; launch the next lane runner(s) within the WIP limits; update this
 file at every lane boundary; batch decisions; stop only on a hard blocker.
+
+## 11. Sync receipt — SYS-03 Save & Serialization (in flight)
+
+- **Lane**: SYS-03 Save & Serialization. **Request**: `lane-SYS-03-report.md` §10
+  (2 `entities.yaml` entries + the `systems-index.md` row/design-order/bullet +
+  the 10 bidirectional-consistency corrections).
+- **Lock**: `shared_file_lock: SYNC-LANE` (held from `a8cb13f`; released only
+  after the sync PR merges).
+- **Branch / PR**: `chore/sync-shared-files` / **PR #47** (base `Main`, branched
+  from `32940c8`).
+- **Files**: `design/registry/entities.yaml` (+`save_contract`,
+  `save_roundtrip_twin`), `design/gdd/systems-index.md` (SYS-03 row → APPROVED,
+  design order #11, the Foundation bullet, the 10 corrections),
+  `production/orchestration/{STATE,review-queue}.md`.
+- **Validation**: YAML parse OK · duplicate-name scan OK (66 entries) · every
+  `source`/`referenced_by` path exists · counts reproduce (26 TR-SAV / 4 F-SAV /
+  9 V-SAV / 26 ACs = 22 GUT + 2 LINT + 2 DEVICE + 0 PLAYTEST; smoke 24) · design
+  order unique · table integrity OK · 10/10 corrections present.
+- **Two corrections to the request** (both toward the authoritative GDD, both
+  re-verified by running the twin): the twin is **32/32 PASS** (the request's
+  §10 says 29/29 — stale since the CodeRabbit batch added three checks) and the
+  `post_flip` hash prefix is **05b1e48e** (the request says b3283603).
+- **Landing hash**: pending — recorded when PR #47 merges.
