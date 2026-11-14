@@ -5,7 +5,7 @@
   "compress": {
     "mode": "range",
     "permission": "allow",
-    "summaryBuffer": true,
+    "summaryBuffer": false,
     "minContextLimit": 250000,
     "maxContextLimit": 350000,
     "nudgeFrequency": 5,

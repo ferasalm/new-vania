@@ -123,6 +123,9 @@ Project config — `.opencode/dcp.jsonc`:
 ```
 
 - The model window is 1M; **250k/350k are quality/cost guards**, not capacity.
+- `summaryBuffer: false` keeps the strong nudge exactly at `maxContextLimit`.
+  With it enabled, DCP adds the active summary tokens to the effective maximum,
+  so a 20k summary would push the nudge to 370k — past the policy's hard trigger.
 - **Config is read at session start.** Restart OpenCode after editing it.
 - Commands: **`/dcp`** (panel: stats, decompress, recompress, help) and
   **`/dcp-compress [focus]`** (one manual compression pass, optional focus).
