@@ -116,15 +116,17 @@ The partition sums: 22 + 2 + 2 + 0 = 26; smoke 24 = the GUT + LINT sets; device 
 | 5 | Minor | `flip_sources_active` typed `bool` but compared with `∅`; F-SAV-04's variables were a prose line | **APPLIED** — a source-id set (empty = writable); F-SAV-04 gains its variables table |
 | 6 | Minor | An unregistered truth-flag name (`sanctum_log_consumed`) passed the validator | **APPLIED** — flag names are checked against the registered table → `REFUSE_UNKNOWN_KEY`; `COR-unregistered-flag` added |
 
-**The twin after the batch: 32/32 PASS.** Counts unchanged (26 TR / 4 F / 9 V / 26 AC).
+**The twin after the batch: 34/34 PASS.** Counts unchanged (26 TR / 4 F / 9 V / 26 AC).
 
 **Confirm pass** (on `cfbe314`, 6m58s; warranted — the batch contained three Major-class findings): **1 new Minor finding** — AC-SAV-23 conflated the suspension snapshot with the ack fallback (a successful close-save must restore the **suspension** state, including anything collected after the last ack; the ack state is the fallback only). **APPLIED in `2b9ecea`**, thread replied + resolved. No new Major findings; the six pass-1 findings are confirmed fixed.
+
+**Re-review after the fixes** (on `e61f6af`, 4m31s): **1 new Minor** — TR-SAV-010's step 6 reports a failure **after** the commit rename, so the new bytes sit at `.sav` while the previous generation is at `.bak`; AC-SAV-23 promised the previous state but the design specified no rollback. **Decision (user-directed): the previous-state outcome.** **APPLIED in `5750c6d`** — TR-SAV-010 now states the step-6 rollback (the `.bak` promoted back to `.sav`; with no `.bak`, the unverified `.sav` is deleted and the slot returns to `EMPTY`), the `SAVE_FAILED_VERIFY` row splits step 3 from step 6, AC-SAV-23 asserts the previous good state, and the twin implements the rollback with `WRITE-verify-readback` + `WRITE-readback-first` (**34/34 PASS**). Thread replied + resolved.
 
 ## 8. Gate trail (final)
 
 | Gate | Verdict |
 |---|---|
-| The authoring gate (the real-file twin) | **32/32 PASS** (the format-contract half; the engine half is story-gated — OQ-SAV-1 (a)) |
+| The authoring gate (the real-file twin) | **34/34 PASS** (the format-contract half; the engine half is story-gated — OQ-SAV-1 (a)) |
 | CD-GDD-ALIGN | **APPROVED** (0 blockers; 7 recommendations, all applied) |
 | Creative seat | NEEDS REVISION (1) → repaired |
 | Technical seat | NEEDS REVISION (8) → repaired |
@@ -134,4 +136,5 @@ The partition sums: 22 + 2 + 2 + 0 = 26; smoke 24 = the GUT + LINT sets; device 
 | Final micro-check | **PASS** (zero blockers) |
 | CodeRabbit pass 1 | 6 findings (3 Major) → all applied in `cfbe314`, 6/6 threads resolved |
 | CodeRabbit confirm pass | **complete** (on `cfbe314`, 6m58s) — 1 new Minor (AC-SAV-23's ack-vs-suspension conflation) → **applied in `2b9ecea`**, thread replied + resolved; 0 new Major; the six pass-1 findings confirmed fixed |
-| CI (5 checks) | **pass** on every head (`04acd38`, `cfbe314`, `2b9ecea`, `08a0a12`) |
+| CodeRabbit re-review (post-fix) | **complete** (on `e61f6af`, 4m31s) — 1 new Minor (the post-commit state after a step-6 failure) → **applied in `5750c6d`**: the step-6 rollback specified, the twin's two step-6 cases added, 34/34 PASS; thread replied + resolved |
+| CI (5 checks) | **pass** on every head (`04acd38`, `cfbe314`, `2b9ecea`, `08a0a12`, `e61f6af`, `5750c6d`) |
