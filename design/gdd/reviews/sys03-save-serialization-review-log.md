@@ -118,7 +118,7 @@ The partition sums: 22 + 2 + 2 + 0 = 26; smoke 24 = the GUT + LINT sets; device 
 
 **The twin after the batch: 32/32 PASS.** Counts unchanged (26 TR / 4 F / 9 V / 26 AC).
 
-**Confirm pass** (on `cfbe314`, 6m58s; warranted — the batch contained three Major-class findings): **1 new Minor finding** — AC-SAV-23 conflated the suspension snapshot with the ack fallback (a successful close-save must restore the **suspension** state, including anything collected after the last ack; the ack state is the fallback only). **APPLIED in `e1e7a1f`**, thread replied + resolved. No new Major findings; the six pass-1 findings are confirmed fixed.
+**Confirm pass** (on `cfbe314`, 6m58s; warranted — the batch contained three Major-class findings): **1 new Minor finding** — AC-SAV-23 conflated the suspension snapshot with the ack fallback (a successful close-save must restore the **suspension** state, including anything collected after the last ack; the ack state is the fallback only). **APPLIED in `2b9ecea`**, thread replied + resolved. No new Major findings; the six pass-1 findings are confirmed fixed.
 
 ## 8. Gate trail (final)
 
