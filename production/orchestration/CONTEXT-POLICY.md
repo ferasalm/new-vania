@@ -91,7 +91,7 @@ Plus the standing clause:
 | Mechanism | Setting | Actual trigger |
 |---|---|---|
 | OpenCode auto-compaction | `compaction.auto: true`, `compaction.buffer: 150000` (project `opencode.json`) | ~**898,576** tokens (1,048,576 − 150,000), i.e. 86% of the window. Emergency backstop only. |
-| DCP compress nudges | `minContextLimit: 250000`, `maxContextLimit: 350000` (`.opencode/dcp.jsonc`) | Reminders from 250k; strong "MAX CONTEXT LIMIT" nudge from 350k. `summaryBuffer: false` keeps the threshold fixed — otherwise DCP adds the active summary tokens to the effective max. |
+| DCP compress nudges | `minContextLimit: 250000`, `maxContextLimit: 350000` (`.opencode/dcp.jsonc`) | Reminders from 250k; the strong "MAX CONTEXT LIMIT" nudge once usage **exceeds** 350k (measured on the latest completed assistant message). `summaryBuffer: false` keeps the threshold fixed — otherwise DCP adds the active summary tokens to the effective max. |
 | DCP deduplication / purge-errors | enabled | Recalculated when the compress tool runs. |
 | OCGS pre/post-compact hooks | `ccgs-hooks.ts` | Fire on the harness's `experimental.session.compacting` events. |
 
