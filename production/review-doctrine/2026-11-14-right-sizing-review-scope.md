@@ -36,8 +36,8 @@ merges the *review surface*, never the ownership or the depth.
   joins only if it is actually in the same window (producer condition 7). Scheduled
   **only after the pilot's evaluation (§ 4) passes every pre-registered threshold (§ 4
   item 1)** — a failed threshold keeps this batch blocked until § 4's pre-registered
-  failure action (item 9) records the producer's decision; the producer's conditions are
-  blocking for this batch.
+  failure actions (items 9–10) record the producer's decision; the producer's conditions
+  are blocking for this batch.
 
 ### Mechanism B — Diff-scoped first-pass default for leaf nodes (lever 4)
 
@@ -177,6 +177,25 @@ mandatory qa-lead spot-checks on any repaired text.
    re-baselining after results), re-scope the SYS-16+17 batch, or revert the doctrine per
    condition 6. The batch stays blocked until that entry exists, whichever option is
    chosen.
+10. **Mechanism B failure action (pre-registered).** A leaf first-pass that fails B's
+   threshold — any increase in escaped blockers (blockers first found after the leaf's
+   final APPROVED verdict, by any downstream review, gate, implementation, or automated
+   check) against the house diff-scoped precedent (Combat 16/16, Movement 16/16, SYS-01
+   #10), or a first pass closing beyond two rounds, measured at SYS-25's first review per
+   item 2 — keeps the SYS-16+17 batch blocked until the pilot-evaluation entry that rides
+   the next retrospective records the producer's failure decision: (i) re-route the failed
+   leaf to the bottleneck mode and keep B for the remaining leaves; (ii) narrow the leaf
+   set by dropping the failed leaf and any leaf sharing its defect-class profile from the
+   diff-scoped default, back to the prior whole-document first-pass; or (iii) revert the
+   doctrine per condition 6, with the escaped defect repaired and re-verified against the
+   escaped defect class in a diff-scoped pass in every option. The batch stays blocked
+   until that entry exists, whichever option is chosen. Under (i) or (ii), B is
+   re-evaluated once at the next remaining leaf's first review before SYS-30/31 (if one
+   remains) under the same threshold and baseline (no re-baselining), with the result
+   recorded in the next pilot-evaluation entry, and a second failure at that event reverts
+   the doctrine per condition 6 without a further extension; re-routing the escaped leaf
+   alone does not unblock the batch, because the batch precondition is a recorded
+   evaluation, not an operational state.
 
 The producer signs the pilot with these recorded and **prices its results at the
 evaluation**; the milestone re-estimate (S1-001) must not bank the doctrine's savings as
