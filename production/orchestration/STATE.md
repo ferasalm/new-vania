@@ -49,18 +49,18 @@ inside their own worktree.
 - **Three-seat review**: 0 of 2 slots in use (the first three lanes are still
   authoring). Next review slot: the first lane to reach CD GATE.
 - **CodeRabbit**: 0 of 1 in flight.
-- **Shared-file writer**: **SYNC-LANE active** — SYS-03's request **landed**
-  (PR #47, `50a9a93`); SYS-04's is in progress (`review-queue.md` §5, order 2).
+- **Shared-file writer**: **idle; lock free** — SYS-03 landed (PR #47,
+  `50a9a93`) and SYS-04 landed (PR #48, `dd33658`). The queue is empty.
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **SYS-03's lock was released at its merge**
-(PR #47 → `50a9a93`, 2026-11-14) and **immediately re-acquired for SYS-04**
-(queued behind it; no idle window, so the value never left `SYNC-LANE`). The two
-shared files (`design/registry/entities.yaml`, `design/gdd/systems-index.md`) are
-write-locked to the sync lane until the SYS-04 sync PR merges; that release lands
-after its merge.
+`shared_file_lock: none` — **both queued syncs landed on 2026-11-14**: SYS-03 at
+`50a9a93` (PR #47) and SYS-04 at `dd33658` (PR #48). The lock was released after
+the SYS-04 merge; the two shared files (`design/registry/entities.yaml`,
+`design/gdd/systems-index.md`) are free. The next lane to reach `SYNC` queues its
+request in `review-queue.md` §5 and the sync lane re-acquires the lock here
+before any edit.
 
 ## 5. Blockers
 
@@ -192,4 +192,10 @@ file at every lane boundary; batch decisions; stop only on a hard blocker.
   `consumed_by` is quoted (its `knobs: MONO` colon-space is a YAML mapping
   error unquoted); the `flip_trigger_contract` `revised` note is appended, not
   overwritten (the registry's own rule — never lose the prior revision record).
-- **Landing hash**: pending — recorded when the SYS-04 sync PR merges.
+- **Landing hash**: **`dd33658`** — `docs(sync): land the SYS-04 audio contracts + index row (#48)`,
+  squash-merged 2026-11-14 with the head pinned at `6392f84` (**admin merge
+  used once**: the required review was the only blocker — all 6 checks green,
+  0 unresolved threads; recorded as a bypass). 3 CodeRabbit threads: 2 applied
+  in `6392f84` (the bullet's "no dependencies" opening; the stale lane phases in
+  STATE/review-queue), 1 rebutted (the `audio-core.md` path is absent until
+  PR #46 lands — the protocol's sync-before-GDD order, the SYS-03 precedent).
