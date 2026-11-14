@@ -133,5 +133,5 @@ The partition sums: 22 + 2 + 2 + 0 = 26; smoke 24 = the GUT + LINT sets; device 
 | qa-lead spot-check #2 | **PASS** |
 | Final micro-check | **PASS** (zero blockers) |
 | CodeRabbit pass 1 | 6 findings (3 Major) → all applied in `cfbe314`, 6/6 threads resolved |
-| CodeRabbit confirm pass | pending at the time of writing |
-| CI (5 checks) | **pass** on `04acd38` and `cfbe314` |
+| CodeRabbit confirm pass | **complete** (on `cfbe314`, 6m58s) — 1 new Minor (AC-SAV-23's ack-vs-suspension conflation) → **applied in `2b9ecea`**, thread replied + resolved; 0 new Major; the six pass-1 findings confirmed fixed |
+| CI (5 checks) | **pass** on every head (`04acd38`, `cfbe314`, `2b9ecea`, `08a0a12`) |
