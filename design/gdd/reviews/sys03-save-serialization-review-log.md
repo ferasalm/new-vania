@@ -103,11 +103,28 @@ The partition sums: 22 + 2 + 2 + 0 = 26; smoke 24 = the GUT + LINT sets; device 
 
 **Final micro-check: PASS — zero blockers** (diff-scoped, fresh seat, on the last two-clause delta). The document is **not reopened**.
 
-## 7. Gate trail (final)
+## 7. CodeRabbit (one pass + one confirm pass)
+
+**Pass 1** (PR #45, 9m39s): 6 findings — **all valid, all applied in one fix commit `cfbe314`**, all 6 threads replied to with a disposition and resolved.
+
+| # | Severity | Finding | Disposition |
+|---|---|---|---|
+| 1 | Major | The canonicalizer sorted **nested** arrays, so a cell coordinate `[1,0]` became `[0,1]` — one discovered cell silently turned into another; the round-trip passed because both sides were equally lossy | **APPLIED** — only the three outer family arrays are sets; a pair keeps its order. `CANON-pair` + `RT-content` added; the `post_flip` hash re-pinned to `05b1e48e…` (the hash change is the proof the loss was real) |
+| 2 | Major | The `.bak` recovery left the corrupt primary at `.sav`, so the next write would rotate it over the good `.bak` and a failed commit would leave two bad files | **APPLIED** — the verified `.bak` is promoted to `.sav` before the slot returns to `OK`; AC-SAV-18 asserts it |
+| 3 | Major | The absent-key defaults applied during normalization changed the hash input, turning a valid sparse file into `REFUSE_HASH_MISMATCH` | **APPLIED** — the absence is preserved through the hash; the defaults apply at restore (TR-SAV-026 step 4 + TR-SAV-023's note) |
+| 4 | Minor | A close request during a flip freeze would have written a synchronous mid-choreography snapshot | **APPLIED** — the close-save is skipped while `flip_sources_active` is non-empty; the station autosave is the fallback (TR-SAV-014 + AC-SAV-23) |
+| 5 | Minor | `flip_sources_active` typed `bool` but compared with `∅`; F-SAV-04's variables were a prose line | **APPLIED** — a source-id set (empty = writable); F-SAV-04 gains its variables table |
+| 6 | Minor | An unregistered truth-flag name (`sanctum_log_consumed`) passed the validator | **APPLIED** — flag names are checked against the registered table → `REFUSE_UNKNOWN_KEY`; `COR-unregistered-flag` added |
+
+**The twin after the batch: 32/32 PASS.** Counts unchanged (26 TR / 4 F / 9 V / 26 AC).
+
+**Confirm pass** (on `cfbe314`, 6m58s; warranted — the batch contained three Major-class findings): **1 new Minor finding** — AC-SAV-23 conflated the suspension snapshot with the ack fallback (a successful close-save must restore the **suspension** state, including anything collected after the last ack; the ack state is the fallback only). **APPLIED in `e1e7a1f`**, thread replied + resolved. No new Major findings; the six pass-1 findings are confirmed fixed.
+
+## 8. Gate trail (final)
 
 | Gate | Verdict |
 |---|---|
-| The authoring gate (the real-file twin) | **29/29 PASS** (the format-contract half; the engine half is story-gated — OQ-SAV-1 (a)) |
+| The authoring gate (the real-file twin) | **32/32 PASS** (the format-contract half; the engine half is story-gated — OQ-SAV-1 (a)) |
 | CD-GDD-ALIGN | **APPROVED** (0 blockers; 7 recommendations, all applied) |
 | Creative seat | NEEDS REVISION (1) → repaired |
 | Technical seat | NEEDS REVISION (8) → repaired |
@@ -115,3 +132,6 @@ The partition sums: 22 + 2 + 2 + 0 = 26; smoke 24 = the GUT + LINT sets; device 
 | qa-lead spot-check #1 | **FAIL** (6) → repaired |
 | qa-lead spot-check #2 | **PASS** |
 | Final micro-check | **PASS** (zero blockers) |
+| CodeRabbit pass 1 | 6 findings (3 Major) → all applied in `cfbe314`, 6/6 threads resolved |
+| CodeRabbit confirm pass | pending at the time of writing |
+| CI (5 checks) | **pass** on `04acd38` and `cfbe314` |
