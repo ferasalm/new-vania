@@ -423,6 +423,54 @@ entities:
     added: 2026-11-14
     revised: ""
 
+# 2026-11-14 (save-serialization.md APPROVED — SYS-03): the persistence contracts registered.
+  - name: save_contract
+    status: active
+    source: design/gdd/save-serialization.md
+    referenced_by:
+      - design/gdd/save-serialization.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
+    kind: published_contract
+    published_by: SYS-03 Save & Serialization
+    consumed_by: SYS-02 (the five families serialized verbatim; the MetSys Dictionary as a written derived target) ·
+      SYS-05 (load_result / restore_complete / save_completed; the refusal flow) · SYS-09 (E4's queue law implemented) ·
+      SYS-10 (restore_complete → the reconcile) · SYS-15 (the `cache` namespace, registered-but-absent at v1) ·
+      SYS-20 (memories_collected read) · SYS-25 (cells_discovered read) · SYS-24 (the refusal/load-result surfaces)
+    values: "The envelope {schema_version, game_version, saved_at_utc, state_hash, payload} · state_hash =
+      sha256(canon({schema_version, payload})) · CURRENT_SCHEMA_VERSION 1, forward-only, one-step, contiguous,
+      zero registered migrations at MVP · the namespace registry (v1 = `world` only; `cache` registered-but-absent
+      until v2) · the five `world` families verbatim (TR-RWS-025) · slots `auto` + `manual_1` (+ one `.bak` each)
+      under user://saves/ · the atomic write (temp → verify → rotate → rename → verify) · the E4 freeze queue
+      (t_write = the first unfrozen tick; the snapshot post-flip by construction) · the 11 refusal codes +
+      the 6 save-failure codes · the absent-key matrix (three arrays → [], truth_flags → {}, the epoch refuses) ·
+      the epoch guard [0, max_epoch] upstream of SYS-10 · no pending-flip / tell / freeze field · no floats"
+    notes: "Store sources, derive targets — the file is evidence. No encryption/anti-cheat at MVP (the security
+      audit may reopen). The engine-path twin and the Save & Serialization ADR are the two story-gated obligations.
+      Counts: 26 TR / 4 F / 9 V / 26 AC."
+    added: 2026-11-14
+    revised: ""
+
+  - name: save_roundtrip_twin
+    status: active
+    source: design/gdd/save-serialization.md
+    referenced_by:
+      - design/gdd/save-serialization.md
+      - design/gdd/world-mutation-epochs.md
+    kind: test_contract
+    published_by: SYS-03 Save & Serialization
+    consumed_by: SYS-03's first implementation story (the engine-path twin, story-gated) · the QA plan (the AC→gate ledger)
+    values: "The four required fixtures (pre_flip bf18d435…, deferral_gap e3f7a6a0…, post_flip 05b1e48e…,
+      corrupted) + the migration set + the normalization fixtures · the procedure: write → close → discard the
+      in-memory store → reload from disk → state-hash compare · the reference twin (tests/save-twin/save_twin.mjs,
+      Node) = the authoring gate, 32/32 PASS · the engine twin (FileAccess/JSON, user://, the worker Thread) =
+      the story-gated half under the same fixtures"
+    notes: "The carried obligation from epoch_mutation_reconciliation. The split is recorded, not implied:
+      the format contract is proven at authoring; the engine path is proven at the first SYS-03 story."
+    added: 2026-11-14
+    revised: ""
+
 # Example (remove when first real entry is added):
 #
 # entities:
