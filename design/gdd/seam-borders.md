@@ -139,8 +139,9 @@ At `SEAM_SIDE_OFFSET = 0`, the W/E = the fill steps (MID/PALE/PALE/LIGHT/LIGHT);
 
 The `band_rect` formula is defined as:
 
-Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ threshold.rect_tiles`; a violation is a boot failure naming `rm03_partition`, never a quantized clip. `threshold.rect_px` and `opening_rect_px` are F-RWS-01 conversions (`TILE_PX` 16, RM-03's origin (1280,0)).
 `band_rect = threshold.rect_px.intersection(opening_rect_px)`
+
+Precondition: `tile_aligned(opening_rect_tiles) ∧ opening_rect_tiles ⊆ threshold.rect_tiles`; a violation is a boot failure naming `rm03_partition`, never a quantized clip. `threshold.rect_px` and `opening_rect_px` are F-RWS-01 conversions (`TILE_PX` 16, RM-03's origin (1280,0)).
 `band_cells = cells(band_rect)` if `band_rect.has_area()` else `∅`
 `band_present(e) = visible(BAND, e) ∧ band_rect.has_area()`
 
