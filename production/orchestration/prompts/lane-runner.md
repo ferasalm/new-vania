@@ -44,7 +44,8 @@
 ### 3.1 CD gate
 
 Spawn the `cd-gate` seat with `production/orchestration/prompts/seat-briefs/cd-gate.md`
-and the document path. Model: `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`.
+and the document path. Model: `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`
+(pass it explicitly as the subagent `model`).
 CONCERNS or REJECT → revise in-session → re-run. Record the verdict.
 
 ### 3.2 Three-seat panel
@@ -56,6 +57,11 @@ Spawn three nested subagents **in parallel**:
 | creative | `seat-briefs/creative.md` | `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash` |
 | technical | `seat-briefs/technical.md` | `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017` |
 | QA | `seat-briefs/qa.md` | `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017` |
+
+**Pass the model explicitly** to every nested subagent call (`model:` on the
+subagent tool). Creative/CD seats → GLM; technical/QA/spot-check → DS. The lane
+runner itself runs on the manifest `model`; a creative lane must be launched on
+GLM. If a creative lane ran on DS, rerun it on GLM.
 
 Each seat reads the document once, in full, and returns the brief's output
 format. Do not tell a seat what verdict you want. Do not re-read the whole

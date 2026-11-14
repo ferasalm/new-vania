@@ -95,6 +95,12 @@ sync lane:
 - The creative/CD seats use `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`.
 - The technical/QA/spot-check seats use
   `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017`.
+- **Model routing (hard rule)**: every **creative division** — art, audio,
+  narrative, world/level, UX/UI, game design, memory, inventory — runs on
+  **GLM-5.3-flash**. Every **technical division** — save/serialization,
+  progression/economy math, ADRs, QA, sync, engineering — runs on **DS**. The lane
+  runner's own model is the manifest `model`; the seats' models are set per the
+  briefs. A creative lane that ran on DS is rerun on GLM.
 - The qa-lead spot-check is mandatory on repaired text. FAIL → repair → re-run.
 - The final micro-check is diff-scoped: blockers only, zero blockers to pass,
   then stop. Do not reopen the document.

@@ -1,6 +1,7 @@
 # Creative Seat — neutral brief
 
 > **Model**: `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`.
+> **Hard rule**: this is a creative seat — GLM-5.3-flash only; never DS.
 > **Input**: the document path + the lane prompt's consumed contracts.
 > **Output**: verdict + blockers only. No praise, no restatement.
 

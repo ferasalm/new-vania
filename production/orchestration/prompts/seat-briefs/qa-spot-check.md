@@ -1,6 +1,7 @@
 # QA Spot-Check Seat — neutral brief
 
 > **Model**: `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017`.
+> **Hard rule**: this is a QA spot-check seat — DS only; never GLM.
 > **Input**: the repair diff + the review log's worklist. Not the whole document.
 > **Output**: PASS/FAIL + blockers only. No praise, no restatement.
 

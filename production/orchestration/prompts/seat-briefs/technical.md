@@ -1,6 +1,7 @@
 # Technical Seat — neutral brief
 
 > **Model**: `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017`.
+> **Hard rule**: this is a technical seat — DS only; never GLM.
 > **Input**: the document path + the lane prompt's consumed contracts.
 > **Output**: verdict + blockers only. No praise, no restatement.
 

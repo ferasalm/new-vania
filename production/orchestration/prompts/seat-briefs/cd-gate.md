@@ -1,6 +1,7 @@
 # CD Gate Seat — neutral brief
 
 > **Model**: `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash` (creative/CD routing).
+> **Hard rule**: this is a creative/CD seat — GLM-5.3-flash only; never DS.
 > **Input**: the document path + the lane prompt's consumed contracts.
 > **Output**: verdict + blockers only. No praise, no restatement.
 

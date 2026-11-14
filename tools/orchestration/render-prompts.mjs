@@ -75,6 +75,7 @@ function parseManifest(text) {
 			prompt_path: field("prompt_path"),
 			prompt_version: field("prompt_version"),
 			prompt_hash: field("prompt_hash"),
+			model: field("model"),
 			status: field("status"),
 		})
 	}
@@ -134,6 +135,7 @@ Lane: ${id}
 Branch: ${lane.branch}
 Worktree: ${lane.worktree}
 Version: ${lane.prompt_version}
+Model: ${lane.model}
 Hash: ${h}
 Source: production/orchestration/lane-kickoff-master.md
 Generated: ${generated}
@@ -171,7 +173,7 @@ function verifyLane(id, lane, shared, blocks) {
 	const file = read(path.join(ROOT, lane.prompt_path))
 	const headerHash = (file.match(/^Hash: ([0-9a-f]{12})$/m) ?? [])[1]
 	if (headerHash !== expected) fail(`lane ${id}: header hash ${headerHash} != master hash ${expected}`)
-	const fields = { Lane: id, Branch: lane.branch, Worktree: lane.worktree, Version: lane.prompt_version }
+	const fields = { Lane: id, Branch: lane.branch, Worktree: lane.worktree, Version: lane.prompt_version, Model: lane.model }
 	for (const [key, value] of Object.entries(fields)) {
 		const actual = (file.match(new RegExp(`^${key}: (.*)$`, "m")) ?? [])[1]
 		if (actual !== String(value)) fail(`lane ${id}: header ${key} ${actual} != manifest ${value}`)

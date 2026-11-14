@@ -2,7 +2,7 @@
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
 Version: 1.0.0
-Hash: abe4b60af4d1
+Hash: 8801f1ed8fb7
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-14
 -->
@@ -62,6 +62,8 @@ For each launch:
 5. Spawn the lane runner (a nested subagent or a parallel chat) with:
    - the lane worktree path,
    - the verified base SHA (`git rev-parse origin/Main`),
+   - the lane's `model` from the manifest (creative lanes GLM-5.3-flash;
+     technical lanes DS) — pass it as the subagent `model`,
    - `production/orchestration/prompts/lanes/<ID>.md` **inside that worktree**,
    - `production/orchestration/prompts/lane-runner.md` **inside that worktree**,
    - the instruction: work only in the worktree; write

@@ -3,6 +3,7 @@ Lane: SYS-04
 Branch: docs/sys04-audio-core
 Worktree: ../new-vania-sys04-audio-core
 Version: 1.0.0
+Model: cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash
 Hash: 4e689924ac17
 Source: production/orchestration/lane-kickoff-master.md
 Generated: 2026-11-14
