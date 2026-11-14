@@ -16,12 +16,12 @@
 > winners + the doctrine discoveries), `design/art/concepts/PROMPT-PACK.md` (the
 > shot list), `design/art/palette.json` (§4B export).
 
-## Rulings recorded in this document
+## Decisions and rulings recorded in this document
 
 | ID | Ruling | Date | Record |
 |---|---|---|---|
-| **D-ORCH-01** | **B — the purple bridge proposal is CLOSED.** The liminal-grey reservation stands; no chromatic exception is ratified at MVP. SYS-02's Player Fantasy line 36 is amended to *"a bridge of neither truth holding it together"* (contract revision, user-approved). SYS-11's tint machinery stays dormant (`tint` null, `PURPLE_ENABLED` false); the P1–P5+G admission test is the recorded re-open gate. | 2026-11-14 | the ART-BIBLE lane report; the SYS-02 amendment commit names D-ORCH-01 |
-| **D-ORCH-02** | **Approved.** The `PROV_LIM_*` ramp: L 0.40 / 0.50 / 0.61 / 0.72, C 0.000 (`#484848` / `#636363` / `#838383` / `#A4A4A4`); the grief tint: L 0.66, C 0.14, h 345 (`#CD6CA6`), band [330, 20]; the fallback order F1 (relax the D-gap to ≥ 0.01) → F2 (close the tint). Gaps 0.098 / 0.110 / 0.109 ≥ 0.09 — no fallback triggered. | 2026-11-14 | the ART-BIBLE lane report; §4 |
+| **D-ORCH-01** | **OPEN — proposed amendment only.** The package proposes B (amend SYS-02's Player Fantasy line 36 to *"a bridge of neither truth holding it together"*) and closing the purple. The text is **PROPOSED — pending user approval** in the lane report; **no SYS-02 edit is applied** (the premature edit was reverted in `8fbc13e`). The decision is recorded in `decisions.md` before any edit. SYS-11's tint machinery stays dormant regardless. | — | the ART-BIBLE lane report |
+| **D-ORCH-02** | **Approved (lane-internal).** The `PROV_LIM_*` ramp: L 0.40 / 0.50 / 0.61 / 0.72, C 0.000 (`#484848` / `#636363` / `#838383` / `#A4A4A4`); the grief tint: L 0.66, C 0.14, h 345 (`#CD6CA6`), band [330, 20]; the fallback order F1 (relax the D-gap to ≥ 0.01) → F2 (close the tint). Gaps 0.098 / 0.110 / 0.109 ≥ 0.09 — no fallback triggered. | 2026-11-14 | the ART-BIBLE lane report; §4 |
 
 ## Section status
 
