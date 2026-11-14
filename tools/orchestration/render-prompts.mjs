@@ -173,6 +173,8 @@ function verifyLane(id, lane, shared, blocks) {
 	const headerHash = (file.match(/^Hash: ([0-9a-f]{12})$/m) ?? [])[1]
 	if (headerHash !== expected) fail(`lane ${id}: header hash ${headerHash} != master hash ${expected}`)
 	if (lane.prompt_hash !== expected) fail(`lane ${id}: manifest hash ${lane.prompt_hash} != master hash ${expected}`)
+	const body = file.slice(file.indexOf("-->\n\n") + 5)
+	if (hash(body) !== expected) fail(`lane ${id}: body hash != master hash ${expected}`)
 	return expected
 }
 
@@ -191,6 +193,8 @@ function verifyNext(manifest) {
 	const file = read(NEXT)
 	const headerHash = (file.match(/^Hash: ([0-9a-f]{12})$/m) ?? [])[1]
 	if (headerHash !== actual) fail(`NEXT.md header hash ${headerHash} != orchestrator hash ${actual}`)
+	const body = file.slice(file.indexOf("-->\n\n") + 5)
+	if (hash(body) !== actual) fail(`NEXT.md body hash != orchestrator hash ${actual}`)
 }
 
 function main() {
