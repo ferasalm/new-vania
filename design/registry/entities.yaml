@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-13"
+last_updated: "2026-11-14"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -534,10 +534,13 @@ constants:
     value: 150
     unit: ms
     notes: "Spend-weight hold guard on the HUD item chip (touch rig only;
-      KB/pad press directly). Chip is a Reserved slot until SYS-17/SYS-24 at VS.
-      TR-INP-068 / F-09."
+      KB/pad press directly). Chip is a Reserved slot until SYS-17/SYS-24
+      (SYS-17 MVP-promoted 2026-11-14, D-1 — the chip-promotion decision rides
+      SYS-17's authoring). TR-INP-068 / F-09."
     added: 2026-11-11
-    revised: ""
+    revised: "2026-11-14 (IP-19 consistency scan: the 'at VS' phrasing went stale
+      with the SYS-17 MVP pin flip; # was: 'until SYS-17/SYS-24 at VS' before
+      2026-11-14)"
   - name: dp_floor_gameplay
     status: active
     source: design/gdd/input-control-mapping.md
