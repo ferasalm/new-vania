@@ -226,6 +226,7 @@ entities:
     referenced_by:
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
+      - design/gdd/audio-core.md
     kind: published_contract
     published_by: SYS-09 Dual-Reality State & Rendering
     consumed_by: SYS-10 (the epoch write on the flip_epoch_boundary signal) · SYS-29 (the freeze request + the tear trigger) · SYS-04 (the ambient composition — contract-first, the audit's IP-7) · SYS-05 (the Reading-close upstream edge)
@@ -244,7 +245,7 @@ entities:
       the commit-abort failure family; the E1 request-presence clarification) ride the batch
       publication as contract additions (the G7-sanctioned path)."
     added: 2026-11-14
-    revised: "2026-11-14 (SYS-10 ratifies verbatim — S1-002b; the three riders ride the batch publication)"
+    revised: "2026-11-14 (SYS-10 ratifies verbatim — S1-002b; the three riders ride the batch publication); 2026-11-14 (SYS-04 composes against it verbatim — the audio obligations at E1–E7; audio-core.md joins referenced_by)"
 
   - name: epoch0_tell_registry
     status: active
@@ -470,6 +471,98 @@ entities:
       the format contract is proven at authoring; the engine path is proven at the first SYS-03 story."
     added: 2026-11-14
     revised: ""
+
+# 2026-11-14 (audio-core.md APPROVED — SYS-04): the audio contracts registered.
+  - name: audio_bus_contract
+    status: active
+    source: design/gdd/audio-core.md
+    referenced_by:
+      - design/gdd/audio-core.md
+    kind: published_contract
+    published_by: SYS-04 Audio Core
+    consumed_by: "SYS-24 HUD (the settings surface renders the knobs: MONO + three
+      sliders, the Ambience and UI buses riding the SFX slider's group)"
+    values: "Master 0 dB (limiter only) · Music −6 dB · Ambience −9 dB · SFX −3 dB ·
+      UI −6 dB (reserved, zero voices at MVP) · one mix snapshot SNAP_GAMEPLAY ·
+      SFX pool 12 + 1 reserved flip slot · AMB pool 4 · VOICE_CAP 20 hard cap
+      (allocated 18) · steal P3 → P2 → drop, never P0, never a signature"
+    notes: "The duck's only target is Music; zero snapshot changes across [E1, E7]
+      (V-AUD-05); the core is a leaf consumer — no gameplay/state event publishes."
+    added: 2026-11-14
+    revised: ""
+
+  - name: ambient_bed_contract
+    status: active
+    source: design/gdd/audio-core.md
+    referenced_by:
+      - design/gdd/audio-core.md
+      - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-04 Audio Core
+    consumed_by: SYS-09 (AC-DR-27's zero-arena-bed-orders assertion audits these bed
+      IDs) · SYS-10 (E3b's receding-first target set is carried in the order record)
+      · SYS-11 (the seam's acoustic no-op — the wing resolves to RM-03's bed)
+    values: "Three beds: AMB_A_HOUSE / AMB_B_HOUSE / AMB_ARENA_STEEL_HUM ·
+      RM-01..RM-05 map A→B, RM-06 is epoch-invariant (the steel hum, never ordered)
+      · the wing has no bed of its own (RM-03's) · AMB_RECEDE_MS 240 ·
+      AMB_ARRIVE_MS 240 · AMB_RECEDE_FLOOR_DB −60 · receding-first: the recede
+      begins at τ0 (a per-voice ramp, never a duck), the arriving bed's first
+      audible sample ≥ the release boundary · the abort leaves the bed put"
+    notes: "The score (MUS_HOUSE_LOOP) is global and untouched by the flip. Zero
+      stochastic ambience one-shots at MVP (the closed-list audit). The bed
+      resolution's epoch source: the derived consumed-event state in-session;
+      the load-complete payload's restored_epoch after a load (CR-AUD-02's
+      request to SYS-03's authoring)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: audio_edge_list
+    status: active
+    source: design/gdd/audio-core.md
+    referenced_by:
+      - design/gdd/audio-core.md
+      - design/gdd/juice-feedback.md
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-04 Audio Core (the voice realization of SYS-29's closed list)
+    consumed_by: SYS-29 (AC-JCE-31/32's audits must find exactly these emissions)
+    values: "Ten SYS-29 edges → eleven one-shot voices (the clash pair carries two)
+      + two flip tear voices (EV_FLIP_TEAR success / EV_FLIP_TEAR_ABORT) = 13
+      one-shot voices · 29 audio files (25 one-shots + 3 beds + 1 score) · zero UI
+      voices · zero stochastic ambience one-shots · no per-press popups, no
+      ORDER RECEIVED voice · variation: round-robin no-immediate-repeat, ±1 st
+      within a band, zero drift on the eight signatures"
+    notes: "TR-JCE-027 remains the upstream closed list (frozen 2026-11-13); adding
+      an edge or a voice is a TR-JCE-027 revision. The three named silences (the
+      Stinger lunge, the demon grant, the Warden drop) are decisions with that
+      revision route, not omissions."
+    added: 2026-11-14
+    revised: ""
+
+  - name: duck_request_contract
+    status: active
+    source: design/gdd/juice-feedback.md
+    referenced_by:
+      - design/gdd/juice-feedback.md
+      - design/gdd/audio-core.md
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-29 Juice & Feedback (the schema; TR-JCE-027)
+    consumed_by: SYS-04 (the single application site in src/audio/; the ratified
+      value) · SYS-15 (the offline screen's lifetime backs the release)
+    values: "duck_request {bus, dB, hold} — exactly three fields: bus ∈ {MUSIC},
+      dB ∈ [−12, 0], hold ∈ {UNTIL_OFFLINE_EXIT} · DEATH_DUCK_DB −6 (RATIFIED —
+      OQ-J7) · attack 120 ms · release 240 ms · released on both exits
+      (reconstruct and revive) · exactly one request per death, one family in
+      the game"
+    notes: "The no-duck law: no hit-stop/flip/seam/reveal-hold/pause duck
+      (AR-SMB-03, SYS-09's sweep-not-beat ruling); V-AUD-01's static audit finds
+      exactly one application site."
+    added: 2026-11-14
+    revised: "2026-11-14 (SYS-04's mix ratifies −6 dB — OQ-J7 resolved; no longer
+      provisional)"
 
 # Example (remove when first real entry is added):
 #

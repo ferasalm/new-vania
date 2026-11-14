@@ -37,8 +37,8 @@
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
 | ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
-| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | AUTHORING | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
-| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | AUTHORING | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
+| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | SYNC (landed; PR #45's merge pending) | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
+| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | SYNC (in flight; PR #46 waits on the sync) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
 lane runners write their reports to `production/session-state/lane-<ID>-report.md`
@@ -49,17 +49,18 @@ inside their own worktree.
 - **Three-seat review**: 0 of 2 slots in use (the first three lanes are still
   authoring). Next review slot: the first lane to reach CD GATE.
 - **CodeRabbit**: 0 of 1 in flight.
-- **Shared-file writer**: **SYNC-LANE active** — SYS-03's request is queued
-  (`review-queue.md` §5, order 1, IN PROGRESS).
+- **Shared-file writer**: **SYNC-LANE active** — SYS-03's request **landed**
+  (PR #47, `50a9a93`); SYS-04's is in progress (`review-queue.md` §5, order 2).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — acquired **2026-11-14** by the sync lane for the
-**SYS-03 Save & Serialization** request (`lane-SYS-03-report.md` §10). The two
+`shared_file_lock: SYNC-LANE` — **SYS-03's lock was released at its merge**
+(PR #47 → `50a9a93`, 2026-11-14) and **immediately re-acquired for SYS-04**
+(queued behind it; no idle window, so the value never left `SYNC-LANE`). The two
 shared files (`design/registry/entities.yaml`, `design/gdd/systems-index.md`) are
-write-locked to the sync lane until the sync PR merges; the lock is released only
-after the merge, in a separate release PR.
+write-locked to the sync lane until the SYS-04 sync PR merges; that release lands
+after its merge.
 
 ## 5. Blockers
 
@@ -112,10 +113,11 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
    lane(s).
 2. **ART-BIBLE lane** — resolve OQ-1 (the purple) as the first item; then the
    palette/grief pins; then the 9 sections; then the asset-spec handoff.
-3. **SYS-03 lane** — author the save GDD; the real-file round-trip twin is the
-   authoring gate.
-4. **SYS-04 lane** — author the audio GDD; consume E1–E7 verbatim; pin the
-   no-duck law.
+3. **SYS-03 lane** — the GDD and the sync have landed; the orchestrator
+   squash-merges PR #45 at `08a0a12` (pinned) and records the landing hash.
+4. **SYS-04 lane** — the sync is in flight (the SYS-04 sync PR); once it merges,
+   the orchestrator squash-merges PR #46 at `391dd18`, and the lane flips the GDD
+   header's `In Review` at that merge (the audio-director countersign).
 5. **When a review slot frees** — start SYS-15 or SYS-28 (the next queued MVP
    GDDs). Do not start SYS-16/SYS-17 until SYS-07-REWORK lands.
 6. **Batch the user decisions** — D-ORCH-01/02 (art bible) and D-ORCH-03
@@ -156,4 +158,38 @@ file at every lane boundary; batch decisions; stop only on a hard blocker.
   re-verified by running the twin): the twin is **32/32 PASS** (the request's
   §10 says 29/29 — stale since the CodeRabbit batch added three checks) and the
   `post_flip` hash prefix is **05b1e48e** (the request says b3283603).
-- **Landing hash**: pending — recorded when PR #47 merges.
+- **Landing hash**: **`50a9a93`** — `docs(sync): land the SYS-03 save contract + index row (#47)`,
+  squash-merged 2026-11-14 with the head pinned at `07f9b27`. 3 CodeRabbit
+  threads: 2 applied in `07f9b27` (SYS-24's dependency edges; the manifest lane
+  status → `SYNC`), 1 rebutted (the parenthetical status cell is the file-wide
+  convention — 10 of 10 approved rows; the exact-string `Approved` restyle is an
+  adopt-migration item, not a single-row edit). All 6 checks green; 0 unresolved.
+
+## 12. Sync receipt — SYS-04 Audio Core (in flight)
+
+- **Lane**: SYS-04 Audio Core. **Request**: `lane-SYS-04-report.md` "Sync
+  request" (4 `entities.yaml` entries + the `flip_trigger_contract` append + the
+  `systems-index.md` row/design-order/bullet/SYS-02 reciprocal).
+- **Lock**: held (re-acquired at SYS-03's release; see §4).
+- **Branch / PR**: `chore/sync-sys04` / the sync PR (base `Main`, branched from
+  `50a9a93`).
+- **Files**: `design/registry/entities.yaml` (+`audio_bus_contract`,
+  `ambient_bed_contract`, `audio_edge_list`, `duck_request_contract`;
+  `flip_trigger_contract` gains `audio-core.md` in `referenced_by` and a second
+  dated `revised` note — the SYS-10 ratification is preserved),
+  `design/gdd/systems-index.md` (SYS-04 row → APPROVED, design order #16, the
+  Foundation bullet, the SYS-02 reciprocal, the enumeration Dependencies column).
+- **Validation**: YAML parse OK · duplicates 0 (70 entries) · every
+  source/referenced_by path exists · counts reproduce (39 TR-AUD / 7 F-AUD /
+  7 V-AUD / 32 ACs = 26 smoke + 4 device + 2 MVP-lock + 0 VS; 14 knobs; 8 OQs) ·
+  design order unique · table integrity OK · the SYS-03 rows/corrections
+  unregressed.
+- **One recorded condition**: the SYS-04 GDD header's `Status` line still reads
+  `In Review` (the audio-director countersign pending — the review log's §D.6
+  condition). The index row says APPROVED **and names the condition**; the lane
+  flips the header at PR #46's merge.
+- **Two mechanical fixes to the request's YAML**: `audio_bus_contract`'s
+  `consumed_by` is quoted (its `knobs: MONO` colon-space is a YAML mapping
+  error unquoted); the `flip_trigger_contract` `revised` note is appended, not
+  overwritten (the registry's own rule — never lose the prior revision record).
+- **Landing hash**: pending — recorded when the SYS-04 sync PR merges.
