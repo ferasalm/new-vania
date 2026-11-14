@@ -82,7 +82,7 @@ lanes:
     status: SYNC
     dependencies: [SYS-02, SYS-09, SYS-10]
     review_state: "GDD APPROVED (2026-11-14; the real-file twin 32/32 PASS; 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs). SYNC LANDED — the sync PR #47 merged at 50a9a93; the GDD row, the registry entries and the 10 corrections are on Main."
-    next_action: "The orchestrator squash-merges PR #45 at 08a0a12 (pinned) and records the landing hash."
+    next_action: "The orchestrator re-verifies PR #45's head (it has moved past the report's 08a0a12 — e61f6af at the last check) and squash-merges at that verified head, then records the landing hash."
 
   - id: SYS-04
     title: "Audio Core — flip contract, ambient_shift, no-duck"
