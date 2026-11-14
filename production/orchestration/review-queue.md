@@ -42,7 +42,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| — | — | — | — | — | idle |
+| 1 | SYS-03 Save & Serialization | `save_contract` · `save_roundtrip_twin` | SYS-03 row → APPROVED · design order #11 · the Foundation bullet · the 10 bidirectional-consistency corrections | 2026-11-14 | **IN PROGRESS** (lock held by SYNC-LANE; request `lane-SYS-03-report.md` §10) |
 
 The sync lane acquires the lock in `STATE.md`, rebases on `origin/Main`
 immediately before the edit, applies serially, validates, commits, pushes,

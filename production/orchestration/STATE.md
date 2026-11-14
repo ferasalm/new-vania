@@ -49,15 +49,17 @@ inside their own worktree.
 - **Three-seat review**: 0 of 2 slots in use (the first three lanes are still
   authoring). Next review slot: the first lane to reach CD GATE.
 - **CodeRabbit**: 0 of 1 in flight.
-- **Shared-file writer**: idle; lock free. First sync request will come from the
-  first lane to finish authoring.
+- **Shared-file writer**: **SYNC-LANE active** — SYS-03's request is queued
+  (`review-queue.md` §5, order 1, IN PROGRESS).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — the sync lane is idle. The lock is acquired in this
-file by the sync lane before any edit to `design/registry/entities.yaml` or
-`design/gdd/systems-index.md`.
+`shared_file_lock: SYNC-LANE` — acquired **2026-11-14** by the sync lane for the
+**SYS-03 Save & Serialization** request (`lane-SYS-03-report.md` §10). The two
+shared files (`design/registry/entities.yaml`, `design/gdd/systems-index.md`) are
+write-locked to the sync lane until the sync PR merges; the lock is released only
+after the merge, in a separate release PR.
 
 ## 5. Blockers
 
