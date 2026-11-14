@@ -383,3 +383,50 @@ files · 1 contract-revision request (CR-AUD-01).
 - **Confirm pass**: the batch is Major-class (findings 1/3/11), so the lane
   loop's confirm CodeRabbit pass runs after the fix commit.
 - **Next**: the thread resolutions + the confirm pass.
+
+## 2026-11-14 — the confirm pass (two attempts; 3 Minor residuals applied)
+
+- **Attempt 1** (triggered after the fix commit): the bot's verification
+  **raced the push** — it checked against the stale head `9c4fa2d` and could
+  not see `9b0924b` ("could not find that commit"), so several threads were
+  marked unverified. Two useful results landed anyway: the **edge-#14 finding
+  was WITHDRAWN** by the bot itself ("SYS-09 waits for room activations and
+  border arcs to finish before the flip, and SYS-02 prevents crossings while
+  the body is frozen — the arena crossing I described cannot occur during a
+  normal flip"), and the **formula-template rebuttal was ACCEPTED** (the bot
+  saved it as a review learning: the SYS-04 lane quality bar calls for inline
+  variables with types and ranges, an Output clause, and worked examples — no
+  separate variable table). The ±1 st and SYS-02/SYS-04 learnings were also
+  accepted.
+- **Attempt 2** (after verifying `9b0924b` was the PR head): the confirm pass
+  verified the applied fixes and returned **3 residuals — all Minor, all
+  refinements of the failsafe fix**:
+  1. **E6 precedence at the failsafe deadline** — **APPLIED**: the failsafe
+     fires only if E6 has not arrived by the failsafe tick (**E6 wins the
+     deadline**); the HELD row, the §G.8 E6 row, AC-AUD-13, and K.2 #15 carry
+     the rule.
+  2. **The arena hum on the failsafe** — **APPLIED**: the floor-hold applies
+     only to a bed that actually receded; the arena's hum keeps its unchanged
+     gain (TR-AUD-013). The §G.8 E6 row, AC-AUD-13, and K.2 #15 carry the
+     qualifier.
+  3. **The IDLE-invariant mismatch** — **APPLIED (the amended-invariant
+     route)**: the IDLE row gains the failsafe exception in its Entered cell
+     (the receded bed holds at the floor until the next room entry re-applies
+     the room's bed). The restore-to-nominal option was rejected: E3b has
+     fired by then, so a nominal A bed would sound truth A while the world is
+     truth B — the ear would lie; the floor hold is the only
+     contract-consistent audio (starting the arrival without E6 is a
+     re-timed edge, forbidden without a revision), and a distinct holding
+     state would add machine surface without changing the audio outcome.
+- **Caught in the same pass: the log's own overclaim** — the repair-batch
+  entry said "K.2 gains edge case #15" but #15 had not actually been applied.
+  **#15 is now in the document** (with the tie rule and the arena qualifier),
+  closing the gap between the record and the text.
+- **Severity**: all three residuals are **Minor** — the batch is not
+  Major-class, so **no further confirm pass** runs (the lane loop's one
+  confirm-pass budget is spent; the residuals are consistency refinements of
+  the applied fix, verified by direct read).
+- **Counts**: unchanged — 39 TR · 7 F · 7 V · 32 ACs · 14 knobs · 8 OQs ·
+  13 voices · 17 roles · 29 files · 2 CRs.
+- **Next**: resolve the confirm threads; the lane stops (the document is
+  done); the report and the final push close the lane.
