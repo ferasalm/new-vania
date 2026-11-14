@@ -274,3 +274,31 @@ files · 1 contract-revision request (CR-AUD-01).
   universal domain `amount ≥ 1`; it moves no threshold and no AC). The
   mandatory qa-lead spot-check on DS covers the diff as the tripwire.
 - **Next**: the qa-lead spot-check on the repair diff (DS, `4c6bb7c..head`).
+
+## 2026-11-14 — qa-lead spot-check (DS, on the GLM rerun's repair diff)
+
+- **Seat**: `qa-spot-check` (deepseek-v4.1-flash). **Verdict: PASS.**
+- **Diff**: `4c6bb7c..93be05d` (the 8 one-line edits + the log append).
+- **Worklist**: 11 rows — **all APPLIED-CORRECTLY**; zero NOT-FOUND, zero
+  MISAPPLIED. Verified against the frozen contracts: the SYS-10 status matches
+  the frozen GDD's own header; 6/12/20 + 30/60/120 resolve to TR-HD-003/006;
+  the gear-beat wording matches `game-concept.md`'s Gate 2 probe text; the
+  counts re-derive (39 TR · 7 F · 7 V · 32 ACs · 14 knobs · 8 OQs · 13 voices ·
+  17 role rows · 29 files · 1 CR); and the zero-technical-delta ground for not
+  re-running the technical seat holds against the diff itself.
+- **Advisories (5, non-blocking)**: the TR-HD citation split (**APPLIED** —
+  `f8df947`); §C.3's mild redundancy (left — item 1's route statement predates
+  the intro pre-commit); the F-AUD-03 scope line rides the PR body (done);
+  CD-2's index Dependencies stays deferred to the sync lane (tracked in the
+  report's sync request); §H.3's bar check gets a line in the palette brief
+  when the sound bible is authored.
+
+## 2026-11-14 — final micro-check (DS, on the advisory delta)
+
+- **Seat**: a fresh deepseek pass, diff-scoped to `93be05d..f8df947` (one hunk:
+  the TR-HD citation split). **Verdict: PASS — zero blockers.** The formula
+  line, the thresholds, the examples, and AC-AUD-08 are byte-identical; both
+  citations resolve in `health-damage.md`.
+- **The GLM rerun's gate trail is complete.** The document stops here. The sync
+  request, the PR, and the one CodeRabbit pass follow in the lane loop; the
+  merge waits for the sync to land (the orchestrator + the sync lane).

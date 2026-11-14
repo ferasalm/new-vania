@@ -1,18 +1,147 @@
 # Lane SYS-04 — report
 
-- **Status**: `PAUSED — model rerun` (the full document is authored; the GLM-5.3-flash creative rerun takes over)
-- **Branch / worktree / PR**: `docs/sys04-audio-core` / `../new-vania-sys04-audio-core` / **none — no PR opened** (per the pause instruction)
-- **Prompt**: v1.0.0 / `4e689924ac17` (matches manifest: **yes**)
-- **Gate trail**: CD **APPROVED** (0 blockers) · creative **NEEDS REVISION** (3) · technical **NEEDS REVISION** (11) · QA **NEEDS REVISION** (9) · spot-check **PASS** (31/31 rows) · micro-check **PASS**
-- **Blockers (hard)**: none. `CR-AUD-01` (E3b's `to_epoch` payload — recorded, not blocking) + OQ-AUD-4/6/7 open (the body assumes the recommendations).
-- **Sync request**: prepared in §3; not sent.
-- **CodeRabbit**: not run (no PR).
-- **Landing receipt**: not merged.
-- **Next action**: the GLM-5.3-flash creative rerun of the lane (the same worktree); then the sync handoff and the PR.
+- **Status**: `PR` — the GLM creative rerun is clean (both seats APPROVED, spot-check PASS, micro-check PASS); the PR opens now; CodeRabbit next
+- **Branch / worktree / PR**: `docs/sys04-audio-core` / `../new-vania-sys04-audio-core` / (PR opened after this commit — see the GLM rerun note below)
+- **Prompt**: v1.0.0 / `4e689924ac17` (matches manifest: **yes** — re-verified at the rerun's start)
+- **Gate trail — DS phase (superseded creative verdicts; technical/QA repairs intact)**: CD APPROVED (0) · creative NEEDS REVISION (3 — superseded by the GLM rerun) · technical NEEDS REVISION (11 → all repaired) · QA NEEDS REVISION (9 → all repaired) · spot-check PASS (31/31) · micro-check PASS
+- **Gate trail — GLM rerun (authoritative creative pass)**: CD **APPROVED** (0 blockers, 7 recs, dispositions logged) · creative **APPROVED** (0 blockers, 7 recs, dispositions logged) · technical **stands** (DS; zero technical-fact deltas — verified by the spot-check against the diff) · QA **stands** (DS; the DS-era repairs untouched) · spot-check **PASS** (DS; 11/11 rows on `4c6bb7c..93be05d`) · micro-check **PASS** (DS; 0 blockers on the advisory delta `93be05d..f8df947`)
+- **Blockers (hard)**: none. `CR-AUD-01` (E3b's `to_epoch` payload — a contract-revision request against the now-APPROVED/frozen SYS-10 GDD; recorded for the batch, not blocking) + OQ-AUD-4/6/7 open (the body assumes the recommendations).
+- **User decisions carried from the rerun (non-gating)**: (1) the Ambience/Music slider regrouping (the GLM creative seat's rec 1 — reopens the in-body-resolved OQ-AUD-8 and AC-AUD-22, so it is deferred, not applied); (2) the AC-AUD-23 mid-bracket probe + the Gate 1 probe amendment → the QA-plan owner; (3) OQ-AUD-4/6/7 stand open as recorded in §K.4.
+- **Sync request**: prepared — see "Sync request" below; not sent (the orchestrator queues it).
+- **CodeRabbit**: one pass runs on the PR; dispositions recorded after.
+- **Landing receipt**: not merged (the merge waits for the sync to land).
+- **Next action**: the orchestrator queues the sync request below; the lane runs the one CodeRabbit pass + triage on the PR; merge after the sync lands and the checks are green.
 
-> **Pause note**: Paused for the GLM-5.3-flash creative rerun per the user's hard rule; no further authoring on DS.
+> **GLM rerun note (2026-11-14)**: per the user's hard rule, the audio division's creative divisions re-ran on **GLM-5.3-flash** (`cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`) in this worktree; DS is reserved for technical work. The DS checkpoint (`4c6bb7c`) was the rerun's input. The rerun re-ran the **CD gate** and the **creative seat** on GLM with the neutral briefs — both returned **APPROVED, zero blockers**. The GLM creative verdict **supersedes** the DS-era creative NEEDS REVISION (3) as the authoritative creative pass (the three DS blockers were repaired in the DS run's 31-row pass and are re-verified by the GLM seat's full read). The rerun brief's conditional prose re-authoring (Overview / Player Fantasy / audio direction / no-duck framing) was **empty** — the GLM seat flagged no prose there — so no settled text was reopened. The **technical** and **QA** seat verdicts remain DS's (correct per the hard rule); no creative repair changed a technical fact, so no DS technical re-run was needed — the spot-check verified that ground against the diff itself. The **qa-lead spot-check** re-ran on DS on the repair diff: PASS. Repair commits: `93be05d` (the 8-line batch), `f8df947` (the citation-split advisory).
 
 ---
+
+## GLM rerun — repair summary
+
+**Applied (8 one-line edits in `93be05d` + 1 in `f8df947`)**: the SYS-10 status label ×2 (the frozen GDD is APPROVED 2026-11-14, S1-002b); §C.3's unnoticed-beat routing pre-commit; §C.3 item 3's gear-beat channel un-pinned (the concept's probe is "noticed and equipped", no channel); F-AUD-03's dual-target scope sentence (strikes 6/12/20 TR-HD-003 · tiers 30/60/120 TR-HD-006) + the +3 st Gate 2 ear-check note; §H.3's held-segment bar check; §E.2's memory-chime repeat-exposure note; the OQ-AUD-4 staged-probe wording; the TR-HD citation split.
+
+**Rebutted (logged, never silently skipped)**: the jump-2 VS-ready mark (CD rec 3) — the closed list is frozen TR-JCE-027 and the counts derive from it; reachability is the progression owners' question.
+
+**Deferred to the user / other owners**: the Ambience↔Music slider regrouping (user; reopens OQ-AUD-8); the AC-AUD-23 mid-bracket probe + the Gate 1 script amendment (QA-plan owner); the SYS-04 index Dependencies column (the sync lane — see below).
+
+**Counts (unchanged by the rerun)**: 39 TR-AUD · 7 F-AUD · 7 V-AUD · 32 ACs (22 GUT · 4 LINT · 4 DEVICE · 2 PLAYTEST; 26 smoke · 4 device · 2 MVP-lock · 0 VS) · 14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role rows · 29 audio files · 1 contract-revision request (CR-AUD-01).
+
+---
+
+## Sync request (prepared; the orchestrator queues it; the sync lane applies)
+
+**To `design/registry/entities.yaml`** — three new SYS-04-owned entries + one SYS-29-sourced entry whose ratification completes with this landing + one `referenced_by` append:
+
+```yaml
+  - name: audio_bus_contract
+    status: active
+    source: design/gdd/audio-core.md
+    referenced_by:
+      - design/gdd/audio-core.md
+    kind: published_contract
+    published_by: SYS-04 Audio Core
+    consumed_by: SYS-24 HUD (the settings surface renders the knobs: MONO + three
+      sliders, the Ambience and UI buses riding the SFX slider's group)
+    values: "Master 0 dB (limiter only) · Music −6 dB · Ambience −9 dB · SFX −3 dB ·
+      UI −6 dB (reserved, zero voices at MVP) · one mix snapshot SNAP_GAMEPLAY ·
+      SFX pool 12 + 1 reserved flip slot · AMB pool 4 · VOICE_CAP 20 hard cap
+      (allocated 18) · steal P3 → P2 → drop, never P0, never a signature"
+    notes: "The duck's only target is Music; zero snapshot changes across [E1, E7]
+      (V-AUD-05); the core is a leaf consumer — no gameplay/state event publishes."
+    added: 2026-11-14
+    revised: ""
+
+  - name: ambient_bed_contract
+    status: active
+    source: design/gdd/audio-core.md
+    referenced_by:
+      - design/gdd/audio-core.md
+      - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-04 Audio Core
+    consumed_by: SYS-09 (AC-DR-27's zero-arena-bed-orders assertion audits these bed
+      IDs) · SYS-10 (E3b's receding-first target set is carried in the order record)
+      · SYS-11 (the seam's acoustic no-op — the wing resolves to RM-03's bed)
+    values: "Three beds: AMB_A_HOUSE / AMB_B_HOUSE / AMB_ARENA_STEEL_HUM ·
+      RM-01..RM-05 map A→B, RM-06 is epoch-invariant (the steel hum, never ordered)
+      · the wing has no bed of its own (RM-03's) · AMB_RECEDE_MS 240 ·
+      AMB_ARRIVE_MS 240 · AMB_RECEDE_FLOOR_DB −60 · receding-first: the recede
+      begins at τ0 (a per-voice ramp, never a duck), the arriving bed's first
+      audible sample ≥ the release boundary · the abort leaves the bed put"
+    notes: "The score (MUS_HOUSE_LOOP) is global and untouched by the flip. Zero
+      stochastic ambience one-shots at MVP (the closed-list audit)."
+    added: 2026-11-14
+    revised: ""
+
+  - name: audio_edge_list
+    status: active
+    source: design/gdd/audio-core.md
+    referenced_by:
+      - design/gdd/audio-core.md
+      - design/gdd/juice-feedback.md
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-04 Audio Core (the voice realization of SYS-29's closed list)
+    consumed_by: SYS-29 (AC-JCE-31/32's audits must find exactly these emissions)
+    values: "Ten SYS-29 edges → eleven one-shot voices (the clash pair carries two)
+      + two flip tear voices (EV_FLIP_TEAR success / EV_FLIP_TEAR_ABORT) = 13
+      one-shot voices · 29 audio files (25 one-shots + 3 beds + 1 score) · zero UI
+      voices · zero stochastic ambience one-shots · no per-press popups, no
+      ORDER RECEIVED voice · variation: round-robin no-immediate-repeat, ±1 st
+      within a band, zero drift on the eight signatures"
+    notes: "TR-JCE-027 remains the upstream closed list (frozen 2026-11-13); adding
+      an edge or a voice is a TR-JCE-027 revision. The three named silences (the
+      Stinger lunge, the demon grant, the Warden drop) are decisions with that
+      revision route, not omissions."
+    added: 2026-11-14
+    revised: ""
+
+  - name: duck_request_contract
+    status: active
+    source: design/gdd/juice-feedback.md
+    referenced_by:
+      - design/gdd/juice-feedback.md
+      - design/gdd/audio-core.md
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-29 Juice & Feedback (the schema; TR-JCE-027)
+    consumed_by: SYS-04 (the single application site in src/audio/; the ratified
+      value) · SYS-15 (the offline screen's lifetime backs the release)
+    values: "duck_request {bus, dB, hold} — exactly three fields: bus ∈ {MUSIC},
+      dB ∈ [−12, 0], hold ∈ {UNTIL_OFFLINE_EXIT} · DEATH_DUCK_DB −6 (RATIFIED —
+      OQ-J7) · attack 120 ms · release 240 ms · released on both exits
+      (reconstruct and revive) · exactly one request per death, one family in
+      the game"
+    notes: "The no-duck law: no hit-stop/flip/seam/reveal-hold/pause duck
+      (AR-SMB-03, SYS-09's sweep-not-beat ruling); V-AUD-01's static audit finds
+      exactly one application site."
+    added: 2026-11-14
+    revised: "2026-11-14 (SYS-04's mix ratifies −6 dB — OQ-J7 resolved; no longer
+      provisional)"
+```
+
+**Append to `flip_trigger_contract`'s `referenced_by`** (the entry exists; do not duplicate):
+```yaml
+      - design/gdd/audio-core.md
+```
+with the revised comment: `2026-11-14 (SYS-04 composes against it verbatim — the audio obligations at E1–E7; audio-core.md joins referenced_by)`.
+
+**To `design/gdd/systems-index.md`**:
+
+1. The SYS-04 row (line 156) is replaced by the landed row:
+```markdown
+| SYS-04 | Audio Core | MVP | **APPROVED (2026-11-14 — the GLM creative rerun's trail): CD APPROVED (GLM, 0) · creative APPROVED (GLM, 0 — the authoritative creative pass, superseding the DS-era NEEDS REVISION (3)) · technical+QA NEEDS REVISION (DS: 11 + 9 → all 31 blockers repaired) · qa-lead spot-check PASS (31/31; re-PASS on the GLM rerun's repair diff) · final micro-check PASS ×2; 39 TR-AUD / 7 F-AUD / 7 V-AUD / 32 ACs (gate 26 smoke + 4 device + 2 MVP-lock + 0 VS) / 14 knobs / 8 OQs (5 resolved); the E1–E7 Flip-Trigger Contract consumed verbatim (TR-DR-004 — the audio obligation column, no edge added/removed/re-timed); the receding-first `ambient_shift` (AR-AUD-01: the target set RM-01..RM-05 exactly, zero arena-bed orders, the recede at τ0, the arrival ≥ the release boundary, the abort leaves the bed put); the freeze brackets (AR-AUD-02: drop-never-queue, no loop restart, no snapshot change, the freeze is not a duck); the arena's epoch-invariant steel hum (TR-AUD-013); the wing's acoustic no-op (the material/acoustic split — a named ruling, audio-director countersign at approval); the no-duck law (exactly one duck family: the death beat −6 dB, OQ-J7 ratified); the closed list (13 voices / 29 files, TR-AUD-038's variation law); CR-AUD-01 recorded (E3b's `to_epoch` payload — the contract-revision request, not blocking); review record `design/gdd/reviews/sys04-audio-core-review-log.md`; **Dependencies (correcting the stale "None"): SYS-09, SYS-10, SYS-29, SYS-11, SYS-07, SYS-08, SYS-02 upstream; SYS-15, SYS-20, SYS-24 downstream; ADR-DRAFT + the sound bible support** | design/gdd/audio-core.md |
+```
+2. The design-order row #16 is marked: `16. SYS-04 Audio Core *(APPROVED)*`.
+3. The dependency-map bullet for SYS-04 (added after the SYS-11 bullet, line 65's neighbourhood):
+```markdown
+- SYS-04 Audio Core → depends on SYS-09, SYS-10, SYS-29, SYS-11, SYS-07, SYS-08, SYS-02 (the Flip-Trigger Contract's composition surface; E3b's receding-first emission; the closed edge list + the death duck; the seam's zero-audio rulings; the damage/heal/death/defeat payloads; the clash pair's publication; the six-room bed map); feeds SYS-15 (the duck's release backstop), SYS-20 (the memory-pickup trigger), SYS-24 (the settings knobs + the group map). **GDD `design/gdd/audio-core.md` — APPROVED (2026-11-14):** 39 TR-AUD / 7 F-AUD / 7 V-AUD / 32 ACs (26 smoke · 4 device · 2 MVP-lock) / 14 knobs / 8 OQs; E1–E7 consumed verbatim; the receding-first turnover; the freeze brackets; the arena steel hum; the no-duck law; the closed list; CR-AUD-01 recorded; review record `design/gdd/reviews/sys04-audio-core-review-log.md`.
+```
+
+---
+
 
 ## 0 · Verification
 
