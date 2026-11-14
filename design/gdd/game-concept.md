@@ -10,7 +10,7 @@
 | Working title | Five Errands for the Devil |
 | Genre | 2D story-forward metroidvania (SotN-school: RPG texture, deliberate combat, room-based exploration) |
 | Platform | Mobile (iOS/Android) primary, PC (itch.io demo → Steam) secondary. Touch-first controls; keyboard + gamepad supported from day one |
-| Estimated scope | Medium (3–6 months, solo part-time) |
+| Estimated scope | Large (≈155–195 dev-days cumulative ≈ 2.5–3× MVP's 55–70; ~12–18 months solo part-time with agent harness) |
 | Engine recommendation | Godot 4 (both owned core assets — Metroidvania System 1.6.1 addon, Warped City — are Godot projects) |
 
 ## Elevator Pitch
@@ -37,7 +37,7 @@ A demon lord's android assassin — built from a dead woman's preserved brain �
 - We will NOT do helpless horror — the player always has attack and clash, with Dash arriving as an unlock (compromises Read, Then Strike)
 - We will NOT do timers or speed pressure — deliberation is the fantasy (compromises Read, Then Strike)
 - We will NOT do endless multiverse content — 5 realities + hub + final room, boss variety within budget (compromises Five Goodbyes and scope)
-- We will NOT do stat-spreadsheet menus — lean RPG (compromises touch-first simplicity)
+- We will NOT do stat-spreadsheet menus — **lean but accessible stat presentation** (amended 2026-11-14, user decision D-2: a stat menu is acceptable if accessible and not too complicated; the `TR-INP-070` a11y baseline binds it, and the presentation itself lands at SYS-26 Sanctuary Menus). A dense numeric spreadsheet still fails (compromises touch-first simplicity)
 - We will NOT do cutscene-driven storytelling — story lives in logs, environments, boss encounters (compromises scope and Five Goodbyes)
 - We will NOT do twitch-precision platforming gauntlets (compromises SotN, Not Hollow Knight)
 
@@ -89,15 +89,28 @@ A SotN-Holy-Glasses-analog item that reveals hidden truths/illusions in the worl
 
 ## MVP Definition
 
-Greybox/juice-first prototype (feel over visuals): one zone — ~6 rooms with one story-threshold that flips the zone's truth mid-run, plus a backtrack reveal of an earlier flipped room — the Denial boss, core combat (combo, clash, deflect; Attack/Jump/Interact), movement state Crouch (stick down-zone), day-one Backdash (double-tap-back + a11y press); Dash locked. One cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Two-stage prototyping: FIRST a single-mechanic combat concept-test (combo weight + clash timing + deflect feel), THEN the ACTUAL greybox MVP with the truth-flip. Success test (testable): the combat concept-test is **concluded — verdict PROCEED** (`prototypes/combat-concept-test/REPORT.md`, all four success criteria met 2026-11-11). The greybox MVP playtest gate: ≥3 outside playtesters × 20-min sessions — pass = ≥2/3 keep playing past the 20-min mark unprompted, ≥1 tester spontaneously mentions the backtrack reveal, and clash timing codes trust on the SYS-01 AC-63 rubric (≥3/5 trust-coded, 0 lag-attribution).
+Greybox/juice-first prototype (feel over visuals): one zone — ~6 rooms with one story-threshold that flips the zone's truth mid-run, plus a backtrack reveal of an earlier flipped room — the Denial boss, core combat (combo, clash, deflect; Attack/Jump/Interact), movement state Crouch (stick down-zone), day-one Backdash (double-tap-back + a11y press); Dash locked (the D-3 mandate adds the gesture ability, not Dash — the unlock-ladder doctrine and its anticipation design stand). One cache station with the death counter, 3–4 memory fragments. Floating-stick touch controls + keyboard. Two-stage prototyping: FIRST a single-mechanic combat concept-test (combo weight + clash timing + deflect feel), THEN the ACTUAL greybox MVP with the truth-flip. Success test (testable): the combat concept-test is **concluded — verdict PROCEED** (`prototypes/combat-concept-test/REPORT.md`, all four success criteria met 2026-11-11).
+
+**The MVP expansion (2026-11-14, user decisions D-1…D-7 — benchmark audit § 5a; the audit's IP-14…IP-17; D-2's wording rides the Anti-Pillars above):**
+
+- **The pause room-grid map** (D-4): SYS-25-minimal — discovered cells + unexplored-doorway ticks — reading the already-MVP `cells_discovered` save family (`TR-RWS-025`); SYS-24 coordinates the pause surface
+- **The MVP gear layer** (D-1): deterministic named Chassis Modules (build modifier + 2-line lore), a two-slot loadout, and the guaranteed Warden-tier drop behind the post-flip partition — the benchmark-pillar-5 (secrets worth finding) seed; authored at SYS-16/17 **after** the low-stat baseline rework lands
+- **The demonic gesture ability** (D-3): the Stinger-like, Tekken-style quarter-spin + Attack combination — demon-granted at MVP, with its grant story moment in SYS-05; **Dash stays locked**; Backdash day-one confirmed as intended (`TR-INP-056`)
+- **The epistemic Epoch-0 tells** (D-6): architectural tells in the existing rooms' Epoch-0 presentation (symmetry, dead conduits, error codes) telegraphing the post-flip openings — an MVP authoring obligation at SYS-09/10; no geometry change, and the dedicated "aha" room stays a zone amendment candidate (the room set is frozen by `AC-RWS-03`)
+- **Benchmark pillars 4/5/6 as MVP priorities** (D-5 — the audit's numbering, not this concept's five pillars): movement pacing — the **450 ms** door-open working default under OQ-RWS-1's playtest question (the reveal arc's 700 ms held signature frame is out of scope); secrets worth finding — the gear seed above; low-friction backtracking — already FIT, protected not regressed as the map and gear land
+- **The low-stat baseline** (D-7): level 1 ≈ 20 HP — the SYS-07 economy rework (strikes, tiers, boss pool, the F-HD bands, the identity-law fixtures re-derive together) is its own amendment session, sequenced BEFORE the gear layer's numbers are authored
+
+The full nine-stat sheet and the essence economy stay VS.
+
+**The greybox MVP playtest gates (phased first contact — user decision 2026-11-14)**: ≥3 outside playtesters × 20-min sessions per contact. **Gate 1 — the core slice** (rooms, flip + reveal, Denial boss, combat core, cache + counter, memories, movement; the **450 ms** door working default already set under OQ-RWS-1): the original pass codes — ≥2/3 keep playing past the 20-min mark unprompted, ≥1 tester spontaneously mentions the backtrack reveal, clash timing codes trust on the SYS-01 AC-63 rubric (≥3/5 trust-coded, 0 lag-attribution). **The expansion increment** — the map (D-4), the gear layer (D-1), the gesture ability (D-3), the epistemic tells (D-6) — lands immediately post-gate-1, shaped by its signal. **Gate 2 — the full expanded slice**: the same pass codes plus the grown elicitation set — AC-RWS-31/32 and AC-HD-44…48 stand unamended, the session scripts grow by four probes: the **map** (is the pause grid consulted unprompted after the flip?), the **gear beat** (is the post-flip Warden drop noticed and equipped?), the **gesture beat** (is the Stinger stumbled into or sought after its grant?), and **tell-noticing** (does any tester mention an Epoch-0 tell without prompting?). The spatial loop-closure question (RM-04→RM-02) stays playtest-gated beside both contacts (IP-1 — amendment-ready, pre-gate no-op).
 
 ## Scope Tiers
 
 | Tier | Included scope | Target timeline / team |
 |---|---|---|
-| MVP | 1 zone, 6 rooms, one story-truth-flip + backtrack reveal, Denial boss, combat core (combo/clash/deflect), cache + death counter, 3–4 memories, greybox visuals | 2–4 weeks, solo |
-| Vertical Slice | One complete errand loop: court briefing → dive (7–8 rooms) → Anger boss → report → contract choice + essence spend | 6–8 weeks cumulative, solo |
-| Full Vision | Hub + 5 realities (~35–40 rooms), 5 self-bosses + demon lord + shapeshifter + 2–3 mini-bosses, 24 memories, 5 shift rules, ~10 contracts, story-revealing item, 2 endings, touch/keyboard/gamepad, MetSys map/minimap/fog-of-war, enemy bestiary | 3–6 months, solo part-time |
+| MVP | 1 zone, 6 rooms, one story-truth-flip + backtrack reveal, Denial boss, combat core (combo/clash/deflect), cache + death counter, 3–4 memories, greybox visuals — **+ the 2026-11-14 expansion (D-1…D-7): the pause room-grid map, the MVP gear layer (named modules · two-slot loadout · the Warden drop behind the post-flip partition), the demonic gesture ability (Dash stays locked), the epistemic Epoch-0 tells, the low-stat baseline (≈20 HP, the SYS-07 rework sequenced ahead of the gear authoring), the 450 ms door working default** | **phased first contact** (re-est. 2026-11-14, producer): core-slice gate ~Jan 2027 → the expansion increment → the full gate ~Mar–Apr 2027 · ~55–70 dev-days · solo part-time + agent harness |
+| Vertical Slice | One complete errand loop: court briefing → dive (7–8 rooms) → Anger boss → report → contract choice + essence spend | ~15–20 dev-days · 7–9 weeks solo part-time, starting after MVP gate 2 (est. VS gate Jun–Jul 2027) |
+| Full Vision | Hub + 5 realities (~35–40 rooms), 5 self-bosses + demon lord + shapeshifter + 2–3 mini-bosses, 24 memories, 5 shift rules, ~10 contracts, story-revealing item, 2 endings, touch/keyboard/gamepad, MetSys map/minimap/fog-of-war, enemy bestiary | ~85–105 dev-days post-VS · ~12–18 months cumulative solo part-time, agent harness (est. 2028) |
 
 *Post-launch / sequel hooks (Tier 3): evidence-withholding system (present or hide proof at court), SotN-style inverted re-tour, NG+, additional endings. Production doctrine: every asset works twice where the story says — mutated zones are one geometry, two palettes; zones the story never flips are single-truth (locked or unchanged); one rig, five grief states. Story is woven into gameplay and visuals, never narrated.*
 
