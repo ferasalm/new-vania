@@ -841,9 +841,12 @@ constants:
     unit: ms
     notes: "The door's scripted arc (42 ticks at 60 tps; the swap at T+21, the 22nd tick;
       busy through T+41, free at T+42). Declared ≤ SCRIPTED_MAX_MS 1200 (V-RWS-13) so
-      Movement's derived worst_case_arc_ms stands. Playtest: OQ-RWS-1."
+      Movement's derived worst_case_arc_ms stands. Playtest: OQ-RWS-1.
+      Greybox working default: 450 ms (game-concept.md, Gate 1); 700 ms remains
+      the authored value until the playtest gate adopts or rejects 450."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-14 (IP-19: the 450 ms greybox working default recorded in the
+      note per the PR #40 review; the registered value stays 700 until the playtest)"
 
   - name: reveal_arc_ms
     status: active
