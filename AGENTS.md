@@ -142,6 +142,12 @@ Every task follows: **Question -> Options -> Decision -> Draft -> Approval**
 
 Context is the most critical resource in an OpenCode session. Manage it actively.
 
+**Tooling and policy**: `production/orchestration/TOOLING.md` (module inventory,
+DCP 3.2.0 + Superpowers `22f0b46`, exact commands, the OCGS/Superpowers division of
+labour) and `production/orchestration/CONTEXT-POLICY.md` (soft 250k / hard 350k,
+the three handoff modes). The model window is 1M; the cap is a quality, cost, and
+latency guard.
+
 **The file is the memory, not the conversation.** Conversations are ephemeral and
 will be compacted or lost. Files on disk persist across compactions and session crashes.
 
