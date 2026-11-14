@@ -1,4 +1,4 @@
-﻿# Orchestration Manifest — the single source of truth for lanes and prompts.
+# Orchestration Manifest — the single source of truth for lanes and prompts.
 #
 # RULES
 #   - Every lane row carries the same prompt_hash as the lane prompt's header.
@@ -12,7 +12,7 @@
 
 version: 1
 generated: "2026-11-15"
-main_hash: "66ae957"
+main_hash: "c480ac0"
 prompt_schema: 1
 
 next:
