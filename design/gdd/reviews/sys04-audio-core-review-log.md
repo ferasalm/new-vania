@@ -189,3 +189,88 @@ files · 1 contract-revision request (CR-AUD-01).
 - **State at pause**: the full GDD, the review log, and the report are committed
   on `docs/sys04-audio-core`. Remaining for the GLM runner: re-verify the
   creative seat on GLM, the sync request, and the PR + one CodeRabbit pass.
+
+## 2026-11-14 — GLM creative rerun: CD gate (re-run on GLM)
+
+- Both creative seats re-spawned with the neutral briefs and the explicit model
+  `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`; the prompt hash
+  `4e689924ac17` re-verified against the manifest row before the rerun.
+- **Seat**: `cd-gate` (glm-5.3-flash). **Verdict: APPROVED — zero blockers.**
+  Pillar service, anti-pillars, player fantasy, scope, contract alignment, and
+  tone all pass; the two reconciliations a reviewer might mistake for drift (the
+  arena's epoch-invariant asset; the wing's material-not-acoustic split) are read
+  as the named rulings they are.
+- **Recommendations (7, all non-blocking) — dispositions**:
+  1. the SYS-10 status label is stale (the frozen GDD's own header reads
+     APPROVED 2026-11-14, S1-002b) — **APPLIED** (the header + §K.3 row);
+  2. the SYS-04 index row's Dependencies column still reads "None" — **DEFERRED
+     to the sync request** (the index is the sync lane's file; the dependency
+     list rides the row completion);
+  3. mark the jump-2 tick's 3 variant files VS-ready — **REBUTTED**: the closed
+     list is frozen TR-JCE-027 (APPROVED 2026-11-13) and is consumed verbatim;
+     the counts (13 voices / 29 files / AC-AUD-15/18) derive from the contract,
+     not from reachability, and Double Jump's MVP reachability is the
+     progression owners' question — a change is the contract's revision route,
+     not this document's;
+  4. make the §D.6 countersign condition explicit — **ALREADY COVERED** (the
+     header's "audio-director countersign pending" + the DS spot-check's tense
+     fix encode it; the approval record will carry it);
+  5. F-AUD-03's dual-target scope — **APPLIED**: the received strikes 6/12/20
+     and tiers 30/60/120 verified against TR-HD-003/006; one scope sentence, no
+     formula or AC change;
+  6. AC-AUD-23's Gate 1 probe needs the QA-plan owner's script amendment —
+     **FLAGGED** in the lane report (a handoff, not a document edit);
+  7. the Gate 2 gear-beat channel is pre-narrowed to "visual" — **APPLIED**: the
+     concept's probe is "noticed and equipped" with no channel pinned.
+
+## 2026-11-14 — GLM creative rerun: creative seat (re-run on GLM — authoritative)
+
+- **Seat**: `creative` (glm-5.3-flash). **Verdict: APPROVED — zero blockers.**
+  The GLM verdict is the authoritative creative pass per the user's hard rule
+  and **supersedes the DS-era creative NEEDS REVISION (3)** — the three DS
+  blockers were repaired in the DS run's 31-row pass (the bed-contrast law, the
+  arc-anchored bands, the three named silences) and are re-verified by this
+  seat's full read.
+- **Prose re-authoring**: the rerun brief's conditional ("re-author the creative
+  prose where the GLM seat flags it — Overview, Player Fantasy, the audio
+  direction/feel, the no-duck framing") is **empty** — the seat flagged no prose
+  in any of those regions (its notes endorse the composition assumption, the
+  fantasy's structural guarantee, and the three-silence routing). **No settled
+  text was reopened**; the DS-era prose stands, now verified by the GLM seat.
+- **Recommendations (7, all non-blocking) — dispositions**:
+  1. regroup Ambience under the Music slider so "mute combat noise" cannot mute
+     the truth-change — **DEFERRED to the user**: it reopens the
+     in-body-resolved OQ-AUD-8 (AC-AUD-22 + §H.4 test the current mapping);
+     recorded in the lane report's decision batch;
+  2. pre-commit the unnoticed-gear/grant response to the TR-JCE-027 revision
+     route — **APPLIED** (§C.3's intro);
+  3. check the held ducked segment does not sit on the loop's most repetitive
+     bar — **APPLIED** (§H.3's carried note);
+  4. ask the AC-SMB-22 owner for a neutral mid-bracket probe so designed
+     stillness is not miscoded as breakage — **FLAGGED** in the lane report
+     (the playtest protocol is the DS run's repaired fixture; not reopened
+     here);
+  5. a Gate 2 ear check on the +3 st band floor (the fix is the floor, never
+     more voices) — **APPLIED** (F-AUD-03's carried note);
+  6. stage one deliberate silent UI interaction early in the Gate 2 session —
+     **APPLIED** (the OQ-AUD-4 probe wording);
+  7. the memory chime's repeat-exposure tolerance across a session — **APPLIED**
+     (§E.2's carried note; the one-variant law stands).
+
+## 2026-11-14 — repair batch (8 one-line edits; zero technical-fact deltas)
+
+- Eight edits to `design/gdd/audio-core.md`, all one-line, non-gating, none
+  reopening the design: the SYS-10 status label (×2), §C.3's routing pre-commit,
+  §C.3 item 3's probe-channel wording, F-AUD-03's scope sentence + the +3 st
+  ear-check note, §H.3's held-segment bar check, §E.2's repeat-exposure note,
+  and the OQ-AUD-4 staged-probe wording.
+- **No formula, count, TR-ID, AC test, contract consumption, or tick value
+  changed.** The counts stand at 39 TR-AUD · 7 F-AUD · 7 V-AUD · 32 ACs (22
+  GUT · 4 LINT · 4 DEVICE · 2 PLAYTEST; 26 smoke · 4 device · 2 MVP-lock ·
+  0 VS) · 14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role rows ·
+  29 audio files · 1 contract-revision request (CR-AUD-01).
+- **The technical seat (DS) is not re-run**: no creative repair changed a
+  technical fact (the F-AUD-03 addition clarifies the variable's existing
+  universal domain `amount ≥ 1`; it moves no threshold and no AC). The
+  mandatory qa-lead spot-check on DS covers the diff as the tripwire.
+- **Next**: the qa-lead spot-check on the repair diff (DS, `4c6bb7c..head`).
