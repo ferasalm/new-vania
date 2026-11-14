@@ -161,3 +161,31 @@
 files · 1 contract-revision request (CR-AUD-01).
 
 **Next**: the mandatory qa-lead spot-check on the repair diff.
+
+## 2026-11-14 — qa-lead spot-check
+
+- **Seat**: `qa-spot-check` (deepseek). **Verdict: PASS.**
+- **Worklist**: 31 rows (the CD gate's 8, creative 3, technical 11, QA 9) — **all
+  APPLIED-CORRECTLY**; zero NOT-FOUND, zero MISAPPLIED.
+- **Counts re-derived**: 39 TR · 7 F · 7 V · 32 ACs (22/4/4/2; the manifest
+  26/4/2/0 = 32) · 14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role
+  rows · 29 files · 1 CR. Every TR is referenced by at least one AC.
+- **Advisories (5, non-blocking, all applied as one-line fixes)**: F-AUD-04's
+  example tick; the §D.6 countersign tense; AC-AUD-23's Gate 1 cohort; the
+  counts line's "17 role rows"; "cross-system calls" wording.
+
+## 2026-11-14 — final micro-check
+
+- **Seat**: a fresh `general`/deepseek pass, diff-scoped to the six advisory
+  fixes (`9d3d018..working tree`). **Verdict: PASS** — six hunks, six lines, no
+  collateral change; the F-AUD-04 example reproduces the formula (unity at 5000,
+  0.5012 at 5008, release 5600–5614, nominal 5615); all counts reproduce; no new
+  placeholder.
+
+## 2026-11-14 — lane PAUSED (model rerun)
+
+- Per the user's hard rule, the audio division reruns on **GLM-5.3-flash**; DS is
+  reserved for technical work. No further authoring on DS; no PR opened.
+- **State at pause**: the full GDD, the review log, and the report are committed
+  on `docs/sys04-audio-core`. Remaining for the GLM runner: re-verify the
+  creative seat on GLM, the sync request, and the PR + one CodeRabbit pass.
