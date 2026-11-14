@@ -33,7 +33,7 @@ The Sanctum's log sits beside the terminal. You read it — and the words undo t
 
 ### Anchor moment — The Wrong Corridor
 
-You go back for the memory you didn't find — the counter said 3 of 4 — and the Cistern you left is not the Cistern you remember. Candlelight where the monitor-glow was. And there, on the back wall you pressed against while dodging the Spitter: a passage. Beyond it a corridor the color of neither truth — the grey of a place between places, a bridge of neither truth holding it together — and the last memory at its end. The backtracking wasn't busywork; it was the second half of the story.
+You go back for the memory you didn't find — the counter said 3 of 4 — and the Cistern you left is not the Cistern you remember. Candlelight where the monitor-glow was. And there, on the back wall you pressed against while dodging the Spitter: a passage. Beyond it a corridor the color of neither truth — the grey of a place between places, a purple bridge holding it together — and the last memory at its end. The backtracking wasn't busywork; it was the second half of the story.
 
 ### Language law
 
