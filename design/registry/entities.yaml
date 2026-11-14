@@ -128,6 +128,7 @@ entities:
     source: design/gdd/room-world-structure.md
     referenced_by:
       - design/gdd/room-world-structure.md
+      - design/gdd/seam-borders.md
     kind: published_contract
     published_by: SYS-02 Room & World Structure
     consumed_by: SYS-32 Camera & Framing (the bounds are the camera's default limits — "room limits first")
@@ -201,6 +202,7 @@ entities:
       - design/gdd/room-world-structure.md
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
+      - design/gdd/seam-borders.md
     kind: published_contract
     published_by: SYS-02 Room & World Structure
     consumed_by: SYS-09 (the palette render) · SYS-10 (the mutations) · SYS-11 (the seam placement) · SYS-03 (the serialization)
@@ -271,6 +273,7 @@ entities:
     referenced_by:
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
+      - design/gdd/seam-borders.md
     kind: published_contract
     published_by: SYS-09 Dual-Reality State & Rendering
     consumed_by: SYS-11 (the PROV_LIM_* ramp — the shared source for the wing + the seam materials) · SYS-29 (PROV_GLITCH_ACCENT consumed by name)
@@ -295,6 +298,7 @@ entities:
     referenced_by:
       - design/gdd/world-mutation-epochs.md
       - design/gdd/room-world-structure.md
+      - design/gdd/seam-borders.md
     kind: published_contract
     published_by: SYS-10 World Mutation & Epochs
     consumed_by: SYS-02 (the readers derive from the epoch — the registry validates the claims) · SYS-09 (the tell lint's delta namespace)
@@ -365,6 +369,56 @@ entities:
       round-trip twin is SYS-03's authoring gate (the carried obligation). The re-fire is
       unconditional per the derived predicate (SYS-09's AC-DR-08 — no session cap; the batch
       pilot withdrew the cap, 2026-11-14)."
+    added: 2026-11-14
+    revised: ""
+
+# 2026-11-14 (seam-borders.md APPROVED — SYS-11): the seam contracts registered.
+  - name: seam_border_contract
+    status: active
+    source: design/gdd/seam-borders.md
+    referenced_by:
+      - design/gdd/seam-borders.md
+      - design/gdd/dual-reality-state.md
+    kind: published_contract
+    published_by: SYS-11 Seam Borders
+    consumed_by: SYS-09 (the renderer applies the step map + tint at its resolve points)
+    values: "SeamBorderContract {schema_version, wing_zone_id, wing_rect_tiles, threshold{rect, step},
+      frame{north{rect, step}, west{rect, step_by_row[]}, east{rect, step_by_row[]}},
+      depth_field{origin_row, span_intervals}, fixtures[], visible_at_epoch_gte (derived),
+      tint: null | {kind, tint_by_step[4], alpha_by_row[], mask_cells,
+      admission_record{ramp_hash, grief_hash, placement_hash, constants_hash}}} · zero collision
+      fields · the band keys on GATE_OPEN(rm03_partition); the frame keys on
+      ZONE_MATERIALIZE(cold_corridor) · step indices 0..3, never hexes · d = clamp((row_y -
+      origin_row)/span_intervals, 0, 1); fill_step = 1 + clamp(floor(3d),0,2); frame_step =
+      clamp(fill_step + SEAM_SIDE_OFFSET, 0, 3); north/band pinned MID · the purple is null (grey
+      default) unless PURPLE_ENABLED AND the P1-P5+G admission AND the art-bible ratification"
+    notes: "SYS-09's renderer applies the recipe at room entry + τ0; no SeamPort; the contract is
+      preloaded (the flip does no load/parse/validate); one ramp-table fetch per resolved zone
+      preserves AC-DR-01's counter. The fill's row sampling is a proposed SYS-09 rider (OQ-7);
+      SYS-11 does not assert it. The band is outside the wing rect and is never tinted (TR-DR-012's
+      absolute bound). SYS-02's Player Fantasy line-36 'purple bridge' conflict is routed to OQ-1."
+    added: 2026-11-14
+    revised: ""
+
+  - name: seam_admission_test
+    status: active
+    source: design/gdd/seam-borders.md
+    referenced_by:
+      - design/gdd/seam-borders.md
+    kind: published_contract
+    published_by: SYS-11 Seam Borders
+    consumed_by: the art-bible pass (the purple's ratification) · SYS-09's owner (the key-level tint countersign)
+    values: "P1-P5 + guards G (F-SMB-05): P1 C(T_i) <= min(C(R_i)+0.035, 0.045); P2
+      |L(T_i)-L(R_i)| <= 0.02, C(D(T_i)) <= 0.005, the four D-L values monotone with min gap >= 0.05;
+      P3 alpha 0 at band/north/fill/fixtures/M4, alpha monotone, max <= 0.5 and >= 1/255, the mask
+      equals the W/E cells minus fixtures/M4; P4 hue distance >= 40 deg from every A/B member and
+      the grief tint, hue in [255,325]; P5 C(T_i) <= 0.5*C(grief); G = four ramp members + grief
+      present/C >= 0.01 + non-empty A/B + the mask equality + the placement hash + a non-empty
+      feasible interval. The admission record hashes the ramp/grief/placement/constants (F-SMB-04);
+      a present-but-unratified tint is a boot failure."
+    notes: "The test runs CI-only (TR-SMB-010); a failed test -> tint null (grey default), not a boot
+      failure. The ramp's L gaps must be >= 0.09 for a guaranteed P2 pass (OQ-4). The key-level vs
+      pixel-level reading of SYS-09's AC-DR-15 is OQ-2; the band's capture inclusion is OQ-3."
     added: 2026-11-14
     revised: ""
 
