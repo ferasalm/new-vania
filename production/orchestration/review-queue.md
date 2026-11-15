@@ -18,9 +18,11 @@ queue).
 
 | Lane | Document | Phase | Owner | Prompt |
 |---|---|---|---|---|
-| ART-BIBLE | `design/art/art-bible.md` | AUTHORING | art-director + creative-director | v1.0.0 |
-| SYS-03 | `design/gdd/save-serialization.md` | AUTHORING | lead-programmer + systems-designer | v1.0.0 |
-| SYS-04 | `design/gdd/audio-core.md` | AUTHORING | sound-designer + audio-director | v1.0.0 |
+| ART-BIBLE | `design/art/art-bible.md` | AUTHORING (parked; D-ORCH-01/02) | art-director + creative-director | v1.0.0 |
+
+SYS-15 left this queue: its GDD is authored, its gates are complete (CD
+APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS), and its
+PR (#59) is open with CodeRabbit pending (§4).
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
 
@@ -32,7 +34,12 @@ queue).
 
 | Lane | PR | Pass | Threads | Dispositions | Status |
 |---|---|---|---|---|---|
-| — | — | — | — | — | idle |
+| SYS-15 | #59 | 1 (initial, 6m48s) | 8 | triage in flight (resumed runner) | fix head pending |
+| SYS-28 | #58 | 2 (initial + confirm re-run) | 6 | 5 applied (`3945b64`) + 1 rebutted (DS-seat routing; recorded) | confirm re-running |
+
+Note: the two lane passes ran concurrently — a serial-rule deviation by the
+autonomous runners, recorded here and in STATE §3. NEW passes (the sync PRs)
+queue behind these recorded dispositions.
 
 Batched cadence: one pass per landed milestone; triage in one batch → one fix
 commit → resolve threads manually with recorded dispositions. A confirm pass only
@@ -42,7 +49,24 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| — | — | — | — | — | idle |
+| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
+
+Full request (read from the lane worktree; `session-state` is gitignored but
+on disk):
+- SYS-28: `../new-vania-sys28-narrative-presentation/production/session-state/lane-SYS-28-report.md` — counts TR 13 / F 3 / V 6 / ACs 15 (13 smoke = 8 LINT + 5 GUT · 0 device · 2 MVP-lock · 0 VS) / OQs 5.
+
+**Landed 2026-11-15** (removed from the active queue): **SYS-15** — PR #63,
+`1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
+`designation_counter` wording narrowed to the GDD's own law; 1 rebuttal — the
+fifth-save-event suggestion closed by AC-CSD-19/OQ-SAV-4); registry 70 → 77
+entries; the index gained the SYS-15 bullet, the APPROVED MVP row and design
+order 12. The full request was
+`../new-vania-sys15-cache-stations-death/production/session-state/lane-SYS-15-report.md` §Sync.
+
+**Landed 2026-11-14** (removed from the active queue; the receipts are in
+`STATE.md` §11/§12): **SYS-03** — PR #47, `50a9a93` (head `07f9b27`; 3 threads:
+2 applied, 1 rebutted) · **SYS-04** — PR #48, `dd33658` (head `6392f84`; admin
+merge, required-review-only; 3 threads: 2 applied, 1 rebutted).
 
 The sync lane acquires the lock in `STATE.md`, rebases on `origin/Main`
 immediately before the edit, applies serially, validates, commits, pushes,

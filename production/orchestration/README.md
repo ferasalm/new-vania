@@ -5,6 +5,15 @@
 >
 > **Read this first**: `STATE.md` (live state) → `manifest.yaml` (source of
 > truth) → `prompts/NEXT.md` (the only prompt the user pastes).
+>
+> **Tooling**: `TOOLING.md` — the module inventory, the two plugins (DCP 3.2.0,
+> Superpowers `22f0b46`), the exact commands, the OCGS/Superpowers division of
+> labour, the 10-minute walkthrough and three exercises.
+> **Context budget**: `CONTEXT-POLICY.md` — the 250k soft / 350k hard policy,
+> the handoff modes, and the measured harness thresholds.
+>
+> **For the human operator**: `OPERATOR.md` — the one-page TL;DR card (the
+> loop, the decision pre-answer format, the unattended-run block).
 
 ## 1. What this is
 
@@ -188,11 +197,36 @@ Never touch `design/gdd/world-mutation-epochs.md`,
   if the head moved. Record the bypass in the landing receipt. Any other blocker
   is diagnosed, not bypassed.
 
-## 11. File map
+## 11. Context budget & handoff
+
+The model window is 1M; the operating cap is **350k** (quality, cost, latency).
+Full policy: `CONTEXT-POLICY.md`.
+
+| Trigger | At | Action |
+|---|---|---|
+| Soft | **250k** | update `STATE.md` + `active.md`, write the handoff, finish the atomic step, stop starting new work |
+| Hard | **350k** | stop, hand off, end the session |
+| Emergency | ~898k | harness auto-compaction (`compaction.buffer: 150000`) — never a working mode |
+
+**Handoff modes**: (a) **fresh chat** — the default for creative/design/
+architecture; (b) **`/clear`** — technical/ops only, with the transcript saved and
+the cleared context verifiably empty; (c) **compaction** — mechanical work only,
+with the clause *"the summary is an index, not the source of truth; re-read
+STATE/manifest/reports."*
+
+DCP's `compress` buys room **inside** a session; it is not a handoff. The template
+is `prompts/handoff.md`; the orchestrator's paste source is `prompts/NEXT.md`
+(now a mode-agnostic handoff prompt: current task, state files, next action,
+constraints, model routing, WIP limits, paste-check, and the re-read clause).
+
+## 12. File map
 
 | Path | Purpose |
 |---|---|
 | `README.md` | this manual |
+| `OPERATOR.md` | the one-page TL;DR card for the human operator |
+| `TOOLING.md` | modules, plugins, commands, OCGS↔Superpowers, walkthrough |
+| `CONTEXT-POLICY.md` | the 250k/350k budget, handoff modes, harness thresholds |
 | `STATE.md` | the single live state/log |
 | `manifest.yaml` | the single source of truth for lanes/prompts |
 | `review-queue.md` | the WIP/review/sync ledger |
@@ -200,14 +234,15 @@ Never touch `design/gdd/world-mutation-epochs.md`,
 | `lane-kickoff-master.md` | the master prompt with all lane blocks |
 | `prompts/lane-runner.md` | the generic per-lane runner |
 | `prompts/sync-lane.md` | the single shared-file writer |
-| `prompts/orchestrator-loop.md` | the short repeatable orchestrator prompt |
+| `prompts/orchestrator-loop.md` | the short repeatable orchestrator prompt (NEXT.md body) |
+| `prompts/handoff.md` | the mode-agnostic handoff template (any role) |
 | `prompts/NEXT.md` | the one prompt the user pastes (generated) |
 | `prompts/seat-briefs/*.md` | the neutral seat briefs |
 | `prompts/lanes/*.md` | the per-lane prompts (generated) |
 | `landings/*.md` | landing receipts and preserved lane states |
 | `../../tools/orchestration/render-prompts.mjs` | the prompt renderer/checker |
 
-## 12. The orchestrator loop (short form)
+## 13. The orchestrator loop (short form)
 
 1. Read `STATE.md` + `manifest.yaml`.
 2. Check blockers; resolve soft blockers by switching lanes.
@@ -215,5 +250,7 @@ Never touch `design/gdd/world-mutation-epochs.md`,
 4. Do not author. Do not read full GDDs.
 5. Update `STATE.md` at every lane boundary.
 6. Batch user decisions in `decisions.md`.
-7. Stop only on a hard blocker.
+7. Stop only on a hard blocker, a contract revision, an art-bible direction, a
+   required-review refusal, or the 350k context hard trigger.
 8. Keep `NEXT.md` current; the user pastes only from it.
+9. At 250k: finish the atomic step, write the handoff, stop starting new work.

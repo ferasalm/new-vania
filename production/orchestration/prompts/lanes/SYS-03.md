@@ -6,7 +6,7 @@ Version: 1.0.0
 Model: cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017
 Hash: 8fbc08eec5c0
 Source: production/orchestration/lane-kickoff-master.md
-Generated: 2026-11-14
+Generated: 2026-11-15
 -->
 
 ## Shared contract — every lane

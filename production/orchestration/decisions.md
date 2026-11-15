@@ -63,7 +63,32 @@
 
 | ID | Lane | Decision | Date | Record |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| D-ORCH-04 | process | Lane runners spawn as the `lane-runner` agent (nested seats restored); §3.6 demoted to last resort; SYS-15/SYS-28 fallback records stand | 2026-11-15 | PR: `chore/lane-runner-subagent`; `TOOLING.md` §5.1 |
+
+### D-ORCH-04 — Nested seat spawning for lane runners (process)
+
+- **Context**: the SYS-15 and SYS-28 lane runners were spawned as OpenCode's
+  built-in `general` subagent, which **cannot launch further subagents** (V2
+  docs, built-ins table); both fell back to the lane-runner contract §3.6
+  (seats as in-session passes on the lane's GLM model). The V2 agents doc
+  confirms nesting is a per-agent `subagent` **permission**, not a hard
+  recursion guard: "The parent agent's `subagent` permissions control which
+  agents it may launch."
+- **Decision (user-approved 2026-11-15)**:
+  1. Add an `agents.lane-runner` definition to project `opencode.json`
+     (`mode: subagent`; `subagent` permission allowed for `*`) and set
+     `experimental.subagent_depth: 2` (the schema-verified depth setting; the
+     default of one blocks the runner's seats). The
+     orchestrator spawns lanes as `agent: "lane-runner"` with the manifest
+     model passed explicitly.
+  2. Demote the §3.6 in-session fallback in `prompts/lane-runner.md` to a
+     last-resort path requiring the orchestrator's explicit order (reported
+     costs: seat independence, per-seat model routing, parallelism).
+  3. The §3.6 fallback records on SYS-15 (PR #59) and SYS-28 (PR #58) **stand**
+     — both gate trails are closed (micro-check PASS); a DS re-pass is NOT
+     ordered. Each landing receipt notes the limitation.
+- **Blocking?** No — process quality for future lanes.
+- **Status**: **RESOLVED** (2026-11-15).
 
 ## Standing authorizations
 
@@ -75,6 +100,12 @@
   Any other blocker is diagnosed, not bypassed.
 - **Checkpoint commits**: the user pre-authorizes small conventional checkpoint
   commits + pushes within a lane branch. No commits on `Main`; no force-push.
+- **Model-failure fallback** (user decision, 2026-11-15): after 4 failed spawn
+  attempts on server-side errors (routing errors, `AiError: Capacity temporarily
+  exceeded`, 5xx/rate limits), a technical (DS) lane may fall back to GLM
+  autonomously — recorded here. A creative (GLM) lane must never fall back to
+  DS without an explicit user decision: park it `PAUSED` and surface the
+  decision, or issue a launch package for a parallel chat on the same model.
 - **Batched cadence**: one CodeRabbit pass per landed milestone; triage in one
   batch; one fix commit; resolve threads manually; a confirm pass only for a
   Major-class fix batch.
