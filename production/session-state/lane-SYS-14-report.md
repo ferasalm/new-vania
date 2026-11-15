@@ -1,6 +1,6 @@
 # Lane SYS-14 — report
 
-- **Status**: PR_OPEN — **PR #82: mergeState CLEAN · 0 unresolved CodeRabbit threads · 5/5 CI checks green** (the final head `268398e`). Awaiting the orchestrator: the sync application → the merge (the required-reviewer rule is the only recorded blocker; the admin-merge fallback is pre-authorized per the lane contract §5.4 — bind the head with `--match-head-commit`).
+- **Status**: PR_OPEN — **PR #82 at the final head `2007f20`: mergeState CLEAN · 0 unresolved CodeRabbit threads · 6/6 checks green (5 CI + CodeRabbit)**. Awaiting the orchestrator: the sync application → the merge (the required-reviewer rule is the only recorded blocker; the admin-merge fallback is pre-authorized per the lane contract §5.4 — bind the head with `--match-head-commit`).
 - **Branch / worktree / PR**: `docs/sys14-grief-boss-framework` / `../new-vania-sys14-grief-boss-framework` / **PR #82** (https://github.com/ferasalm/new-vania/pull/82, `--base Main`, opened on `9aff9e8`; the final head `268398e`)
 - **Prompt**: v1.0.0 / `a6ae5fbdfe32` (matches manifest: **yes** — verified by `node tools/orchestration/render-prompts.mjs --check` → ✔; the lane ran on the manifest model GLM — a creative lane on GLM, as required)
 - **Base SHA**: `b99171429273271db2c0867b3c0a805469ad7888` (ancestry verified: `git merge-base --is-ancestor` → OK)
