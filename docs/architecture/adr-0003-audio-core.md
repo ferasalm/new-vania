@@ -1,4 +1,4 @@
-# ADR-0003: Audio Core — Bus Graph, Voice Pool, and the Flip's Sound Mechanism
+﻿# ADR-0003: Audio Core — Bus Graph, Voice Pool, and the Flip's Sound Mechanism
 
 ## Status
 
@@ -53,10 +53,10 @@ poisoned-sentinel run possible at all.
 |-------|-------|
 | **Engine** | Godot 4.7.2 (pinned; GDScript) |
 | **Domain** | Audio (+ Core, for the tick/thread boundary) |
-| **Knowledge Risk** | **MEDIUM** — the audio API is stable across 4.4–4.7 per the repo's snapshot ("No major breaking changes to the audio API in 4.4–4.6"), but two *mechanisms* this ADR needs are undocumented or unverified: the stereo→mono collapse and the Ogg loop seam. Both are probe-gated (§13) |
+| **Knowledge Risk** | **MEDIUM** — the audio API is stable across 4.4–4.7 per the repo's snapshot ("No major breaking changes to the audio API in 4.4–4.6"), but two *mechanisms* this ADR needs are undocumented or unverified: the stereo→mono collapse and the Ogg loop seam. Both are probe-gated (§14) |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `modules/audio.md`; `breaking-changes.md` (4.7 `AudioStreamPlayer.area_mask` default; 4.7 `AudioEffectSpectrumAnalyzer.tap_back_pos` removed); `deprecated-apis.md`; `docs/framework/technical-preferences.md` |
 | **Post-Cutoff APIs Used** | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` (**documented in `modules/audio.md`**); `AudioServer.set_bus_effect` + the effect slot model **[unverified for 4.7.2's limiter class name: `AudioEffectLimiter` vs `AudioEffectHardLimiter`]**; `AudioStreamPlayer.play(from_position)` **[unverified parameter name]**; `AudioStreamOggVorbis.loop` / `loop_offset` **[unverified for gapless behaviour]**; `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end`; `AudioEffectCapture` (the loop-seam probe); `AudioStreamPlayer.area_mask` default `0` (4.7 — irrelevant here: no `Area` audio overrides in the audio graph, and none may be added) |
-| **Verification Required** | The 8-item register in §13. 4 items are `PROBE-PENDING` and block the first SYS-04 implementation story (and, for item 2, the bed assets' import); 4 are `DOCUMENTED`. |
+| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (MEDIUM).** Two traps are specific to this decision.
 > (1) The `AudioStreamPlayer.area_mask` default changed to `0` in 4.7: an
@@ -198,12 +198,13 @@ no second duck family; no reading the truth state; no per-press chatter.
               physics_tick  AudioServer  18 players   ring     {event_id,tick}
 ```
 
-**The seam is one-way.** The adapter subscribes to the six publishers and
-forwards stamped edge events; the core returns **commands** (start voice N with
-stream S at gain G, set bus volume V, emit record R); the adapter executes them.
-Nothing in the core calls `AudioServer`, `AudioStreamPlayer`, `Time`,
-`SceneTree`, `RenderingServer`, or reads `truth_epoch` — that is V-AUD-04, and it
-is enforceable by grep because the core holds ports instead of singletons.
+**The seam is one-way.** The adapter subscribes to the **five publishers** (SYS-09,
+SYS-29, SYS-10, SYS-02, SYS-05) and forwards stamped edge events; the core returns
+**commands** (start voice N with stream S at gain G, set bus volume V, emit record
+R); the adapter executes them. Nothing in the core calls `AudioServer`,
+`AudioStreamPlayer`, `Time`, `SceneTree`, `RenderingServer`, or reads
+`truth_epoch` — that is V-AUD-04, and it is enforceable by grep because the core
+holds ports instead of singletons.
 
 **Why this matters beyond style.** V-AUD-04's poisoned-sentinel run ("a stubbed
 bed run produces the identical order trace with the truth state replaced by a
@@ -236,6 +237,11 @@ Master (0 dB)  ──[ Limiter ]──▶ device
   defaults to `0`; an `Area`-driven override would silently stop applying. The
   bus is a property of the voice's slot. (This is a *structural* answer to a
   version trap, not a stylistic preference.)
+- **The repo's own audio reference shows the forbidden pattern.** `modules/audio.md`'s
+  "Playing Audio" example fades with `create_tween().tween_property(music_player,
+  "volume_db", …)` — linear in **dB**, on `_process`. It is the exact shape R2
+  forbids; an implementer who copies the reference will fail AC-AUD-02. The
+  reference is a quick-reference, not this project's law: §6 is.
 
 ### 4 · The MONO stage
 
@@ -245,28 +251,67 @@ mono, one-shots mono); the score is the only stereo asset. So MONO's whole job i
 the score, and the GDD names the difficulty honestly: "*a stereo→mono sum on
 Master (no documented built-in)*".
 
-**Decision.** MONO is one **Master-bus stage behind a `MonoStage` interface**, and
-the MVP implementation is a **second encode of the score**, not an engine sum:
+**Decision.** `MonoStage` is a **stream strategy on the Music voice** — *not* a bus
+effect — and the MVP implementation is a **second encode of the score**, not an
+engine sum:
+
+```gdscript
+## The MONO strategy. The ONLY thing that differs between implementations is how the
+## Music voice's stereo image is collapsed. The upgrade path (a native Master effect)
+## replaces this object; no call site changes.
+class_name MonoStage extends RefCounted
+## @param player  the Music voice's AudioStreamPlayer
+## @param at      the tick the toggle was requested
+## @return        the tick the swap actually lands (see the deferral rule)
+func apply(player: AudioStreamPlayer, at: int) -> int
+func restore(player: AudioStreamPlayer, at: int) -> int
+```
 
 - The score ships as `MUS_HOUSE_LOOP` (stereo, the only stereo asset) **and** its
-  mono fold `MUS_HOUSE_LOOP_MONO` — a content-pipeline artifact of the same
-  asset, not a new voice and not a new bed. **The GDD's 29-asset arithmetic
-  stands** (25 one-shots + 3 beds + 1 score); the fold is an encode, and the disk
-  budget carries it (3.7 MB → ~4.25 MB against a 10 MB bar, §G.7).
-- The toggle swaps the Music player's stream **preserving the playhead**
-  (`play(from_position)`), preceded by a **2-tick per-voice gain ramp** so the
-  swap cannot click. The ramp is a per-voice gain motion, the same mechanism the
-  bed recede uses — **never a `duck_request`** (V-AUD-01's one-duck audit would
-  fail, and a settings toggle is not a mix beat).
+  mono fold `MUS_HOUSE_LOOP_MONO`. The fold is a **30th file** (see the contract
+  note below) with its own §G.6 import row: Ogg Vorbis q0.6–0.7, **mono**,
+  44.1 kHz, loop on, +~0.55 MB. Disk: 3.7 → ~4.25 MB against the 10 MB bar.
+- **The swap preserves the playhead** (`play(from_position)`) and is preceded by a
+  **2-tick per-voice gain ramp** (1 tick down to the swap floor, the swap, 1 tick
+  back up — 33 ms total), so the stream change cannot click. The ramp is a
+  per-voice gain motion, the same mechanism the bed recede uses — **never a
+  `duck_request`** (V-AUD-01's one-duck audit would fail, and a settings toggle is
+  not a mix beat).
+- **The deferral rule.** If the toggle is requested **inside [E1, E7]**, the swap is
+  deferred to the first `IDLE` tick after the window: the pause screen is reachable
+  during the bracket (AC-AUD-29 #12), and a 2-tick gain ramp there would be a
+  second audible motion inside the stillness bracket. The toggle's *setting* is
+  recorded immediately; only the *swap* waits.
+- **The fold's loudness is matched to the stereo encode** (a pipeline RMS/LUFS
+  assert), so the toggle reads as a stereo collapse, not a volume step.
+- **The pipeline rule**: no stereo asset may ship without a fold (or the native
+  `MonoStage` upgrade). A second stereo asset at VS would otherwise silently break
+  "collapses every bus".
+- **The fold's missing-asset path** is §G.8's: `AUD_ASSET_MISSING {asset_id:
+  "MUS_HOUSE_LOOP_MONO", tick}`, the toggle stays off, the stereo stream continues,
+  and the record is rate-limited to one per asset per run. The audio never fails a
+  toggle into silence.
 - **Nothing else changes**: the four mono buses are unaffected, no bus gain moves,
   no snapshot changes.
+
+**Contract note (CR-AUD-03, carried).** The GDD's counts line records **29 audio
+files** and its §G.6 table has one stereo Score row, while AC-AUD-32's `[LINT]`
+asserts "every asset … match §G.6". Shipping a 30th file therefore **requires** a
+one-line contract revision: the counts line 29 → 30, the §G.6 Score row gaining the
+mono-encode row, and AC-AUD-32's scope naming it. **This ADR files CR-AUD-03 rather
+than reinterpreting a frozen count**, and carries it as an obligation — the ADR's
+*decision* (the `MonoStage` interface + the fold) is sound either way; only the
+count and the audit's scope need the user's nod. If CR-AUD-03 is declined, the
+fallback is the native summing effect behind the same interface (Alternative 6),
+which restores 29 files at the cost of a GDExtension build.
 
 **Why not an engine sum.** A summing `AudioEffect` would need a GDExtension build
 (a native toolchain and export-binary verification the MVP pipeline does not
 have), and the GDD itself records that no documented built-in exists. A
 double-encode is GDScript-only, deterministic, and testable — and it reduces the
 GDD's second probe from "does a stereo→mono sum exist?" (an engine question) to
-"does the swap click?" (a two-tick ramp question, answerable in one fixture).
+"does the swap click?" (a two-tick ramp question, answerable in one fixture,
+register item 3).
 
 **The upgrade path.** If the sound-bible pass finds the fold audible at the
 toggle (a stereo image collapsing abruptly), the fix is a native summing effect
@@ -279,6 +324,22 @@ implementation is swappable.
 `max_polyphony = 1`: 13 on SFX (12 pool + **1 reserved flip slot**), 4 on
 Ambience, 1 on Music, 0 on UI. `allocated = 12 + 4 + 1 + 1 + 0 = 18` of a 20 hard
 cap (2 slack) — the arithmetic reproduces from the knobs (F-AUD-05, AC-AUD-11).
+
+**A voice may hold more than one slot.** Four voices declare `Max conc. = 2`
+(`EV_DAMAGE_TICK`, `EV_DEFLECT`, `EV_JUMP2_TICK`, `EV_DEFEAT_TICK` — §E.2), and
+`max_polyphony = 1` per player means a second concurrent instance of one of those
+voices takes **a second slot from the same pool**, not a second voice on one
+player. The mapping is explicit and auditable:
+
+- each slot carries `voice_id`; the pool's candidate array is **per slot**, so a
+  conc-2 voice can occupy two slots and each is individually stealable;
+- a conc-2 voice is **capped at its declared 2** by the core (a third concurrent
+  request for the same voice drops);
+- the voice's retrigger floor (1/2/3/21/30 ticks, §E.2) is evaluated **per voice**,
+  before slot admission — so the floor, not the pool, is what prevents a flurry
+  from consuming the whole bus;
+- the theoretical 15-voice instant worst case still exceeds the 12-slot SFX pool,
+  which is exactly why the steal rule exists (§G.3).
 
 - **Why fixed players, not `max_polyphony` on a few nodes**: the steal rule needs
   per-voice identity (class, age, signature flag) and the closed-list audit needs
@@ -322,7 +383,9 @@ computed from F-AUD-02's tick boundaries:
   starting at the floor, at the release boundary — never a resume, never a
   pre-roll (§G.5, TR-AUD-030).
 - **`min(recede_ticks, N)`** guards a short freeze: the recede compresses, the
-  hold disappears, the arrival still waits for the boundary.
+  **floor hold becomes zero — never negative** (`floor_hold = [recede_end,
+  release_boundary)` is empty when `recede_end ≥ release_boundary`), and the arrival
+  still waits for the boundary.
 - **The arena is excluded by the order record**, not by a runtime check: the
   target set `{RM-01..RM-05}` and `excluded {RM-06}` are carried in the order
   record so the assertion holds even when only one bed is sounding (TR-AUD-008,
@@ -363,8 +426,13 @@ func apply_duck(request: DuckRequest) -> void:
   unchanged). The **backstop** is the offline screen's tree-exit
   (`AUD_DUCK_RELEASE_BACKSTOP`), because a lost release edge would leave the score
   ducked forever.
-- **A missing bus** drops the request with one record — **never a silent Master
-  duck**.
+- **A missing bus** drops the request with one `AUD_DUCK_BUS_MISSING` record —
+  **never a silent Master duck**.
+- **The third exit is SYS-15's, and SYS-15 is not authored**: this ADR *assumes* the
+  offline screen has three exits (reconstruct, revive, quit) and that the quit exit
+  releases the duck. The assumption is recorded beside O-AUD-1, and the tree-exit
+  backstop makes the release robust to whatever SYS-15 decides — a missing edge
+  costs a telemetry record, never a permanently ducked score.
 - **One application site** is structural: the duck lives in `DuckStage` and
   `apply_duck` is its only entry; V-AUD-01's static audit finds exactly one call
   site, and no hit-stop / flip / seam / reveal-hold / pause source calls it.
@@ -396,7 +464,8 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
 | Asset class | Format | Channels | Rate | Loop | Engine side |
 |---|---|---|---|---|---|
 | Beds | Ogg Vorbis q0.5–0.6 | mono | 44.1 kHz | on, seamless | `AudioStreamOggVorbis.loop = true`; the loop seam is **probe item 2** |
-| Score | Ogg Vorbis q0.6–0.7 | stereo | 44.1 kHz | on, seamless | as above; plus the mono fold (§4) |
+| Score (stereo) | Ogg Vorbis q0.6–0.7 | stereo | 44.1 kHz | on, seamless | as above; **CR-AUD-03** adds the row below |
+| Score (mono fold) | Ogg Vorbis q0.6–0.7 | **mono** | 44.1 kHz | on, seamless | `MUS_HOUSE_LOOP_MONO` (§4); the same loop pin; a **30th file**, pending CR-AUD-03 |
 | One-shots | WAV 16-bit PCM | mono | 44.1 kHz | off | trimmed, −3 dBFS peak, no silence padding; no loop flags |
 
 - **The import flags are committed** (`*.ogg.import` / `*.wav.import`) and an
@@ -405,28 +474,38 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
 - **Probe 1 — the limiter class** (register item 1): which of
   `AudioEffectHardLimiter` / `AudioEffectLimiter` 4.7.2 exposes, and its
   gain-reduction readback for AC-AUD-20's ≤ 3 dB high-water.
-- **Probe 2 — the Ogg loop seam** (register item 2): record ten loop iterations
-  through an `AudioEffectCapture` on the Ambience bus and assert no discontinuity
-  above the seam threshold at the loop point (encoder padding is the risk).
+- **Probe 2 — the Ogg loop seam** (register item 2): **run in a dev-only probe
+  scene on a dedicated probe bus layout** — the probe's `AudioEffectCapture` is
+  *not* part of the production graph, and §3's one-effect law applies to the
+  shipping layout only (the exemption is named here so the probe cannot be read as
+  a second production effect). Method: record ten loop iterations on the probe
+  bus; **pass** = no sample-to-sample delta above `SEAM_DELTA_MAX` (the loudest
+  legal transient in the bed's own material, measured once on the bed's interior)
+  at any of the ten loop points; **fail** = any seam delta above it.
   **Fallback, pre-priced**: beds as `AudioStreamWAV` with
   `loop_mode = LOOP_FORWARD` and sample-exact `loop_begin`/`loop_end` — mono
-  44.1 kHz 16-bit is 88.2 kB/s, so the three beds fit the 10 MB bar at a combined
-  bed duration ≤ ~84 s (10 − 1.1 score − 1.5 one-shots = 7.4 MB). The fallback
-  changes no law; only the file format.
-- **No `AudioEffect` other than the limiter** may be added without a new ADR: the
-  "one effect" property is what makes the mix auditable.
+  44.1 kHz 16-bit is 88.2 kB/s, so the beds fit the 10 MB bar at a combined
+  duration ≤ **~78 s** (10 − 1.1 score − **0.55 mono fold** − 1.5 one-shots =
+  6.85 MB). The fallback also makes the beds **resident rather than streamed**:
+  its runtime cost is priced against the 16 MB bar (~+2 MB at 78 s), not only the
+  disk bar. It changes no law; only the file format and the residency.
+- **No `AudioEffect` other than the limiter** may be added to the **production**
+  graph without a new ADR: the "one effect" property is what makes the mix
+  auditable. (Probe scenes and the dev-only probe layout are exempt and never
+  ship.)
 
 ### 11 · Epoch-blindness and the ports
 
-The core consumes **six** inbound things and publishes **none**:
+The core consumes **five inbound signal sources plus the clock** and publishes
+**none**:
 
 | Inbound | Owner | Port | Missing → |
 |---|---|---|---|
 | E1 / E4 / E7 | SYS-09 | adapter signal | `AUD_MISSING_E1/_E7` (E4 has no obligation) |
 | E2 / E5 / E6 | SYS-29 | adapter signal | `AUD_MISSING_E2/_E5/_E6` + the named behaviour (§G.8) |
 | E3b `ambient_shift` | SYS-10 | adapter signal | `AUD_MISSING_E3B`; **the bed stays put; no self-shift** |
-| Room activation | SYS-02 | adapter signal | the bed re-applies at the next entry |
-| Load-complete (`restored_epoch`) | SYS-05 (§12) | adapter signal | `AUD_LOAD_MISSING`; the derived state stands |
+| Room activation | SYS-02 | adapter signal | **no record** — the only inbound whose absence has no distinct behaviour: the bed stays as it is and the next real room entry re-applies the room's bed. Named here as the one exception to R9, so "every missing input has a record" is not silently false |
+| Load-complete (`restored_epoch`) | SYS-05 (§12, O-AUD-1) | adapter signal | `AUD_LOAD_MISSING`; the derived state stands |
 | The tick | ADR-0001 | `ClockPort` | a boot-order defect; the dev assert |
 
 **The allowlist** is exactly two read-only ports: the tuning read
@@ -459,9 +538,20 @@ request therefore resolves to a precise owner:
   the derived epoch-0 state. The bounded fallback is the GDD's own, and it is
   **not** a blocker for the audio core.
 - **O-AUD-1** (carried obligation): SYS-05's authoring must include
-  `restored_epoch` on `load_complete`. Recorded here and in the lane report; **no
-  frozen contract is edited** — SYS-04's text is unchanged, and this is a seam
-  resolution, not a revision.
+  `restored_epoch` on `load_complete`, and must assert it is present and
+  non-default after a post-flip load. Recorded here and in the lane report.
+
+**CR-AUD-04 (contract-revision request, carried).** TR-AUD-002's publisher map
+says "*the load-complete is SYS-03's (its payload carries `restored_epoch` —
+CR-AUD-02's request)*" — which SYS-03's landed contract contradicts: SYS-03
+publishes `restore_complete` + `load_result`, and `load_complete` is SYS-05's.
+An implementer reading TR-AUD-002 verbatim would subscribe the adapter to an event
+that does not exist. **That is a one-clause correction to a frozen GDD, so it rides
+the contract-revision route** (the `decisions.md` batch, alongside CR-AUD-01/02),
+not a self-declared exemption: TR-AUD-002's publisher row becomes
+"load-complete — SYS-05 (its payload carries `restored_epoch`)". O-AUD-1 is the
+carrying obligation; **this ADR changes no decision either way**, and no frozen
+text is edited here.
 
 ### 13 · Test seams
 
@@ -482,34 +572,48 @@ request therefore resolves to a precise owner:
 
 ### 14 · The engine verification register
 
-| # | Item | Verdict | Blocks |
-|---|---|---|---|
-| 1 | The Master limiter class in 4.7.2 (`AudioEffectHardLimiter` vs `AudioEffectLimiter`) and its gain-reduction readback | **PROBE-PENDING** | The first story; AC-AUD-20 |
-| 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (beds, score) | **PROBE-PENDING** | The beds' import; AC-AUD-28/30 |
-| 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | The MONO stage; AC-AUD-22 |
-| 4 | `AudioServer.set_bus_volume_db` per tick at 60 tps is within the core's tick bar and does not zipper | **PROBE-PENDING** | AC-AUD-02/21 |
-| 5 | Five buses + one Master effect is inside the mobile mix budget (the limiter is the only CPU cost) | **DOCUMENTED** (`modules/audio.md`: the mixing is on the audio thread) | — |
-| 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`) | — |
-| 7 | `AudioEffectCapture` can record the Ambience bus for the loop-seam probe | **DOCUMENTED** (the class is the documented capture route) | — |
-| 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **DOCUMENTED** | — |
+Every `PROBE-PENDING` row carries a **Method** (a runnable protocol with a
+pass/fail) and an **Owner**, so a probe closes or fails rather than being narrated.
+The `Blocks` column names **what the probe gates**, which is the probe itself plus
+the AC it unblocks — not an AC that already tests something else.
 
-`PROBE-PENDING` is an open verdict: items 1–4 block the first implementation story
-and item 2 blocks the beds' import. No story may consume one as settled fact.
+| # | Item | Verdict | Method (pass = ) | Owner | Blocks |
+|---|---|---|---|---|---|
+| 1 | The Master limiter class in 4.7.2 (`AudioEffectHardLimiter` vs `AudioEffectLimiter`) and its gain-reduction readback | **PROBE-PENDING** | instantiate both candidates; the surviving class is instantiated on Master and its reduction is readable during AC-AUD-20's loudest fixture | godot-specialist | The first story; AC-AUD-20's ≤ 3 dB high-water |
+| 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (beds, score) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene: zero seam deltas above `SEAM_DELTA_MAX` at ten consecutive loop points | sound-designer + godot-specialist | **The beds' and score's import**; the WAV fallback decision |
+| 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | the swap at tick T: the post-swap `playback_position` is within 1 tick of the pre-swap value, and the gain ramp's two ticks are exact | lead-programmer | The MONO stage; AC-AUD-22's collapse assertion becomes meaningful |
+| 4 | Per-tick `set_bus_volume_db` at 60 tps is inside the core's tick bar and does not zipper | **PROBE-PENDING** | a 15-tick ramp at 240 ms: the core's tick stays within p99.9 ≤ 0.10 / max ≤ 0.30 ms **and** a capture of the ramp shows no step above `ZIPPER_DELTA_MAX`; a staircase reading fails the probe and moves the envelope to a per-tick interpolation inside one audio-thread callback | performance-analyst | AC-AUD-21 (the tick bar) + AC-AUD-02's schedule fidelity |
+| 5 | Five buses + one Master effect is inside the mobile mix budget | **PROBE-PENDING** | measured as an **extra instrument** during AC-AUD-21's device run (mixer CPU share, no new AC); the bar is "the audio thread's share stays under 25% of the frame" | performance-analyst | The graph's viability on the reference SKU |
+| 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`'s "Audio Buses" block) | — | — | — |
+| 7 | `AudioEffectCapture` can record a bus for the loop-seam probe | **PROBE-PENDING** | the probe scene captures 10 s of a known loop and the capture's length matches within one buffer | godot-specialist | Probe 2's method |
+| 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **PROBE-PENDING** | a WAV bed loops 100× with zero seam delta; `loop_end − loop_begin` equals the authored sample count | sound-designer | The fallback's viability (only if probe 2 fails) |
+
+`PROBE-PENDING` is an open verdict: items 1–5 and 7–8 block their named gates, and
+item 2 blocks the beds' and score's import. No story may consume one as settled
+fact. **Only item 6 is documented by the repo's own snapshot** — a grep for
+`AudioEffectCapture`, `loop_mode` or "audio thread" in
+`docs/engine-reference/godot/` finds nothing, which is why the rest are probes.
 
 ### Architecture diagram — the flip's 34 ticks
 
 ```
 tick  100        101        116      119              134
-      │ E1       │ E2+E3b   │        │ E6             │ E7 → arrive_end
-      │ arm      │ gate shut│ recede │ gate open      │ resume
-      │ beds+    │ recede→  │ ends   │ arrival starts │
-      │ tear     │ tear at  │        │ at the floor   │
-      │ resident │ τ0       │        │                │
+      │ E1       │ E2+E3b   │        │ E6 + E7        │ arrive_end
+      │ arm      │ gate shut│ recede │ gate open      │ (the arrival's fade
+      │ beds+    │ recede→  │ ends   │ arrival starts │  completes; E7 was
+      │ tear     │ tear at  │        │ + gameplay     │  at 119)
+      │ resident │ τ0       │        │   resumes      │
       │          └── floor hold ──────┘                │
       │  zero orders before τ0 · zero arena orders anywhere in [100,134]
       │  zero ducks · zero snapshot changes · zero loop restarts
       └── the score untouched, playing, at the same playhead
 ```
+
+**E7 is at 119, not 134.** `flip_complete` fires with E6 at the release boundary and
+the gameplay one-shots resume there; the arrival's fade *continues* to
+`arrive_end` (134) as a voice envelope. 134 is a fade boundary, never a resume
+boundary — an implementer who resumes at 134 is 15 ticks late and fails AC-AUD-06
+and AC-AUD-02's schedule.
 
 ### Key interfaces
 
@@ -701,6 +805,8 @@ enum VoiceClass { P0_RESERVED, P1_SIGNATURE, P2_COMBAT, P3_FEEDBACK }
 | The duck's release edge is lost | Medium | Medium | The offline screen's tree-exit backstop + `AUD_DUCK_RELEASE_BACKSTOP` |
 | Epoch-blindness erodes (a convenience read) | Medium | High | V-AUD-04's grep + the poisoned-sentinel run; `MVP_FLIP_TO_EPOCH` is a constant |
 | `restored_epoch` never lands on SYS-05 | Medium | Medium | O-AUD-1 carried to SYS-05's authoring; the bounded fallback is playable |
+| CR-AUD-03 (the mono fold's count/audit row) is declined | Medium | Low | The decision stands; the fallback is the native summing effect behind the same `MonoStage` (29 files, a GDExtension build) |
+| CR-AUD-04 (TR-AUD-002's publisher row) is declined | Low | Medium | The adapter still subscribes to SYS-05's `load_complete` (the only event that exists); the frozen text stays wrong and a reader can be misled — the ADR's §12 note is the mitigation until the correction lands |
 
 ## Performance Implications
 
@@ -741,12 +847,19 @@ superseding ADR would replace the graph, not the laws.
 
 ## Validation Criteria
 
+**Two gates, two lists.** Criteria 1–15 are the **ADR acceptance** list. Criteria
+16–17 are the **story gate** (they cannot hold at acceptance by construction — the
+probe register and the engine-facing measurements close at the first
+implementation story).
+
+**ADR acceptance.**
+
 - [ ] The bus table matches §G.1 exactly; the SFX pool is 12 + 1 reserved; a duck
       naming a non-Music bus is rejected with a record (AC-AUD-26).
 - [ ] `allocated` = 18 of 20 reproduces from the knobs; `VOICE_CAP < allocated` is
       a boot failure; a full SFX pool never starves the tear (AC-AUD-07/11).
 - [ ] The steal order is P3 → P2 → drop; P0 and every signature survive their
-      floods (AC-AUD-11).
+      floods (AC-AUD-11); a conc-2 voice occupies at most two slots (§5).
 - [ ] The schedule reproduces exactly: recede 101→116, floor hold 116→119,
       arrival 119→134 at the defaults, and 116→122 / 122→137 at N = 21
       (AC-AUD-02) — **linear in gain**, not in dB.
@@ -763,25 +876,34 @@ superseding ADR would replace the graph, not the laws.
 - [ ] Exactly one duck request per death, attack 8 / release 15 ticks, both exits
       release it; one application site in `src/audio/` (AC-AUD-10/17).
 - [ ] MONO collapses every bus; the Ambience and UI buses follow the SFX slider;
-      the swap does not click (AC-AUD-22).
+      every slider's range is honoured (AC-AUD-22) — **plus** the swap's own
+      fixture, which AC-AUD-22 does not cover: the ramp's two ticks are exact, the
+      playhead is preserved, and a toggle requested inside [E1, E7] lands at the
+      first `IDLE` tick (§4's deferral rule).
+- [ ] The fold's missing-asset path emits `AUD_ASSET_MISSING` and leaves the toggle
+      off with the stereo stream playing (§4, §G.8's class).
 - [ ] Exactly thirteen registered one-shot IDs; a 10,000-tick soak emits zero
       ambience one-shots (AC-AUD-15).
 - [ ] Zero truth-state symbols in the core; the adapter's subscriptions equal the
       publisher map; the allowlist grep matches only two ports (AC-AUD-19).
 - [ ] The snapshot hash is unchanged and the score untouched across [E1, E7]
       (AC-AUD-16).
-- [ ] The import audit matches §G.6 on every asset; the metadata read is present on
-      every registered voice and bed (AC-AUD-32).
+- [ ] The import audit matches §G.6 on every asset, including the mono fold's own
+      row (AC-AUD-32, scoped by CR-AUD-03).
+
+**Story gate (the first SYS-04 implementation story).**
+
 - [ ] Disk ≤ 10 MB, runtime ≤ 16 MB, voices ≤ 20, the core's tick within its
-      (provisional) bar on the Pixel 6a (AC-AUD-21).
-- [ ] Zero `PROBE-PENDING` items remain before the first implementation story.
+      (provisional) bar, and the mixer's share within item 5's bar on the Pixel 6a
+      (AC-AUD-21 + register item 5's extra instrument).
+- [ ] Every `PROBE-PENDING` item in §14 has a verdict; zero remain open.
 
 ## GDD Requirements Addressed
 
 | GDD Document | System | Requirement | How This ADR Satisfies It |
 |---|---|---|---|
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-001/002 — consume E1–E7 verbatim; the publisher map; publishes nothing | The adapter's six subscriptions equal the publisher map; the core returns commands, never events (§2, §11) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-003 — epoch-blindness | Ports instead of singletons; `MVP_FLIP_TO_EPOCH` as a boot-validated constant; the poisoned-sentinel run (§2, §11, §13) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-003 — epoch-blindness | Ports instead of singletons; `MVP_FLIP_TO_EPOCH` as a boot-validated constant; the poisoned-sentinel run (§2, §11, §14) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-004 — the closed list is closed | Thirteen voices over eighteen preallocated slots; the registration scan (AC-AUD-15/18) (§5) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-005 — the death duck is consumed, not designed | `DuckStage` + one `apply_duck` site; three fields; `UNTIL_OFFLINE_EXIT` (§8) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-006 — the missing-input failure paths | The six-row inbound table with named records and no synthesized substitute (§11) |
@@ -790,9 +912,9 @@ superseding ADR would replace the graph, not the laws.
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-009 — the stillness bracket | `gate_open = false`; drop-never-queue; no loop restart; zero snapshot changes; ring-out (§5, §9) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-010 — the tear | The reserved P0 slot outside the steal table; 24 ticks in a 26-tick window; the silent-asset path (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-011 — the abort path | Zero orders; the force-release-derived `freeze_close` as an event; `DEGRADED` precedence; no `RELEASED` (§6, §9) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace relative to the raise tick; the post-resume hash equals the fresh run's (§6, §13) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace relative to the raise tick; the post-resume hash equals the fresh run's (§6, §14) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-013/014 — the arena hum; the wing's no-op | RM-06 excluded by the order record; no separate wing bed; the room-entry path only at real entries (§6) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-015…021 — the eight one-shot voices | The voice table's slots, classes, retrigger floors and signatures; the variation law's deterministic draw (§5, §7) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-015…021 — **the eleven** one-shot voices of the SYS-29 list (015 damage; 016 clash contact + midpoint; 017 deflect; 018 heal + death; 019 revive + level-up; 020 memory; 021 jump-2 + defeat) | The voice table's slots, classes, retrigger floors and signatures; the conc-2 slot mapping (§5); the variation law's deterministic draw (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-022/024/025 — the bed table; the seam's exemption; the transition law | The derived bed map + `restored_epoch`; the room-entry crossfade only at a real entry; no restart, no duck (§6, §12) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-023 — beds only, no stochastic detail | Zero ambience one-shot registrations; the 10,000-tick soak (§5) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-026/034 — the bus layout; the nominal mix | The committed bus layout + the boot assert; the four classes; the steal (§3, §5) |
@@ -817,8 +939,17 @@ superseding ADR would replace the graph, not the laws.
 **Counts consumed, not re-derived:** 39 TR-AUD · 7 F-AUD · 7 V-AUD · 32 ACs
 (22 GUT · 4 LINT · 4 DEVICE · 2 PLAYTEST; the gate manifest 26 smoke · 4 device ·
 2 MVP-lock · 0 VS) · 14 knobs · 8 OQs (5 resolved, 3 open) · 13 voices · 17 role
-rows · 29 audio assets · 2 contract-revision requests (CR-AUD-01, CR-AUD-02). This
-ADR adds **no** TR, **no** formula and **no** AC.
+rows · **29 audio assets (30 files with the mono fold — CR-AUD-03)** · 2
+contract-revision requests inherited from the GDD (CR-AUD-01, CR-AUD-02) + **2
+filed here** (CR-AUD-03 the mono fold's count/audit row; CR-AUD-04 TR-AUD-002's
+load-complete publisher). This ADR adds **no** TR, **no** formula and **no** AC.
+
+**V-invariant coverage** (all seven carried): V-AUD-01 by AC-AUD-10/17 (the one
+application site); V-AUD-02 by AC-AUD-15/18 (the registration scan); V-AUD-03 by
+AC-AUD-03 and the order record's target/excluded sets (§6); V-AUD-04 by AC-AUD-19
+and the poisoned-sentinel run (§11); V-AUD-05 by AC-AUD-16 and §3's one snapshot;
+V-AUD-06 by AC-AUD-02's schedule fixture (§6); V-AUD-07 by AC-AUD-06/07 (the gate
+and the reserved slot) (§5, §9).
 
 ## Related
 
@@ -836,3 +967,6 @@ ADR adds **no** TR, **no** formula and **no** AC.
   `design/gdd/seam-borders.md`.
 - **Registry**: `audio_bus_contract`, `ambient_bed_contract`, `audio_edge_list`,
   `duck_request_contract` (all `status: active`).
+- **Carried**: O-AUD-1 (`restored_epoch` on SYS-05's `load_complete`); CR-AUD-03
+  (the mono fold's counts/§G.6/AC-AUD-32 row); CR-AUD-04 (TR-AUD-002's
+  load-complete publisher). None changes a decision in this ADR.

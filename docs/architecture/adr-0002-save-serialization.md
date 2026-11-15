@@ -20,6 +20,10 @@ superseded explicitly.
 engine-reference snapshots (`VERSION.md`, `breaking-changes.md`,
 `deprecated-apis.md`), and a live run of the authoring twin
 (`node tests/save-twin/save_twin.mjs` → **34/34 PASS**, 2026-11-15).
+**Count discrepancy, recorded not edited:** the registry entry
+`save_roundtrip_twin` says **32/32**; the twin prints **34/34** and the GDD's
+header and gate manifest both say 34/34. The twin's own output is the authority;
+the registry correction is queued to the sync lane.
 
 ## Decision Makers
 
@@ -40,11 +44,13 @@ and the platform path helper. This ADR decides those four, plus the two engine
 facts the GDD could not settle without a code decision — Godot's float-typed
 `JSON` parse (handled by a schema-typed normalization pass that sits *below* the
 hash) and the post-4.4 `FileAccess.store_*` boolean returns (every store call is
-checked, and a `false` is classified into the named `SAVE_FAILED_*` vocabulary).
-The shape is one pure `PersistenceCore` over injected ports, one `SaveWriter` node
-owning a single dedicated `Thread` with a one-deep queue, one canonical byte
-stream that is both the hash's input and the file's payload, and one path helper —
-with no second write path, no repair write, and no downgrade writer anywhere.
+checked, and a `false` is classified by §5a's explicit `Error`→code table, never
+by message inspection). The shape is one pure `PersistenceCore` over injected
+ports, one `SaveWriter` node owning a single dedicated `Thread` with a
+per-slot cancellable one-deep queue, one canonicalizer whose **fragment is both
+the hash's input and a byte-identical substring of the file**, and one path
+helper — with no second write path, no repair write, and no downgrade writer
+anywhere.
 
 ## Engine Compatibility
 
@@ -54,8 +60,8 @@ with no second write path, no repair write, and no downgrade writer anywhere.
 | **Domain** | Core + Persistence (Core/FileAccess/JSON/Hashing/Threading) |
 | **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The audio/render subsystems are stable across 4.4–4.7 per the repo's snapshots; the *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4) |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `modules/audio.md` (for the not-join precedent only); `docs/framework/technical-preferences.md` |
-| **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `FileAccess.get_sha256()` **[unverified for a whole-file digest in 4.7.2]**; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256); `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` / `NOTIFICATION_APPLICATION_FOCUS_OUT` |
-| **Verification Required** | The 9-item register in §13. 5 items are `PROBE-PENDING` and block the first SYS-03 implementation story; 4 are `DOCUMENTED`. The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256) — **`FileAccess.get_sha256()` is rejected**: it would hash the file, and the hash input is the canonical projection, not the file bytes; `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `DirAccess.get_space_left()` **[unverified name for 4.7.2 — register item 10]**; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` (**not** `NOTIFICATION_APPLICATION_FOCUS_OUT`, which is not an exit and must never trigger a save) |
+| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. 6 items are `PROBE-PENDING` and block the first SYS-03 implementation story; 3 are `DOCUMENTED`; 1 is an inference folded into a probe. The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (HIGH).** Two failure modes are specific to this
 > version band and are load-bearing here: (1) `JSON` parses *every* number as a
@@ -135,9 +141,9 @@ trust without thinking (the Player Fantasy's honesty clause).
 
 ### Requirements
 
-- **R1 — One canonical byte stream.** The bytes hashed and the bytes written are
-  the same bytes; the canonical form is a pure function of `{schema_version,
-  payload}` and of nothing else.
+- **R1 — One canonical fragment.** The canonical form is a pure function of
+  `{schema_version, payload}`; the bytes hashed are a **byte-identical substring**
+  of the file, and no second canonicalizer exists anywhere.
 - **R2 — Integrity before interpretation.** The hash is checked before any
   semantic decision, but after the mechanical minimum (parse + normalize) that
   makes a hash computable.
@@ -260,10 +266,20 @@ input, and never gate anything (TR-SAV-008). A re-save of an unchanged state
 therefore hashes identically with a different timestamp — the twin's
 `RT-hash-stable`.
 
-**The byte stream is produced once.** The canonicalizer returns the exact bytes
-that are (a) hashed and (b) written. There is no second serializer and no
-"pretty" variant: a debug pretty-printer, if one is ever wanted, is a *different
-file* and never a save.
+**One canonicalizer, two artifacts — stated precisely.** `canon(payload)` returns
+the payload's canonical bytes (the **fragment**). The hash is computed over the
+**projection** `{"schema_version":v,"payload":<fragment>}`; the file is the
+five-key envelope with **that same fragment spliced in unchanged**. The law is
+therefore:
+
+> the hashed fragment is a **byte-identical substring** of the file.
+
+The twin proves the shape: `envelope()` wraps `canon(payload)` and the hash covers
+the projection only (`tests/save-twin/save_twin.mjs`). There is no second
+canonicalizer and no second payload serializer; the envelope's five keys are
+string-assembled *around* the fragment, and `state_hash` is the only value in the
+file that is not part of the hashed input. A debug pretty-printer, if one is ever
+wanted, is a *different file* and never a save.
 
 ### 4 · The hash
 
@@ -281,21 +297,42 @@ record, not metadata about it.**
 ### 5 · The write path on the worker thread
 
 `SaveWriter` owns **one** `Thread`, one `Mutex`, one `Semaphore`, and a
-**one-deep job queue per slot** (TR-SAV-014). It is created at boot and joined at
-shutdown. The game thread hands over an immutable job (the canonical bytes + the
-slot id + the expected hash) and never touches the filesystem.
+**one-deep job queue per slot** (TR-SAV-014): **one write in flight, at most one
+pending per slot**. It is created at boot and joined at shutdown. The game thread
+hands over an immutable job — **the deep-copied snapshot dict** (the copy is
+synchronous, TR-SAV-012), the slot id and the cause — and never touches the
+filesystem. **The bytes are produced off-thread**, exactly as TR-SAV-010/012
+require; the copy is what is synchronous, not the serialization.
 
 Six steps, all on the worker (TR-SAV-010), with the boolean-return discipline
 from `breaking-changes.md`:
 
 | # | Step | Failure → |
 |---|---|---|
-| 1 | serialize the snapshot to bytes (**already done on the game thread** — the canonical bytes travel in the job) | `SAVE_FAILED_UNKNOWN` |
-| 2 | write bytes to `<slot>.tmp`; **check every `store_*` return**; `flush()`; `close()` | `SAVE_FAILED_DISK_FULL` / `SAVE_FAILED_PERMISSION` |
+| 1 | `canon()` the job's snapshot dict to bytes; compute `state_hash` | a canon failure is a **dev assert**, not a save failure (the snapshot is schema-typed by construction) |
+| 2 | write bytes to `<slot>.tmp`; **check every `store_*` return**; `flush()`; `close()` | `SAVE_FAILED_DISK_FULL` / `SAVE_FAILED_PERMISSION` (§5a) |
 | 3 | re-read `<slot>.tmp`, verify its hash (cheap at ≤ 2 KB) | `SAVE_FAILED_VERIFY` (pre-commit) |
 | 4 | if `<slot>.sav` exists, `rename_absolute` it to `<slot>.bak` (replacing an older `.bak`) | `SAVE_FAILED_RENAME` |
 | 5 | `rename_absolute` `<slot>.tmp` → `<slot>.sav` — **the commit point** | `SAVE_FAILED_RENAME` (`.sav` missing, `.bak` present → boot sweep recovers) |
 | 6 | re-read `<slot>.sav`, verify its hash, emit `save_completed` (or `save_failed`) | `SAVE_FAILED_VERIFY` (post-commit → **roll back**: promote `.bak` back to `.sav`; no `.bak` → delete the unverified `.sav`, slot `EMPTY`) |
+
+**§5a · The `Error` → `SAVE_FAILED_*` classification.** A boolean `store_*` plus
+`get_error()` cannot by itself separate a full volume from a read-only one
+(`ERR_FILE_CANT_WRITE` covers both), so the classification is **pre-flighted and
+explicit**, never inferred from the message:
+
+| Condition (in this order) | Code |
+|---|---|
+| the path is not writable / the directory cannot be created (`ERR_UNAUTHORIZED`, `ERR_FILE_NO_PERMISSION`) | `SAVE_FAILED_PERMISSION` |
+| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (4× the largest expected file) | `SAVE_FAILED_DISK_FULL` |
+| a `store_*` returns `false` **and** the pre-flight passed | `SAVE_FAILED_DISK_FULL` if the volume's free space dropped during the write, else `SAVE_FAILED_UNKNOWN` |
+| `rename_absolute` returns non-`OK` at step 4/5 | `SAVE_FAILED_RENAME` |
+| a read-back hash mismatch at step 3 / step 6 | `SAVE_FAILED_VERIFY` |
+| the freeze publication is unreadable past `N_max` (queue path) | `SAVE_FAILED_FREEZE_UNAVAILABLE` |
+
+The pre-flight's mechanism (`DirAccess.get_space_left()` or the platform
+equivalent) is **register item 10**; the mapping table above is the contract, and
+AC-SAV-09's injected-IO fixtures assert the code, not the message.
 
 **The step-6 rollback is the one place a "restore" is legal**, and it is a
 *file-level* restore of the last good bytes — the same operation as the boot
@@ -309,11 +346,17 @@ is what AC-SAV-12's frame probe asserts.
 
 **The close-save (the one legal block).** On the close request the save is
 written **synchronously** on the game thread — there is no frame to miss, the
-file is ≤ 2 KB, and the dev assert bound is `SAVE_JOIN_TIMEOUT_MS` 250 ms. Two
-guards, both from the GDD: (a) if a write is in flight, it completes first;
+file is ≤ 2 KB, and the dev assert bound is `SAVE_JOIN_TIMEOUT_MS` 250 ms. Three
+guards, all from the GDD: (a) if a write is in flight, it completes first;
 (b) **if `flip_sources_active` is non-empty, the close-save is skipped** and the
 last station autosave is the fallback — a synchronous snapshot there would
-capture the mid-choreography state that V-SAV-05 and E4 forbid.
+capture the mid-choreography state that V-SAV-05 and E4 forbid; **(c) a pending
+(not yet started) job for the same slot is superseded and its result drained
+before the synchronous write begins** — otherwise the queued job would run after
+the close-save, write the same `<slot>.tmp`, and rotate the newer file over it,
+which is exactly the race AC-SAV-23's "the restored state equals the state at the
+suspension" forbids. Guard (c) is why the one-deep queue is per slot and
+cancellable rather than a bare ring.
 
 ### 6 · The read path and the number-normalization pass
 
@@ -330,6 +373,13 @@ non-integral number as `REFUSE_FLOAT`, refuse a number for a non-integer key as
 `REFUSE_TYPE`. The **envelope's `schema_version` gets the same pass** (it is
 parsed as a float too). The pass is idempotent and total over the schema.
 
+**The precedence is explicit** (the two codes can both claim one input): a
+**non-integral number anywhere** is `REFUSE_FLOAT`, whatever its key's declared
+type — TR-SAV-006's "a float anywhere" is the stronger law; an **integral number
+at a non-integer key** is `REFUSE_TYPE`. `3.5` at a `String` key is therefore
+`REFUSE_FLOAT`, and the fixture that pins it is named in §13's list of the
+refusal matrix's ambiguous rows (AC-SAV-06 and AC-SAV-17 must not disagree).
+
 **6b. Absence survives the hash.** A declared key that is absent **stays absent**
 in the normalized payload — materializing the defaults there would change the
 hash input and turn a valid sparse file into `REFUSE_HASH_MISMATCH`. The defaults
@@ -342,9 +392,18 @@ first three rows are mechanical (parse, version-is-int, every number integral) �
 they are the minimum that makes a hash computable — then the hash, then the
 interpretation (gate, shape, range). `MIGRATE` is an **output**, not a refusal.
 
-### 7 · The migration registry API
+### 7 · The registry: namespaces and migrations
+
+Two registrations, one boot check, and one composition rule.
 
 ```gdscript
+## Registers a namespace: one owner, a declared shape, and the migration step that
+## introduces it. Called at boot, in code. TR-SAV-004.
+## @param owner           the publishing system id (&"world", &"cache", &"progress", …)
+## @param shape           {key: type} — the declared per-key type/range table
+## @param migration_step  the version at which the key first appears (0 = present since v1)
+func register_namespace(owner: StringName, shape: Dictionary, migration_step: int) -> void
+
 ## Registers a one-step, pure migration. Called at boot, in code, never at runtime.
 ## @param from_version  the source version; must be >= 1 and < CURRENT_SCHEMA_VERSION
 ## @param migrate       Callable(payload: Dictionary) -> Dictionary; pure; must not
@@ -352,6 +411,15 @@ interpretation (gate, shape, range). `MIGRATE` is an **output**, not a refusal.
 ## @param shape_note    the human-readable shape delta (one line) for the boot log
 func register_migration(from_version: int, migrate: Callable, shape_note: String) -> void
 ```
+
+**The composition rule (the two APIs are not alternatives).** A namespace
+registered with `migration_step = k > 0` **requires** a registered
+`MIGRATIONS[k−1]` that adds the key with its conservative default; the boot
+checks that pairing (V-SAV-08's owner+reader check and V-SAV-02's contiguity are
+the same check seen from two sides). A namespace present since v1
+(`migration_step = 0`) requires no migration. `cache` is the worked example:
+registered, `migration_step = 2`, and its `v1→v2` step is what makes the key
+appear (TR-SAV-004).
 
 - **Contiguity is a boot check** (V-SAV-02): `MIGRATIONS[n]` must exist for every
   `1 ≤ n < CURRENT_SCHEMA_VERSION`; a hole is a dev boot failure.
@@ -376,9 +444,10 @@ namespace's current values, **as typed containers** (`Array`/`Dictionary` of
 `int`/`String`/`bool`), never as engine resources. Its cost is bounded constant —
 SYS-02's registries bound the arrays (128 borders, 1 flag, 4 memories, 6 cells)
 so the copy is ≤ ~150 elements — and the dev assert prices it at ≤ 0.5 ms. The
-canonical bytes are produced **in the same synchronous step** (the job carries
-bytes, not a mutable dict), which removes the only shared-mutable-state question
-in the whole design: there is nothing for the worker to see half-written.
+job carries **the deep copy, not a live reference** (the worker reads a dict nobody
+else can mutate), which removes the shared-mutable-state question without moving
+serialization onto the game thread: TR-SAV-012's split is preserved exactly — the
+**copy** is synchronous, the **bytes** are produced off-thread.
 
 The snapshot is taken **once per request**; a re-request after a failure is a new
 request with a new snapshot (a save is a snapshot of *now*).
@@ -399,6 +468,8 @@ conversion.
 - **The unreadable publication** (a boot-order defect) reads **true** (the
   conservative reading: unreadable means frozen) for at most `N_max` ticks, then
   fails with `SAVE_FAILED_FREEZE_UNAVAILABLE` — a bounded wait, never a hang.
+  **The reading's owner is SYS-29** (the publication's publisher); SYS-03 infers
+  the freeze state from that one signal and from nothing else.
 
 ### 10 · The path helper and the platform policy
 
@@ -433,7 +504,9 @@ The **boot sweep** runs per slot, in this order, before any load: (1) if
 `<slot>.tmp` exists, delete it (`tmp_swept`); (2) if `<slot>.sav` is missing and
 `<slot>.bak` exists, promote the `.bak` (`bak_promoted`); (3) neither file →
 `EMPTY`, which is the first boot and not an error. The order matters: deleting the
-`.tmp` first means the promotion can never race a stale temp.
+`.tmp` first means the promotion can never race a stale temp. (TR-SAV-015's prose
+lists the promotion first; **AC-SAV-13's list is the one the sweep implements** —
+the divergence is deliberate and cited, not an oversight.)
 
 ### 12 · Test seams
 
@@ -446,27 +519,38 @@ The **boot sweep** runs per slot, in this order, before any load: (1) if
   four reads the core performs, all injected.
 - **The engine half** (story-gated): the same 34 fixtures, run in-engine, must
   assert `typeof(value) == TYPE_INT` after the normalization pass on a real
-  `JSON.parse_string` result **and** reproduce the reference twin's three hashes
-  (`bf18d435…`, `e3f7a6a0…`, `05b1e48e…`). The reference twin cannot simulate the
-  float-typed parse (JavaScript has one number type) — it tests the refusal branch
-  and the coercion's identity only. **This is the named split, not an omission.**
+  `JSON.parse_string` result **and** reproduce the three digests recorded in the
+  GDD's **F-SAV-01 worked-example table** (`bf18d435…`, `e3f7a6a0…`, `05b1e48e…` —
+  the **full** 64-hex values live in that table and in the twin's own run output;
+  a fixture copies them from the GDD, never from this ADR's truncated prefixes).
+  The reference twin cannot simulate the float-typed parse (JavaScript has one
+  number type) — it tests the refusal branch and the coercion's identity only.
+  **This is the named split, not an omission.**
 
 ### 13 · The engine verification register
 
-| # | Item | Verdict | Blocks |
-|---|---|---|---|
-| 1 | `JSON.parse_string` returns `float` for every JSON number (incl. `schema_version`) | **DOCUMENTED** (the GDD's TR-SAV-026; the repo snapshot records the knowledge gap) | — |
-| 2 | `FileAccess.store_*` returns `bool` (4.4+) and `false` is detectable | **DOCUMENTED** (`breaking-changes.md`, 4.3→4.4 row) | — |
-| 3 | `HashingContext` SHA-256 digest over a byte buffer equals the twin's Node `crypto` digest for the same canonical bytes | **PROBE-PENDING** | The first story |
-| 4 | `DirAccess.rename_absolute` is atomic-enough on iOS/Android (the commit point) | **PROBE-PENDING** | The first story; AC-SAV-14/23 |
-| 5 | `Thread.start(Callable)` + `Semaphore` + `Mutex` gives a one-deep queue with no lost wakeup | **PROBE-PENDING** | The first story |
-| 6 | `FileAccess.flush()` before `close()` makes a short write detectable by the step-3 re-read | **PROBE-PENDING** | The first story |
-| 7 | `user://` resolves to the app's data dir on both platforms and survives a relaunch | **PROBE-PENDING** | AC-SAV-14 |
-| 8 | `NOTIFICATION_APPLICATION_PAUSED` is delivered before an iOS background-kill | **DOCUMENTED** (the GDD's platform claim; the device AC is the proof) | AC-SAV-23 |
-| 9 | A `FileAccess` write of ≤ 2 KB fits the platform's suspension window | **DOCUMENTED** (bounded by construction) | — |
+Every `PROBE-PENDING` row carries a **Method** (a runnable protocol with a
+pass/fail) and an **Owner**, so a probe can be closed or failed rather than
+narrated.
 
-`PROBE-PENDING` is an open verdict, not a pass: no story may consume items 3–7 as
-settled fact (the AC-74 pattern from ADR-0001).
+| # | Item | Verdict | Method (pass = ) | Owner | Blocks |
+|---|---|---|---|---|---|
+| 1 | `JSON.parse_string` returns `float` for **every** JSON number, including `schema_version` | **PROBE-PENDING** | parse the three twin payloads; every number's `typeof` is `TYPE_FLOAT` before the pass and `TYPE_INT` after it | godot-specialist | The first story (the load path's premise) |
+| 2 | `FileAccess.store_*` returns `bool` (4.4+) and `false` is detectable | **DOCUMENTED** (`breaking-changes.md`, 4.3→4.4 row) | — | — | — |
+| 3 | `HashingContext` SHA-256 over the canonical bytes equals the Node twin's digest for the same input | **PROBE-PENDING** | the three fixture payloads hash to `bf18d435…`, `e3f7a6a0…`, `05b1e48e…` — the **full digests from F-SAV-01's worked-example table** (`design/gdd/save-serialization.md`), which the twin reproduces; the engine run must match all three | lead-programmer | The first story; AC-SAV-24's engine half |
+| 4 | `DirAccess.rename_absolute` is atomic-enough on iOS/Android for the commit point | **PROBE-PENDING** | kill the process during step 5, 20 trials: 20/20 boots load either the old `.sav` or the promoted `.bak`; zero torn reads | devops-engineer | The first story; AC-SAV-14/23 |
+| 5 | `Thread.start(Callable)` + `Semaphore` + `Mutex` gives one in flight + one pending per slot with no lost wakeup | **PROBE-PENDING** | 1,000 alternating requests per slot: every request yields exactly one result, no result is duplicated, no job is dropped | lead-programmer | The first story |
+| 6 | `flush()` before `close()` makes a short write detectable by the step-3 re-read | **PROBE-PENDING** | inject a truncated buffer: step 3 fails 20/20 with `SAVE_FAILED_VERIFY`, and the previous `.sav` is byte-identical afterwards | lead-programmer | The first story; AC-SAV-09 |
+| 7 | `user://` resolves to the app's data dir on both platforms and survives a relaunch | **PROBE-PENDING** | write, kill, relaunch, load: the file is under the app data dir and the state restores | qa-lead | AC-SAV-14 |
+| 8 | The suspension notification is delivered **before** the platform kills the app (iOS background-kill; Android `onStop`) | **PROBE-PENDING** | background the app from gameplay on real hardware 10× per platform: the close-save lands 10/10 and the restored state equals the suspension state | qa-lead | AC-SAV-23 |
+| 9 | The `Error`→code classification separates a full volume from a read-only one (§5a) | **PROBE-PENDING** | an injected full-volume fake and an injected read-only fake yield `SAVE_FAILED_DISK_FULL` and `SAVE_FAILED_PERMISSION` respectively; the same pair on a device (a full volume via a disk-fill harness) agrees | devops-engineer | AC-SAV-09 |
+| 10 | `DirAccess.get_space_left()` (or the platform equivalent) exists in 4.7.2 and reports the slot's volume | **PROBE-PENDING** | the call returns a plausible byte count for `user://saves/` and falls back to the store-only path if absent | godot-specialist | §5a's pre-flight |
+
+`PROBE-PENDING` is an open verdict, not a pass: no story may consume items 1, 3–10
+as settled fact (the AC-74 pattern from ADR-0001). Items 2 is the only
+engine fact the repo's own snapshot pins; the JSON float model is **not** in
+`docs/engine-reference/godot/` (a grep for `JSON` finds nothing), which is why it
+is a probe and not a citation — and why item 1's Method is the load path's proof.
 
 ### Architecture diagram — one save request at a glance
 
@@ -697,7 +781,7 @@ func remove(path: String) -> Error
 | Migration chain hole ships | Low | High | V-SAV-02's contiguity boot check; the synthetic `CURRENT = 3` harness |
 | A second write path appears (an ad-hoc `FileAccess` call) | Medium | High | V-SAV-04's CI grep; AC-SAV-26; the port is the only door |
 | A repair write is introduced "to be helpful" | Medium | High | R7; the law stated once (file-level restore ≠ state repair); review discipline |
-| Registry/twin count drift (32 vs 34) | High | Low | Reported to the sync lane; the twin's own output is the authority |
+| Registry/twin count drift (32 vs 34) | **Occurred** | Low | The twin reproduces **34/34** on this checkout (§Last Verified) and the GDD says 34/34; the registry entry `save_roundtrip_twin` still says 32/32 → reported to the sync lane as a registry correction, never edited here |
 
 ## Performance Implications
 
@@ -744,25 +828,41 @@ superseding ADR would replace the writer, not the laws.
 
 ## Validation Criteria
 
-- [ ] The canonicalizer is single-sourced: the bytes hashed equal the bytes
-      written, and no second serializer exists (AC-SAV-08/22, the twin's
-      `CANON-order` / `RT-hash-stable`).
+**Two gates, two lists.** Criteria 1–13 are the **ADR acceptance** list (they must
+hold when this ADR is Accepted, because they are decided here). Criteria 14–15
+are the **story gate** (they cannot hold at acceptance by construction — the
+engine half and the probe register close at the first implementation story).
+
+**ADR acceptance.**
+
+- [ ] One canonicalizer: `canon(payload)` produces the fragment, the hash covers
+      `{schema_version, fragment}`, and the fragment appears byte-identically in
+      the file — asserted by the step-3/step-6 re-read (AC-SAV-09) **and** by a
+      CI grep for a second `to_json`/`JSON.stringify` site under `src/save/`
+      (V-SAV-04's grep family).
 - [ ] The version is inside the hash: a `99 → 1` edit refuses with
       `REFUSE_HASH_MISMATCH`, never a gate bypass (AC-SAV-22).
 - [ ] The six-step write's fault injection names the outcome **per commit point**;
       no torn file is ever readable (AC-SAV-09, the twin's `WRITE-*`).
 - [ ] The step-6 rollback restores the previous generation, or leaves the slot
       `EMPTY` on a first write (AC-SAV-09/23).
-- [ ] The snapshot is taken once per request, at an eligible tick, ≤ 0.5 ms dev
-      assert, and never mid-choreography (AC-SAV-10/11, V-SAV-05).
+- [ ] The close-save supersedes a pending same-slot job before it writes; no
+      queued job can overwrite the close-save (AC-SAV-23).
+- [ ] The snapshot is taken once per request, at an eligible tick, and never
+      mid-choreography (AC-SAV-10/11, V-SAV-05); its **gating** bound is
+      ≤ ~150 elements, with the 0.5 ms wall-clock figure kept as AC-SAV-10's
+      **non-gating probe**.
 - [ ] The queue's bound holds: `t_write ≤ t_req + N_max`; an unreadable
       publication fails with `SAVE_FAILED_FREEZE_UNAVAILABLE` (AC-SAV-11).
-- [ ] The normalization pass runs below the hash, preserves absence, is
-      idempotent, and refuses a non-integral number (AC-SAV-25, V-SAV-09).
-- [ ] The migration chain is contiguous, pure, and forward-only; the rename idiom
-      preserves the value; a `v0` file is refused at the gate (AC-SAV-16).
-- [ ] All eleven `REFUSE_*` and six `SAVE_FAILED_*` codes have a fixture and the
-      file's bytes are identical after the attempt (AC-SAV-17).
+- [ ] The normalization pass runs below the hash, preserves absence, is idempotent,
+      refuses a non-integral number as `REFUSE_FLOAT` and an integral number at a
+      non-integer key as `REFUSE_TYPE` (§6a's precedence) (AC-SAV-25, V-SAV-09).
+- [ ] The migration chain is contiguous, pure, and forward-only; a namespace's
+      `migration_step` has its paired `MIGRATIONS[k−1]`; the rename idiom preserves
+      the value; a `v0` file is refused at the gate (AC-SAV-16, V-SAV-02/08).
+- [ ] All eleven `REFUSE_*` codes have a refusal fixture (AC-SAV-17) and all six
+      `SAVE_FAILED_*` codes have an injected-failure fixture (AC-SAV-09/11/23);
+      the file's bytes are identical after every refusal.
 - [ ] The absent-key matrix holds: three arrays `[]`, `truth_flags` `{}` with every
       flag unset, the absent epoch refuses (AC-SAV-19).
 - [ ] The epoch guard sits upstream of SYS-10; out-of-range never reaches it; state
@@ -770,9 +870,15 @@ superseding ADR would replace the writer, not the laws.
 - [ ] `restore_complete` precedes `load_complete` in every case (AC-SAV-20).
 - [ ] No persistence module calls a UI API; every path string comes from the one
       helper; every write goes through temp+rename (AC-SAV-26).
-- [ ] The engine twin's 34 fixtures pass in-engine and reproduce the three
-      recorded hashes (AC-SAV-24's story-gated half).
-- [ ] Zero `PROBE-PENDING` items remain before the first implementation story.
+
+**Story gate (the first SYS-03 implementation story).**
+
+- [ ] The engine half runs the 34 fixtures in-engine, asserts `TYPE_INT` after the
+      normalization pass on a real `JSON.parse_string` result, and reproduces
+      F-SAV-01's three recorded digests (the **engine-path twin**; AC-SAV-24 is
+      explicitly labelled "reference twin only", so the engine half is this story's
+      own obligation — named in §12 and in the report's carried list).
+- [ ] Every `PROBE-PENDING` item in §13 has a verdict; zero remain open.
 
 ## GDD Requirements Addressed
 
@@ -780,7 +886,7 @@ superseding ADR would replace the writer, not the laws.
 |---|---|---|---|
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-001 — the five `world` families verbatim | The `world` namespace is copied by key and shape; the canonicalizer sorts set-arrays only, never a pair's inner order (§3) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-002/003 — store sources, derive targets; the MetSys write-only adapter | No derived key exists in the schema; the adapter writes the Dictionary from the sources after restore, before `restore_complete` (§2, §6) |
-| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-004 — the namespace registry (v1 = `world`; `cache` registered-but-absent) | `register_namespace(owner, shape, migration_step)`; the version-aware payload allowlist; the boot's owner+reader check (§7) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-004 — the namespace registry (v1 = `world`; `cache` registered-but-absent) | `register_namespace(owner, shape, migration_step)` + the `migration_step`↔`MIGRATIONS` composition rule; the version-aware payload allowlist (§6); the boot's owner+reader check (§3, §6, §7) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-005/006 — no transients; no floats | The schema type table admits `int|String|bool|Array|Dictionary` only; the normalization pass refuses a non-integral number (§6) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-007 — SYS-03 never writes a source at runtime | The runtime write ban from `restore_complete`; `TruthPort` is read-only; the port spy (AC-SAV-07) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-008/009 — the envelope; the canonical serialization | The fixed envelope order; the five canon rules; `game_version`/`saved_at_utc` outside the hash (§3) |
@@ -789,7 +895,7 @@ superseding ADR would replace the writer, not the laws.
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-012/014 — the snapshot; the worker thread and the shutdown path | The synchronous bounded snapshot with bytes produced in the same step; one `Thread`, one-deep queue, the tick-boundary drain, the close-save exception (§5, §8) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-013 — the E4 freeze queue | The `FreezePort` predicate, `t_write`, coalescing, the `N_max` bound, the bounded-wait failure (§9) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-015 — the boot sweep and `.bak` promotion | The three-step sweep order, before any load (§11) |
-| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-017 — the telemetry | The 13-record set in a 256-record ring; no record carries a value; the rate limit (§12, §8) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-017 — the telemetry | The GDD's 13-record set is consumed unchanged (this ADR adds **no** record); the records are emitted by the core and drained at the tick boundary (§5, §12); the rate limit is a config read |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-018/026 — the load order; the number-normalization pass | The nine steps; the pass below the hash; absence preserved; the envelope's version normalized too (§6) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-019 — `schema_version` and the migration table | `register_migration()`; contiguity boot check; one-step purity; the rename idiom; the synthetic harness (§7) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-020/021 — the refusal codes; the `.bak` fallback | The eleven codes as a stable API; the recovery-then-`OK` rule; the schema-ahead no-fallback rule (§6, §11) |
@@ -803,9 +909,14 @@ superseding ADR would replace the writer, not the laws.
 | `docs/architecture/adr-0001-input-architecture.md` | ADR-0001 | §3 freeze; §5 tick boundary | The queue's window and the completion drain consume both (§5, §9) |
 
 **Counts consumed, not re-derived:** 26 TR-SAV · 4 F-SAV · 9 V-SAV · 26 ACs
-(22 GUT + 2 LINT + 2 DEVICE + 0 PLAYTEST; smoke 24) · 2 knobs · 11 OQs (9
-resolved/carried-decided, 2 carried). This ADR adds **no** TR, **no** formula and
+(22 GUT + 2 LINT + 2 DEVICE + 0 PLAYTEST; smoke 24) · 2 knobs · 11 OQs (7
+resolved, 4 carried: OQ-SAV-7/8/10/11). This ADR adds **no** TR, **no** formula and
 **no** AC — it is a decision record, not a second design.
+
+**V-invariant coverage** (all nine carried, none re-minted): V-SAV-01/04/07 by
+AC-SAV-04/26's audits; V-SAV-02/08 by §7's boot checks; V-SAV-03/05 by
+AC-SAV-05/07; V-SAV-06 by AC-SAV-20's no-clamp refusal; V-SAV-09 by AC-SAV-25 and
+§6a's precedence.
 
 ## Related
 

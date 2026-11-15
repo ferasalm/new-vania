@@ -66,22 +66,87 @@ both documents rest on post-cutoff API behaviour.
 
 | Gate | Seat model | ADR-0002 | ADR-0003 |
 |---|---|---|---|
-| CD (ADR alignment) | GLM-5.3-Flash | _pending_ | _pending_ |
-| Three-seat · creative | GLM-5.3-Flash | _pending_ | _pending_ |
-| Three-seat · technical | DS | _pending_ | _pending_ |
-| Three-seat · QA | DS | _pending_ | _pending_ |
-| Repairs | — | _pending_ | _pending_ |
+| CD (ADR alignment) | GLM-5.3-Flash | **APPROVED** (0 blockers) | **CONCERNS** (2 blockers) |
+| Three-seat · creative | GLM-5.3-Flash | **APPROVED** (0 blockers) | **APPROVED** (0 blockers) |
+| Three-seat · technical | DS | **NEEDS REVISION** (7 blockers) | **NEEDS REVISION** (7 blockers) |
+| Three-seat · QA | DS | **NEEDS REVISION** (7 blockers) | **NEEDS REVISION** (6 blockers) |
+| Repairs | — | **20 applied** + 3 rebuttals | **22 applied** + 0 rebuttals |
 | qa-lead spot-check | DS | _pending_ | _pending_ |
 | Final micro-check | DS | _pending_ | _pending_ |
 | `/architecture-review` (traceability + cross-ADR) | DS | _pending_ | _pending_ |
 
-## 3 · Repairs
+All four seats ran against the **same draft** (commit `114da98`) in one batch, and
+every seat read the draft once in full. The CD gate and the panel were dispatched
+together: the CD verdict arrived with the panel's and no CD blocker required a
+restructuring, so no seat's verdict was invalidated by the other's.
 
-_pending_
+## 3 · Repairs — the worklist
+
+### ADR-0002 (save)
+
+| # | Blocker | Source | Disposition |
+|---|---|---|---|
+| 1 | R1/§3's "one canonical byte stream" was **false**: the file is the 5-key envelope, the hash covers `{schema_version, payload}` — two byte streams, as the twin's `envelope()` proves | tech 1 | **APPLIED** — §3 restates the law as "the hashed fragment is a byte-identical substring of the file" (fragment vs projection); R1 restated |
+| 2 | §5/§8 put serialization on the game thread, contradicting TR-SAV-010 ("step 1 … on the worker") and TR-SAV-012 ("the bytes are produced off-thread") | tech 2, QA 1 | **APPLIED** — the job carries the **deep copy**; `canon()` + hash run on the worker; §8 restates TR-SAV-012's split (copy synchronous, bytes off-thread) |
+| 3 | The close-save could be overwritten by a **pending** same-slot job (guard (a) covered only an in-flight write) | tech 3 | **APPLIED** — guard (c): the pending job is superseded and drained before the synchronous write |
+| 4 | `register_namespace(owner, shape, migration_step)` (TR-SAV-004) was missing, and the namespace↔migration composition was undefined | tech 4, CD rec 1 | **APPLIED** — §7 now defines both APIs + the composition rule (`migration_step = k` requires `MIGRATIONS[k−1]`), with `cache` as the worked example |
+| 5 | No `Error`→`SAVE_FAILED_*` classification; a bool + `get_error()` cannot separate full from read-only | tech 5, QA 1 | **APPLIED** — §5a's ordered classification table + register items 9/10 (the pre-flight mechanism) |
+| 6 | §13 item 1 marked `DOCUMENTED` with no repo citation (the JSON float model is in the GDD, not the snapshot) | tech 6, QA 3 | **APPLIED** — `PROBE-PENDING` with a Method (parse the three payloads, assert `TYPE_FLOAT` → `TYPE_INT`) |
+| 7 | The register had no Method/Owner; several probes had no pass threshold | QA 5 | **APPLIED** — 10 items, each with Method + Owner + a pass condition |
+| 8 | Items 8/9 `DOCUMENTED` without documentation (item 8's own parenthetical conceded the device AC is the proof) | QA 4 | **APPLIED** — item 8 → `PROBE-PENDING` (device method, both platforms); item 9 folded into it |
+| 9 | `REFUSE_FLOAT` vs `REFUSE_TYPE` both claim `3.5` at a `String` key — two ACs could disagree | QA 2 | **APPLIED** — §6a states the precedence (non-integral anywhere → `REFUSE_FLOAT`; integral at a non-int key → `REFUSE_TYPE`) |
+| 10 | Validation 1 and 5 were unfalsifiable / contradicted their own ACs | QA 6 | **APPLIED** — criterion 1 now cites the step-3/6 re-read + a second-serializer grep; criterion 5's gating bound is the element count, the 0.5 ms stays AC-SAV-10's non-gating probe |
+| 11 | Validation 14/15 were story-gate criteria inside the acceptance list (AC-SAV-24 is "reference twin only"; "zero PROBE-PENDING" is false at acceptance) | QA 7 | **APPLIED** — the list is split into **ADR acceptance** (1–13) and **story gate** (14–15) |
+| 12 | "the three recorded hashes" — the digests live in F-SAV-01's worked-example table, not in the twin's source | tech 7 | **APPLIED** — cited to F-SAV-01, with the note that a fixture copies the **full** digests from there, never this ADR's truncated prefixes |
+| 13 | Minor, all applied | CD/tech/QA recs | `get_sha256()` removed (rejected: the hash input is the projection, not the file); `NOTIFICATION_APPLICATION_FOCUS_OUT` removed from the used-APIs row and named as *not* an exit; §11 cites AC-SAV-13 for the sweep order; §9 names SYS-29 as the `FreezeState` owner; counts corrected to **7 resolved / 4 carried**; a V-invariant coverage line added; TR-SAV-004/017 citations corrected; the 32-vs-34 risk marked **Occurred** with the registry correction routed to the sync lane; Last Verified records the discrepancy |
+
+**Rebuttals (ADR-0002).**
+
+1. *"`integrity_verdict(bytes)` hides the parse→normalize→hash ordering; pass the
+   parsed+normalized payload."* — **Not applied.** The signature is deliberately
+   bytes-in: F-SAV-04 is the verdict **over bytes**, and its rows 0–2 (parse,
+   version-is-int, every-number-integral) are *inside* it precisely because they
+   are the minimum that makes a hash computable. Moving normalization outside the
+   verdict would relocate the law into a caller. §6's nine steps are the internal
+   order and are documented.
+2. *"Criterion 8's 'pure' migrations have no audit; add a LINT."* — **Not
+   applied.** §7's doc comment forbids store/clock/singleton reads and AC-SAV-26's
+   audit family is the GDD's own static surface. A purity LINT would be a new audit
+   the GDD does not have, and this ADR adds no audit.
+3. *Creative seat's four recommendations* (bind SYS-15's print to
+   `save_completed`; word the first-boot `EMPTY` outcome as "first boot"; make the
+   freeze-skip record queryable for Gate 2; a code→sentence fixture) — **Not
+   applied here.** All four are SYS-15/SYS-24 surface obligations, outside this
+   ADR's scope; routed to those lanes in the report.
+
+### ADR-0003 (audio)
+
+| # | Blocker | Source | Disposition |
+|---|---|---|---|
+| 1 | The diagram re-timed **E7 to 134** (E7 is at 119; 134 is `arrive_end`) — an implementer would resume 15 ticks late | tech 1 | **APPLIED** — the diagram labels 119 as `E6 + E7` and 134 as `arrive_end`, with an explicit note |
+| 2 | §4 called MONO "a Master-bus stage", contradicting the one-effect law, and left the interface undefined | tech 2 | **APPLIED** — `MonoStage` is a **Music-voice stream strategy** with a defined interface; the native Master effect is the named upgrade path |
+| 3 | The MONO fold is a **30th file** while the GDD counts 29 and AC-AUD-32 audits "every asset … match §G.6" — a frozen count was being reinterpreted | tech 3, CD 1 | **APPLIED** — **CR-AUD-03 filed** (counts 29→30, the §G.6 mono-encode row, AC-AUD-32's scope); §10's table carries the fold's own row; the counts line and the risk table carry the CR. The decision stands either way (fallback: the native effect, 29 files) |
+| 4 | Probe 2's `AudioEffectCapture` was a second `AudioEffect`, contradicting §3/§10 | tech 4 | **APPLIED** — the probe runs in a **dev-only probe scene on a dedicated probe layout**, explicitly exempt; the one-effect law governs the shipping layout |
+| 5 | `max_polyphony = 1` vs four voices declaring `Max conc. = 2` — the mapping was undefined and the pool arithmetic left no room | tech 5 | **APPLIED** — a conc-2 voice occupies **two slots from the same pool**; each slot is individually stealable; the retrigger floor is evaluated per voice before admission |
+| 6 | The WAV fallback's arithmetic omitted the fold's 0.55 MB (84 s → a 10 MB breach) | tech 6, QA rec | **APPLIED** — ~78 s (10 − 1.1 − 0.55 − 1.5 = 6.85 MB), plus the residency cost against the 16 MB runtime bar |
+| 7 | Items 5/7/8 marked `DOCUMENTED` on citations the repo does not contain | tech 7, QA 2 | **APPLIED** — all three `PROBE-PENDING` with methods; item 5 is measured as an extra instrument during AC-AUD-21's device run; only item 6 stays `DOCUMENTED` (the one the snapshot actually pins) |
+| 8 | The probes' `Blocks` cited ACs that do not test the probe's claim (item 2 → AC-AUD-30, item 3 → AC-AUD-22, item 4 → AC-AUD-02) | QA 3 | **APPLIED** — `Blocks` now names what the probe **gates** (the import, the stage, the tick bar), not an unrelated AC |
+| 9 | Probe pass criteria were undefined ("the seam threshold", "does not click", "does not zipper") | QA 4 | **APPLIED** — `SEAM_DELTA_MAX`, `ZIPPER_DELTA_MAX`, exact-tick assertions, and a 1,000-request / 20-trial shape where a trial count is needed |
+| 10 | The MONO decision added two uncovered failure paths (the swap click; the fold's missing asset) and criterion 11 cited AC-AUD-22 for a click assertion AC-AUD-22 does not make | QA 5 | **APPLIED** — the fold's `AUD_ASSET_MISSING` path is named in §4 (no new record ID: it is §G.8's asset class), and criterion 11 now cites AC-AUD-22 **plus** the swap's own fixture |
+| 11 | Validation 17 ("zero `PROBE-PENDING`") is false by construction at acceptance | QA 6 | **APPLIED** — the list is split into **ADR acceptance** (1–15) and **story gate** (16–17) |
+| 12 | The traceability row said "the **eight** one-shot voices" for TR-AUD-015…021, which own **eleven** | QA 1 | **APPLIED** — relabelled "the eleven", with the per-TR voice mapping printed |
+| 13 | O-AUD-1 silently re-pointed TR-AUD-002's publisher (SYS-03 → SYS-05) with no revision route | CD 2 | **APPLIED** — **CR-AUD-04 filed** (TR-AUD-002's load-complete row is a one-clause correction to a frozen GDD); O-AUD-1 remains the carrying obligation; no frozen text edited |
+| 14 | Minor, all applied | CD/tech/QA recs + creative | §8 names `AUD_DUCK_BUS_MISSING`; SYS-15's third exit recorded as an **assumption** beside O-AUD-1; §11's room activation is the **named exception** to R9 (no record, no distinct behaviour); §2 and §11 agree on "five publishers + the clock"; §6's `min()` case makes the floor hold **zero, never negative**; §3 warns that `modules/audio.md`'s own Tween example is the forbidden pattern; a V-invariant coverage line added; the CRs appear in the counts line, the risk table and Related; the creative seat's three in-lane recommendations applied (the MONO swap **defers out of [E1, E7]**, the fold's loudness is RMS-matched, and "no stereo asset without a fold" is a pipeline rule) |
+
+**Rebuttals (ADR-0003).** None material — every blocker and every in-lane
+recommendation was applied. Three recommendations are **deferred, not rejected**:
+a GUT for the bus group map (AC-AUD-22's device assertion is the GDD's; a GUT would
+be an addition), the `MVP_FLIP_TO_EPOCH` boot-assert fixture (a story detail), and
+AC-AUD-20's re-pin owner (the audio-director's sound-bible pass, recorded there).
 
 ## 4 · Rebuttals
 
-_pending_
+Recorded in §3's two rebuttal lists (three for ADR-0002, none for ADR-0003).
 
 ## 5 · Final verdict
 
