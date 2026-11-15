@@ -16,7 +16,9 @@ Each animation ships as:
 
 - `<name>.aseprite` — the editable source: one named layer, all frames as cels,
   the asset's own palette set (union of frame colors, luminance-sorted).
-- `<name>_strip.png` — horizontal spritesheet for Godot.
+- `<name>_strip.png` — horizontal spritesheet (preview + atlas-slice source; **not a
+  direct texture on mobile** — the three 48-frame Pandora strips are 11520×135,
+  over the ~4096 px mobile GPU texture limit; see Godot notes).
 - `<name>_strip.json` — Aseprite spritesheet metadata: per-frame rects **and
   durations** (the art bible §8 frame-count+fps record).
 - `frames_<action>/<name>_fNN.png` — per-frame PNG exports (1-based, zero-padded).
@@ -86,9 +88,12 @@ standard.
 1. Pose crops from the 1024×1024 sheet (text labels `IDLE (FLOATING)` /
    `CAST` / `ATTACK` and the bottom caption excluded by crop bounds):
    idle `[80,26,476,516]`, cast `[536,26,990,518]`, attack `[230,536,912,976]`.
-2. White key: flood from crop edges over `min(r,g,b) ≥ 240`, global sweep
-   `≥ 246`, defringe `min ≥ 225` (JPEG halo). Interior whites (dress/glass
-   highlights) are enclosed and survive.
+2. White key: flood from crop edges over `min(r,g,b) ≥ 240`, then a global
+   sweep at `min(r,g,b) ≥ 246`, defringe `min ≥ 225` (JPEG halo). **The sweep
+   keys any pixel with min ≥ 246, enclosed or not — enclosed pure whites (dress/
+   glass highlights reading ≥ 246) go with it; only enclosed whites below the
+   threshold survive.** The pass verified 0.00 % near-white residue, which is the
+   sweep's own result.
 3. Tight-crop, BOX downscale to height 360 (2.75 × 131), 40-color quantize
    (denial render: 48). Re-verified: **0.00 % opaque near-white** in all four.
 4. `arnetria-denial.jpg`: crop `[96,0,944,948]` (includes the detached left
@@ -151,6 +156,11 @@ asset-spec pass. No palette JSON was modified in this pass.
 
 - Import PNGs with nearest-neighbor filtering (project default
   `default_texture_filter = Nearest` per art bible §8), mipmaps off.
+- **Per-frame PNGs are the platform-safe import path** (240×135 and smaller — every
+  target). The horizontal strips are preview/atlas-slice artifacts; any strip wider
+  than ~4096 px (the three 48-frame Pandora strips at 11520×135) must NOT be
+  imported as a direct texture on mobile targets — Godot documents the typical
+  mobile GPU limit at 4096×4096. Slice them via the JSON, or use the frames.
 - `*_strip.json` is Aseprite spritesheet format (frame rects + durations) —
   directly consumable by atlas-slicing importers.
 - The `.aseprite` files are the edit-here sources of truth; regenerate strips
