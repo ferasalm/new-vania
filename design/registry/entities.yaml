@@ -735,7 +735,7 @@ entities:
     published_by: SYS-08 Combat
     consumed_by: "SYS-07 (the resolver's input — HP, the ladder dispatch, the death edge) · SYS-02/SYS-15 (the ENVIRONMENT variant: `source = ENV`, `raw_damage = hp_max`)"
     values: "DamageEvent {source, target, raw_damage, kind ∈ {NORMAL, COUNTER, DEFLECT, ENEMY_STRIKE, ENVIRONMENT}, arc ∈ {ATK1, ATK2, CROUCH, AIR, ABILITY, NONE}, contact_tick} — six fields; `raw_damage` already includes the counter's 1.5× (the producer law, TR-HD-005)"
-    notes: "TR-CMB-025's boundary: Combat publishes, SYS-07 owns HP/damage/death/respawn; Combat contains no HP field. `arc` was added by D-ORCH-03 — it is the ladder's column selector, and a NORMAL/COUNTER event with `arc = NONE` is a SYS-07 dispatch rejection (dev assert). The ENVIRONMENT variant carries the `ENV` sentinel source (SYS-02's pit, SYS-15's surfaces) and bypasses i-frames/defense per TR-HD-018."
+    notes: "TR-CMB-025's boundary: Combat publishes, SYS-07 owns HP/damage/death/respawn; Combat contains no HP field. `arc` was added by D-ORCH-03 — it is the ladder's column selector, and a NORMAL/COUNTER event with `arc = NONE` is a SYS-07 dispatch rejection (dev assert). **`arc = ABILITY` is not a ladder column**: branch 4 of SYS-07's seven-branch dispatch routes it through the percent law on the event's raw (D-3's Stinger cell, TR-HD-005); the ladder's four columns are ATK1/ATK2/CROUCH/AIR only. The ENVIRONMENT variant carries the `ENV` sentinel source (SYS-02's pit, SYS-15's surfaces) and bypasses i-frames/defense per TR-HD-018."
     added: 2026-11-15
     revised: ""
 
@@ -1692,9 +1692,10 @@ constants:
       edit splits by case: reject for row-0/row-4/ATK1-crouch-air,
       clamp-and-revalidate for ATK2/chain). `step(attack) = clamp(floor((attack
       − PLAYER_ATK_BASE) ÷ ATK_PER_POINT), 0, 4)`, scoped to attack ≤ 132 —
-      above it the VS sheet governs (OQ#20). **SYS-15 is the MVP consumer**
-      (the cache spend surface: a committed STRIKES row moves the step the
-      player feels; SYS-26's per-step preview is VS)."
+      above it the VS sheet governs (OQ#20). An `arc = ABILITY` event never reads
+      this table (branch 4's percent law — see `damage_event`). **SYS-15 is the MVP
+      consumer** (the cache spend surface: a committed STRIKES row moves the step
+      the player feels; SYS-26's per-step preview is VS)."
     added: 2026-11-15
     revised: ""
 
