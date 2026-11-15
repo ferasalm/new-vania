@@ -448,3 +448,15 @@ both Majors are repaired in this same commit; the contract's confirm pass
 is for a Major-class fix batch, and this pass's Majors are the only
 Majors; the repair is mechanical and diff-scoped — recorded as the
 runner's judgment call under the one-pass rule).
+
+### The remote review (the GitHub CodeRabbit pass — 6 threads on the
+pre-fix head; triaged against the fix commit `3945b64`)
+
+| Thread | Maps to | Disposition |
+|---|---|---|
+| 4576671073 (minor — the `LINE_MAX_CHARS` range vs the fixtures; "at 40 existing lines exceed the cap") | CR-1 | **Resolved — fixed** (`3945b64`): the re-pin semantics recorded; at any configured cap the whole budget re-derives and the copy re-audits (a re-pin to 40 correctly fails the current 45-char lines until the copy re-pins — the law is one law at whatever cap is configured). |
+| 4576671076 (Major — the save-failure rows rejected by the orphan check) | CR-3 | **Resolved — fixed** (`3945b64`): the consumer-binding rule (the refusal rows bind to SYS-03's code mapping). |
+| 4576671081 (Major — the re-read assertion vs AC-NAR-05's `post_threshold` requirement) | CR-5 | **Resolved — fixed** (`3945b64`): AC-NAR-11's re-read fixture is scoped to unchanged saves with the TR-NAR-006 cross-reference; the two fixtures now compose (AC-05 asserts the two-state rendering; AC-11 asserts byte-identical re-reads only on an unchanged save). |
+| 4576671085 (minor — the AC-NAR-15 top-up satisfied while 4 beat-readers remain) | CR-4 | **Resolved — fixed** (`3945b64`): the sample floor (≥ 5 beat-readers else unevaluated; the top-up before scoring; the denominator is the beat-reader set). |
+| 4576671087 (Major — the technical/QA seat passes ran on GLM under the §3.6 fallback; "§3.6 does not change the seat rule") | (process) | **Resolved — rebutted with a recorded limitation.** §3.6's fallback is the contract's own provision for an unavailable subagent tool: "run each seat pass yourself in a separate pass with the same brief and record the fallback." With no spawn capability, no DS model was mechanically invocable in this session (and the routing policy's GLM→DS ban forecloses autonomous substitution). The passes were run with the seats' neutral briefs and are transparently labeled in this log. **Flagged to the orchestrator in the lane report**: if the house judges the DS routing load-bearing for the technical/QA seats, the orchestrator may order a DS re-pass; the text's gate trail stands as recorded. |
+| 4576671090 (Major — "exempt DEATH rows from the orphan check"; pointed at the review log's W4 wording) | CR-3 | **Resolved — fixed** (`3945b64`): the DEATH rows bind to SYS-15's screen under the consumer-binding rule. The log's W4 row quoted the pre-fix wording; that repair record is superseded by this disposition (the record stands as history; the GDD's rule is the current text). |
