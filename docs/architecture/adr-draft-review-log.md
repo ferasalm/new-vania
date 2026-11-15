@@ -388,7 +388,10 @@ than three patches. The design has four parts:
 | technical (DS) on the wave-3 delta | `deepseek-v4.1-flash` | **NEEDS REVISION — 2 blockers**, both applied: register item 8 was a corrupted table splice, and the commit-outcome enumeration omitted the *failed* write on the exit path |
 | qa-lead spot-check (DS) on the wave-3 delta | `deepseek-v4.1-flash` | **PASS — 10/10 rows** |
 | micro-check on the wave-3 delta | `deepseek-v4.1-flash` | **FAIL (3)** — a step-4 failure is not a `.bak` promotion; clause 1's "steps 2–5" excluded step 6's rollback; clause (c) was left unamended → then **PASS (0 blockers)** |
-| CodeRabbit confirm pass #2 | — | **PASS**, no new threads |
+| CodeRabbit confirm pass #2 | — | **3 new threads, all valid, all applied** — all on the seam probe's mechanics (§8.6) |
+| technical (DS) on the wave-4 delta | `deepseek-v4.1-flash` | **NEEDS REVISION — 2 blockers**, both applied: the slope bound was one-sided *and* signed (a mirrored kink passed), and "capture starts at playback start" assumed δ = 0 when `play()` is mix-quantized and `clear_buffer()` is not |
+| micro-check on the wave-4 delta | `deepseek-v4.1-flash` | **PASS (0 blockers)** |
+| CodeRabbit confirm pass #3 | — | **PASS**, no new threads |
 
 **The loop, recorded honestly.** Five micro-check passes for five threads: the
 first three each found a real residual *created by the repair itself* (an
@@ -409,6 +412,19 @@ valid, all applied in `12accc0`, all resolved:
 | 8 | Major | the ~42 s figure was presented as an independent native ceiling | **APPLIED** — it is rung-specific (beds on Ogg); the fold-declined + beds-failed branch gets `88.2·T_beds + 176.4·T_score ≤ 8,500 kB`, and 70 s + 42 s + one-shots is priced at ≈ 15.1 MB against the **10 MB disk** bar |
 | 9 | Minor | probe 2 did not name the mono fold as its own capture target | **APPLIED** — every looped file is its own capture (5 seams: 3 beds + the score pair), and a **fold-only failure is a pair failure**, never a fold-only swap |
 
-**Confirm pass #2** ran on `12accc0`: **PASS**, no new threads. `UNRESOLVED=0`; every
-thread in both waves was resolved by reply with its disposition. The wave's commit
-hashes are in the lane report §6.
+**Confirm pass #2** ran on `366854f` and opened **3 more threads**, all on the seam
+probe's mechanics — i.e. on the *new* text from pass #1, which is where the risk
+always is. All valid, all applied in `08f6097`, all resolved:
+
+| # | Sev | Finding | Disposition |
+|---|---|---|---|
+| 10 | Major | the slope bound tested only the left seam-spanning triple; a silent last window + a first window starting `sin(πn/6)` gives a zero step and a zero left second difference but a right one of 0.5 > the window max ≈ 0.268 | **APPLIED** — **both** triples tested, and (from the technical seat) on **magnitude**: a signed comparison passed the mirrored kink |
+| 11 | Minor | the capture timeline was unspecified: `play()` is mix-quantized while `clear_buffer()` is not, so the capture index of the playback's first sample is `δ ∈ [0, one mix block)` — a δ-shifted read lands mid-loop and passes | **APPLIED** — clear-then-play, **δ measured once per run and asserted constant**, `seam_index_k = k·loop_end + δ`, an unmeasured δ is a probe failure |
+| 12 | Minor | the capture rate was unspecified, and the 2,205-sample window assumes 44.1 kHz | **APPLIED** — `audio/driver/mix_rate = 44100` pinned in `project.godot` (Migration step 1), asserted by the probe, a device-forced rate is a failure needing the conversion **and** a re-run |
+
+Gates on that delta: technical **NEEDS REVISION (2 → applied)** · micro-check
+**PASS (0 blockers)**.
+
+**Confirm pass #3** ran on `08f6097`: **PASS**, no new threads. `UNRESOLVED=0`; every
+thread in all three waves was resolved by reply with its disposition. The waves'
+commit hashes are in the lane report §6.
