@@ -235,8 +235,9 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **The user playtests prototype v2** — `"C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --path prototypes/sandbox`,
-   cold start. The verdicts feed v3: the canonical `.aseprite` sources
+1. **The user playtests prototype v2** — cmd/bash: `"C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --path prototypes/sandbox`;
+   PowerShell: `& "C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --path prototypes/sandbox`.
+   Cold start. The verdicts feed v3: the canonical `.aseprite` sources
    (`assets/processed/`), the SFX package (`assets/audio/selected/` + WIRING.md),
    and the room-language spec wire in on the next prototype pass.
 2. **The queued agents (spawn on the verdicts)**: analytics-engineer (telemetry

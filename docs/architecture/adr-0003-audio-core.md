@@ -11,8 +11,9 @@ is `docs/architecture/adr-draft-review-log.md` §5); the prepared acceptance rec
 is the log's §5. The engine-probe register in §14 is an
 **implementation gate**, not an ADR-status gate. Carried obligations (not status
 gates): O-AUD-1, CR-AUD-03, CR-AUD-04, **OQ-AUD-9**. If a later architecture review
-finds a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed`
-and is superseded explicitly.
+finds a contradiction with a newer Accepted ADR, the conflict is recorded and
+this ADR is **superseded explicitly** (`Superseded`, per the docs lifecycle —
+never reverted to `Proposed`, which would auto-block its stories).
 
 ## Date
 

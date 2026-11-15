@@ -71,7 +71,9 @@ asset-audit gate.
 
 Per pack, at promotion time:
 
-- [ ] License text or store-page URL recorded in the `Evidence` column
+- [ ] License text or store-page URL recorded in the `Evidence` column — for the
+      seven user-recalled rows, **both** (the license text **and** the store
+      page) before promotion
 - [ ] Commercial-use and modification rights confirmed
 - [ ] Attribution requirements captured (see `assets/CREDITS.md`)
 - [ ] Redistribution clause checked: `Magic Pack 9` and the Metroidvania Kit both

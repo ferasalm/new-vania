@@ -12,8 +12,9 @@ is the log's §5. The engine-probe register in §13 is an
 **implementation gate**, not an ADR-status gate. Carried obligations (not status
 gates): the story-gated engine half of the twin, and **CR-SAV-01** — the abandonment
 regime's four-clause **exit-path reconciliation** of AC-SAV-23 and TR-SAV-014 (§5b). If a later
-architecture review finds a contradiction with a newer Accepted ADR, this ADR
-reverts to `Proposed` and is superseded explicitly.
+architecture review finds a contradiction with a newer Accepted ADR, the conflict
+is recorded and this ADR is **superseded explicitly** (`Superseded`, per the docs
+lifecycle — never reverted to `Proposed`, which would auto-block its stories).
 
 ## Date
 
