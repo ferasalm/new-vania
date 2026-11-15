@@ -233,7 +233,7 @@ Health's formulas are **conversion laws** (raw → dealt/taken), **state laws** 
 7. `else if kind = ENVIRONMENT` → the TR-HD-018 bypass (`taken = raw_damage`, no DEF, no i-frame lock), then F-HD-04's cap/floor.
 8. `else` → reject with telemetry.
 
-`step(attack) = clamp(floor((attack − PLAYER_ATK_BASE) ÷ ATK_PER_POINT), 0, 4)`, scoped to `attack ≤ 132` (the points cap; above it the VS sheet governs, OQ#20). Crit (VS, `kind = NORMAL` only): `dealt = floor(dealt × CRIT_MULT)` with `CRIT_MULT = 1.5` · `dealt = min(dealt, profile.damage_cap_per_event)`.
+`step(attack) = clamp(floor((attack − PLAYER_ATK_BASE) ÷ ATK_PER_POINT), 0, 4)`, scoped to `attack ≤ 132` (the points cap; above it the VS sheet governs, OQ#20). **An MVP module that raises `attack` above 132 holds row 4** (`step()`'s clamp) — the MVP dealt value never exceeds the ladder's top row, and the VS sheet governs only from L6. Crit (VS, `kind = NORMAL` only): `dealt = floor(dealt × CRIT_MULT)` with `CRIT_MULT = 1.5` · `dealt = min(dealt, profile.damage_cap_per_event)`.
 
 **Variables:** `raw_damage` int ≥ 0; `attack` int 100–132 at MVP (points), up to 214 at VS; `attack_context.damage_bonus` int ≥ 0 (0 at no gear; `StatBlock.damage_bonus` copied in). **Output (the ladder, ATK 100/108/116/124/132):** ATK1 **2/3/3/4/4** · ATK2 **4/4/5/5/6** · crouch **2/2/3/3/3** · air **2/3/3/3/4**; the counter **3/4/4/4/4** and **6/7/7/8/8**. **Example:** ATK2 6 at ATK 132; a chain = 10; T3 24 dies in 3 chains (30).
 

@@ -1,7 +1,9 @@
 # SYS-07 Baseline Rework — review log (the IP-17 contract-revision package, ROUND 2)
 
 > **Document under review**: `design/reviews/sys07-baseline-rework-package.md` (the
-> proposal; **no frozen document was edited by this lane**).
+> proposal; **no frozen document was edited by the proposal itself**; the approved
+> revision was applied afterwards — see § 6.2 for the applied file set and § 7 for the
+> applied-diff gates).
 > **Lane**: SYS-07-REWORK · **Branch**: `docs/sys07-baseline-rework` · **Round**: 2
 > **Decision**: D-ORCH-03 (round 2 requested 2026-11-15; the user's approval is the
 > final gate — this log records the *agent* gates, not the decision).
