@@ -153,6 +153,21 @@ Write `production/session-state/lane-<ID>-report.md` in the worktree:
 Return the same report as your final message. Do not paste the GDD into the
 report.
 
+### 6.1 User escalation — the QUESTION protocol
+
+When a step genuinely needs the user (a contract revision, an art-bible
+direction, a required-review refusal, or a failure the orchestrator must
+decide on): do **not** bury it in the report file. **End your turn** with a
+message whose first line is exactly
+
+    QUESTION FOR THE USER: <one-line question>
+
+followed by 2–3 options, each with a one-line consequence, and your
+recommendation. The orchestrator relays it to the user (the subagent's idle
+report reaches the parent automatically), records the answer in
+`decisions.md`, and resumes this session with the decision. Never try to
+prompt the user directly — the orchestrator is the single inbox.
+
 ## 7. Hard rules
 
 - Work only in the lane worktree. Never edit the main checkout or another lane.
