@@ -88,4 +88,6 @@
 
 Recommendations applied: R1 the boss codes' contact named (a dedicated boss session — the AC-63 bar cannot run inside the Gate-1 contacts) · R2 the air attack's boss-side scope recorded (no air clash at MVP; the matrix's trio is the grounded answer-space) · R3 the ring return's launch rule authored (the straight line to the published position; no corridor tolerance) · R4 TR-GBF-002's schema-scope clarified (the strike-side absence; the projectile's damage is SYS-13's schema data) · R5 the XP re-grant cycle noted in OQ-9 (the economy rider at the QA-plan sync).
 
-**Re-run verdict: see 3.1a.**
+**Re-run verdict (round 2, fresh GLM seat): APPROVED — 0 blockers, 5 recommendations (all applied: the per-fight scoping of the look; the swap-tick pin; the envelope key's historical-handle note; the AC-GBF-23 denominator's print instruction; the OQ-9 economy rider's ladder weighing). CD gate CLOSED.**
+
+### 3.2 Three-seat panel (parallel — creative GLM / technical DS / QA DS)
