@@ -130,14 +130,15 @@ For each launch:
      sync lane), record the fallback in `decisions.md`, then spawn on GLM.
    - **Relaunch after a pause**: `PAUSED` is a legal manifest status (a side
      state in the README state machine). When `decisions.md` records the
-     user's authorization to run a GLM lane on DS, first set the lane's
+     user's authorization to run a GLM lane on DS: first set the lane's
      manifest `model` to the DS model, re-render + validate (`--lane <ID>`,
-     then `--check`), land the model change on `origin/Main` as above, then
-     commit or reset the lane's `manifest.yaml` and `lanes/<ID>.md` edits so
-     the step-3 merge runs on a clean worktree, set the lane back to
-     `QUEUED`, and relaunch it from step 1. When the routing issue is
-     resolved without a model change, set the lane back to `QUEUED` and
-     relaunch it from step 1.
+     then `--check`); then set the lane back to `QUEUED` **in the same
+     manifest edit**, and land `model` + `status` together on `origin/Main`
+     through the §6 path (a branch + PR, or the sync lane); commit or reset
+     the lane worktree's `manifest.yaml` and `lanes/<ID>.md` edits so the
+     step-3 merge runs on a clean worktree; then relaunch from step 1. When
+     the routing issue is resolved without a model change, land the `QUEUED`
+     status change the same way and relaunch from step 1.
 6. After a runner spawns successfully (including a DS→GLM fallback spawn),
    update the manifest status to `AUTHORING`; update `STATE.md`. If every
    attempt fails, keep the lane `PAUSED` — never set `AUTHORING` on a failed
