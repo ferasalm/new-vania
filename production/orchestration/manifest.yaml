@@ -116,7 +116,7 @@ lanes:
     dependencies_waived: [SYS-03, SYS-05]
     dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring (the review-doctrine pending-obligation ledger)."
     review_state: "gates complete: CD APPROVED (after CONCERNS repair) · three-seat NEEDS REVISION (1+3+2) all repaired · spot-check PASS (11/11) · micro-check PASS; seats ran in-session on GLM (contract §3.6 fallback, recorded)"
-    next_action: "PR #59 open (CI green); CodeRabbit pending — resume the runner session (ses_e2318d2a8ffe1Ie7DIw934S1eg) to triage; the sync request is queued in review-queue.md §5; the orchestrator squash-merges after the sync lands."
+    next_action: "PR #59 open (CI green); CodeRabbit pending — resume the runner session (ses_e2318d2a8ffe1Ie7DIw934S1eg) to triage; the sync request is queued in review-queue.md §5; the orchestrator squash-merges after CodeRabbit triage is clean and the sync has landed."
 
   - id: SYS-28
     title: "Narrative Presentation — logs, briefings, telegraph text"
