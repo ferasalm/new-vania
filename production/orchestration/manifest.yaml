@@ -229,11 +229,11 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: QUEUED
+    status: SYNC
     dependencies: [SYS-07]
     gates: [SYS-16, SYS-17]
-    review_state: "contract-revision request — user approval required before edits"
-    next_action: "ROUND 2 REQUESTED (2026-11-15): the round-1 package was NOT approved; prepare the revised IP-17 contract-revision package and re-present it. Do not edit the frozen GDD until round 2 is approved."
+    review_state: "GATES CLOSED (2026-11-15, D-ORCH-03 option A, user-approved): CD APPROVED (2 passes) · technical NEEDS REVISION ×10 → all blockers repaired · the applied-diff gates: CD APPROVED, technical 9 repaired + 2 rebutted, qa-lead spot-check PASS 7/7, micro-check PASS (zero blockers) · CodeRabbit 19 threads across 2 passes, all resolved · CI 5/5 green on 270b9ad (PR #75). SYNC IN FLIGHT (PR #76): the registry value set + `damage_event` + the baseline constants, the index row/bullet/design-order/unblock, the 5th Gate-2 probe; `spitter_orb_damage` HELD for the SYS-13 rider."
+    next_action: "Merge order per review-queue.md §7 rule 4 (a lane may not merge before its sync lands): the orchestrator verifies PR #75's head, merges the sync PR #76, then squash-merges PR #75 at its verified head. The landing receipt + the sync remove the SYS-07-REWORK blocker from SYS-16 and SYS-17 — SYS-17 keeps its own SYS-16 dependency, so it starts only after SYS-16 lands. The SYS-13 rider (one coordinated doc touch) then flips `spitter_orb_damage`."
 
   - id: SYS-16
     title: "Progression — level 1–5 + gear layer"
