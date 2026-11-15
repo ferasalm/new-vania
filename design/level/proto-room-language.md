@@ -113,7 +113,7 @@ A mini-boss is a **skill exam standing between parts**. It never teaches a new v
 
 The rules:
 
-1. **One per part, minimum one, never adjacent.** Every part of the multi-part arc (the errand structure — one grief state per part) carries at least one mini-boss; no two mini-bosses within 3 room-crossings of each other (encounter-density breathing — the exam must be an event, not a gauntlet).
+1. **One per part, minimum one, never adjacent — except the goodbye.** Every part of the multi-part arc (the errand structure — one grief state per part) carries at least one mini-boss, **except Errand 5, which carries none** (the goodbye gets an honest road — see The four candidates); no two mini-bosses within 3 room-crossings of each other (encounter-density breathing — the exam must be an event, not a gauntlet).
 2. **The door precedes.** Every mini-boss stands behind a mini-boss-grade door (§1's grammar, smaller treatment). The card names what the door promised (§ Title cards).
 3. **Exactly one siting role per mini-boss.** The four admitted siting classes:
    - **(a) The gate-guard** — behind the door that opens the route into the next part's threshold. The critical-path exam.
@@ -123,7 +123,7 @@ The rules:
 4. **The duel-room rule.** A mini-boss room is authored single-screen-ish: 30–40 tiles wide (480–640 px; the room-graph minimum is the floor), flat flow with at most 1–2 elevation changes, at most one interior hazard rect (or none — the fight is the threat), and the playable interior authored inside the thumb-band discipline as an authoring habit. **No camera hold machinery at this tier** — the arena hold is SYS-14's grief-boss law (TR-CAM-012/TR-GBF-017); a mini-boss lives in the ordinary follow, and the room's smallness *is* the staging (the room is the stage; the frame barely moves).
 5. **The retreat law — no seal, reset by the world's own word.** No arena-seal machinery at this tier (the seal is SYS-14's authored drop, priced by SYS-07's kinematics). If the player retreats through the mini door mid-fight, SYS-02's room-lifetime law does the honest thing: the room's local state dies with the room (TR-RWS-011) — the exam resets, the door stands open both ways, and re-entry re-applies the fight. The world does not chase; it does not cheat; it simply re-deals.
 6. **The persistence law — resolves once.** A mini-boss's defeat is **world truth** (the doors' law extended): it resolves exactly once; re-crossings are plain passages; the room's spawn list never re-applies a resolved mini-boss. *Contract-adjacent cost:* the save's five source families (TR-RWS-025) gain a `mini_bosses_resolved` family, and the spawn list needs an epoch/flag-keyed variant — raised in Open Questions (OQ-LD-2/3).
-7. **The card rule — the door names, the card confirms.** The title card fires on the mini door's open-arc **completion** (the crossing lands on the arena anchor), never on aggro. What the door promised, the card names.
+7. **The card rule — the door names, the card confirms.** The title card fires on the mini door's open-arc **completion** (the crossing lands on the arena anchor), never on aggro. What the door promised, the card names. **The re-entry trigger:** after a retreat (rule 5) the door stands already open, so there is no open-arc completion to fire — the reduced re-fire (the 400 ms hold, below) triggers on the **re-entry crossing itself** (the crossing that re-applies the fight), never on aggro.
 
 ### The title-card treatment
 
@@ -137,7 +137,7 @@ The prototype already renders boss title cards; the grammar generalizes:
 | The world | the fight's intro owns it | **no hold, no context** — gameplay continues; the enemy's first decision is cadence-gated until the card dismisses (an authored intro beat on the room's data, the SYS-14 `INTRO_BEAT_MS` pattern at this tier, never new machinery) |
 | Color | per the art bible's print discipline | identical: bone/void ink, **never red**, no accents |
 | Placement | the card's anchor (upper third, centered) | identical anchor |
-| Re-fires | — | in full on first entry; after a reset (retreat law), a **400 ms hold** replaces the full card (re-attempts skip the ceremony, keep the mark) |
+| Re-fires | — | in full on first entry; after a reset (retreat law), a **400 ms hold** replaces the full card, starting on the re-entry crossing (rule 7's re-entry trigger; re-attempts skip the ceremony, keep the mark) |
 
 **Names are working placeholders** — the naming voice is the writer's (flagged OQ-LD-6); the treatment is this doc's.
 
@@ -226,7 +226,7 @@ The identity geometry — byte-identical by SYS-02's validated invariant (TR-RWS
 ### The first-revisit law
 
 - The player's **first re-entry** into any changed room happens on a route they chose — the carrot (a counter's missing item, a story's open question), never a forced corridor. The world answers the telling, not the walker (SYS-10's law, made spatial: the level never *marches* the player through a change).
-- The **first crossing of a mutation-opened route is a held, framed arc** — SYS-02's reveal-arc law (TR-RWS-009) generalized as the pattern's presentation rule: every change class ≥ 2's first crossing gets the arc + a framing zone (SYS-32's input), shown not sprung. One arc per change, once: later crossings are plain walk-throughs.
+- The **first crossing of a mutation-opened route is a held, framed arc** — SYS-02's reveal-arc law (TR-RWS-009) generalized as the pattern's presentation rule: every **route-opening** change class's first crossing gets the arc + a framing zone (SYS-32's input), shown not sprung. One arc per change, once: later crossings are plain walk-throughs. **Classes that open no route get their own trigger:** class 4 (exposed content) arcs on the approach that first brings the exposed content into view; class 5 (repopulation) arcs on the first entry that shows the room re-dealt; **class 7 (the pocket) never arcs** — the pocket's statement is the room's own unchanged quiet.
 - The **game's first changed room is the authored canonical reveal** (RM-03's Cistern — the Cold Corridor wing). Every later changed room is a quieter rhyme of it, never a louder one: escalation comes from *meaning* (what the change says), not from *volume* (how hard the room announces).
 
 ### THE PACING RULE — the loop budget
@@ -249,7 +249,7 @@ The rule of thumb for authoring: **if a loop cannot say its one change in one br
 
 The Twine story tree (D-ORCH-21) keys on exactly what the room data can answer — the pattern keeps it spatial:
 
-- **Node id**: `room_id` + visit-state: `first` / `epoch_n` / `changed_<set_id>` / `pocket`. Every changed room's tree has **two text states minimum** — the remembered voice (what the bones still say) and the changed voice (the new sentence) — and the branch keys are the triples the level data carries: `(room_id, truth_epoch, mutation sets applied)`.
+- **Node id**: `room_id` + visit-state: `first` / `epoch_n` / `changed_<set_id>` / `pocket`. Every changed room's tree has **two text states minimum** — the remembered voice (what the bones still say) and the changed voice (the new sentence) — and the branch key is the Node id itself (`room_id` + visit-state), resolved over the triple the level data carries: `(room_id, truth_epoch, mutation sets applied)` — so a first visit never merges with an unchanged revisit at the same epoch.
 - **The vocabulary is closed**: the Twine author picks from the change classes above; a change class the room data cannot answer does not exist in the tree. No new branch kind without a new mutation effect (a contract revision, never a silent edit).
 - **The tells' text rule carries over** (SYS-10's TR-WME-008, generalized): changed-room text may dramatize in the house's own voice; it never inventories the change, never confirms the noticing, never varies by an epoch-conditional *re-read*.
 
