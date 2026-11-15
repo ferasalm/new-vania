@@ -12,7 +12,7 @@ early. The acceptance text is prepared and recorded in the log; the status flips
 `Accepted` on the TD's verdict. The engine-probe register in §13 is an
 **implementation gate**, not an ADR-status gate. Carried obligations (not status
 gates): the story-gated engine half of the twin, and **CR-SAV-01** — the abandonment
-regime's three-clause reconciliation of AC-SAV-23 and TR-SAV-014 (§5b). If a later
+regime's four-clause **exit-path reconciliation** of AC-SAV-23 and TR-SAV-014 (§5b). If a later
 architecture review finds a contradiction with a newer Accepted ADR, this ADR
 reverts to `Proposed` and is superseded explicitly.
 
@@ -170,8 +170,9 @@ trust without thinking (the Player Fantasy's honesty clause).
   off by the platform's kill between steps 4 and 5, in which case step 5's row
   applies and the boot sweep promotes the `.bak` to the last station autosave. No
   regime leaves a torn file, and none leaves a state older than the last station
-  save. Regime 1's AC wording is a **filed revision (CR-SAV-01)**, not an
-  interpretation (§5b).
+  save. A close-save that **fails** on the exit path is the third way to end without
+  committing, and it recovers per its step's row (§5b). Regime 1's AC wording is a
+  **filed revision (CR-SAV-01)**, not an interpretation (§5b).
 - **R5 — The snapshot is taken at an eligible tick, once per request.** The E4
   queue's predicate is read from SYS-29's `FreezeState`; a mid-choreography
   snapshot is unreachable by construction.
@@ -460,7 +461,18 @@ once in R4:
    station save; the platform's kill is the backstop, exactly as it is for a crash.
 
 Neither regime can leave a torn file — the six-step write's commit point is the
-rename — and neither can make the session worse than the last station save. What
+rename — and neither can make the session worse than the last station save. **A
+close-save that fails outright on the exit path is the third way a close-save can end
+without committing** (beside abandonment and the kill): §5a's `SAVE_FAILED_*` code is
+*produced* but never *observed*, because the drain happens on a tick the exiting app
+will not run. The recovered state is **the one its step's row names**, and the split
+is the commit point's, not a range: a failure at **steps 1–4** leaves the slot
+**unchanged** (nothing has been renamed — a step-4 rename is atomic, so `.sav` is
+untouched); a failure at **step 5** leaves `.sav` missing with `.bak` present, so the
+boot sweep promotes the `.bak`; and a failure at **step 6** is post-commit, so its own
+rollback promotes the `.bak` back over the unverified `.sav`. That is why CR-SAV-01's
+clause 1 names the failed write beside the abandoned and the interrupted ones, and why
+its clause 4 scopes the AC's code-assertion to a process that survives to observe it. What
 the policy does **not** claim is that the write "never lands", or that a commit in
 flight "always finishes": a blocked rename is precisely the case the timeout fires
 on, and a kill between steps 4 and 5 is precisely the case step 5's row prices.
@@ -479,20 +491,34 @@ recovered). **Regime 1 is a fourth case**: delivered, attempted, abandoned. Its
 *recovered state* is clause (c)'s — the previous good state, which is the last
 station autosave — but **no code is observable**, because the process is exiting
 and there is nothing left to report to. This ADR does **not** reinterpret the
-frozen text (R7 freezes the six codes): it files **CR-SAV-01**, the abandonment
-regime's reconciliation, in **three** clauses —
+frozen text (R7 freezes the six codes): it files **CR-SAV-01**, the exit-path
+reconciliation of the close-save's non-completing cases, in **four** clauses —
 
-1. **AC-SAV-23 clause 1** gains "…**commits within `SAVE_JOIN_TIMEOUT_MS`**; where
-   it does not, the fallback clause applies". Without this the AC would assert both
-   "it lands and the restored state is the suspension" and "the fallback holds when
-   it did not commit" — a self-contradictory AC that a QA run would fail the build
-   for.
-2. **AC-SAV-23 clause (b)**'s "only when" gains "…or the close-save did not commit
-   within `SAVE_JOIN_TIMEOUT_MS`", so the fallback is named rather than inferred.
+1. **AC-SAV-23 clause 1** gains "…**the close-save's commit that completes — including
+   one that completes after `SAVE_JOIN_TIMEOUT_MS` — restores the suspension
+   snapshot; where the commit is abandoned before its rename, interrupted before step
+   5, or fails on the exit path, the fallback clause applies**". Two things are being
+   keyed here. **Completion, not the timeout**: §5b explicitly permits a rename
+   already in flight to finish late, and that late commit restores the **better**
+   state — a "committed-within-the-bound" test would misclassify exactly that case as
+   a fallback. **And the failed write**: a failure on the exit path recovers per its
+   step's row (§5b), which is not always the suspension snapshot. Without this clause
+   the AC would also assert both "it lands and the restored state is the suspension"
+   and "the fallback holds" — self-contradictory, and a QA run would fail the build
+   for the behaviour §5b prices as correct.
+2. **AC-SAV-23 clause (b)**'s "only when" gains "…**or the close-save was abandoned
+   before its rename, interrupted before step 5, or failed on the exit path**", so
+   the fallback is named rather than inferred.
 3. **TR-SAV-014**'s "joined at shutdown" is qualified: "…**except on the close-save's
    abandonment path**, where the join is skipped and the platform's kill is the
    final bound" — joining there would be a second unbounded wait, i.e. the very
    thing the exit policy exists to prevent.
+4. **AC-SAV-23 clause (c)**'s code-assertion is scoped: "…the reported
+   `SAVE_FAILED_*` code **is asserted where the process survives to observe it**; on
+   the exit path it is produced but not asserted, and the recovery is per the step's
+   row." Without this the AC demands an assertion that no process is left to make —
+   clause (c) applies whenever the event is delivered and the write fails, which is
+   exactly the exit-path failure the fence exists for.
 
 It is carried as an obligation (report §5, review log §5). The mechanism (the fence
 and the two regimes) is this ADR's; the frozen wording is the GDD's.
@@ -744,7 +770,7 @@ job → one-deep queue ───────────────────
   ┌──────────────────────────────────────────────────────────┘
   ▼
 [tick boundary] drain → save_completed(slot, tick, bytes, hash)
-                       | save_failed(slot, code) [+ rollback at step 6]
+                       | save_failed(slot, code)  [step 6's rollback runs on the worker]
 ```
 
 ### Key interfaces
@@ -951,7 +977,7 @@ func remove(path: String) -> Error
 | Unchecked `store_*` → silent short write | Medium | High | The boolean discipline in §5; the step-3 re-read; AC-SAV-09's six-step fault injection |
 | Rename not atomic on a mobile filesystem | Low | High | Register item 4; the `.bak` promotion path; AC-SAV-14/23 |
 | Lost wakeup / lost job in the one-deep queue | Low | High | Register item 5; one job per slot; the completion drained on a tick |
-| Close-save blocks past the suspension window | Low | Medium | The two-regime exit policy (§5, §5b) and **CR-SAV-01**: the step-3b fence abandons the write with no rename and the last station autosave stands; a commit already in flight lands the suspension snapshot, or — killed between steps 4 and 5 — step 5's row promotes the `.bak`. Never older, never torn. Plus the freeze-skip guard; ≤ 2 KB by construction |
+| Close-save blocks past the suspension window | Low | Medium | The two-regime exit policy (§5, §5b) and **CR-SAV-01**: the step-3b fence abandons the write with no rename and the last station autosave stands; a commit already in flight lands the suspension snapshot, or — killed between steps 4 and 5 — step 5's row promotes the `.bak`; a failure on the exit path recovers per its step's row, with its code produced but never observed. Never older, never torn. Plus the freeze-skip guard; ≤ 2 KB by construction |
 | Absent-key defaults materialized before the hash | Medium | High | TR-SAV-026 step 4 + TR-SAV-023; the twin's `ABS-defaults` |
 | Migration chain hole ships | Low | High | V-SAV-02's contiguity boot check; the synthetic `CURRENT = 3` harness |
 | A second write path appears (an ad-hoc `FileAccess` call) | Medium | High | V-SAV-04's CI grep; AC-SAV-26; the port is the only door |
@@ -1027,7 +1053,10 @@ the *decision* fixes — not checks runnable at sign-off. The **story gate**
       (step 3b) is asserted twice: a cancelled job performs **no rename** and
       leaves the slot's bytes unchanged (the last station autosave stands), and a
       job whose commit sequence has begun completes with the suspension snapshot
-      — the two regimes of §5b, each with its own injected-IO fixture.
+      — the two regimes of §5b, each with its own injected-IO fixture; a failure on
+      the exit path recovers **per its step's row** — the slot unchanged for steps
+      1–4, `.bak` promotion for step 5, step 6's rollback for step 6 — with no code
+      observable.
 - [ ] The hash input excludes exactly three values — `game_version`,
       `saved_at_utc`, `state_hash` — and includes `schema_version` and the whole
       payload; the twin's three digests do not reproduce if a fourth is excluded
@@ -1119,9 +1148,12 @@ AC-SAV-05/07; V-SAV-06 by AC-SAV-20's no-clamp refusal; V-SAV-09 by AC-SAV-25 an
   O-AUD-1.
 - **Registry**: `save_contract`, `save_roundtrip_twin`, `epoch_mutation_reconciliation`
   (all `status: active`).
-- **Carried**: **CR-SAV-01** — the abandonment regime's frozen-text reconciliation,
-  in three clauses: AC-SAV-23's clause 1 gains "commits within
-  `SAVE_JOIN_TIMEOUT_MS`", its clause (b) gains "…or the close-save did not commit
-  within `SAVE_JOIN_TIMEOUT_MS`", and TR-SAV-014's "joined at shutdown" gains
-  "…except on the abandonment path" (§5b). Filed here and batched for the user with
+- **Carried**: **CR-SAV-01** — the close-save exit path's frozen-text reconciliation,
+  in **four** clauses: AC-SAV-23's clause 1 gains "the close-save's commit that
+  completes — including after `SAVE_JOIN_TIMEOUT_MS` — restores the suspension
+  snapshot; where the commit is abandoned before its rename, interrupted before step
+  5, or fails on the exit path, the fallback applies"; its clause (b) gains the
+  matching "only when"; TR-SAV-014's "joined at shutdown" gains "…except on the
+  abandonment path"; and clause (c)'s code-assertion is scoped to a process that
+  survives to observe it (§5b). Filed here and batched for the user with
   CR-AUD-03/04; it changes no mechanism in this ADR.
