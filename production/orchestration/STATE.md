@@ -75,6 +75,21 @@ The request being applied: `../new-vania-sys16-progression/production/session-st
 §4a–4e (order 1 in `review-queue.md` §5). The **SYS-14 sync** follows serially
 (writer limit 1).
 
+**Receipt (in flight, 2026-11-15)** — **PR #84** (`chore/sync-sys16` → `Main`):
+`fa91299` (the lock) + `e71183a` (the sync) + `7590599` (the CodeRabbit batch).
+Registry **88 → 113** entries (+18 constants, +5 published contracts, +2
+`kind: formula`; `damage_ladder_mvp`'s note revised, value unchanged). Index: the
+SYS-16 APPROVED row, design order 23, the dependency bullet, 9 row corrections,
+the six riders recorded. Validation: YAML parses · no duplicate names · no
+missing `source`/`referenced_by` path (`design/gdd/progression.md` is the one
+pending path — it lands with PR #81, which merges **after** this sync by
+review-queue §7 rule 4) · the counts reproduce · no entry deleted. CodeRabbit:
+**5 threads, 5 applied, 0 rebutted, 0 deferred, all resolved** (the SYS-17
+unblock trigger; the joint-guardrail load repair; the `gear_budget` predicate's
+grouping + the exception's admission clause; the banked-point row condition; the
+gear knobs' joint ranges). **Do not merge before PR #81's dependency order is
+respected: this sync lands first, then #81.**
+
 **Prior release 2026-11-15 (the riders mini sync)**: PR #80 at `fe38c4c` —
 `spitter_orb_damage` 8 → 2, `enemy_strike_contract`'s payload `power_band`
 1 → 2, the index's SYS-07 Suture 25 → 5.
