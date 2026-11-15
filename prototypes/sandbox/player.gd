@@ -1,23 +1,29 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# Question: does the game feel right when its landed numbers are played, not read?
-# Date: 2026-11-16
-# The player body. Flat rects, feet-anchored, hand-rolled AABB against Rect2 solids.
-# Feel knobs the contracts do not name are PROTO (startup/active/recovery pacing).
+# Question: does the game feel right when its LANDED numbers are played, not read?
+# Date: 2026-11-16 (v2)
+# PANDORA — the body. Real frames (chroma-keyed from the concept art), feet-anchored,
+# hand-rolled AABB against Rect2 solids.
+#
+# THE ONE BUTTON: the scene classifies the press (strike / clash / counter) because
+# the scene is what knows the enemy's clock; the body only knows how to wear the
+# three poses. See fight.gd::_on_press for the ladder.
 extends Node2D
 
-const W := 16.0
-const H := 40.0
-const SPEED := 132.0
-const DASH_SPEED := 330.0
+const Assets = preload("res://assets.gd")
+
+const W := 26.0
+const H := 100.0
+const SPEED := 150.0
+const DASH_SPEED := 340.0
 const DASH_MS := 150.0
 const DASH_CD_MS := 420.0
-const GRAVITY := 1100.0
-const JUMP_V := -330.0
+const GRAVITY := 1250.0
+const JUMP_V := -380.0
 
 # PROTO pacing: the strike arc. The contract fixes the window (ATTACK_WINDOW_MS 200).
-const LIGHT := {"startup": 60.0, "active": 90.0, "recovery": 120.0}
-const HEAVY := {"startup": 110.0, "active": 100.0, "recovery": 170.0}
-const COUNTER_WINDOW := 300.0
+const STRIKE := {"startup": 60.0, "active": 90.0, "recovery": 120.0}
+const CLASH_MS := 140.0
+const COUNTER_MS := 220.0
 
 var solids: Array = []          # Array[Rect2] — world-space solid rects
 var hp := float(K.PLAYER_MAX_HP)
@@ -26,15 +32,10 @@ var facing := 1
 var vel := Vector2.ZERO
 var on_ground := false
 
-var state := "idle"             # idle | attack | counter | knockdown | dead
+var state := "idle"             # idle | strike | clash | counter | knockdown | dead
 var state_ms := 0.0
-var attack_kind := "light"
-var attack_raw := K.ATK1_DAMAGE
-var attack_power := 1
 var strike_id := 0
 var hit_done := false
-var counter_heavy := false
-var counter_done := false
 
 var invuln_ms := 0.0
 var dash_ms := 0.0
@@ -43,10 +44,29 @@ var flash_ms := 0.0
 var locked := false
 var combat := true
 var down_ms := 0.0
+var fall_ms := 0.0              # the fall fade (no damage, no death)
+
+var spr: AnimatedSprite2D
+var slash: AnimatedSprite2D
 
 
 func _ready() -> void:
 	z_index = 20
+	spr = Assets.sheet({
+		"idle": {"prefix": "pandora/idle", "n": Assets.PANDORA["idle"], "fps": 9.0},
+		"dash": {"prefix": "pandora/dash", "n": Assets.PANDORA["dash"], "fps": 16.0},
+		"jump": {"prefix": "pandora/jump", "n": Assets.PANDORA["jump"], "fps": 9.0, "loop": false},
+	})
+	spr.scale = Vector2(K.PLAYER_SCALE, K.PLAYER_SCALE)
+	add_child(spr)
+	spr.play("idle")
+
+	slash = Assets.strip("fx/slash", Assets.FX["slash"], 22.0, 0)
+	slash.scale = Vector2(1.6, 1.6)
+	slash.offset = Vector2(-32, -32)
+	slash.z_index = 3
+	slash.visible = false
+	add_child(slash)
 
 
 func reset_body(at: Vector2) -> void:
@@ -57,6 +77,7 @@ func reset_body(at: Vector2) -> void:
 	state_ms = 0.0
 	locked = false
 	invuln_ms = 0.0
+	fall_ms = 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -69,10 +90,13 @@ func _physics_process(delta: float) -> void:
 		dash_cd_ms = maxf(0.0, dash_cd_ms - ms)
 	if flash_ms > 0.0:
 		flash_ms = maxf(0.0, flash_ms - ms)
+	if fall_ms > 0.0:
+		fall_ms = maxf(0.0, fall_ms - ms)
 
 	if state == "dead" or locked:
 		vel.x = move_toward(vel.x, 0.0, 900.0 * delta)
 		_integrate(delta)
+		_animate()
 		queue_redraw()
 		return
 
@@ -85,17 +109,23 @@ func _physics_process(delta: float) -> void:
 				state = "idle"
 				state_ms = 0.0
 				down_ms = 0.0
-		"attack":
-			_tick_attack()
-		"counter":
-			if state_ms >= COUNTER_WINDOW:
+		"strike":
+			if state_ms >= STRIKE["startup"] + STRIKE["active"] + STRIKE["recovery"]:
 				state = "idle"
 				state_ms = 0.0
-				counter_done = false
+				hit_done = false
+		"clash":
+			if state_ms >= CLASH_MS:
+				state = "idle"
+				state_ms = 0.0
+		"counter":
+			if state_ms >= COUNTER_MS:
+				state = "idle"
+				state_ms = 0.0
 		_:
 			_read_input(delta, ms)
 
-	if state != "attack" and state != "counter":
+	if state != "strike" and state != "counter":
 		vel.x = move_toward(vel.x, 0.0, 1400.0 * delta)
 		if dash_ms > 0.0:
 			dash_ms -= ms
@@ -103,23 +133,11 @@ func _physics_process(delta: float) -> void:
 			if dash_ms <= 0.0:
 				dash_ms = 0.0
 	_integrate(delta)
+	_animate()
 	queue_redraw()
 
 
 func _read_input(delta: float, ms: float) -> void:
-	if not combat:
-		var dir := 0
-		if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
-			dir -= 1
-		if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT):
-			dir += 1
-		if dir != 0:
-			facing = dir
-			vel.x = dir * SPEED
-		if (Input.is_physical_key_pressed(KEY_SPACE)) and on_ground:
-			vel.y = JUMP_V
-		return
-
 	var dir := 0
 	if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
 		dir -= 1
@@ -133,55 +151,45 @@ func _read_input(delta: float, ms: float) -> void:
 		vel.y = JUMP_V
 
 
-func _tick_attack() -> void:
-	var cfg: Dictionary = LIGHT if attack_kind == "light" else HEAVY
-	var a: float = cfg["startup"]
-	var b: float = a + cfg["active"]
-	if state_ms >= a + cfg["active"] + cfg["recovery"]:
-		state = "idle"
-		state_ms = 0.0
-		hit_done = false
-	elif state_ms > a and state_ms <= b:
-		pass
-
-
-# ── input verbs (the scene calls these so it can lock the body) ─────────────
-func try_light() -> void:
-	if not combat or state != "idle" or locked:
+# ── the three poses (the scene chooses which) ───────────────────────────────
+func do_strike() -> void:
+	if state != "idle" or locked or not combat:
 		return
-	state = "attack"
+	state = "strike"
 	state_ms = 0.0
-	attack_kind = "light"
-	attack_raw = K.ATK1_DAMAGE
-	attack_power = 1
 	strike_id += 1
 	hit_done = false
+	_flash_slash(K.C_CYAN, 1.0)
 
 
-func try_heavy() -> void:
-	if not combat or state != "idle" or locked:
+func do_clash() -> void:
+	if locked or not combat:
 		return
-	state = "attack"
+	state = "clash"
 	state_ms = 0.0
-	attack_kind = "heavy"
-	attack_raw = K.ATK2_DAMAGE
-	attack_power = 2
-	strike_id += 1
-	hit_done = false
+	_flash_slash(Color(1, 1, 1, 1), 1.25)
 
 
-func try_counter() -> void:
-	if not combat or locked:
-		return
-	if state == "counter":
-		counter_heavy = true     # K inside the stance upgrades 3 -> 6
-		return
-	if state != "idle":
+func do_counter() -> void:
+	if locked or not combat:
 		return
 	state = "counter"
 	state_ms = 0.0
-	counter_heavy = false
-	counter_done = false
+	_flash_slash(K.C_ICE, 1.5)
+
+
+func _flash_slash(c: Color, s: float) -> void:
+	if slash == null:
+		return
+	slash.visible = true
+	slash.modulate = c
+	slash.scale = Vector2(1.6 * s, 1.6 * s)
+	slash.position = Vector2(facing * 22.0, -H * 0.55)
+	slash.flip_h = facing < 0
+	slash.play("run")
+	var t := create_tween()
+	t.tween_interval(0.16)
+	t.tween_callback(func(): slash.visible = false)
 
 
 func try_dash() -> void:
@@ -198,7 +206,11 @@ func is_idle() -> bool:
 
 
 func is_attacking() -> bool:
-	return state == "attack"
+	return state == "strike"
+
+
+func is_clashing() -> bool:
+	return state == "clash"
 
 
 func is_countering() -> bool:
@@ -218,27 +230,27 @@ func is_invulnerable() -> bool:
 
 
 func counter_value() -> int:
-	return K.counter_output(K.ATK2_DAMAGE if counter_heavy else K.ATK1_DAMAGE)
+	return K.counter_output(K.COUNTER_RAW)
 
 
 func attack_active() -> bool:
-	if state != "attack":
+	if state != "strike":
 		return false
-	var cfg: Dictionary = LIGHT if attack_kind == "light" else HEAVY
-	var a: float = cfg["startup"]
-	return state_ms > a and state_ms <= a + cfg["active"]
+	var a: float = STRIKE["startup"]
+	return state_ms > a and state_ms <= a + STRIKE["active"]
 
 
 func hitbox() -> Rect2:
 	if not attack_active():
 		return Rect2()
-	var x := position.x + (4.0 if facing > 0 else -34.0)
-	return Rect2(x, position.y - H + 4.0, 30.0, 26.0)
+	var reach := 46.0
+	var x := position.x + (4.0 if facing > 0 else -4.0 - reach)
+	return Rect2(x, position.y - H + 6.0, reach, 66.0)
 
 
 func hurtbox() -> Rect2:
 	if state == "knockdown":
-		return Rect2(position.x - 22.0, position.y - 14.0, 44.0, 14.0)
+		return Rect2(position.x - 30.0, position.y - 22.0, 60.0, 22.0)
 	return Rect2(position.x - W * 0.5, position.y - H, W, H)
 
 
@@ -254,7 +266,6 @@ func take_hit(power: int, from_x: float, dmg: int) -> bool:
 		return false
 	hp = maxf(0.0, hp - float(dmg))
 	flash_ms = 120.0
-	# the knockback pushes AWAY from the source
 	var dir := -1 if from_x >= position.x else 1
 	if K.knocks_down(power):
 		state = "knockdown"
@@ -285,9 +296,16 @@ func restore_full() -> void:
 	hp = hp_max
 
 
+func teleport(at: Vector2) -> void:
+	position = at
+	vel = Vector2.ZERO
+	state = "idle"
+	state_ms = 0.0
+	down_ms = 0.0
+
+
 func _integrate(delta: float) -> void:
 	vel.y += GRAVITY * delta
-	# x
 	position.x += vel.x * delta
 	for r in solids:
 		var hb := hurtbox()
@@ -297,7 +315,6 @@ func _integrate(delta: float) -> void:
 			elif vel.x < 0.0:
 				position.x = r.position.x + r.size.x + hb.size.x * 0.5 + 0.1
 			vel.x = 0.0
-	# y
 	on_ground = false
 	position.y += vel.y * delta
 	for r in solids:
@@ -311,43 +328,42 @@ func _integrate(delta: float) -> void:
 			vel.y = 0.0
 
 
-# ── draw ───────────────────────────────────────────────────────────────────
-func _draw() -> void:
-	var body := Rect2(-W * 0.5, -H, W, H)
+func _animate() -> void:
+	if spr == null:
+		return
+	spr.flip_h = facing < 0
+	slash.flip_h = facing < 0
 	if state == "knockdown" or state == "dead":
-		body = Rect2(-22.0, -14.0, 44.0, 14.0)
-
-	var c := K.C_BONE
+		spr.rotation = 1.35 * facing
+		spr.position = Vector2(0, -6)
+		if spr.animation != "idle":
+			spr.play("idle")
+		return
+	spr.rotation = 0.0
+	spr.position = Vector2.ZERO
+	var want := "idle"
+	if dash_ms > 0.0:
+		want = "dash"
+	elif not on_ground:
+		want = "jump"
+	if spr.animation != want:
+		spr.play(want)
 	if flash_ms > 0.0:
-		c = Color(1, 1, 1, 1)
-	if state == "dead":
-		c = K.C_BONE_DIM
-	draw_rect(body, c)
-	draw_rect(body, Color(0, 0, 0, 0.45), false, 1.0)
-
-	if state != "knockdown" and state != "dead":
-		# the facing mark: a 1px vertical seam on the leading edge
-		var sx := W * 0.5 - 2.0 if facing > 0 else -W * 0.5 + 1.0
-		draw_rect(Rect2(sx, -H + 8.0, 1.0, 22.0), Color(0, 0, 0, 0.5))
-
+		spr.modulate = Color(1.6, 1.6, 1.6, 1.0)
+	elif state == "counter":
+		spr.modulate = Color(1.15, 1.25, 1.3, 1.0)
+	else:
+		spr.modulate = Color(1, 1, 1, 1)
 	if invuln_ms > 0.0:
-		# the hum, not a shield bubble: a thin cyan outline at breathing alpha
-		var a := 0.30 + 0.25 * sin(Time.get_ticks_msec() * 0.012)
-		draw_rect(body.grow(2.0), Color(K.C_CYAN.r, K.C_CYAN.g, K.C_CYAN.b, a), false, 1.0)
+		spr.modulate.a = 0.55 + 0.35 * sin(Time.get_ticks_msec() * 0.012)
 
-	if state == "counter":
-		# the clashable window: a cyan blade held out front
-		var x := 6.0 if facing > 0 else -8.0
-		var a2 := 0.55 + 0.35 * sin(Time.get_ticks_msec() * 0.02)
-		var col := K.C_CYAN
-		col.a = a2
-		draw_rect(Rect2(x, -H + 4.0, 2.0, 26.0), col)
 
-	if attack_active():
-		var hb0 := hitbox()
-		var hb := Rect2(hb0.position - position, hb0.size)
-		var ac := K.C_AMBER
-		ac.a = 0.30
-		draw_rect(hb, ac)
-		draw_rect(Rect2(hb.position.x if facing > 0 else hb.position.x, hb.position.y + 6.0,
-			hb.size.x, 2.0), K.C_AMBER)
+# ── draw (only what the sprite cannot say: the shadow, the fade) ────────────
+func _draw() -> void:
+	if state != "knockdown" and state != "dead":
+		draw_set_transform(Vector2(0, 2), 0.0, Vector2(1, 0.32))
+		draw_circle(Vector2.ZERO, 17.0, Color(0, 0, 0, 0.28))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if fall_ms > 0.0:
+		var a: float = clampf(fall_ms / K.FALL_FADE_MS, 0.0, 1.0)
+		draw_rect(Rect2(-40, -140, 80, 150), Color(0.02, 0.02, 0.02, a * 0.9))

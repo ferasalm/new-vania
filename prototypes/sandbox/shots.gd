@@ -1,16 +1,17 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# Question: does the game feel right when its landed numbers are played, not read?
-# Date: 2026-11-16
-# Screenshot harness: loads each scene, waits, saves a PNG. Throwaway.
+# Question: does the game feel right when its LANDED numbers are played, not read?
+# Date: 2026-11-16 (v2)
+# Screenshot harness: loads each room, waits, saves a PNG. Throwaway.
+# (A human looks at these; the agent verifies by numbers and by the smoke run.)
 extends Node2D
 
 
 func _ready() -> void:
 	await RenderingServer.frame_post_draw
-	for s in ["menu", "duel", "cache", "denial"]:
+	for s in ["menu", "training", "approach", "cache", "arena"]:
 		var sc = load("res://%s.tscn" % s).instantiate()
 		add_child(sc)
-		for i in 40:
+		for i in 45:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var img: Image = get_viewport().get_texture().get_image()
@@ -29,7 +30,7 @@ func _ready() -> void:
 	bb.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
 	cache_scene.add_child(bb)
 	var off = load("res://offline.gd").new()
-	off.cause = "FAULT: THE PIT · ENVIRONMENT · TICK 214"
+	off.cause = "FAULT: THE SEAM · ENVIRONMENT · TICK 214"
 	off.has_module = true
 	off.held_ms = 600.0
 	cache_scene.add_child(off)
