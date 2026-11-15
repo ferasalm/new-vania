@@ -172,6 +172,17 @@ func _physics_process(_delta: float) -> void:
 			check(absf(m.ratio() - 1.0) < 0.05, "the mirror's timer ring starts full")
 			m.tick(3.0)
 			check(m.ratio() < 0.6 and m.ratio() > 0.4, "the ring drains (6000 -> ~3000)")
+			# the reach law: a mirror above a ground strike's hitbox is a mirror
+			# nobody can ever break, which makes the whole fight unwinnable
+			var p = arena.get("player")
+			p.position = Vector2(m.position.x - 20.0, 440.0)
+			p.facing = 1
+			p.state = "idle"
+			p.state_ms = 0.0
+			p.do_strike()
+			p.state_ms = 61.0
+			check(p.attack_active(), "a ground strike is live")
+			check(m.hurtbox().intersects(p.hitbox()), "a ground strike reaches the mirror")
 			m.hit(4)
 			check(m.broke, "four damage breaks the mirror")
 			b._resolve_mirror()
@@ -314,13 +325,15 @@ func _physics_process(_delta: float) -> void:
 			solo.cause = "FAULT: THE SEAM · ENVIRONMENT · TICK 1"
 			solo.has_module = false
 			add_child(solo)
+			# connect BEFORE the first input: an early emit must be recorded, or the
+			# test cannot tell "dead before the hold" from "emitted and ignored"
+			solo.chosen.connect(func(c): offline_ok = true)
 			var ev := InputEventKey.new()
 			ev.pressed = true
 			ev.keycode = KEY_ENTER
 			solo._input(ev)
 			check(not offline_ok, "options are dead before OFFLINE_HOLD_MS 400")
 			solo.held_ms = 500.0
-			solo.chosen.connect(func(c): offline_ok = true)
 			solo._input(ev)
 			check(offline_ok, "options unlock after the hold")
 			solo.queue_free()

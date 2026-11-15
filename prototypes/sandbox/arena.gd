@@ -68,6 +68,9 @@ func _physics_process(delta: float) -> void:
 		won = true
 		done = true
 		player.locked = true
+	# this node owns the phase label and the victory text: without its own
+	# invalidation the label would stay on its first frame forever
+	queue_redraw()
 
 
 func _spawn() -> Vector2:

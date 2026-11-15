@@ -53,6 +53,11 @@ func _draw() -> void:
 		var tc := float(threat.get("t", 0.0))
 		var counterable := bool(threat.get("counterable", true))
 		var clashable := bool(threat.get("clashable", true))
+		var dist := float(threat.get("dist", 0.0))
+		# the bar must not promise a window the press cannot take: out of reach the
+		# zone is still shown, but dimmed to a rumour
+		var near_c := 1.0 if dist <= K.COUNTER_REACH else 0.22
+		var near_x := 1.0 if dist <= K.CLASH_REACH else 0.22
 
 		# strike zone (the telegraph, before the flash)
 		var strike_w: float = tele * k
@@ -65,14 +70,17 @@ func _draw() -> void:
 		if counterable:
 			var cw: float = K.COUNTER_WINDOW_MS * k
 			var pulse: float = 0.55 + 0.45 * (0.5 + 0.5 * sin(t * TAU * 2.2))
-			draw_rect(Rect2(cx, y0, cw, H), Color(K.C_ICE.r, K.C_ICE.g, K.C_ICE.b, pulse * 0.55))
-			draw_rect(Rect2(cx, y0, cw, H), K.C_ICE, false, 1.0)
+			draw_rect(Rect2(cx, y0, cw, H),
+				Color(K.C_ICE.r, K.C_ICE.g, K.C_ICE.b, pulse * 0.55 * near_c))
+			draw_rect(Rect2(cx, y0, cw, H),
+				Color(K.C_ICE.r, K.C_ICE.g, K.C_ICE.b, near_c), false, 1.0)
 
 		# clash zone (the swing)
 		var clx := x0 + tele * k
 		var clw: float = act * k
 		if clashable:
-			draw_rect(Rect2(clx, y0, clw, H), Color(K.C_CYAN.r, K.C_CYAN.g, K.C_CYAN.b, 0.45))
+			draw_rect(Rect2(clx, y0, clw, H),
+				Color(K.C_CYAN.r, K.C_CYAN.g, K.C_CYAN.b, 0.45 * near_x))
 		else:
 			draw_rect(Rect2(clx, y0, clw, H), Color(K.C_BONE.r, K.C_BONE.g, K.C_BONE.b, 0.10))
 			draw_line(Vector2(clx + 2, y0 + H), Vector2(clx + clw - 2, y0),
@@ -85,9 +93,11 @@ func _draw() -> void:
 		# the labels, under the zones
 		_label("STRIKE", x0 + 4, y0 + H + 12, K.C_BONE_DIM)
 		if counterable:
-			_label("COUNTER", cx + 2, y0 + H + 12, K.C_ICE)
+			_label("COUNTER", cx + 2, y0 + H + 12,
+				Color(K.C_ICE.r, K.C_ICE.g, K.C_ICE.b, near_c))
 		if clashable:
-			_label("CLASH", clx + clw - 40, y0 + H + 12, K.C_CYAN)
+			_label("CLASH", clx + clw - 40, y0 + H + 12,
+				Color(K.C_CYAN.r, K.C_CYAN.g, K.C_CYAN.b, near_x))
 		var nm := String(threat.get("name", ""))
 		if nm != "":
 			_right(nm.to_upper(), x0 + W, y0 - 8, K.C_BONE_DIM)

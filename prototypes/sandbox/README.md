@@ -128,7 +128,7 @@ the clash's hitstop, not its damage).
 downloaded packs, and writes `assets/MANIFEST.txt` naming the source of every file:
 
 ```bash
-python tools/build_assets.py --src <repo>/inbox/downloads/organized/art
+python prototypes/sandbox/tools/build_assets.py --src <repo>/inbox/downloads/organized/art
 ```
 
 The game never reads `inbox/` — only `assets/`.

@@ -37,6 +37,8 @@ func _build() -> void:
 	bg.mode = "cache"
 	bg.floor_y = FLOOR_Y
 	bg.world_w = 960.0
+	bg.floor_gaps = [Vector2(PIT_L, PIT_R)]
+	bg.seam_rect = Rect2(SEAM_L, 220.0, SEAM_R - SEAM_L, FLOOR_Y - 220.0)
 	add_child(bg)
 
 	# the seam: the environmental death edge (TR-CSD-018 territory)

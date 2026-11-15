@@ -39,6 +39,8 @@ func _build() -> void:
 	bg_node.mode = "approach"
 	bg_node.floor_y = FLOOR_Y
 	bg_node.world_w = WORLD_W
+	for pit in PITS:
+		bg_node.floor_gaps.append(Vector2(float(pit[0]), float(pit[1])))
 	add_child(bg_node)
 
 	# the plain door: quiet furniture, back to the menu

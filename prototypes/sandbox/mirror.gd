@@ -43,6 +43,7 @@ func tick(delta: float) -> void:
 		timer_ms = 0.0
 		alive = false
 		expired = true
+	queue_redraw()
 
 
 func ratio() -> float:
@@ -61,6 +62,7 @@ func hit(dmg: int) -> void:
 	if hp <= 0.0:
 		alive = false
 		broke = true
+	queue_redraw()
 
 
 func _draw() -> void:

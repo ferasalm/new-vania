@@ -156,10 +156,19 @@ func _physics_process(delta: float) -> void:
 func _update_safe() -> void:
 	# A ground PROBE, not the player's own on_ground flag: the flag is one frame
 	# stale relative to this call, and a stale true poisons the safe spot with the
-	# position you are falling from.
-	if player.is_idle() and _grounded_now():
+	# position you are falling from. A hazard is never "safe" either — standing in
+	# the seam must not become the spot a revive returns you to.
+	if player.is_idle() and _grounded_now() and not _in_hazard():
 		if _safe_here(player.position):
 			last_safe = player.position
+
+
+func _in_hazard() -> bool:
+	var hb: Rect2 = player.hurtbox()
+	for hz in hazards:
+		if hb.intersects(hz["rect"]):
+			return true
+	return false
 
 
 func _grounded_now() -> bool:
@@ -236,6 +245,10 @@ func _near_shard() -> Dictionary:
 func _on_press() -> void:
 	if dead or done or player.is_dead():
 		return
+	# on the floor is on the floor: a knockdown is the 1200 ms the contracts
+	# bought, and no press may cut it short
+	if player.is_knocked_down():
+		return
 
 	# 1. a shard about to land: the same button deflects it
 	var sh := _near_shard()
@@ -259,7 +272,9 @@ func _on_press() -> void:
 		player.do_counter()
 		var out: int = player.counter_value()
 		var res: Dictionary = e.take_damage(out)
-		if not bool(res.get("dead", false)):
+		if bool(res.get("dead", false)):
+			_on_enemy_death(e)
+		else:
 			e.stagger(K.BOSS_COUNTER_STAGGER_MS)
 		dmg.spawn(Vector2(e.position.x, e.position.y - 70.0), str(out), K.C_AMBER, 21)
 		windows.flash_outcome("COUNTER", out)
@@ -304,7 +319,8 @@ func _resolve() -> void:
 				_on_enemy_death(e)
 			break
 
-	# player -> the mirror (a strike or a counter both break it)
+	# player -> the mirror (a STRIKE breaks it; the counter is aimed at a telegraph,
+	# and the mirror never telegraphs — it just hangs there and runs out)
 	if player.attack_active() and not player.hit_done:
 		var mb = _live_mirror()
 		if mb != null and mb.hurtbox().intersects(player.hitbox()):

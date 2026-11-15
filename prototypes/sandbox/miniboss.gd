@@ -124,6 +124,7 @@ func _physics_process(delta: float) -> void:
 		title_ms = maxf(0.0, title_ms - ms)
 	if state == "dead":
 		dead_t += ms
+		_animate()
 		queue_redraw()
 		return
 	if cooldown_ms > 0.0:

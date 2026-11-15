@@ -174,10 +174,12 @@ func _spawn_mirror() -> void:
 		return
 	mirror = MIRROR.new()
 	get_parent().add_child(mirror)
-	# she sets it where the fight is, not where she is
+	# she sets it where the fight is, not where she is. It hangs LOW on purpose:
+	# a ground strike's hitbox tops out 94 px above the floor, so a mirror above
+	# that is a mirror nobody can ever break (see MIRROR_HOVER).
 	var side := -1.0 if position.x > 480.0 else 1.0
 	mirror.position = Vector2(clampf(position.x + side * 150.0, arena_left + 40.0, arena_right - 40.0),
-		position.y - 150.0)
+		position.y - K.MIRROR_HOVER)
 
 
 func mirror_node():

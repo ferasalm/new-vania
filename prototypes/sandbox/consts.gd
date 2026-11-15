@@ -96,6 +96,8 @@ const SHARD := {"damage": 2, "telegraph": 300, "speed": 210.0, "lifetime": 1600,
 const MIRROR_PERIOD_MS := 7000   # PROTO: how often she casts
 const MIRROR_TIMER_MS := 6000    # PROTO: the window to break it
 const MIRROR_HP := 4             # PROTO: two taps
+const MIRROR_HOVER := 60.0       # PROTO: it must hang inside a GROUND strike's reach
+                                 # (the strike's top is 94 px up; 60 leaves a 34 px bite)
 const STORED_CAP := 60           # PROTO: the store cannot exceed her pool
 const BAR_LURCH_MS := 320        # PROTO: the bar's drop after a break (it LURCHES)
 
