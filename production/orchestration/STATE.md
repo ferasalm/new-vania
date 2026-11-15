@@ -64,26 +64,27 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **transferred 2026-11-15 to the SYS-24 sync**
-(branch `chore/sync-sys24`, worktree `../new-vania-sync-shared-files`, based on
-`origin/Main` `fa628cf`). Writer: the sync lane only. Scope:
+`shared_file_lock: SYNC-LANE` — **transferred 2026-11-16 to the SYS-05 sync**
+(branch `chore/sync-sys05`, worktree `../new-vania-sync-shared-files`, based on
+`origin/Main` `40aaf78`). Writer: the sync lane only. Scope:
 `design/registry/entities.yaml` + `design/gdd/systems-index.md`. **The lock is
 released only after the sync PR merges** (`prompts/sync-lane.md` §6) — a blocked
 or failed PR keeps the lock and the request in `review-queue.md` §5 for retry.
 
-**The transfer (dated 2026-11-15)**: the SYS-14 sync **landed** — PR #85
-squash-merged as `27aa989` — and, like the SYS-16 sync before it, its release
-edit did not land with the merge. This sync therefore **releases the SYS-14 hold
-and re-acquires the lock in one edit** (a landed sync may not keep the lock
-nominally). **The release to `shared_file_lock: none` is recorded with the
-orchestrator's receipt for this sync's merge** — together with this sync's
-landing hash. **PR #86 (the SYS-24 GDD) does not gate the release**: it merges
-after this sync by review-queue §7 rule 4, and its landing is recorded
-separately in its own receipt.
+**The transfer (dated 2026-11-16)**: the SYS-24 sync **landed** — PR #89
+squash-merged as `bdc8380` — and, like the SYS-16/SYS-14 syncs before it, its
+release edit did not land with the merge. This sync therefore **releases the
+SYS-24 hold and re-acquires the lock in one edit** (a landed sync may not keep
+the lock nominally). **The release to `shared_file_lock: none` is recorded with
+the orchestrator's receipt for this sync's merge** — together with this sync's
+landing hash. **PR #87 (the SYS-05 GDD) does not gate the release**: it merges
+after this sync by review-queue §7 rule 4, and its landing is recorded separately
+in its own receipt.
 
-The request being applied: `../new-vania-sys24-hud/production/session-state/lane-SYS-24-report.md`
-"Sync request" §A–§B (order 1 in `review-queue.md` §5 — the SYS-14 sync that held
-it landed as `27aa989` and is out of the active queue).
+The request being applied:
+`../new-vania-sys05-game-flow-session/production/session-state/lane-SYS-05-report.md`
+"Sync request" §A–§C (order 1 in `review-queue.md` §5 — the SYS-24 sync that
+held it landed as `bdc8380` and is out of the active queue).
 
 **Landed receipt 2026-11-15 (order 1, the SYS-16 sync)** — **PR #84**
 (`chore/sync-sys16` → `Main`), squash-merged as **`fac409f`**:
@@ -117,7 +118,8 @@ the tracker's status cell stays the house `**APPROVED (date — trail)**` form �
 `SYNC-LANE` at that merge; its release to `none` rides the SYS-24 sync's receipt.**
 Landing order: **that sync first, then PR #82** (both landed).
 
-**Receipt (in flight, 2026-11-15)** — **PR #89** (`chore/sync-sys24` → `Main`):
+**Receipt (landed 2026-11-16)** — **PR #89** (`chore/sync-sys24` → `Main`),
+squash-merged as **`bdc8380`**:
 the lock transfer + the sync + the CodeRabbit batch. Registry
 **119 → 122** entries (+3 published contracts: `hud_caps_contract`,
 `settings_namespace`, `hud_registration_contract`; `camera_publication_contract`'s
@@ -132,9 +134,9 @@ lands with **PR #86**, which merges **after** this sync by review-queue §7 rule
 deferred, all resolved** (the SYS-24 dependency list gains SYS-16 + SYS-04 — the
 GDD's own dependency table marks SYS-16 **hard** and SYS-04 soft; then SYS-06's
 read-only boot-constant edge, which the enumeration row already carried — the
-enumeration and the bullet are now the same set). **The lock stays
-`SYNC-LANE`; the release to `none` is the orchestrator's receipt for this sync's
-merge.** Landing order: **this sync first, then PR #86.**
+enumeration and the bullet are now the same set). **The lock stayed
+`SYNC-LANE` at that merge; the release to `none` rides the SYS-05 sync's
+receipt.** Landing order: **that sync first, then PR #86** (both landed).
 
 **Prior release 2026-11-15 (the riders mini sync)**: PR #80 at `fe38c4c` —
 `spitter_orb_damage` 8 → 2, `enemy_strike_contract`'s payload `power_band`
