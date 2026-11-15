@@ -64,26 +64,26 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **transferred 2026-11-15 to the SYS-14 sync**
-(branch `chore/sync-sys14`, worktree `../new-vania-sync-shared-files`, based on
-`origin/Main` `6db8c38`). Writer: the sync lane only. Scope:
+`shared_file_lock: SYNC-LANE` — **transferred 2026-11-15 to the SYS-24 sync**
+(branch `chore/sync-sys24`, worktree `../new-vania-sync-shared-files`, based on
+`origin/Main` `fa628cf`). Writer: the sync lane only. Scope:
 `design/registry/entities.yaml` + `design/gdd/systems-index.md`. **The lock is
 released only after the sync PR merges** (`prompts/sync-lane.md` §6) — a blocked
 or failed PR keeps the lock and the request in `review-queue.md` §5 for retry.
 
-**The transfer (dated 2026-11-15)**: the SYS-16 sync **landed** — PR #84
-squash-merged as `fac409f` — but its release edit never landed, so `Main` still
-read "acquired by the SYS-16 sync" / "PR open". This sync therefore **releases
-the SYS-16 hold and re-acquires the lock in one edit** (a landed sync may not
-keep the lock nominally). **The release to `shared_file_lock: none` is recorded
-with the orchestrator's receipt for this sync's merge** — together with this
-sync's landing hash. **PR #82 (the SYS-14 GDD) does not gate the release**: it
-merges after this sync by review-queue §7 rule 4, and its landing is recorded
+**The transfer (dated 2026-11-15)**: the SYS-14 sync **landed** — PR #85
+squash-merged as `27aa989` — and, like the SYS-16 sync before it, its release
+edit did not land with the merge. This sync therefore **releases the SYS-14 hold
+and re-acquires the lock in one edit** (a landed sync may not keep the lock
+nominally). **The release to `shared_file_lock: none` is recorded with the
+orchestrator's receipt for this sync's merge** — together with this sync's
+landing hash. **PR #86 (the SYS-24 GDD) does not gate the release**: it merges
+after this sync by review-queue §7 rule 4, and its landing is recorded
 separately in its own receipt.
 
-The request being applied: `../new-vania-sys14-grief-boss-framework/production/session-state/lane-SYS-14-report.md`
-§A–§B (order 1 in `review-queue.md` §5 — the SYS-16 sync that held it landed as
-`fac409f` and is out of the active queue).
+The request being applied: `../new-vania-sys24-hud/production/session-state/lane-SYS-24-report.md`
+"Sync request" §A–§B (order 1 in `review-queue.md` §5 — the SYS-14 sync that held
+it landed as `27aa989` and is out of the active queue).
 
 **Landed receipt 2026-11-15 (order 1, the SYS-16 sync)** — **PR #84**
 (`chore/sync-sys16` → `Main`), squash-merged as **`fac409f`**:
@@ -98,7 +98,8 @@ review-queue §7 rule 4) · the counts reproduce · no entry deleted. CodeRabbit
 **5 threads, 5 applied, 0 rebutted, 0 deferred, all resolved**. Its lock release
 rides the transfer above.
 
-**Receipt (in flight, 2026-11-15)** — **PR #85** (`chore/sync-sys14` → `Main`):
+**Receipt (landed 2026-11-15)** — **PR #85** (`chore/sync-sys14` → `Main`),
+squash-merged as **`27aa989`**:
 `fedde76` (the lock transfer) + `b4862a8` (the sync) + `c40a8d1` (the CodeRabbit
 batch). Registry **113 → 119** entries (+5 published contracts, +1 `contract`;
 `boss_hp_pool` 60; the request's `boss_kill_award` **folded onto `xp_boss`** —
@@ -112,9 +113,25 @@ no entry deleted. CodeRabbit: **4 threads, 3 applied, 1 rebutted, 0 deferred,
 all resolved** (the `arena_hold` two-term predicate; the landed SYS-16 row
 removed from the active queue; the release decoupled from PR #82; **rebutted**:
 the tracker's status cell stays the house `**APPROVED (date — trail)**` form —
-14 of 31 rows carry it and no consumer parses the cell). **The lock stays
-`SYNC-LANE`; the release to `none` is the orchestrator's receipt for this sync's
-merge.** Landing order: **this sync first, then PR #82.**
+14 of 31 rows carry it and no consumer parses the cell). **The lock stayed
+`SYNC-LANE` at that merge; its release to `none` rides the SYS-24 sync's receipt.**
+Landing order: **that sync first, then PR #82** (both landed).
+
+**Receipt (in flight, 2026-11-15)** — **PR (this sync; the number recorded in the
+CodeRabbit batch commit)** (`chore/sync-sys24` → `Main`): the lock transfer + the
+sync + the CodeRabbit batch. Registry
+**119 → 122** entries (+3 published contracts: `hud_caps_contract`,
+`settings_namespace`, `hud_registration_contract`; `camera_publication_contract`'s
+`consumed_by` gains the caps' rendered-center clause; 8 `referenced_by` appends;
+the envelope `2.45/6.55 → 2.55/6.85`, eight-system). Index: the SYS-24 APPROVED
+row, the dependency bullet, the SYS-15/16/03/32 row notes; design order 18
+unchanged. Validation: YAML parses · no duplicate names (122) · no missing
+`source`/`referenced_by` path (`design/gdd/hud.md` is the one pending path — it
+lands with **PR #86**, which merges **after** this sync by review-queue §7 rule 4)
+· the counts reproduce (25 TR / 7 F / 8 V / 37 ACs = 30 smoke + 5 device + 2 lock
++ 0 VS) · no entry deleted. **The lock stays `SYNC-LANE`; the release to `none` is
+the orchestrator's receipt for this sync's merge.** Landing order: **this sync
+first, then PR #86.**
 
 **Prior release 2026-11-15 (the riders mini sync)**: PR #80 at `fe38c4c` —
 `spitter_orb_damage` 8 → 2, `enemy_strike_contract`'s payload `power_band`
