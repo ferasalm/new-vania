@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # SCENE 2 — THE CACHE LOOP. Death is a story:
 #   the pit / the seam fire the death edge EXACTLY ONCE -> monochrome + glitch,
 #   SYSTEM OFFLINE / you are destroyed / the cause row, then the three options
@@ -83,6 +85,7 @@ func _physics_process(delta: float) -> void:
 	var wd := delta * 1000.0
 	world_ms += wd
 	dmg.step(wd)
+	_tick_logs(wd)
 	if stamp_ms > 0.0:
 		stamp_ms -= wd
 	bar.hp = player.hp
@@ -92,8 +95,11 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	# the last grounded safe position (TR-CSD-018: the ENVIRONMENT revive placement)
-	if player.on_ground and player.position.x > PIT_R + 8.0 and player.position.x < SEAM_L - 8.0:
+	# the last grounded safe position (TR-CSD-018: the ENVIRONMENT revive placement).
+	# Both platforms record; the pit's span and the seam's span are excluded.
+	var px: float = player.position.x
+	var over_pit: bool = px > PIT_L - 8.0 and px < PIT_R + 8.0
+	if player.on_ground and not over_pit and px < SEAM_L - 8.0:
 		last_safe = player.position
 
 	# the terminal: walk in -> the bar goes to hp_max, the first ack grants a module
@@ -135,6 +141,12 @@ func _log(t: String) -> void:
 		log_lines.pop_back()
 
 
+func _tick_logs(ms: float) -> void:
+	for l in log_lines:
+		l["t"] -= ms
+	log_lines = log_lines.filter(func(l): return l["t"] > 0.0)
+
+
 func _die(cause: String) -> void:
 	if dead:
 		return
@@ -159,10 +171,12 @@ func _on_choice(choice: String) -> void:
 			# for the ENVIRONMENT death (TR-CSD-018) — never inside the hazard.
 			K.restore_modules -= 1
 			K.designations += 1
-			K.pending_stamp = "DESIGNATION " + K.designation_text(K.designations)
+			stamp = "DESIGNATION " + K.designation_text(K.designations)
+			stamp_ms = 1600.0
+			K.pending_stamp = ""
+			player.vel = Vector2.ZERO
 			player.position = last_safe
 			player.revive(K.RESTORE_MODULE_HEAL_PCT)
-			player.locked = false
 			dead = false
 			offline.queue_free()
 			offline = null
@@ -199,13 +213,11 @@ func _draw() -> void:
 
 	var y := 90.0
 	for l in log_lines:
-		l["t"] -= 16.6
 		var a: float = clampf(l["t"] / 800.0, 0.0, 1.0)
 		var c := K.C_BONE
 		c.a = a
 		_text(l["text"], 40, y, 12, c)
 		y += 18.0
-	log_lines = log_lines.filter(func(l): return l["t"] > 0.0)
 
 	if stamp_ms > 0.0:
 		var a2: float = clampf(stamp_ms / 400.0, 0.0, 1.0)

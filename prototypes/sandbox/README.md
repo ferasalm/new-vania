@@ -148,15 +148,16 @@ drawing (flat rects, no art), and the seam's position.
 # boot all four scenes headless
 "C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --headless --path prototypes/sandbox --quit-after 120
 
-# the contract rules, asserted (29 checks)
+# the contract rules, asserted (33 checks)
 "C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --headless --path prototypes/sandbox res://smoke.tscn --quit-after 900
 ```
 
 `smoke.tscn` prints `PASS`/`FAIL` per rule and exits non-zero on any failure. It
 covers: the counter's 3/6, the strike table, the knockdown floor, the 3-digit
 stamp, the 20-segment pool, the boss's floor clamp (the stall), the three-whiff
-crack, the floor release, the post-crack death edge, the 400 ms offline hold, and
-the duel's hitbox landing the number.
+crack, the floor release, the post-crack death edge, the 400 ms offline hold, the
+duel's hitbox landing the number, the counter's damage reaching her pool, and the
+module revive (half a bar + the body lock released) — 33 checks.
 
 `shots.tscn` renders each scene to a PNG (`shot_*.png`) — a throwaway visual check.
 

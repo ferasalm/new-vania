@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # The segmented HP bar. 20 segments, pale bone on dark, NO red fill; the loss is
 # read by length. The low cue (<= 25%) is a slow pulse — never a flash.
 # Values: consts.gd HP_SEGMENTS / LOW_HP_RATIO (health-damage.md TR-HD-036 area).

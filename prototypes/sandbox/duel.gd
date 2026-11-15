@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # SCENE 1 — THE DUEL RANGE. The combat feel with the landed numbers:
 #   light 2 / heavy 4 · counter 3 or 6 (1.5x) · knockdown 1200 ms on power >= 2 ·
 #   floating numbers 700 ms world-time · the 20-segment bone bar, no red fill.
@@ -78,6 +80,7 @@ func _physics_process(delta: float) -> void:
 	var wd := 0.0 if K.frozen else delta * 1000.0
 	world_ms += wd
 	dmg.step(wd)
+	_tick_logs(wd)
 	if stamp_ms > 0.0:
 		stamp_ms -= delta * 1000.0
 	if hint_ms > 0.0:
@@ -159,6 +162,12 @@ func _log(t: String) -> void:
 		log_lines.pop_back()
 
 
+func _tick_logs(ms: float) -> void:
+	for l in log_lines:
+		l["t"] -= ms
+	log_lines = log_lines.filter(func(l): return l["t"] > 0.0)
+
+
 func _die(cause: String) -> void:
 	if dead:
 		return
@@ -180,9 +189,10 @@ func _on_choice(choice: String) -> void:
 		"module":
 			K.restore_modules -= 1
 			K.designations += 1
-			K.pending_stamp = "DESIGNATION " + K.designation_text(K.designations)
+			stamp = "DESIGNATION " + K.designation_text(K.designations)
+			stamp_ms = 1600.0
+			K.pending_stamp = ""
 			player.revive(K.RESTORE_MODULE_HEAL_PCT)
-			player.locked = false
 			dead = false
 			offline.queue_free()
 			offline = null
@@ -228,13 +238,11 @@ func _draw() -> void:
 	# the log (top right, under the run totals)
 	var y := 66.0
 	for l in log_lines:
-		l["t"] -= 16.6
 		var a: float = clampf(l["t"] / 700.0, 0.0, 1.0)
 		var c := K.C_AMBER
 		c.a = a
 		_text(l["text"], 920.0 - ThemeDB.fallback_font.get_string_size(l["text"], 0, -1, 11).x, y, 11, c)
 		y += 16.0
-	log_lines = log_lines.filter(func(l): return l["t"] > 0.0)
 
 	_text("TRAINING DATA %03d" % K.training_data, 792, 26, 11, K.C_BONE_DIM)
 	_text("KILLS %d" % kills, 792, 42, 11, K.C_BONE_DIM)

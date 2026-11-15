@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # The player body. Flat rects, feet-anchored, hand-rolled AABB against Rect2 solids.
 # Feel knobs the contracts do not name are PROTO (startup/active/recovery pacing).
 extends Node2D
@@ -183,7 +185,7 @@ func try_counter() -> void:
 
 
 func try_dash() -> void:
-	if not combat or locked or dash_cd_ms > 0.0 or state == "knockdown":
+	if not combat or locked or dash_cd_ms > 0.0 or state != "idle":
 		return
 	dash_ms = DASH_MS
 	dash_cd_ms = DASH_CD_MS
@@ -252,7 +254,8 @@ func take_hit(power: int, from_x: float, dmg: int) -> bool:
 		return false
 	hp = maxf(0.0, hp - float(dmg))
 	flash_ms = 120.0
-	var dir := 1 if from_x >= position.x else -1
+	# the knockback pushes AWAY from the source
+	var dir := -1 if from_x >= position.x else 1
 	if K.knocks_down(power):
 		state = "knockdown"
 		state_ms = 0.0
@@ -272,6 +275,8 @@ func revive(pct: float) -> void:
 	state = "idle"
 	state_ms = 0.0
 	down_ms = 0.0
+	locked = false
+	vel = Vector2.ZERO
 	invuln_ms = K.REVIVE_IFRAME_MS
 	flash_ms = 0.0
 
@@ -288,9 +293,9 @@ func _integrate(delta: float) -> void:
 		var hb := hurtbox()
 		if hb.intersects(r):
 			if vel.x > 0.0:
-				position.x = r.position.x - W * 0.5 - 0.1
+				position.x = r.position.x - hb.size.x * 0.5 - 0.1
 			elif vel.x < 0.0:
-				position.x = r.position.x + r.size.x + W * 0.5 + 0.1
+				position.x = r.position.x + r.size.x + hb.size.x * 0.5 + 0.1
 			vel.x = 0.0
 	# y
 	on_ground = false

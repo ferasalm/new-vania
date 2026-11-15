@@ -1,6 +1,11 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # The smoke harness. Boots the contract-critical rules headless and prints PASS/FAIL.
-# Run: godot --headless --path prototypes/sandbox res://smoke.tscn --quit-after 420
+# Run: godot --headless --path prototypes/sandbox res://smoke.tscn --quit-after 900
+# (900 main-loop iterations is the measured bound that reaches phase 9; the harness
+#  also self-guards — a run that stalls prints SMOKE: TIMED OUT and exits non-zero,
+#  so a wrapper may check both the exit status and the final SMOKE summary line.)
 extends Node2D
 
 const BOSS := preload("res://boss.gd")
@@ -9,12 +14,14 @@ const OFFLINE := preload("res://offline.gd")
 
 var phase := 0
 var ft := 0
+var frames := 0
 var passes := 0
 var fails := 0
 var boss
 var player
 var sweep_n := 0
 var duel: Node = null
+var den: Node = null
 var offline_ok := false
 var offline_early := false
 
@@ -36,6 +43,11 @@ func check(cond: bool, label: String) -> void:
 
 func _physics_process(_delta: float) -> void:
 	ft += 1
+	frames += 1
+	if frames > 800 and phase < 11:
+		print("SMOKE: TIMED OUT at phase %d after %d frames" % [phase, frames])
+		get_tree().quit(1)
+		return
 	match phase:
 		0:
 			if ft < 4:
@@ -163,6 +175,39 @@ func _physics_process(_delta: float) -> void:
 			ft = 0
 
 		9:
+			if ft < 3:
+				return
+			print("SMOKE: the boss's exchange (the counter lands)")
+			den = load("res://denial.tscn").instantiate()
+			add_child(den)
+			phase = 10
+			ft = 0
+
+		10:
+			if ft < 3:
+				return
+			var dp = den.get("player")
+			var db = den.get("boss")
+			dp.position = Vector2(660, 440)
+			dp.facing = 1
+			dp.try_counter()
+			db._begin_strike("lifted")
+			db.state = "active"
+			db.state_ms = 0.0
+			db.hit_done = false
+			db.facing = -1
+			den.call("_resolve")
+			check(int(db.hp) == 57, "the counter's 3 reaches her pool: 60 -> 57")
+			check(db.state == "stagger", "and the counter order staggers her")
+			dp.locked = true
+			dp.hp = 0.0
+			dp.revive(K.RESTORE_MODULE_HEAL_PCT)
+			check(int(dp.hp) == 10, "the module revive is half a bar (ceil 20 x 0.5)")
+			check(not dp.locked, "the revive releases the body lock")
+			phase = 11
+			ft = 0
+
+		11:
 			if ft < 2:
 				return
 			print("SMOKE: %d passed, %d failed" % [passes, fails])

@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # The tier dummy. Three tiers (hp 6/12/24, awards 3/7/14) that telegraph one strike
 # so the clash, the counter and the knockdown can be felt. Pacing is PROTO.
 extends Node2D

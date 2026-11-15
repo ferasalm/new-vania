@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # SCENE 3 — THE DENIAL LIE. One boss, one arena, the ring is her weapon.
 #   hp 60, the phase-1 floor 20: damage lands, the numbers print, the bar STALLS
 #   at 20/60 = 1/3. Three unanswered ring sweeps crack the halo; the 2000 ms crack
@@ -79,6 +81,7 @@ func _physics_process(delta: float) -> void:
 	var wd := 0.0 if K.frozen else delta * 1000.0
 	world_ms += wd
 	dmg.step(wd)
+	_tick_logs(wd)
 	if stamp_ms > 0.0:
 		stamp_ms -= delta * 1000.0
 	bar.hp = player.hp
@@ -116,9 +119,13 @@ func _resolve() -> void:
 		boss.consume_strike()
 		if player.is_countering() and boss.strike_is_clashable():
 			var out: int = player.counter_value()
-			boss.stagger(K.BOSS_COUNTER_STAGGER_MS)
+			var res3: Dictionary = boss.take_damage(out)
+			if not res3["dead"]:
+				boss.stagger(K.BOSS_COUNTER_STAGGER_MS)
 			dmg.spawn(Vector2(boss.position.x, boss.position.y - 64.0), str(out), K.C_AMBER, 21)
 			_hitstop(K.HITSTOP_CLASH_MS)
+			if res3["dead"]:
+				_log("the lie is broken")
 		else:
 			var took: bool = player.take_hit(p, boss.position.x, K.strike_dmg(p))
 			if took:
@@ -160,6 +167,12 @@ func _log(t: String) -> void:
 		log_lines.pop_back()
 
 
+func _tick_logs(ms: float) -> void:
+	for l in log_lines:
+		l["t"] -= ms
+	log_lines = log_lines.filter(func(l): return l["t"] > 0.0)
+
+
 func _die(cause: String) -> void:
 	if dead:
 		return
@@ -181,9 +194,10 @@ func _on_choice(choice: String) -> void:
 		"module":
 			K.restore_modules -= 1
 			K.designations += 1
-			K.pending_stamp = "DESIGNATION " + K.designation_text(K.designations)
+			stamp = "DESIGNATION " + K.designation_text(K.designations)
+			stamp_ms = 1600.0
+			K.pending_stamp = ""
 			player.revive(K.RESTORE_MODULE_HEAL_PCT)
-			player.locked = false
 			dead = false
 			offline.queue_free()
 			offline = null
@@ -240,13 +254,11 @@ func _draw() -> void:
 
 	var y := 92.0
 	for l in log_lines:
-		l["t"] -= 16.6
 		var a: float = clampf(l["t"] / 800.0, 0.0, 1.0)
 		var c := K.C_BONE
 		c.a = a
 		_text(l["text"], 40, y, 11, c)
 		y += 16.0
-	log_lines = log_lines.filter(func(l): return l["t"] > 0.0)
 
 	if stamp_ms > 0.0:
 		var a2: float = clampf(stamp_ms / 400.0, 0.0, 1.0)

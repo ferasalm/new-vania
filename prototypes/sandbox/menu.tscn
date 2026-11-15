@@ -1,4 +1,7 @@
-﻿[gd_scene load_steps=2 format=3]
+; PROTOTYPE - NOT FOR PRODUCTION
+; Question: does the game feel right when its landed numbers are played, not read?
+; Date: 2026-11-16
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://menu.gd" id="1_menu"]
 

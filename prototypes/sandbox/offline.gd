@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # THE SYSTEM OFFLINE SCREEN — death as a story, not a fail state.
 # Contract (cache-stations-death.md TR-CSD-008/009, system_offline_contract):
 #   three rows: SYSTEM OFFLINE / you are destroyed (lowercase) / the cause row

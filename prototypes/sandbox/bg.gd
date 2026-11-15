@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # The static furniture, drawn on a node far behind the actors so each scene's own
 # _draw can carry the HUD on top. Numbers mirror the scene's own constants.
 extends Node2D

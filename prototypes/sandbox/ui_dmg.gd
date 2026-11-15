@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # The floating damage numbers. 700 ms world-time lifetime, pooled at 32.
 # Palette: enemy damage amber, player damage taken pale bone, heal cyan.
 # Never sigil-red. (health-damage.md TR-HD-036)

@@ -1,4 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
+# Question: does the game feel right when its landed numbers are played, not read?
+# Date: 2026-11-16
 # DENIAL — the ring is her weapon. SYS-14 grief-boss-framework.md, consumed:
 #   hp 60 (BOSS_HP) · hp_floor 20 in LIE_WHOLE (the bar stalls at 1/3) ·
 #   3 unanswered ring sweeps crack the lie (CRACK_WHIFFS_REQUIRED) ·
