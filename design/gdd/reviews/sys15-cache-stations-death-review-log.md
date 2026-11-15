@@ -202,3 +202,11 @@ The confirm pass itself surfaced two more valid findings (the CodeRabbit cadence
 | CR-20 | 4576675807 | Minor | The formula-template opener (the design-system skill's learning) | **VERIFIED: the rebuttal + the substance-fix both stand** — the reply (4576718811) records the corpus precedent (no landed GDD uses the opener; SYS-03's F-SAV-01..04 and SYS-07's F-HD-01..15 are the house standard), and the finding's substance (F-CSD-04's variable table + output range) landed in `e5cea0d`. Resolved on the recorded rebuttal |
 
 **Counts: unchanged** — 20 TR / 4 F / 7 V / 26 ACs / 9 OQs / gate 21+3+2+0. The mechanical audit re-run clean.
+
+## 8. The tick fix (the run on `5d2b489` — one Minor) — applied
+
+| # | ID | Severity | Finding (verified) | Disposition |
+|---|---|---|---|---|
+| CR-21 | 4576778428 | Minor | The fallback arm said "the post-resume increment applies" without naming the tick — the load path ties its increment to `load_complete`, but the fallback loads no file, so a reader cannot identify the increment point from the fallback arm alone | **APPLIED** in `29e3556` — the fallback arm names the increment point in the load path's tick language: **the first logic tick after the carry step, before control returns** (the carry step standing in for the `load_complete` gate the fallback path does not have; no new event introduced; the ordering before any saveable event preserved). The same wording completed in the three sibling passages: F-CSD-01's branch a (the fallback clause), the pre-cache edge-case row, AC-CSD-16's fallback arm, and F-CSD-01's worked example (1) |
+
+**Counts: unchanged** — 20 TR / 4 F / 7 V / 26 ACs / 9 OQs / gate 21+3+2+0. The thread resolved after the reply; the run on `29e3556` was CodeRabbit **skipping** (the docs-only diff — zero new findings); **all 18 review threads resolved, 0 unresolved** — the required-resolution merge gate is clear.
