@@ -62,3 +62,58 @@
 12. Open questions.
 
 *(The gate trail follows in §3+. Section drafts were written to file as authored; the transcript presents the brief and the section summaries.)*
+
+## 3. Gate trail
+
+### 3.1 CD gate (CD-GDD-ALIGN)
+
+**Fallback recorded (contract §3.6):** this harness session has no nested-subagent tool; every seat ran as a separate in-session pass with the seat's neutral brief, reading the document once in full from disk. The per-seat model routing (GLM/DS) could not be honored — all passes ran on the lane's GLM model. No seat was skipped.
+
+**Run 1 — verdict: CONCERNS (1 blocker, 2 one-line defects).**
+
+| # | Finding | Class | Disposition |
+|---|---|---|---|
+| CD-1 | Anchor 1 (The Print) wrote "The world's noise ducks under a held −6 dB of terminal hush" — a **station duck**, contradicting the no-duck law the same document consumes (exactly one duck family: the death beat, `duck_request_contract`'s "one family in the game") and contradicting the anchor's own parenthetical | Blocker (contract conflict + internal contradiction) | **APPLIED** — the anchor rewritten: no duck at the station; the hush is the threshold room's ambient bed (SYS-04's design), never a duck request; the no-duck clause made explicit |
+| CD-2 | The adjacency doctrine attributed "~10–14 stations" to "the audit's scale" — the audit's IP-6 names no count; the figure is the doctrine's own extrapolation | One-line precision defect | **APPLIED** — reworded to "the doctrine's extrapolation at the audit's scope, tunable per zone pass" |
+| CD-3 | The pre-cache fallback: the reconstruct option's words name "the neural terminal" but the fallback wakes at the boot anchor — a words-vs-place gap the document left implicit | One-line clarification | **APPLIED** — TR-CSD-014 names the fallback's placement (the boot anchor, the machine's raw print), keeps SYS-07's verbatim words, and states the fiction's hold-by-omission |
+
+**Run 2 (post-repair) — verdict: APPROVED (zero blockers).** Pillar service ✓ (MEMORY CACHED → SotN's save-sanctuary texture + Remade Every Death's beat; the doctrine → One World, Two Truths). Anti-pillars ✓ (no timers — the hold is presentation, explicitly framed; no stat-spreadsheet — two diegetic spend rows; no helpless horror; no twitch gauntlets). Player fantasy ✓ ("You Are a Copy, and the Copy Counts" — the concept's diegetic serial-number doctrine). Scope ✓ (one MVP station; the doctrine is doctrine; fast travel opened-not-built; VS items in OQs). Contract alignment ✓ (the five rulings are ratifications the consumed contracts assigned to SYS-15; no frozen contract edited; SYS-05's pre-shaped contract ratified at authoring per the manifest's `dependency_note`). Tone/voice ✓ (the print voice; the lowercase ruling stands; the language law bans the banned nouns).
+
+### 3.2 Three-seat panel
+
+**Fallback (§3.6) applies to all three seats** (no nested-subagent tool; separate in-session passes; the model routing unrecorded per seat — all GLM).
+
+| Seat | Verdict | Blockers |
+|---|---|---|
+| Creative | **NEEDS REVISION** | 1 |
+| Technical | **NEEDS REVISION** | 3 |
+| QA | **NEEDS REVISION** | 2 |
+
+### 3.3 Repair worklist — every blocker, dispositioned
+
+#### Creative
+
+| # | Blocker | Disposition |
+|---|---|---|
+| C1 | The designation increment is invisible on the revive path: the reconstruct path prints the new number at the terminal (TR-CSD-014), but the revive path returns to Gameplay on the spot with no acknowledgment — the pillar's scar goes unwitnessed on one of the two death paths, and D-CSD-2's inclusion token "the number" is unreachable for revive-only testers | **APPLIED.** TR-CSD-015 gains the exit print: the revive's exit prints the new designation row in Gameplay (the machine's acknowledgment — the same print-slot family as MEMORY CACHED, driven by SYS-15's own increment event); AC-CSD-15's THEN gains the print clause. One line, non-gating, uses the existing surface. |
+
+Creative recommendations: (1) the options' focus order (reconstruct → revive → quit) already puts the common choice first — **noted, no change**; (2) RE-CACHE's near-null texture — **already recorded as intentional** (TR-CSD-005); (3) the success signature's "nobody describes the death screen as a game over" — **kept** (it is the D-CSD-2 exclusion set's positive form).
+
+#### Technical
+
+| # | Blocker | Disposition |
+|---|---|---|
+| T1 | The ack's stated order — save request (a) **then** context (b), with the activation at the gate-entry phase — lets the first-activation snapshot execute at the request tick **before** the faucet appends the station: the first save captures `activated_caches: []`; a crash + reload re-fires the faucet (a module farm) and the first save is a lie about the activation | **APPLIED.** TR-CSD-002's ack order is now three steps: (a) **the activation applies at the ack's resolution tick** (the faucet evaluates, the record appends — the namespace write precedes the snapshot), (b) the save request raises (the snapshot captures the post-activation state), (c) the context request raises (non-ack queued). TR-CSD-007 splits the timing: the faucet + the record at the ack's resolution, the body restore at the gate-entry phase. AC-CSD-01's THEN asserts the ordering. |
+| T2 | V-CSD-02 read "exactly one increment per resolved death … never neither" while the same row's parenthetical excepts quit (which increments nothing) — the invariant contradicts its own exception | **APPLIED.** The invariant now reads: exactly one increment per death resolved by reconstruct or revive — never both, never neither on those paths; a quit-resolved death increments nothing (the exception is the law). |
+| T3 | The document is silent on its envelope position — the house not-join pattern (SYS-02's "envelope not-join", SYS-03's "does not join the gameplay-tick envelope") is missing, leaving an implementable ambiguity about per-tick work | **APPLIED.** The Detailed Design intro gains the not-join: SYS-15 prices event budgets, not a tick budget — the screens are context-time presentation with no gameplay-tick work; the counter's write is one integer write at two named events; the namespace's snapshot cost is SYS-03's bounded-constant budget (TR-SAV-012 consumed). |
+
+Technical recommendations: (1) F-CSD-03's set-union notation on an ordered list → **APPLIED** (append-if-absent wording); (2) the SYS-03 bump rider (CURRENT=2 / MIGRATIONS[1] registration is SYS-03's schema fact; the frozen GDD's "zero migrations at MVP" posture line goes stale at the bump's landing) → **APPLIED as the OQ-M1-pattern rider** (TR-CSD-016 + OQ-CSD-9; the sync request carries the SYS-03 doc-touch note); (3) AC-CSD-18's v0 clause overlaps SYS-03's AC-SAV-17 — **kept** (it is the bump's boundary arm, not a duplicate fixture).
+
+#### QA
+
+| # | Blocker | Disposition |
+|---|---|---|
+| Q1 | The Core Rules intro promises "PROVISIONAL marks" but no TR carries the mark — a phantom convention (the no-placeholder bar) | **APPLIED.** The intro reworded: no MVP TR is provisional; the not-yet-landed consumers (SYS-05, SYS-24, SYS-28) are named as pre-shaped in the Interactions table, which is where their status lives. |
+| Q2 | AC-CSD-25 has no denominator: a tester who never dies in 30 minutes cannot feed a "≥ 3/5" bar honestly | **APPLIED.** The AC gains the denominator: the testers who experienced ≥ 1 death **and** ≥ 1 station visit; a tester with neither is recorded, not counted. |
+
+QA recommendations: (1) the OQ table gains OQ-CSD-9 (the SYS-03 bump rider) — **APPLIED** (header count 8 → 9 OQ rows, everywhere reproduced); (2) AC-CSD-16's "third arm" phrasing — **kept** (it is the AC's named third GIVEN arm); (3) AC-CSD-24's v2 dependency — **kept and named** (the namespace ships with SYS-15's implementation stories; the AC runs at the device gate).
