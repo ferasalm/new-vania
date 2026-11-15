@@ -1,8 +1,8 @@
 <!--
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
-Version: 2.0.2
-Hash: eea2fd1a50dc
+Version: 2.0.3
+Hash: e887fa37253e
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-15
 -->
@@ -131,7 +131,14 @@ For each launch:
      (`ProviderModelNotFoundError`, `AiError: Capacity temporarily exceeded`,
      HTTP 5xx / rate limits). After the 4th failure, apply the §3 fallback
      asymmetry — DS→GLM autonomously; GLM→DS only on an explicit user decision
-     (otherwise park `PAUSED`).
+     (otherwise park `PAUSED`). For a **DS→GLM fallback**: first set the lane's
+     manifest `model` to the GLM model, re-render + validate (`--lane <ID>`,
+     then `--check` — the lane prompt header embeds the model), record the
+     fallback in `decisions.md`, then spawn on GLM.
+   - **Relaunch after a pause**: `PAUSED` is a legal manifest status (a side
+     state in the README state machine). When `decisions.md` records the
+     user's authorization — or the routing issue is resolved — set the lane
+     back to `QUEUED` and relaunch it from step 1.
 6. After a runner spawns successfully (including a DS→GLM fallback spawn),
    update the manifest status to `AUTHORING`; update `STATE.md`. If every
    attempt fails, keep the lane `PAUSED` — never set `AUTHORING` on a failed
