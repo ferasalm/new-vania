@@ -544,16 +544,22 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   *not* part of the production graph, and §3's one-effect law applies to the
   shipping layout only (the exemption is named here so the probe cannot be read as
   a second production effect). Method: record ten loop iterations on the probe
-  bus; **pass** = the seam test below passes at all ten loop points; **fail** = it
-  fails at any of them.
+  bus, **plus at least 50 ms beyond the tenth seam** — the window *after* a seam
+  needs its own samples, and a capture that ends exactly at the tenth seam cannot
+  supply them; **pass** = the seam test below passes at all ten loop points; **fail**
+  = it fails at any of them.
 
   **The seam test is boundary-local, because a click is a discontinuity, not a
   transient.** A threshold taken from the asset's loudest interior peak cannot
   distinguish the two: a bed with an 0.8 interior transient would license a 0.5 jump
   at an otherwise quiet loop point — an audible click that the probe would pass.
-  The test is therefore a predicate, **`seam_pass()`**, evaluated per loop point and
-  per asset, with **two local conditions** measured on the seam's own neighbourhood
-  (the last and first 50 ms of the loop, exactly 2,205 samples each at 44.1 kHz):
+  The test is therefore a predicate, **`seam_pass()`**, evaluated per loop point, per
+  asset **and per channel**, with **two local conditions** measured on the seam's own
+  neighbourhood (the last and first 50 ms of the loop, exactly 2,205 samples each at
+  44.1 kHz). **Channels are tested independently**: a stereo capture is never summed
+  or downmixed before the test, because opposite-sign discontinuities in the two
+  channels cancel in a sum and a click would pass in both — an asset passes only when
+  **every channel** satisfies all three conjuncts. **The conjuncts, per channel:**
 
   - **(a) the step bound** — `|x[0] − x[N−1]|` must not exceed the largest
     adjacent-sample delta **inside those two windows, excluding the seam pair
@@ -573,13 +579,16 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
     zero step and a zero left second difference, and a large right one.
 
   `SEAM_DELTA_MAX` remains the **scalar upper bound** and is the test's third,
-  independent conjunct: the seam delta must also stay below the asset's loudest
+  independent conjunct: the seam delta must also stay below **that channel's**
+  loudest
   **interior** transient (the interior excluding both 50 ms windows). It is a real
   constraint, not a sanity check — (a) alone can license up to roughly twice the
   local peak — and it is never borrowed across asset classes: a score's bar-boundary
-  transient and a bed's steady hum do not share a tolerance. A seam delta that
-  exceeds the material's own loudest interior event is a click without further
-  argument.
+  transient and a bed's steady hum do not share a tolerance. It is **that channel's**
+  loudest interior event (per channel, like the other two conjuncts), so a quiet
+  channel is judged on its own material and not licensed by its loud sibling. A seam
+  delta that exceeds the material's own loudest interior event is a click without
+  further argument.
 
   All three conjuncts are post-processing on **one contiguous capture per looped
   file** — drained per frame from `AudioEffectCapture.get_buffer()` into the probe's
@@ -789,7 +798,7 @@ the AC it unblocks — not an AC that already tests something else.
 |---|---|---|---|---|---|
 | 1 | The Master limiter class in 4.7.2 (`AudioEffectHardLimiter` vs `AudioEffectLimiter`) and its gain-reduction readback | **PROBE-PENDING** | instantiate both candidates; the surviving class is instantiated on Master and its reduction is readable during AC-AUD-20's loudest fixture | godot-specialist | The first story; AC-AUD-20's ≤ 3 dB high-water |
 | 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (**every looped file**: 3 beds, the stereo score, the mono fold — each its own capture) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene, **once per looped file**, including a separate capture of `MUS_HOUSE_LOOP_MONO` (conditional on CR-AUD-03): **δ is measured and constant**, no `get_buffer()` call underruns, the recorded mix rate is the asserted **44.1 kHz**, and `seam_pass()` (§10) then holds at all ten loop points | sound-designer + godot-specialist | **The import of every looped file** (5 seams — 4 if CR-AUD-03 is declined); the fallback rows and their ceilings (§10); **OQ-AUD-9** if any looped file exceeds its rung's ceiling |
-| 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | the swap at tick T: the post-swap `playback_position` is within 1 tick of the pre-swap value, and the gain ramp's two ticks are exact | lead-programmer | The MONO stage; AC-AUD-22's collapse assertion becomes meaningful |
+| 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | the swap at tick T: the post-swap `playback_position` is within 1 tick of the pre-swap value, and the gain ramp's two ticks are exact; **and the swap is captured and passes a click test** — a **±10 ms** capture around T must show no step or slope discontinuity above the §10 `seam_pass()` bounds (the swap is a stream change, so the click test is the same predicate applied to a different seam), which playhead and ramp timing alone cannot establish. **All three conjuncts apply** to the swap capture (step, slope, and the scalar bound) — it is the same predicate, not a two-condition version of it. The window is **±10 ms around T** because the ramp's two *intended* gain writes sit one tick away on each side (down at T − 16.7 ms, the swap at T, up at T + 16.7 ms, §4's 33 ms total), so a half-width below 16.7 ms keeps both intended steps **outside** the capture; widening the window without moving those writes out would fail on the ramp rather than on a click | lead-programmer | The MONO stage; AC-AUD-22's collapse assertion becomes meaningful |
 | 4 | Per-tick `set_bus_volume_db` at 60 tps is inside the core's tick bar and does not zipper | **PROBE-PENDING** | a 15-tick ramp at 240 ms: the core's tick stays within p99.9 ≤ 0.10 / max ≤ 0.30 ms **and** a capture of the ramp shows no step above `ZIPPER_DELTA_MAX`; a staircase reading fails the probe and moves the envelope to a per-tick interpolation inside one audio-thread callback | performance-analyst | AC-AUD-21 (the tick bar) — the probe gates the measurement; AC-AUD-02 is a GUT over the fake `BusPort` and cannot zipper, so it is **not** a gate here |
 | 5 | Five buses + one Master effect is inside the mobile mix budget | **PROBE-PENDING** | measured as an **extra instrument** during AC-AUD-21's device run (mixer CPU share, no new AC); the bar is "the audio thread's share stays under 25% of the frame" | performance-analyst | The graph's viability on the reference SKU |
 | 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`'s "Audio Buses" block) | — | — | — |
@@ -1008,7 +1017,7 @@ enum VoiceClass { P0_RESERVED, P1_SIGNATURE, P2_COMBAT, P3_FEEDBACK }
 |---|---|---|---|
 | A `Tween` creeps into an envelope | Medium | High | R2; AC-AUD-02's tick fixture; the review guideline |
 | The reserved tear slot is stolen under a flood | Low | High | The slot is outside the candidate array; AC-AUD-07's flood fixture |
-| Ogg loop seams click on the beds or on the score pair | Medium | High | Probe 2's **absolute, boundary-local** `seam_pass()` (step + slope + the scalar bound, per asset; every looped file captured, the fold as its own target); the priced ladder (§10: 78 s beds / 28 s score pair / 8.5 MB joint); OQ-AUD-9 if any looped file exceeds its rung's ceiling |
+| Ogg loop seams click on the beds or on the score pair | Medium | High | Probe 2's **absolute, boundary-local** `seam_pass()` (step + slope + the scalar bound, per asset and per channel; every looped file captured, the fold as its own target); the priced ladder (§10: 78 s beds / 28 s score pair / 8.5 MB joint); OQ-AUD-9 if any looped file exceeds its rung's ceiling |
 | The MONO swap clicks | Medium | Medium | The 2-tick per-voice ramp; AC-AUD-22; probe 3 |
 | A per-tick bus write zippers or costs too much | Low | High | Probe 4; the core's tick bar (p0.10/max 0.30 ms) |
 | An `Area` bus override is added later | Low | High | R1 + the boot assert on the five buses; the 4.7 `area_mask` note |
@@ -1094,7 +1103,10 @@ sign-off. The **story gate** (3 criteria) closes at the first implementation sto
 - [ ] MONO collapses every bus; the Ambience and UI buses follow the SFX slider;
       every slider's range is honoured (AC-AUD-22) — **plus** the swap's own
       fixture, which AC-AUD-22 does not cover: the ramp's two ticks are exact, the
-      playhead is preserved, and a toggle requested inside [E1, E7] **or one whose
+      playhead is preserved, **the captured swap passes the click test** (no step or
+      slope discontinuity above §10's `seam_pass()` bounds — playhead and ramp timing
+      alone cannot establish that the swap is inaudible), and a toggle requested
+      inside [E1, E7] **or one whose
       ramp or swap would land inside it** defers the whole sequence to the first
       `IDLE` tick (§4's deferral rule).
 - [ ] The fold's missing-asset path emits `AUD_ASSET_MISSING` and leaves the toggle
@@ -1117,7 +1129,7 @@ sign-off. The **story gate** (3 criteria) closes at the first implementation sto
       unit**: a fold-only failure sends the pair down the rung, a failed score never
       ships beside an Ogg fold, and no rung ships an asset that fails the
       **boundary-local seam test** (`seam_pass()`: step + slope + the scalar bound,
-      per asset; §10).
+      per asset and per channel; §10).
 
 **Story gate (the first SYS-04 implementation story).**
 

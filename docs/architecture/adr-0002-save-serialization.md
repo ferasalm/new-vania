@@ -49,8 +49,9 @@ leaving four implementation choices to this ADR: the writer's thread shape, the
 file's byte layout and canonicalization, the migration table's registration API,
 and the platform path helper. This ADR decides those four, plus the two engine
 facts the GDD could not settle without a code decision — Godot's float-typed
-`JSON` parse (handled by a schema-typed normalization pass that sits *below* the
-hash) and the post-4.4 `FileAccess.store_*` boolean returns (every store call is
+`JSON` parse (handled by a normalization pass whose **mechanical half sits below the
+hash** and whose **schema-typed half runs after the gate** — §6a) and the post-4.4
+`FileAccess.store_*` boolean returns (every store call is
 checked, and a `false` is classified by §5a's explicit `Error`→code table, never
 by message inspection). The shape is one pure `PersistenceCore` over injected
 ports, one `SaveWriter` node owning a single dedicated `Thread` with a
@@ -153,7 +154,8 @@ trust without thinking (the Player Fantasy's honesty clause).
   **byte-identical substring** of the file, and the hash input is the projection
   `canon({schema_version, payload})`. No second canonicalizer exists anywhere.
 - **R2 — Integrity before interpretation.** The hash is checked before any
-  semantic decision, but after the mechanical minimum (parse + normalize) that
+  semantic decision, but after the mechanical minimum (parse + the **mechanical
+  half** of normalize; the schema-typed half is §6a's post-gate stage) that
   makes a hash computable.
 - **R3 — The commit point is one rename.** No state is ever observable from a
   partially written file; a failure on either side of the rename leaves either
@@ -531,20 +533,54 @@ decisions:
 **6a. `JSON.parse_string` yields floats for every number.** A legitimately
 written `truth_epoch: 0` re-parses as `0.0`; a canonicalizer that refuses floats
 would refuse *every legitimate save*. The **normalization pass** (TR-SAV-026)
-therefore sits between the parse and the hash, and it is **schema-typed, not
-heuristic**: walk the parsed payload against the declared type table, accept a
-number for an `int` key iff it is integral and in range and coerce it, refuse a
-non-integral number as `REFUSE_FLOAT`, refuse a number for a non-integer key as
-`REFUSE_TYPE`. The **envelope's `schema_version` gets the same pass** (it is
-parsed as a float too). The pass is idempotent and total over the schema.
+therefore **spans the hash** — its mechanical half sits between the parse and the
+hash, its schema-typed half after the hash and after the version gate — because only
+half of it is mechanical:
 
-**The precedence is explicit** (the two codes can both claim one input): a
-**non-integral number anywhere** is `REFUSE_FLOAT`, whatever its key's declared
-type — TR-SAV-006's "a float anywhere" is the stronger law; an **integral number
-at a non-integer key** is `REFUSE_TYPE`. `3.5` at a `String` key is therefore
-`REFUSE_FLOAT`, and the fixtures that pin it are AC-SAV-06 (the float, write and
-load sides) and AC-SAV-17's refusal matrix (the named code per fixture) — the two
-must agree on this input.
+- **The mechanical half runs before the hash** (it is the minimum that makes a hash
+  computable, and it depends on no schema): every number **in the payload** must be
+  **integral**, else `REFUSE_FLOAT`; an integral number is **coerced to an int**. A
+  **non-integral `schema_version` is `REFUSE_SCHEMA_INVALID`, not `REFUSE_FLOAT`** —
+  TR-SAV-020's
+  trigger table, F-SAV-04 row 1 and AC-SAV-15 all pin that code for a non-integer
+  version, and the envelope is not payload.
+- **The schema-typed half runs after the hash and after the version gate**: a number
+  at a key the **type table in force at that point** declares non-integer is
+  `REFUSE_TYPE` — `CURRENT`'s table for a current-version file, the **migrated**
+  payload's target-version table after a migration. It must come **after** the gate,
+  and that ordering is load-bearing: a **schema-ahead** file (`99`) can legitimately
+  hold a number where v1 declares a `String`, so a type check first would raise
+  `REFUSE_TYPE` before the gate could raise `REFUSE_SCHEMA_AHEAD` — and the loader
+  would then **retry the `.bak`**, silently downgrading the session, which is exactly
+  the one lie TR-SAV-021's no-fallback rule exists to prevent (§6b).
+
+  **The reading this rests on, stated so it is not silent.** F-SAV-04 row 2 lists
+  `REFUSE_FLOAT` **/ `REFUSE_TYPE`** for "every number … an integer in its
+  schema-declared domain", and row 6 lists `REFUSE_TYPE` again for "every value's
+  type". This ADR reads **row 2's `REFUSE_TYPE` as the integer-domain check** (an
+  integral number outside its declared int range) and **row 6 as the type-vs-key
+  check** — because the alternative makes row 2 refuse a schema-ahead file before
+  row 4 can, and TR-SAV-021 says a schema-ahead file never falls back. The
+  integer-domain check is still **emitted at the schema-typed stage**, since the
+  declared range lives in the same table as the declared type. No
+  current-version outcome changes under either reading; the divergence is *cited*
+  here rather than left for an implementer to discover (the §11 pattern, and the
+  same one AC-SAV-15's "parse → normalize → hash → gate → shape → range" implies).
+  It also reconciles two frozen sentences that would otherwise pull apart:
+  TR-SAV-026's "the pass sits between the parse and the canonicalization (rows 0–2)"
+  is the **mechanical** half, and **TR-SAV-018 step 7**'s "post-migration validation:
+  shape, types, the unknown-key policy, the epoch range" is the schema-typed half.
+
+The pass is idempotent and total over the schema.
+
+**The precedence is a stage order, not a tie-break** (the two codes can both claim
+one input): a **non-integral number anywhere** is `REFUSE_FLOAT`, whatever its key's
+declared type — TR-SAV-006's "a float anywhere" is the stronger law, and it fires in
+the mechanical stage, before any type table is consulted. An **integral number at a
+non-integer key** is `REFUSE_TYPE`, and only a file that survived the hash and the
+gate can reach it. `3.5` at a `String` key is therefore `REFUSE_FLOAT`, and the
+fixtures that pin it are AC-SAV-06 (the float, write and load sides) and AC-SAV-17's
+refusal matrix (the named code per fixture) — the two must agree on this input.
 
 **6b. Two refusal rules are decisions, not outcomes.** They are decided here
 because the GDD states them as laws and only an implementation choice makes them
@@ -557,10 +593,15 @@ enforceable:
   difference between "upstream" and "hopefully before".
 - **A schema-ahead file never falls back to the `.bak`** (TR-SAV-020/021): the
   `.bak` is older by construction, so falling back would silently downgrade the
-  session — the one lie the refusal exists to prevent. `REFUSE_SCHEMA_AHEAD` is
-  therefore the **only** refusal that skips the `.bak` retry, and the rule lives in
+  session — the one lie the refusal exists to prevent. Precisely: a **schema-ahead
+  *refusal*** never falls back. `REFUSE_SCHEMA_AHEAD` is therefore the **only**
+  refusal that skips the `.bak` retry, and the rule lives in
   the load machine's **step 5** (TR-SAV-018's version gate → the GDD's `REFUSED`
-  state; the slot records `REFUSED_READ_ONLY`), not in a caller's policy.
+  state; the slot records `REFUSED_READ_ONLY`), not in a caller's policy. A
+  schema-ahead file carrying a **non-integral** number cannot reach the gate at all
+  — canon cannot hash a float, so it refuses `REFUSE_FLOAT` in the mechanical stage
+  and *does* retry the `.bak` per TR-SAV-021. That path is inherent, not a hole in
+  this rule.
 
 Both rules are enforced inside the verdict — the epoch guard is **F-SAV-04 row 8**
 and the version gate is **row 4** — and the validation list asserts them
@@ -576,7 +617,12 @@ easiest way to get the load path wrong, and it is why the twin has an
 The verdict function (`integrity_verdict`, F-SAV-04) is an **ordered list** whose
 first three rows are mechanical (parse, version-is-int, every number integral) —
 they are the minimum that makes a hash computable — then the hash, then the
-interpretation (gate, shape, range). `MIGRATE` is an **output**, not a refusal.
+interpretation in F-SAV-04's own row order: **gate (row 4) → shape / unknown key
+(row 5) → types (row 6, 6a's schema-typed half) → epoch present (row 7) → range
+(row 8)**. The type check sits after the gate for exactly the reason 6a gives, and it
+sits after shape because the shape allowlist is version-aware — a key can only be
+type-checked once it is known to be registered at that version. `MIGRATE` is an
+**output**, not a refusal.
 
 ### 7 · The registry: namespaces and migrations
 
@@ -785,7 +831,8 @@ func request_load(slot: StringName) -> LoadResult                    # synchrono
 func snapshot_world() -> Dictionary                                  # bounded copy
 func canon(envelope: Dictionary) -> PackedByteArray                  # the ONE serializer
 func integrity_verdict(bytes: PackedByteArray) -> Verdict           # F-SAV-04 order
-func normalize_numbers(parsed: Variant, schema: Dictionary) -> Variant
+func normalize_numbers(parsed: Variant) -> Variant                  # mechanical half, BELOW the hash
+func validate_types(parsed: Variant, schema: Dictionary) -> Variant  # schema-typed half, AFTER the gate
 
 # ---- ports ----------------------------------------------------------------
 class_name FileSystemPort extends RefCounted
@@ -973,7 +1020,7 @@ func remove(path: String) -> Error
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
-| `JSON` float model mishandled → every save refuses | Medium | High | The schema-typed normalization pass below the hash; V-SAV-09; the engine-half fixture |
+| `JSON` float model mishandled → every save refuses | Medium | High | The mechanical normalization half below the hash + the schema-typed half after the gate (§6a); V-SAV-09; the engine-half fixture |
 | Unchecked `store_*` → silent short write | Medium | High | The boolean discipline in §5; the step-3 re-read; AC-SAV-09's six-step fault injection |
 | Rename not atomic on a mobile filesystem | Low | High | Register item 4; the `.bak` promotion path; AC-SAV-14/23 |
 | Lost wakeup / lost job in the one-deep queue | Low | High | Register item 5; one job per slot; the completion drained on a tick |
@@ -1067,9 +1114,13 @@ the *decision* fixes — not checks runnable at sign-off. The **story gate**
       **non-gating probe**.
 - [ ] The queue's bound holds: `t_write ≤ t_req + N_max`; an unreadable
       publication fails with `SAVE_FAILED_FREEZE_UNAVAILABLE` (AC-SAV-11).
-- [ ] The normalization pass runs below the hash, preserves absence, is idempotent,
-      refuses a non-integral number as `REFUSE_FLOAT` and an integral number at a
-      non-integer key as `REFUSE_TYPE` (§6a's precedence) (AC-SAV-25, V-SAV-09).
+- [ ] The normalization pass is **split as §6a states**: its mechanical half runs
+      below the hash (every number integral, else `REFUSE_FLOAT`; a non-integral
+      `schema_version` is `REFUSE_SCHEMA_INVALID`) and its **schema-typed half runs
+      after the hash and after the version gate** (a number at a non-integer key is
+      `REFUSE_TYPE`), so a schema-ahead file can never be refused as `REFUSE_TYPE`
+      before the gate; absence is preserved and the pass is idempotent (AC-SAV-15/25,
+      V-SAV-09).
 - [ ] The migration chain is contiguous, pure, and forward-only; a namespace's
       `migration_step` has its paired `MIGRATIONS[k−1]`; the rename idiom preserves
       the value; a `v0` file is refused at the gate (AC-SAV-16, V-SAV-02/08).
@@ -1109,7 +1160,7 @@ the *decision* fixes — not checks runnable at sign-off. The **story gate**
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-013 — the E4 freeze queue | The `FreezePort` predicate, `t_write`, coalescing, the `N_max` bound, the bounded-wait failure (§9) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-015 — the boot sweep and `.bak` promotion | The three-step sweep order, before any load (§11) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-017 — the telemetry | The GDD's 13-record set is consumed unchanged (this ADR adds **no** record); the records are emitted by the core and drained at the tick boundary (§5, §12); the rate limit is a config read |
-| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-018/026 — the load order; the number-normalization pass | The nine steps; the pass below the hash; absence preserved; the envelope's version normalized too (§6) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-018/026 — the load order; the number-normalization pass | The nine steps; the pass **split at the gate** (mechanical below the hash, schema-typed after it, §6a); absence preserved; a non-integral version is `REFUSE_SCHEMA_INVALID` (§6) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-019 — `schema_version` and the migration table | `register_migration()`; contiguity boot check; one-step purity; the rename idiom; the synthetic harness (§7) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-020/021 — the refusal codes; the `.bak` fallback | The eleven codes as a stable API; the recovery-then-`OK` rule; the schema-ahead no-fallback rule (§6, §11) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-022 — the refusal path's ownership | SYS-03 publishes `load_result`; SYS-05 flows; SYS-24 renders; no UI call from the module (§6) |
