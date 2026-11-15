@@ -1543,6 +1543,7 @@ constants:
     source: design/gdd/narrative-presentation.md
     referenced_by:
       - design/gdd/narrative-presentation.md
+      - design/gdd/cache-stations-death.md
     value: "LINE_MAX_CHARS 46 [40, 60] · FIELD_LINES 3 (fixed at MVP — the IP-8 rider's law; a change is a contract revision) · CPS_FLOOR 12 [10, 15] · READING_BUDGET_S 20 [15, 30] · SESSION_LINES 8 / SESSION_BUDGET_S 30 (VS-active) · NAR_TELEMETRY_RATE_LIMIT_MS 60000"
     unit: mixed (chars / lines / s / ms)
     notes: "F-NAR-02/03 — the copy-side budget enforced by the CI lint (a
