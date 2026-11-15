@@ -32,8 +32,7 @@
 
 **The honest summary**: the CD gate closed at APPROVED on the second pass. The technical
 seat never returned a clean pass — **every one of its ten passes found real defects, and
-every one was repaired** — but the defects narrowed monotonically from structural
-(the dispatch, the schema, the ladder's validation) to naming and consistency
+every one was repaired** — but the defects narrowed monotonically from structural(the dispatch, the schema, the ladder's validation) to naming and consistency
 (a duplicated term, a stale cell, a clamp's scope). **The arithmetic core was verified
 green in every pass from #4 onward**: the ladder's columns and chain, the counter's five
 values, F-HD-03's taken values, the TTK envelope, the identity law at 0 gear/0 points,
@@ -150,7 +149,7 @@ OQ#20's (R11).
 | File | Commit | Content |
 |---|---|---|
 | `design/gdd/health-damage.md` | the SYS-07 revision commit | § 8's full clause inventory: the header (Status/Last Verified/Counts/Contracts), the Player Fantasy (term 4 + the three anchor moments + the success signature, **prose re-derived**), the Overview's six-stage pipeline, TR-HD-003/005/006/007/008/009/010/011/016/021/029/030/033/034/035/037/039, F-HD-01/02/03/06/07/08/09/10/11/13/14 (+ the ledger rows), V-HD-07/12/13/14, the edge cases, the 12 changed knob rows + `ATK_PER_POINT` reclassified + the new `DAMAGE_LADDER_MVP` row, the cross-system inputs, the Interactions cell, the Dependencies rows/bullets, 19 ACs, OQ#5/#6/#10/#13/#14, and the new OQ#20 |
-| `design/gdd/combat.md` | the SYS-08 co-revision commit | TR-CMB-004 (the damage column + the re-derived safe ranges), TR-CMB-010, TR-CMB-015, **TR-CMB-025 (`DamageEvent.arc` + the stamping rule)**, F-CMB-06 (the input band 1–4, the outputs 3/6), F-CMB-10's example, the four damage knobs, AC-CMB-12, AC-CMB-17, AC-CMB-30 |
+| `design/gdd/combat.md` | the SYS-08 co-revision commit | TR-CMB-004 (the damage column + the re-derived safe ranges), TR-CMB-010, TR-CMB-015, **TR-CMB-025 (`DamageEvent.arc` + the stamping rule)**, F-CMB-06 (the input band **1–6**, the outputs 3/6 with the range 1–9), F-CMB-10's example, the four damage knobs, AC-CMB-12, AC-CMB-17, AC-CMB-30, **the header's D-ORCH-03 declaration**, **the SYS-07 dependency row's status**, and **the SYS-12 status (MVP — D-3; mana-free) + the ABILITY stamper** (the applied-diff review's repairs, § 7) |
 | `design/gdd/reviews/sys07-rework-review-log.md` | this commit | this section |
 
 **Not applied, with the reason recorded** (a deliberate, reported deviation from the
@@ -205,7 +204,81 @@ lane report.
 **33 knob rows** · gate manifest 42 + 3 + 5 + 0 = 50. The added OQ is #20; the added
 knob row is `DAMAGE_LADDER_MVP`; no TR and no AC was added or removed.
 
-## 7. The residual risks the seats did not block (recorded for the user)
+## 7. The applied-diff review (the post-application gates, 2026-11-15)
+
+The package's gates (§ 2–§ 4) covered the *proposal*. This section covers the **applied
+text** — the two frozen documents as edited — per the lane-runner contract § 3. Every
+seat ran as a nested subagent with its model passed explicitly.
+
+| Gate | Pass | Verdict | Disposition |
+|---|---|---|---|
+| **CD-GDD-ALIGN** (applied) | 1 | **CONCERNS** — 1 blocker | repaired (the `combat.md` header + the SYS-07 dependency row did not declare the co-revision) |
+| **CD-GDD-ALIGN** (applied) | 2 | **APPROVED** — 0 blockers, 6 recommendations | closed |
+| **Technical seat** (applied) | 1 | **NEEDS REVISION** — 6 blockers | 4 repaired, 2 rebutted (§ 7.2) |
+| **Technical seat** (applied) | 2 | **NEEDS REVISION** — 5 blockers | 3 repaired, 2 rebutted (§ 7.3) |
+| **qa-lead spot-check** (repair diff) | 1 | **FAIL** — 6 defects | all repaired |
+| **qa-lead spot-check** (repair diff) | 2 | **PASS (7/7)** | closed |
+| **Final micro-check** (diff-scoped) | 1 | **PASS** — zero blockers | closed |
+
+### 7.1 What the applied-diff review changed
+
+**`combat.md`**: the header now declares the D-ORCH-03 co-revision (values, `arc`, the
+SYS-12 status, F-CMB-06's band) and points at this log; the SYS-07 dependency row reads
+*"APPROVED 2026-11-12 + the D-ORCH-03 baseline"* (it said *"GDD not written —
+PROVISIONAL"*); F-CMB-06's input band is **1–6** (the union of the four re-derived safe
+ranges — at `ATK2_DAMAGE` 6 the counter is 9, outside the printed 1–4) with the output
+range 1–9; **the SYS-12 status is MVP (D-3), mana-free (M1)**, with Combat named as the
+ABILITY arc's publisher and SYS-12 the ability's `raw_damage` owner; AC-CMB-30 gains the
+ABILITY fixture; the gate table's VS parenthetical now scopes to *"the Stinger's clash
+interaction"*; OQ#9 is scoped the same way.
+
+**`health-damage.md`**: the Interactions `DamageEvent` cell and the Dependencies SYS-08
+row print the **six-field** event (they still printed five); TR-HD-037's
+`AttackContext` and TR-HD-035's `StatRevision` carry **`damage_bonus`** (the resolver was
+not self-contained without it — `StatBlock` is not an input); F-HD-02 branch 2 reads
+`attack_context.damage_bonus`; **term 10** (TR-HD-017 and F-HD-15) is the **immune-kind
+predicate only** — the cap and the floor are clamps in F-HD-04, and the floor's release
+lives in F-HD-05's edge, so an over-cap hit applies capped (AC-HD-23) instead of being
+rejected; F-HD-03's range reads **0–25 at MVP / 0–40 at VS** with the Variables line
+stating the input domain vs the clamp; TR-HD-008's energy fixture matches AC-HD-08
+verbatim (**45 → 50 at L1**, 85 → 90 at L5 — the old 50 → 55 was impossible at the cap);
+F-HD-02's pre-dispatch is an event-level rejection (the "last good config" rule belongs
+to V-HD); the `ATK_PER_POINT` gloss no longer claims a VS shared step; the cross-system
+inputs mark the registry values as pending the sync; `Last Updated` is 2026-11-15.
+
+### 7.2 The rebuttals (recorded, never a silent skip)
+
+- **TR-HD-030's charge-spend timing** (the commit says *"the charge is spent on the
+  commit"* while the body-wait path can expire — so an expiry may or may not refund).
+  **Rebutted as pre-existing and out of this revision's scope**: the sentence is
+  unchanged from the 2026-11-12 approval, the revision touches nothing in TR-HD-030, and
+  the repair is a *behavioural* choice (when the charge is spent) that a contract
+  revision should not smuggle in. **Carried**: owner SYS-07 + SYS-01, trigger *before
+  the first heal story*; the candidate resolution (spend at application; an expiry spends
+  nothing, preserving "never waste" and V-HD-08) is recorded here for that touch.
+- **`combat.md`'s `worst_case_arc_ms` printed as 700 and 800** (the ADR ratification
+  table and the Not-knobs line say 700; TR-CMB-021, F-CMB-11, AC-CMB-26 and the
+  registry's `combat_worst_case_arc_ms` say **800**, which is the correct derivation).
+  **Rebutted as pre-existing and out of scope**: no clause of the revision touches it.
+  **Carried**: owner lead-programmer (SYS-08), the next SYS-08 doc touch; the registry
+  constant 800 is the operative tiebreaker.
+- **The `decisions.md` ledger still reads D-ORCH-03 OPEN** (the seat cannot see the
+  orchestrator's boundary PR). **Not a defect of this branch**: the orchestrator lands
+  that ledger entry on its side (explicitly delegated at the approval); this lane names
+  the ID in every commit and does not edit the orchestration ledger. Recorded so the
+  lag is visible until the boundary PR lands.
+
+### 7.3 The CD gate's closing note
+
+The CD seat's second pass **APPROVED** the applied text and recorded that *"this verdict
+closes the post-application CD gate owed by review-log § 6.3"*. Its six recommendations
+are non-blocking and are routed: the SYS-13 rider (already carried), Combat OQ#5's
+ratification note, the IP-15 sweep of combat.md's Stinger VS pins (partly done by the
+SYS-12 repair), the module stage's branch-2 boundary as a SYS-16 input, the review log's
+F-CMB-06 shorthand (corrected in § 6.2 above), and the identity law's three phrasings
+("no harness" / "no gear" / "no modules" — one term at the next touch).
+
+## 8. The residual risks the seats did not block (recorded for the user)
 
 - **R10 — the DEF axis collapses** at the low baseline (any `defense ≥ 1` ≡ DEF 25). The
   package turns this into a **D-1 input** rather than hiding it: a Chassis Module must not

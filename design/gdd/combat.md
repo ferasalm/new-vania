@@ -1,9 +1,9 @@
 # Combat
 
-> **Status**: **APPROVED (2026-11-12 — diff-scoped re-review PASS after an in-session 5-blocker repair)**. The three-seat design review (technical 8, QA 8, creative PASS) was revised in-session; the diff-scoped re-review (changed sections + arithmetic/AC fixtures; qa-lead spot-check) then found 2 revision regressions + 3 arithmetic/range defects, all repaired in-session. The user-approved decisions 1–11 held; no design re-open.
+> **Status**: **APPROVED (2026-11-12 — diff-scoped re-review PASS after an in-session 5-blocker repair)**. **Revised 2026-11-15 by D-ORCH-03 (the IP-17 low-stat baseline co-revision)** — the arc table's damage column (2/4/2/2) and its safe ranges, the counters (3/6), the deflect's raw, `DamageEvent.arc` **and the SYS-12 status (MVP — D-3; mana-free, M1) with Combat named as the ABILITY stamper**, plus **F-CMB-06's re-derived input band (1–6, outputs 1–9)**; the pending OQ#2/#3 amendments are untouched. The three-seat design review (technical 8, QA 8, creative PASS) was revised in-session; the diff-scoped re-review (changed sections + arithmetic/AC fixtures; qa-lead spot-check) then found 2 revision regressions + 3 arithmetic/range defects, all repaired in-session. The user-approved decisions 1–11 held; no design re-open.
 > **Author**: user + game-designer (creative seat, GLM-5.3-Flash) + systems-designer/gameplay-programmer (technical seat, DeepSeek V4.1 Flash)
-> **Last Updated**: 2026-11-12 (design review + in-session revision)
-> **Design Review**: NEEDS REVISION (2026-11-12) → revision applied → diff-scoped re-review PASS (2026-11-12); record at `design/gdd/reviews/combat-review-log.md`
+> **Last Updated**: 2026-11-15 (the D-ORCH-03 baseline co-revision; previously 2026-11-12)
+> **Design Review**: NEEDS REVISION (2026-11-12) → revision applied → diff-scoped re-review PASS (2026-11-12); record at `design/gdd/reviews/combat-review-log.md`; **the D-ORCH-03 co-revision's record is `design/gdd/reviews/sys07-rework-review-log.md`**
 > **Implements Pillar**: "Read, Then Strike" (every threat telegraphs; the clash is optional mastery) · "SotN, Not Hollow Knight" (committed weight, deliberate exchange) · "Remade Every Death" (the body's commitments are honest, so death is never a mishearing)
 > **System ID**: SYS-08 (Core layer, MVP)
 > **Contracts**: ADR-0001 — Input Architecture (Accepted 2026-11-12); SYS-01 `design/gdd/input-control-mapping.md` (UNFROZEN, #10 record) — TR-INP-013/014/019/020/021/022/024/028/029/047/056/057/066/070/075/076, F-01/F-05/F-07/F-08, EX-1/EX-5, AC-18/AC-65; SYS-06 `design/gdd/movement.md` (APPROVED 2026-11-12) — `facing`/`grounded`/`body_busy`, `crouch_effective` + posture-carry, `KnockbackOrder {dir, power}`, `KNOCKDOWN_POWER`, `BACKDASH_IFRAME_MS`, derived `worst_case_arc_ms` 1200, `move_refused`, `freeze_hold`.
@@ -171,7 +171,7 @@ Combat's player states are orthogonal to Movement's locomotion: a Combat state i
 - **SYS-05 Game Flow (coordination):** the contexts and gates.
 - **SYS-24 HUD (downstream, soft):** reads the commitment state; no Combat-owned HUD.
 - **SYS-14 Grief-Boss (downstream, soft):** the boss interaction rules; the arena locks.
-- **SYS-12 Stinger (VS):** the composite gesture's combat interaction; no MVP dependency.
+- **SYS-12 Stinger (MVP — D-3; mana-free, M1):** the composite gesture's combat interaction. **Combat is the ABILITY arc's publisher** — the Stinger's `DamageEvent` is stamped `kind = NORMAL, arc = ABILITY` at its contact (TR-CMB-025), the SYS-07 ladder's branch 4; **SYS-12 authors the ability's `raw_damage`** (registered when SYS-12 lands); the mana cost is VS (M1 keeps the MVP Stinger mana-free).
 - **SYS-16 Progression (soft):** the ability grants (Dash, Wall Jump, Double Jump) are Movement's; Combat reads the body state.
 
 ### ADR-0001 + SYS-01 Contract Ratification (Combat side)
@@ -257,7 +257,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 `counter_damage = floor(ATK.damage × COUNTER_CLASH_MULT)`
 
-**Variables:** `ATK.damage` 1–4; `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 3, ATK2 6 at defaults. **Example:** ATK2 4 × 1.5 = 6; the enemy's HP is SYS-07's.
+**Variables:** `ATK.damage` 1–6 (the union of the four re-derived damage ranges: ATK1 1–3, ATK2 3–6, crouch 1–3, air 1–3); `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 3, ATK2 6 at defaults; the output range for the legal domain is `floor(1 × 1.5)` = 1 to `floor(6 × 1.5)` = 9. **Example:** ATK2 4 × 1.5 = 6; the enemy's HP is SYS-07's.
 
 #### F-CMB-07 · hitstop_ticks — the beat (TR-CMB-022)
 
@@ -369,13 +369,13 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 |---|---|---|---|---|
 | Upstream | **SYS-01 Input & Control Mapping** | **Hard** | In: attack presses + stamp snapshots + `press_tick`/supersede; `crouch` raw; the `body_busy` OR; the 200 ms override; custody · Out: commitments, clash results, damage events, knockback orders, stagger orders | GDD UNFROZEN; ADR-0001 Accepted |
 | Upstream | **SYS-06 Movement & Platforming** | **Hard** | In: `facing`/`grounded`/`body_busy`; `crouch_effective` + posture-carry; `KnockbackOrder` execution; `KNOCKDOWN_POWER`; `BACKDASH_IFRAME_MS`; derived 1200; `freeze_hold` · Out: the Combat commitments; the i-frame grants | **APPROVED 2026-11-12** |
-| Upstream | **SYS-07 Health & Damage** | **Hard at hit time** | In: HP, damage application, death/respawn · Out: `DamageEvent` | GDD not written — PROVISIONAL |
+| Upstream | **SYS-07 Health & Damage** | **Hard at hit time** | In: HP, damage application, death/respawn · Out: `DamageEvent` | **APPROVED 2026-11-12 + the D-ORCH-03 baseline (2026-11-15)** |
 | Upstream | **SYS-13 Enemy AI & Telegraphs** | **Hard for strikes** | In: the enemy strike contract (`power`, `active_ms`, `telegraph_ms`, hitbox, `facing` ∈ {−1, +1}) · Out: clash/counter/stagger orders | GDD not written — PROVISIONAL |
 | Upstream | **SYS-29 Juice & Feedback** | Soft/hard for the freeze | In: the hit-stop clock · Out: the paired commitment; the haptic hook | GDD not written — PROVISIONAL |
 | Coordination | **SYS-05 Game Flow** | Soft | In: contexts and gates · Out: no context state | Linear stub |
 | Downstream | **SYS-14 Grief-Boss Framework** | Soft | In: the boss interaction rules · Out: the clash/stagger/deflect results | GDD not written |
 | Downstream | **SYS-24 HUD** | Soft | In: the commitment state for the HUD/haptics · Out: none | GDD not written |
-| Downstream | **SYS-12 Motion Input / Stinger** | VS | In: the Stinger's combat interaction · Out: none at MVP | VS |
+| Downstream | **SYS-12 Motion Input / Stinger** | **MVP (D-3) — mana-free (M1)** | In: the Stinger's combat interaction · Out: the ABILITY-stamped `DamageEvent` | **MVP (the ability); the mana cost is VS** |
 | Downstream | **SYS-16 Progression** | Soft | In: the ability grants (Movement's) · Out: none | VS |
 
 **Explicit non-dependencies:** SYS-03 Save (Combat has no save data) · SYS-09/10/11 (rendering/mutation, never combat physics) · SYS-17/18 (inventory/economy; the healing item is SYS-17's VS question) · SYS-02 (collision is Movement's).
@@ -522,7 +522,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 - **AC-CMB-27** [GUT] *(TR-CMB-022, F-CMB-07)* — **GIVEN** a hit, clash and deflect, **WHEN** the hit-stop converts, **THEN** 70→5, 90→6, 40→3 ticks; every source publishes a commitment; no freeze exists without one; an idle body is covered by `freeze_hold`.
 - **AC-CMB-28** [GUT] *(TR-CMB-023)* — **GIVEN** an arc with 10 ticks remaining, **WHEN** a 6-tick hit-stop begins, **THEN** the timer holds, the commitment stays published, and the arc resumes with 10 ticks; no new arc starts frozen.
 - **AC-CMB-29** [GUT] *(TR-CMB-024)* — **GIVEN** an attack in progress, **WHEN** a gate opens, **THEN** no damage or motion is applied on the transition frame, the arc dies, and on resume COMBAT_IDLE with nothing queued.
-- **AC-CMB-30** [GUT] *(TR-CMB-025)* — **GIVEN** a hit, **WHEN** the damage resolves, **THEN** a `DamageEvent {source, target, raw_damage, kind, arc, contact_tick}` is published to the SYS-07 mock; Combat contains no HP field; death is SYS-07's edge; the four player arcs stamp ATK1/ATK2/CROUCH/AIR.
+- **AC-CMB-30** [GUT] *(TR-CMB-025)* — **GIVEN** a hit, **WHEN** the damage resolves, **THEN** a `DamageEvent {source, target, raw_damage, kind, arc, contact_tick}` is published to the SYS-07 mock; Combat contains no HP field; death is SYS-07's edge; the four player arcs stamp ATK1/ATK2/CROUCH/AIR, **and a Stinger contact publishes `kind = NORMAL, arc = ABILITY`**.
 - **AC-CMB-31** [GUT] *(TR-CMB-026, F-CMB-09)* — **GIVEN** a power-2 enemy strike, **WHEN** the knockback order is published, **THEN** `dir` is away from the attacker and `power = 2`; a same-x hit uses the attacker's facing (never `dir = 0`); Movement's F-MOV-10 enters KNOCKDOWN on the hit tick; power 1 runs KNOCKBACK.
 - **AC-CMB-32** [GUT] *(TR-CMB-027)* — **GIVEN** a second heavy hit during GETUP, **WHEN** it lands, **THEN** damage applies and no new lock starts; the getup i-frames cover the first 300 ms.
 - **AC-CMB-33** [GUT] *(TR-CMB-028)* — **GIVEN** the enemy strike contract mock, **WHEN** the fields are validated, **THEN** `power ∈ 1…3`, `active_ms ≥ 84` (6 ticks), the telegraph precedes the active, the hitbox is present, `facing ∈ {−1, +1}` is present and drives the same-x knockback fallback, and no `knockback_power` field exists (the single `power` drives the order); the MVP answerability review (backdash · clash · crouch) is a SYS-13 gate record, not a GUT observation.
@@ -571,7 +571,7 @@ The four-gate partition, exactly one gate per AC. `[GUT]`/`[DEVICE]`/`[PLAYTEST]
 | **MVP smoke** | **39** | AC-CMB-01…38, AC-CMB-40 | Headless GUT on the CI build |
 | **MVP device** | **4** | AC-CMB-39, AC-CMB-46, AC-CMB-47, AC-CMB-48 | Device matrix (QA plan §7.1) |
 | **MVP-lock** | **5** | AC-CMB-41…45 | Playtest + coded rubric (SYS-01 AC-63 protocol) |
-| **VS** | **0** | — | The VS content (air clash, Dash i-frames, short-defer, Stinger) is recorded, not AC'd at MVP |
+| **VS** | **0** | — | The VS content (air clash, Dash i-frames, short-defer, **the Stinger's clash interaction**) is recorded, not AC'd at MVP |
 | **Total** | **48** | | 39 + 4 + 5 + 0 = 48 |
 
 **Exactly-one proof.** Every AC-CMB-01…48 appears in exactly one gate; no AC is in two gates; the count is 48. The DEVICE-tagged ACs do not default home to smoke; the playtest ACs are MVP-lock, not smoke. The Combat QA plan will expand the device/playtest protocols; this manifest is the GDD-side partition.
@@ -588,5 +588,5 @@ The four-gate partition, exactly one gate per AC. `[GUT]`/`[DEVICE]`/`[PLAYTEST]
 | 6 | **Getup i-frame value** — 300 ms vs 200/400; playtest | SYS-08 + QA | Playtest |
 | 7 | **Hold-repeat contract extension** — the intent record exposes `repeat_tag` and `stream_origin_tick` for the a11y exemption; a one-field SYS-01/ADR extension | SYS-01 + SYS-08 | Before the first Combat story |
 | 8 | **Multi-enemy contact order** — the first-contact rule and the entity-id tie-break; performance at 3+ enemies | SYS-13 + SYS-08 | At SYS-13 authoring |
-| 9 | **Stinger clash interaction** — the Stinger's lunge-through vs the clash; VS | SYS-12 + SYS-08 | VS |
+| 9 | **Stinger clash interaction** — the Stinger's lunge-through vs the clash; **the ability is MVP (D-3), the clash interaction is VS** | SYS-12 + SYS-08 | VS |
 | 10 | **Boss interaction rules** — the grief-boss states' clash/deflect exceptions; SYS-14 | SYS-14 | At SYS-14 authoring |
