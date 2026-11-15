@@ -1,0 +1,61 @@
+{
+  "name": "Five Errands for the Devil — Color Palette",
+  "generated": "2026-11-15",
+  "art-bible-source": "design/art/art-bible.md",
+  "notes": "Machine-readable export of the art bible §4. Status: PINNED = user-approved via a recorded decision (D-ORCH-02, 2026-11-15); PLACEHOLDER = legal through the greybox MVP, PINNED required before content ship (SYS-09 TR-DR-002); RESERVED = not a table member. OKLCH (L 0-1, C 0-0.4, h deg) is the source of truth; hex is the 8-bit sRGB encoding, round-trip verified. Derived shades (coursing -0.05 L, print inks, rim tones) are computed per surface, never stored as members.",
+  "primary": [
+    { "name": "PROV_LIM_DEEP", "hex": "#484848", "oklch": { "L": 0.40, "C": 0.000, "h": null }, "status": "PINNED", "decision": "D-ORCH-02", "role": "Liminal ramp step 0 — the frame at SEAM_SIDE_OFFSET -1", "context": "world", "source": "SYS-09 ramp + VR-SMB-01 ladder" },
+    { "name": "PROV_LIM_MID", "hex": "#636363", "oklch": { "L": 0.50, "C": 0.000, "h": null }, "status": "PINNED", "decision": "D-ORCH-02", "role": "Liminal ramp step 1 — the band + north pin", "context": "world", "source": "SYS-09 ramp + VR-SMB-01 ladder" },
+    { "name": "PROV_LIM_PALE", "hex": "#838383", "oklch": { "L": 0.61, "C": 0.000, "h": null }, "status": "PINNED", "decision": "D-ORCH-02", "role": "Liminal ramp step 2", "context": "world", "source": "SYS-09 ramp + VR-SMB-01 ladder" },
+    { "name": "PROV_LIM_LIGHT", "hex": "#A4A4A4", "oklch": { "L": 0.72, "C": 0.000, "h": null }, "status": "PINNED", "decision": "D-ORCH-02", "role": "Liminal ramp step 3 — the terminal plane, the corridor's value maximum", "context": "world", "source": "SYS-09 ramp + VR-SMB-01 ladder" },
+    { "name": "PROV_GRIEF_TINT", "hex": "#CD6CA6", "oklch": { "L": 0.66, "C": 0.14, "h": 345 }, "status": "PINNED", "decision": "D-ORCH-02", "role": "The grief tint — the corridor's one admitted color, M4's anchor only; band [330,20]; the player's truth", "context": "world", "source": "SYS-09 overlay anchor + VR-SMB-07 range" }
+  ],
+  "semantic": [
+    { "name": "PROV_GLITCH_ACCENT", "hex": "#00CFE8", "oklch": { "L": 0.783, "C": 0.136, "h": 210 }, "status": "PLACEHOLDER", "role": "The tear's cyan accent — the fault in the world; 1-px tear edges at alpha 0.9 only", "context": "vfx", "source": "art-bible pass; SYS-09 TR-DR-002 name; SYS-29 consumer" },
+    { "name": "PROV_SIGIL_RED", "hex": null, "oklch": null, "status": "RESERVED", "candidate": { "hex": "#B3122E", "oklch": { "L": 0.49, "C": 0.19, "h": 21 }, "note": "candidate only; pins at the court pass" }, "meaning": "The demon lord's physical presence: sigils, seals, contracts, his granted Stinger, the court's canonical red", "colorblind-backup": "shape (closed sigil form) + value (L 0.66 grief glow vs dark seals)", "context": "world", "source": "SYS-09 TR-DR-002 reserved; red rule (REVIEW finding 5)" }
+  ],
+  "reality_a": [
+    { "name": "PROV_A_WALL",   "hex": "#2E3A44", "oklch": { "L": 0.342, "C": 0.024, "h": 244 }, "status": "PLACEHOLDER", "role": "Backdrop body — cool-dominant steel", "context": "world", "source": "concept master 01a dialect band; pending pack promotion + normalization audit" },
+    { "name": "PROV_A_FLOOR",  "hex": "#46525C", "oklch": { "L": 0.432, "C": 0.023, "h": 243 }, "status": "PLACEHOLDER", "role": "Floor mid — entities clear it by >= 2 ramp steps", "context": "world", "source": "same" },
+    { "name": "PROV_A_TRIM",   "hex": "#6B7D8A", "oklch": { "L": 0.580, "C": 0.029, "h": 239 }, "status": "PLACEHOLDER", "role": "Conduits, rails, rack frames", "context": "world", "source": "same" },
+    { "name": "PROV_A_FRAME",  "hex": "#9DAEB9", "oklch": { "L": 0.741, "C": 0.025, "h": 236 }, "status": "PLACEHOLDER", "role": "Bulkhead frame edges — the shape-carrier exemplar slot", "context": "world", "source": "same" },
+    { "name": "PROV_A_GLOW",   "hex": "#4FC8DC", "oklch": { "L": 0.773, "C": 0.110, "h": 210 }, "status": "PLACEHOLDER", "role": "Monitor-glow — A's largest chroma area; the discriminator's cool anchor", "colorblind-backup": "shape of the light source (a strip = A)", "context": "world", "source": "same" },
+    { "name": "PROV_A_HAZARD", "hex": "#7DF0FF", "oklch": { "L": 0.893, "C": 0.107, "h": 207 }, "status": "PLACEHOLDER", "role": "The cold flash — brightest value in A; always paired with shape", "colorblind-backup": "shape (telegraph grammar)", "context": "world", "source": "same" },
+    { "name": "PROV_A_VOID",   "hex": "#141A1F", "oklch": { "L": 0.214, "C": 0.013, "h": 244 }, "status": "PLACEHOLDER", "role": "The unlit read; the print layer's ink on A paper", "context": "world", "source": "same" },
+    { "name": "PROV_A_SEAL",   "hex": null, "oklch": null, "status": "PLACEHOLDER", "dormant": true, "dormancy_rule": "OQ-DR-8/AC-DR-02: zero MVP occurrences", "role": "The sigil-red binding inside A frames — renders only where the lord's presence is physical", "context": "world", "source": "the reserved red (see semantic)" }
+  ],
+  "reality_b": [
+    { "name": "PROV_B_WALL",   "hex": "#4A3527", "oklch": { "L": 0.349, "C": 0.038, "h": 55 }, "status": "PLACEHOLDER", "role": "Backdrop body — warm-dominant umber", "context": "world", "source": "concept master 01b-v2 dialect band; pending pack promotion + normalization audit" },
+    { "name": "PROV_B_FLOOR",  "hex": "#7A6248", "oklch": { "L": 0.513, "C": 0.049, "h": 69 }, "status": "PLACEHOLDER", "role": "Aged stone/parchment floor mid", "context": "world", "source": "same" },
+    { "name": "PROV_B_TRIM",   "hex": "#A98B62", "oklch": { "L": 0.655, "C": 0.067, "h": 75 }, "status": "PLACEHOLDER", "role": "Carved stone, choir-stall wood", "context": "world", "source": "same" },
+    { "name": "PROV_B_FRAME",  "hex": "#D9BC8F", "oklch": { "L": 0.809, "C": 0.068, "h": 79 }, "status": "PLACEHOLDER", "role": "The same openings' gothic render — the exemplar's B half", "context": "world", "source": "same" },
+    { "name": "PROV_B_GLOW",   "hex": "#E8A94A", "oklch": { "L": 0.777, "C": 0.132, "h": 75 }, "status": "PLACEHOLDER", "role": "Candlelight — B's largest chroma area; the discriminator's warm anchor", "colorblind-backup": "shape of the light source (a pool from a holder = B) + key-light direction law", "context": "world", "source": "same" },
+    { "name": "PROV_B_HAZARD", "hex": "#C24B33", "oklch": { "L": 0.569, "C": 0.158, "h": 33 }, "status": "PLACEHOLDER", "dormant": true, "dormancy_rule": "OQ-DR-8: no B-side effect ships at MVP", "role": "Warm wine/flame flash for VS", "context": "world", "source": "same" },
+    { "name": "PROV_B_VOID",   "hex": "#1E1610", "oklch": { "L": 0.208, "C": 0.017, "h": 59 }, "status": "PLACEHOLDER", "role": "The unlit warm read; the print layer's ink on B paper", "context": "world", "source": "same" },
+    { "name": "PROV_B_SEAL",   "hex": "#8E2A3C", "oklch": { "L": 0.443, "C": 0.134, "h": 14 }, "status": "PLACEHOLDER", "dormant": true, "dormancy_rule": "OQ-DR-8: dormant table member at MVP", "role": "The wine-red seal family", "context": "world", "source": "same" }
+  ],
+  "presentation_shades": [
+    { "name": "TELEGRAPH_BAND_1", "hex": "#7DF0FF", "oklch": { "L": 0.893, "C": 0.107, "h": 207 }, "status": "PLACEHOLDER", "member": "PROV_A_HAZARD", "meaning": "The telegraph's light-strike flash (power band 1) — truth-independent by SYS-13 TR-ENM-013's designer-fixed bands (OQ-ENM-3, pinned in art-bible §2B)", "context": "vfx" },
+    { "name": "TELEGRAPH_BAND_2", "hex": "#C78B28", "oklch": { "L": 0.68, "C": 0.13, "h": 75 }, "status": "PLACEHOLDER", "member": null, "derived_from": "PROV_B_GLOW family", "meaning": "The telegraph's heavy-strike flash (power band 2) — a fixed derived presentation shade (not a table member); truth-independent; ΔL 0.213 from band 1 (>= 0.20 = >= 2 ramp steps); band 3 is VS-recorded", "context": "vfx" }
+  ],
+  "variants": [
+    {
+      "name": "The Cistern reveal set — one geometry, two palettes",
+      "rule": "The isomorphism law: same slot list, same placements; a re-skin is a table swap over unchanged coordinates. tileset_cistern_a/b ship as a same-dimension pair.",
+      "palette_a": ["#141A1F", "#2E3A44", "#46525C", "#6B7D8A", "#9DAEB9", "#4FC8DC", "#7DF0FF"],
+      "palette_b": ["#1E1610", "#4A3527", "#7A6248", "#A98B62", "#D9BC8F", "#E8A94A", "#C24B33"]
+    },
+    {
+      "name": "The liminal wing — neither truth",
+      "rule": "Epoch-invariant; greys own seam space; the ramp is the only light model; the grief tint at M4's anchor is the sole hue.",
+      "palette": ["#484848", "#636363", "#838383", "#A4A4A4", "#CD6CA6"]
+    }
+  ],
+  "tests": {
+    "two_second_truth": "A cold viewer names the reality (A cold-tech / B warm-gothic) from a still in under 2 seconds, no caption",
+    "hue_swap_survival": "Recolor each set's glow to the other's temperature; A must still read machine, B must still read crafted",
+    "value_zoning": "Entities >= 2 value-ramp steps clear of every backdrop member of their frame's truth",
+    "gap_check": "Ramp quantized gaps 0.098 / 0.110 / 0.109 >= 0.09 (D-ORCH-02 verified; no fallback triggered)",
+    "feasible_hue_interval": "A = {206.6, 210.3}, B = {14.1, 33.2, 74.6, 74.9, 78.5}, grief 344.8, sep 40, band [255,325] -> [255, 304.8]; candidate h 275 inside"
+  }
+}
