@@ -553,7 +553,7 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   at an otherwise quiet loop point — an audible click that the probe would pass.
   The test is therefore a predicate, **`seam_pass()`**, evaluated per loop point and
   per asset, with **two local conditions** measured on the seam's own neighbourhood
-  (the last and first 50 ms of the loop, ≈ 2,205 samples each at 44.1 kHz):
+  (the last and first 50 ms of the loop, exactly 2,205 samples each at 44.1 kHz):
 
   - **(a) the step bound** — `|x[0] − x[N−1]|` must not exceed the largest
     adjacent-sample delta **inside those two windows, excluding the seam pair
@@ -562,10 +562,15 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
     a *slope* — its energy is spread over many samples, so its adjacent deltas are
     small — while a loop discontinuity is a *single jump*, measured against a
     quantity it cannot hide behind.
-  - **(b) the slope bound** — the second difference across the seam must not exceed
-    the largest second difference **inside the same windows, excluding the
-    seam-spanning triple** `(x[N−2], x[N−1], x[0])` — so a seam that is
-    step-continuous but *kinks* (the audible tick) also fails.
+  - **(b) the slope bound** — the **magnitude** of the second difference across
+    **each seam-spanning triple** — `(x[N−2], x[N−1], x[0])` **and**
+    `(x[N−1], x[0], x[1])` — must not exceed the largest **|second difference|**
+    **inside the same windows, excluding both triples**. Magnitude, not sign, for
+    the same reason (a) uses `|·|`: a downward kink is as audible as an upward one,
+    and a signed comparison passes whichever direction the interior max does not
+    happen to cover. And **both** triples, because a kink can sit on either side of
+    the join: a silent last window and a first window that starts with a slope has a
+    zero step and a zero left second difference, and a large right one.
 
   `SEAM_DELTA_MAX` remains the **scalar upper bound** and is the test's third,
   independent conjunct: the seam delta must also stay below the asset's loudest
@@ -577,14 +582,42 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   argument.
 
   All three conjuncts are post-processing on **one contiguous capture per looped
-  file**, so the probe's cost does not change. Contiguity is a **precondition**
-  (register item 7): a dropped buffer at a seam would either fabricate a failure or
-  measure the wrong sample pair, so the capture must be gap-free across each seam and
-  the seam's sample index is located from the loop's authored `loop_end` — never
-  assumed to be the capture's start.
+  file** — drained per frame from `AudioEffectCapture.get_buffer()` into the probe's
+  own buffer, because the effect's ring buffer is ~0.1 s by default and cannot hold a
+  loop. So the probe's cost does not change. **Contiguity, timeline and rate are
+  preconditions** (register item 7):
+
+  - **Contiguity** — no `get_buffer()` call may underrun, **requesting the frame
+    count the elapsed mix time owes** (never `get_frames_available()`, which makes
+    the check vacuous by construction and cannot see a ring-buffer *overflow* — the
+    actual drop mode at ~0.1 s capacity). A dropped buffer at a seam would either
+    fabricate a failure or measure the wrong sample pair, and a length tolerance
+    cannot establish gap-freeness: the defect is exactly one buffer.
+  - **Timeline — δ is measured, never assumed zero.** **Clear, then play:**
+    `clear_buffer()` before `play()`, in that order, or δ can go negative. `play()`
+    starts the stream at the next **mix callback**, while `clear_buffer()` clears the
+    ring buffer wherever the main thread lands in that callback, so the capture index
+    of the playback's first sample is `δ ∈ [0, one mix block)` — up to ~15 ms at the
+    default output latency, i.e. 30 % of the 50 ms window. δ is **constant per run**
+    (set once at the start), so it is measured **once per run** — a marker at the test
+    loop's start, or cross-correlation against one decoded iteration — **asserted
+    constant across the ten iterations**, and applied to the seam index:
+    **`seam_index_k = k·loop_end + δ`** for iteration *k* (1…10). An unmeasured δ is a
+    **probe failure**: a δ-shifted read lands mid-loop, where a continuous waveform
+    passes the local test, so assuming δ = 0 would silently pass a seam nobody
+    checked.
+  - **Rate** — the project pins `audio/driver/mix_rate = 44100`, the rate §G.6 pins for
+    every asset, and the probe **asserts** it recorded at 44.1 kHz, so
+    `loop_end` needs no conversion and the 50 ms window is exactly 2,205 capture
+    samples (`44,100 × 0.05`). A device-forced rate is a **probe failure** that
+    requires both the conversion `capture_index = loop_end × mix_rate / asset_rate`
+    (window scaled by the same factor) **and a re-run at that rate** — a formula
+    substitution on a 44.1 kHz capture cannot speak for a build that resamples across
+    the seam.
 
   **The pass condition is absolute.** An asset that fails `seam_pass()` **never
-  ships on any rung of this ladder**. A measured delta recorded in the gate evidence
+  ships on any rung of this ladder**. The measured **seam delta** recorded in the gate
+  evidence
   is *evidence of a failure*, never a waiver: "the loop point is authored at a
   musical bar boundary" is the hypothesis the probe exists to test, not a substitute
   for testing it. (This replaces an earlier draft's "accepted for the score alone",
@@ -755,12 +788,12 @@ the AC it unblocks — not an AC that already tests something else.
 | # | Item | Verdict | Method (pass = ) | Owner | Blocks |
 |---|---|---|---|---|---|
 | 1 | The Master limiter class in 4.7.2 (`AudioEffectHardLimiter` vs `AudioEffectLimiter`) and its gain-reduction readback | **PROBE-PENDING** | instantiate both candidates; the surviving class is instantiated on Master and its reduction is readable during AC-AUD-20's loudest fixture | godot-specialist | The first story; AC-AUD-20's ≤ 3 dB high-water |
-| 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (**every looped file**: 3 beds, the stereo score, the mono fold — each its own capture) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene, **once per looped file**, including a separate capture of `MUS_HOUSE_LOOP_MONO` (conditional on CR-AUD-03): `seam_pass()` (§10) holds at all ten loop points | sound-designer + godot-specialist | **The import of every looped file** (5 seams: 3 beds + the score pair); the fallback rows and their ceilings (§10); **OQ-AUD-9** if any looped file exceeds its rung's ceiling |
+| 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (**every looped file**: 3 beds, the stereo score, the mono fold — each its own capture) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene, **once per looped file**, including a separate capture of `MUS_HOUSE_LOOP_MONO` (conditional on CR-AUD-03): **δ is measured and constant**, no `get_buffer()` call underruns, the recorded mix rate is the asserted **44.1 kHz**, and `seam_pass()` (§10) then holds at all ten loop points | sound-designer + godot-specialist | **The import of every looped file** (5 seams — 4 if CR-AUD-03 is declined); the fallback rows and their ceilings (§10); **OQ-AUD-9** if any looped file exceeds its rung's ceiling |
 | 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | the swap at tick T: the post-swap `playback_position` is within 1 tick of the pre-swap value, and the gain ramp's two ticks are exact | lead-programmer | The MONO stage; AC-AUD-22's collapse assertion becomes meaningful |
 | 4 | Per-tick `set_bus_volume_db` at 60 tps is inside the core's tick bar and does not zipper | **PROBE-PENDING** | a 15-tick ramp at 240 ms: the core's tick stays within p99.9 ≤ 0.10 / max ≤ 0.30 ms **and** a capture of the ramp shows no step above `ZIPPER_DELTA_MAX`; a staircase reading fails the probe and moves the envelope to a per-tick interpolation inside one audio-thread callback | performance-analyst | AC-AUD-21 (the tick bar) — the probe gates the measurement; AC-AUD-02 is a GUT over the fake `BusPort` and cannot zipper, so it is **not** a gate here |
 | 5 | Five buses + one Master effect is inside the mobile mix budget | **PROBE-PENDING** | measured as an **extra instrument** during AC-AUD-21's device run (mixer CPU share, no new AC); the bar is "the audio thread's share stays under 25% of the frame" | performance-analyst | The graph's viability on the reference SKU |
 | 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`'s "Audio Buses" block) | — | — | — |
-| 7 | `AudioEffectCapture` can record a bus for the loop-seam probe | **PROBE-PENDING** | the probe scene captures 10 s of a known loop, the capture's length matches within one buffer, **and the capture is gap-free across the seam** (no dropped buffer at the transition — a gap would fabricate a failure or measure the wrong sample pair) | godot-specialist | Probe 2's method; §10's contiguity precondition |
+| 7 | `AudioEffectCapture` can record a bus for the loop-seam probe | **PROBE-PENDING** | the probe scene captures **a known short test loop (≤ 10 s, so the capture crosses at least one seam)**, drained per frame; **no `get_buffer()` call underruns**, **δ is measured once and asserted constant across the ten iterations** (§10's timeline precondition), and the recorded **mix rate is the asserted 44.1 kHz** (a device-forced rate is a failure requiring the §10 conversion **and** a re-run) | godot-specialist | Probe 2's method; §10's contiguity + timeline + rate preconditions |
 | 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **PROBE-PENDING** | a WAV **looped file** (a bed, or the score pair on its fallback row) loops 100× and passes **the same boundary-local seam test probe 2 uses** (`seam_pass()`, §10) at every loop point — a continuous waveform's last and first samples legitimately differ, which is why the test is local rather than an absolute-zero rule; `loop_end − loop_begin` equals the authored sample count | sound-designer | The fallback's viability (only if probe 2 fails) |
 
 `PROBE-PENDING` is an open verdict: items 1–5 and 7–8 block their named gates, and
@@ -1006,7 +1039,10 @@ the bar is provisional pending the technical-director's ratification.
 No existing audio code or assets exist; the migration is a greenfield scaffold.
 
 1. **The bus layout + the limiter.** Add `default_bus_layout.tres` (five buses,
-   the §G.1 volumes), the limiter factory, and the boot assert.
+   the §G.1 volumes), the limiter factory, and the boot assert. **Pin
+   `audio/driver/mix_rate = 44100` in `project.godot`** — the seam probe asserts it
+   (§10), and an unpinned rate is a probe failure that needs the conversion and a
+   re-run.
 2. **The core.** Add `src/audio/core/` (`AudioCore`, `FlipStateMachine`,
    `BedDirector`, `VoicePool`, `DuckStage`, `Gate`, `VariationRng`, `OrderTrace`,
    `TelemetryRing`, `Tuning`) and the GUT suite under `tests/unit/audio/` with the
