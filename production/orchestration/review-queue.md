@@ -49,13 +49,19 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-15 | +7 (5 contracts/doctrine + 2 knobs) + 1 rider on `duck_request_contract` | SYS-15 dependency-map bullet + MVP row → APPROVED + design order 12 | 2026-11-15 | **LANDED** — PR #63, `1e9e524` (head `5f67ee0`; 1 thread applied, 1 rebutted) |
-| 2 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
+| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
 
-Full requests (read from the lane worktrees; `session-state` is gitignored but
+Full request (read from the lane worktree; `session-state` is gitignored but
 on disk):
-- SYS-15: `../new-vania-sys15-cache-stations-death/production/session-state/lane-SYS-15-report.md` §Sync — counts TR 20 / F 4 / V 7 / ACs 26 (21 smoke = 17 GUT + 4 LINT · 3 device · 2 lock · 0 VS) / OQs 9; registry N + 7, no renames/retypes.
 - SYS-28: `../new-vania-sys28-narrative-presentation/production/session-state/lane-SYS-28-report.md` — counts TR 13 / F 3 / V 6 / ACs 15 (13 smoke = 8 LINT + 5 GUT · 0 device · 2 MVP-lock · 0 VS) / OQs 5.
+
+**Landed 2026-11-15** (removed from the active queue): **SYS-15** — PR #63,
+`1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
+`designation_counter` wording narrowed to the GDD's own law; 1 rebuttal — the
+fifth-save-event suggestion closed by AC-CSD-19/OQ-SAV-4); registry 70 → 77
+entries; the index gained the SYS-15 bullet, the APPROVED MVP row and design
+order 12. The full request was
+`../new-vania-sys15-cache-stations-death/production/session-state/lane-SYS-15-report.md` §Sync.
 
 **Landed 2026-11-14** (removed from the active queue; the receipts are in
 `STATE.md` §11/§12): **SYS-03** — PR #47, `50a9a93` (head `07f9b27`; 3 threads:
