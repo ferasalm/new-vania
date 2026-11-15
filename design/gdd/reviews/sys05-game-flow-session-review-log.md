@@ -121,7 +121,7 @@ clause in SYS-05's own document.
 ### 0.6 Gate trail (filled as gates run)
 
 - Authoring: COMPLETE (2026-11-15) — `design/gdd/game-flow-session.md` written in full; counts verified 24 TR / 3 F / 7 V / 30 ACs (25 smoke = 20 GUT + 3 LINT + 2 PLAYTEST · 3 DEVICE · 2 lock · 0 VS) / 5 OQs; two broken self-references (V-GFS-08 → AC-GFS-22) and the interrupted-close rider repaired pre-commit.
-- CD gate: —
+- CD gate: round 1 CONCERNS (3 blockers) → repaired → round 2 CONCERNS (2 blockers) → repaired → round 3 CONCERNS (1 blocker: the carried OQ-PRG-6 disposition) → repaired → **round 4 APPROVED (2026-11-15, zero blockers)**. Post-approval: 6 one-line recommendations applied (the grant build-gate; the teardown-during-Loading edge; the re-open's first-line clause; the phase-3 mapping pointer; the authored-order mark; the pooled-cohort script clause); 1 declined with rebuttal: *deferring the Cutscene row's registration to the VS pass* — the nine-row set is the authored shape and the row's registration is table data; deferring would churn AC-GFS-01's fixture and the set law for a cosmetic MVP delta the approved round-4 document already hedges (the retire path).
 - Creative seat: — · Technical seat: — · QA seat: —
 - qa-lead spot-check: —
 - Final micro-check: —
