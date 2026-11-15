@@ -312,9 +312,9 @@ than reinterpreting a frozen count**, and carries it as an obligation — the AD
 count and the audit's scope need the user's nod. If CR-AUD-03 is declined, the
 fallback is the native summing effect behind the same interface (Alternative 6),
 which restores 29 files at the cost of a GDExtension build — and **that fallback
-requires its own ADR**, because §10's one-effect law admits no production effect
-other than the limiter without one. The fallback is therefore not a silent
-alternative: it is a second decision.
+requires its own ADR**, because the one-effect law (§3, restated as the operative
+prohibition in §10) admits no production effect other than the limiter without
+one. The fallback is therefore not a silent alternative: it is a second decision.
 
 **Why not an engine sum.** A summing `AudioEffect` would need a GDExtension build
 (a native toolchain and export-binary verification the MVP pipeline does not
@@ -521,6 +521,10 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   probe's failure is **accepted for the score alone** — its loop point is authored
   at a musical bar boundary, where the material is continuous — with the measured
   seam delta recorded in the gate evidence rather than assumed.
+  **The two fallbacks are ceilings, not a joint budget**: the score's 6.85 MB
+  excludes its own 1.1 MB, and if probe 2 fails for *both* the beds and the score,
+  the bed ceiling drops by the score's Ogg size (≈7.95 MB → ≤ ~90 s of bed WAV) and
+  the sound-bible pass decides which asset keeps the space.
 - **No `AudioEffect` other than the limiter** may be added to the **production**
   graph without a new ADR: the "one effect" property is what makes the mix
   auditable. (Probe scenes and the dev-only probe layout are exempt and never
@@ -915,8 +919,9 @@ sign-off. The **story gate** (3 criteria) closes at the first implementation sto
 - [ ] MONO collapses every bus; the Ambience and UI buses follow the SFX slider;
       every slider's range is honoured (AC-AUD-22) — **plus** the swap's own
       fixture, which AC-AUD-22 does not cover: the ramp's two ticks are exact, the
-      playhead is preserved, and a toggle requested inside [E1, E7] lands at the
-      first `IDLE` tick (§4's deferral rule).
+      playhead is preserved, and a toggle requested inside [E1, E7] **or one whose
+      ramp or swap would land inside it** defers the whole sequence to the first
+      `IDLE` tick (§4's deferral rule).
 - [ ] The fold's missing-asset path emits `AUD_ASSET_MISSING` and leaves the toggle
       off with the stereo stream playing (§4, §G.8's class).
 - [ ] Exactly thirteen registered one-shot IDs; a 10,000-tick soak emits zero

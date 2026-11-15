@@ -159,8 +159,10 @@ trust without thinking (the Player Fantasy's honesty clause).
   the previous generation or a recoverable `.bak`.
 - **R4 — The game thread never waits on IO during gameplay.** One write in
   flight per slot; one-deep queue; the completion drains at a tick boundary.
-  Exactly one legal blocking path (the close-save), bounded by
-  `SAVE_JOIN_TIMEOUT_MS`.
+  Exactly one legal blocking path (the close-save), with `SAVE_JOIN_TIMEOUT_MS` as
+  its **dev-assert measurement bound** — not a preemption guarantee. The exit
+  policy is §5's: the write is abandoned, the last station autosave is the state
+  the player returns to, and the commit point guarantees no torn file.
 - **R5 — The snapshot is taken at an eligible tick, once per request.** The E4
   queue's predicate is read from SYS-29's `FreezeState`; a mid-choreography
   snapshot is unreachable by construction.
