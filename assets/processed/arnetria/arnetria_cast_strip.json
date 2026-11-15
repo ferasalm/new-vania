@@ -1,0 +1,26 @@
+{ "frames": {
+   "arnetria_cast.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 332, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 332, "h": 360 },
+    "sourceSize": { "w": 332, "h": 360 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.x-3669f47-dev",
+  "image": "arnetria_cast_strip.png",
+  "format": "RGBA8888",
+  "size": { "w": 332, "h": 360 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "arnetria_cast", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
