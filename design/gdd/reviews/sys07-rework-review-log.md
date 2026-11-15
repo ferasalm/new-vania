@@ -229,8 +229,9 @@ seat ran as a nested subagent with its model passed explicitly.
 SYS-12 status, F-CMB-06's band) and points at this log; the SYS-07 dependency row reads
 *"APPROVED 2026-11-12 + the D-ORCH-03 baseline"* (it said *"GDD not written —
 PROVISIONAL"*); F-CMB-06's input band is **1–4** (the union of the four re-derived safe
-ranges — at `ATK2_DAMAGE` 6 the counter is 9, outside the printed 1–4) with the output
-range 1–9; **the SYS-12 status is MVP (D-3), mana-free (M1)**, with Combat named as the
+ranges) with the output range **1–8** (the confirmed figures — see § 7.5; the 1–6 / 1–9
+values printed here at the time were the wide-range artefacts of the application error
+§ 7.5 records); **the SYS-12 status is MVP (D-3), mana-free (M1)**, with Combat named as the
 ABILITY arc's publisher and SYS-12 the ability's `raw_damage` owner; AC-CMB-30 gains the
 ABILITY fixture; the gate table's VS parenthetical now scopes to *"the Stinger's clash
 interaction"*; OQ#9 is scoped the same way.
