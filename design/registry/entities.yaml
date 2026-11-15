@@ -2461,6 +2461,7 @@ constants:
       - design/gdd/game-flow-session.md
     kind: constant
     value: 5000
+    unit: ms
     range: [1000, 15000]
     attributes: >
       Dev-only diagnostic constant — the load-stall dev assert + the LOAD_STALL record's bound;
