@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-15"
+last_updated: "2026-11-16"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -474,7 +474,10 @@ entities:
       Counts: 26 TR / 4 F / 9 V / 26 AC. **The SYS-24 rider (recorded 2026-11-15, the OQ-M1 pattern — rides
       SYS-03's next doc touch):** `load_result.restored` gains `recovered_from_bak` (bool) — SYS-03's §UI already
       obliges the recovery's statement and `bak_loaded` is telemetry, not a consumer field; the boolean is the
-      minimal channel."
+      minimal channel. **The SYS-05 riders (recorded 2026-11-15, the OQ-M1 pattern — ride SYS-03's next doc
+      touch):** TR-SAV-014's close-save condition gains the `death_unresolved` skip clause (the anti-scum law —
+      no close-save while a death is unresolved), and `register_namespace` gains `carries_live_state: bool`
+      (the load-complete gate's ack set's source; `world` registers false). Both are recorded, never applied."
     added: 2026-11-14
     revised: ""
 
@@ -963,6 +966,91 @@ entities:
     added: 2026-11-15
     revised: ""
 
+# 2026-11-15 (lane SYS-05, the game-flow sync — report §A): the flow layer's published contracts.
+# Source: design/gdd/game-flow-session.md (lands with PR #87, after this sync by review-queue §7
+# rule 4 — the documented pending-path pattern, the SYS-24 precedent).
+  - name: context_machine
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+      - design/gdd/save-serialization.md
+      - design/gdd/cache-stations-death.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/narrative-presentation.md
+      - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/progression.md
+    kind: contract
+    attributes: >
+      The nine-context state machine (SYS-01's seven + Loading (machine-only-entry) + the TRANSITION
+      fallback (never at MVP)); the gate-source classes (P0 forced-blur / P1 death / P2
+      transition+cutscene / P3 ack-born / P4 reflex); one queued request applied per gate-entry
+      phase (F-GFS-01); the composition law (a P1 win over an open full gate composes
+      close-then-open atomically, no Gameplay logic tick between); the custody/void fates; the
+      single-writer law (only SYS-05 writes context state); the blur's per-context ruling
+      (TR-GFS-008(a)–(e)); the flip window refuses the pause and composes the blur; the pause is
+      not a freeze and the freeze is not a gate (the respawn increment's bookkeeping tick is the
+      death arc's own flow-owned logic tick).
+    added: 2026-11-15
+    revised: ""
+
+  - name: load_complete_gate
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/save-serialization.md
+      - design/gdd/cache-stations-death.md
+      - design/gdd/progression.md
+      - design/gdd/audio-core.md
+    kind: contract
+    attributes: >
+      SYS-05's load-complete gate (ADR-0003 §12 / O-AUD-1's owner): load_complete(slot, tick,
+      restored_epoch) publishes only when restore_complete_observed ∧ reconcile_settled ∧
+      (∀ o ∈ carry_owing_owners: carry_complete(o)) — the carry-owing set is SYS-03's registry's
+      carries_live_state set (cache, progression at MVP; world's verbatim restore owes no ack).
+      restore_complete is strictly before the gate (TR-SAV-024.3); SYS-10's reconcile request
+      publishes strictly before the gate (TR-WME-006); the payload's restored_epoch is the restored
+      store's truth_epoch at the swap (the identity assert, V-GFS-04). The Loading exit is a
+      function of the entry path: boot → Gameplay; reconstruct → Death/respawn's respawn phase
+      (spawn, increment on the first logic tick, print — then respawn-complete → Gameplay); the
+      pending-restore flag defers the boot's exit to Paused and never bypasses the beat.
+    added: 2026-11-15
+    revised: ""
+
+  - name: cache_activation
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+      - design/gdd/progression.md
+    kind: contract
+    attributes: >
+      SYS-15's activation-edge publication, cache_activation(station_id, first: bool) — first is
+      the activation record's append of a not-yet-recorded station (TR-CSD-016's ordering law).
+      The grant beat's trigger source (critical-path on SYS-15's implementation story; unlanded →
+      the build's grant-beat assertion fails). SYS-16 mints the GrantEvent from the flow's
+      flow_grant_trigger edge; SYS-16 stays the GrantEvent's sole publisher.
+    added: 2026-11-15
+    revised: ""
+
+  - name: flow_grant_trigger
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/progression.md
+    kind: contract
+    attributes: >
+      The flow's grant trigger edge, flow_grant_trigger{grant: STINGER, cause:
+      first_cache_activation, tick} — the D-3 story moment's contract (the first cache activation;
+      the GrantEvent publishes at the first Gameplay tick after the Cache-terminal context exits).
+      The once-latched law + the persisted-latch reconciliation (a composed record holding a
+      non-empty activated_caches while the grant set lacks STINGER re-fires the trigger at
+      load_complete — the beat is not missable). SYS-16's GrantEvent.source enum registers
+      first_cache_activation (the one-value rider).
+    added: 2026-11-15
+    revised: ""
+
 # Example (remove when first real entry is added):
 #
 # entities:
@@ -1227,6 +1315,54 @@ formulas:
       equipped alongside a frame (its cost becomes unpayable with term (b)). The 60 s integral
       is blind to the pool (779 vs 584), which is WHY the guardrail is a pair of axes and not
       one number. Weapons are untouched: TR-HD-034/F-HD-13 keep the weapon set's ±10% ceiling."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-05, the game-flow sync — report §A): the flow's three named laws.
+# Source: design/gdd/game-flow-session.md (lands with PR #87, after this sync by review-queue §7
+# rule 4).
+  - name: gate_priority
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/game-flow-session.md
+    kind: formula
+    attributes: >
+      F-GFS-01: gate_priority(t) = first r ∈ Q(t) in priority order where eligible(r, active(t));
+      one application per gate-entry phase. Priority P0 forced > P1 death > P2 transition/cutscene
+      > P3 ack-born (arrival order) > P4 reflex; eligibility P1 always, P2/P3/P4 iff active =
+      GAMEPLAY, P0 per the blur's ruling; P1/P2 applications void the queue; P3 retains custody;
+      P4 voids when preempted; the forward-binding (a gate request raised earlier in a tick blocks
+      later ack commits in that tick).
+    added: 2026-11-15
+    revised: ""
+
+  - name: load_complete_ready
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/game-flow-session.md
+    kind: formula
+    attributes: >
+      F-GFS-02: load_complete_ready(t) = restore_complete_observed ∧ reconcile_settled ∧
+      (∀ o ∈ owners: carry_complete(o, t)); owners = the registry's carries_live_state set; the
+      stall clause (a missing input holds Loading; LOAD_STALL_ASSERT_MS dev assert; production
+      waits); exactly-once per load (SYS-03's RECONCILE consumes the edge).
+    added: 2026-11-15
+    revised: ""
+
+  - name: session_anchor
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+    kind: formula
+    attributes: >
+      F-GFS-03: session_anchor(load) = terminal_anchor(active_cache(composed)) if
+      active_cache(composed) ≠ ∅ else SESSION_BOOT_ANCHOR — every load_complete's spawn (boot,
+      reconstruct, relaunch) consumes the same derivation (the save carries no position);
+      active_cache = activated_caches' last entry (SYS-15's TR-CSD-016 derived read consumed;
+      the composed record's activation wins over the loaded save's empty record).
     added: 2026-11-15
     revised: ""
 
@@ -2312,6 +2448,24 @@ constants:
       OQ-M1 pattern — rides SYS-14's next doc touch):** SYS-14's TR-GBF-012 / F-GBF-03's `hp_ratio`
       phrasing re-derives to the integer `boss_hp_current` / `boss_hp_max` pair — the float-ratio
       path floors `20/60 × 6` to 1."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-05, the game-flow sync — report §A): the load-stall dev diagnostic.
+# Source: design/gdd/game-flow-session.md (lands with PR #87, after this sync by review-queue §7
+# rule 4).
+  - name: LOAD_STALL_ASSERT_MS
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/game-flow-session.md
+    kind: constant
+    value: 5000
+    range: [1000, 15000]
+    attributes: >
+      Dev-only diagnostic constant — the load-stall dev assert + the LOAD_STALL record's bound;
+      wall-clock (it fires inside Loading, the one context that runs no ticks); never a player
+      surface; production waits (no timeout).
     added: 2026-11-15
     revised: ""
 
