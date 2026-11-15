@@ -56,7 +56,7 @@ poisoned-sentinel run possible at all.
 | **Knowledge Risk** | **MEDIUM** — the audio API is stable across 4.4–4.7 per the repo's snapshot ("No major breaking changes to the audio API in 4.4–4.6"), but two *mechanisms* this ADR needs are undocumented or unverified: the stereo→mono collapse and the Ogg loop seam. Both are probe-gated (§14) |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `modules/audio.md`; `breaking-changes.md` (4.7 `AudioStreamPlayer.area_mask` default; 4.7 `AudioEffectSpectrumAnalyzer.tap_back_pos` removed); `deprecated-apis.md`; `docs/framework/technical-preferences.md` |
 | **Post-Cutoff APIs Used** | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` (**documented in `modules/audio.md`**); `AudioServer.set_bus_effect` + the effect slot model **[unverified for 4.7.2's limiter class name: `AudioEffectLimiter` vs `AudioEffectHardLimiter`]**; `AudioStreamPlayer.play(from_position)` **[unverified parameter name]**; `AudioStreamOggVorbis.loop` / `loop_offset` **[unverified for gapless behaviour]**; `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end`; `AudioEffectCapture` (the loop-seam probe); `AudioStreamPlayer.area_mask` default `0` (4.7 — irrelevant here: no `Area` audio overrides in the audio graph, and none may be added) |
-| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. **On acceptance this ADR becomes Accepted as architecture**; until then it is `Proposed`, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (MEDIUM).** Two traps are specific to this decision.
 > (1) The `AudioStreamPlayer.area_mask` default changed to `0` in 4.7: an
@@ -355,6 +355,12 @@ player. The mapping is explicit and auditable:
 - **Ambience has 4** because a turnover sounds two beds at once (the receding and
   the arriving) and a room-entry crossfade may need a second pair; the pool is the
   bound, and a fifth concurrent bed is a design error, not a config.
+- **The draw is seeded and injected.** `VariationRng` takes the run's **seed** from
+  the adapter at arm time (one seed per run; the adapter derives it from the run
+  identity, not from wall time), and the core never reads a clock or a global RNG.
+  A replay reuses the recorded seed, so the draw sequence is identical (AC-AUD-30);
+  a fresh run gets a different seed, so the sequence is not memorisable across
+  sessions.
 - **The gate is a boolean on the core, not a bus mute.** `set_bus_mute` on SFX
   would silence already-sounding voices (a cut is a click and reads as a bug —
   §D.3's ring-out law). The gate refuses **new** starts and leaves the ringing
@@ -876,8 +882,9 @@ the device measurements close at the first implementation story.
       `HELD → IDLE` with no `RELEASED` entry (AC-AUD-13).
 - [ ] The abort trace shows E2, the degenerate tear, the derived E6 as an event,
       and zero orders (AC-AUD-04).
-- [ ] Exactly one duck request per death, attack 8 / release 15 ticks, both exits
-      release it; one application site in `src/audio/` (AC-AUD-10/17).
+- [ ] Exactly one duck request per death, attack 8 / release 15 ticks, released on
+      the two exits the GDD names **and on the quit exit** (TR-CSD-015; the schema
+      is unchanged); one application site in `src/audio/` (AC-AUD-10/17).
 - [ ] MONO collapses every bus; the Ambience and UI buses follow the SFX slider;
       every slider's range is honoured (AC-AUD-22) — **plus** the swap's own
       fixture, which AC-AUD-22 does not cover: the ramp's two ticks are exact, the
@@ -915,7 +922,7 @@ the device measurements close at the first implementation story.
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-009 — the stillness bracket | `gate_open = false`; drop-never-queue; no loop restart; zero snapshot changes; ring-out (§5, §9) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-010 — the tear | The reserved P0 slot outside the steal table; 24 ticks in a 26-tick window; the silent-asset path (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-011 — the abort path | Zero orders; the force-release-derived `freeze_close` as an event; `DEGRADED` precedence; no `RELEASED` (§6, §9) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace relative to the raise tick; the post-resume hash equals the fresh run's (§6, §13) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace encodes **relative to the raise tick** (F-AUD-06), so the post-resume span hashes identically to the fresh flip's; the comparison starts at R′ (§6) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-013/014 — the arena hum; the wing's no-op | RM-06 excluded by the order record; no separate wing bed; the room-entry path only at real entries (§6) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-015…021 — **the eleven** one-shot voices of the SYS-29 list (015 damage; 016 clash contact + midpoint; 017 deflect; 018 heal + death; 019 revive + level-up; 020 memory; 021 jump-2 + defeat) | The voice table's slots, classes, retrigger floors and signatures; the conc-2 slot mapping (§5); the variation law's deterministic draw (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-022/024/025 — the bed table; the seam's exemption; the transition law | The derived bed map + `restored_epoch`; the room-entry crossfade only at a real entry; no restart, no duck (§6, §12) |
@@ -928,10 +935,10 @@ the device measurements close at the first implementation story.
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-032 — the budget | Disk/runtime/voices/tick, measured on the Pixel 6a; the provisional marker (§10, §14) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-033 — the duck schema, telemetry, allowlist, failure paths | The one-site rule; the 256-record ring; the two-port allowlist; the failsafe (§8, §9, §11) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-035 — masking and headroom | One limiter; the beds ≥ 6 dB under the one-shots; the device measurement (§3) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-036 — the death duck, ratified | −6 dB, 120/240 ms on the wall clock, the hold, both exits (§8) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-036 — the death duck, ratified | −6 dB, 120/240 ms on the wall clock, the hold, both named exits (+ the quit exit, TR-CSD-015 — the GDD's TR-AUD-036 predates it and the `UNTIL_OFFLINE_EXIT` value already covers it) (§8) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-037 — the accessibility surface | The MONO stage + the three sliders' group map + the metadata port (§4, §11) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-038 — the variation law | The deterministic seeded draw; no immediate repeat; zero drift on the eight signatures and the clash pair (§5) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-039 — the bed-contrast bar | The sound-bible pass owns the realisation; the DEVICE fixture (AC-AUD-31) owns the bar (§10) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-038 — the variation law | The deterministic seeded draw: the **seed is injected** (`VariationRng` takes the run's seed from the adapter at arm time, one seed per run; a replay reuses the recorded seed), no immediate repeat, ±1 st within a band, zero drift on the **six signatures** and the clash pair (§5) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-039 — the bed-contrast bar | **Partial by design**: the bar (≥4/5 nameability, audible on the Pixel 6a speaker, the arena distinct) is AC-AUD-31's; the *realisation* is the sound-bible pass's, and no engine mechanism decides it. The ADR's part is the import pins that make the comparison fair (§10) |
 | `design/gdd/dual-reality-state.md` | SYS-09 | TR-DR-004 / E1–E7 + G1–G7 | The five subscriptions; the arm, the bracket, the tear, the release, the resume (§2, §6, §7, §9) |
 | `design/gdd/world-mutation-epochs.md` | SYS-10 | E3b `ambient_shift` + the abort + the latched resume | The order record; zero orders on the abort; the resume hash (§6, §12) |
 | `design/gdd/juice-feedback.md` | SYS-29 | TR-JCE-027 + the `duck_request` schema | The ten edges → eleven voices; the three-field schema; one application site (§5, §8) |

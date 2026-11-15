@@ -58,10 +58,10 @@ writer anywhere.
 |-------|-------|
 | **Engine** | Godot 4.7.2 (pinned; GDScript) |
 | **Domain** | Core + Persistence (Core/FileAccess/JSON/Hashing/Threading) |
-| **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The audio/render subsystems are stable across 4.4–4.7 per the repo's snapshots; the *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4) |
-| **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `modules/audio.md` (for the not-join precedent only); `docs/framework/technical-preferences.md` |
+| **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4); the JSON number model is undocumented in the repo's snapshots and is probe item 1 |
+| **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `docs/framework/technical-preferences.md`; **ADR-0001 §16** (the notification-family probe this ADR's item 8 shares) |
 | **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256) — **`FileAccess.get_sha256()` is rejected**: it would hash the file, and the hash input is the canonical projection, not the file bytes; `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `DirAccess.get_space_left()` **[unverified name for 4.7.2 — register item 10]**; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` (**not** `NOTIFICATION_APPLICATION_FOCUS_OUT`, which is not an exit and must never trigger a save) |
-| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). **On acceptance this ADR becomes Accepted as architecture**; until then it is `Proposed`, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (HIGH).** Two failure modes are specific to this
 > version band and are load-bearing here: (1) `JSON` parses *every* number as a
@@ -325,7 +325,7 @@ explicit**, never inferred from the message:
 | Condition (in this order) | Code |
 |---|---|
 | the path is not writable / the directory cannot be created (`ERR_UNAUTHORIZED`, `ERR_FILE_NO_PERMISSION`) | `SAVE_FAILED_PERMISSION` |
-| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (4× the largest expected file) | `SAVE_FAILED_DISK_FULL` |
+| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (**a constant, not a knob** — 4× the largest expected file; §Tuning Knobs' doctrine) | `SAVE_FAILED_DISK_FULL` |
 | a `store_*` returns `false` **and** the pre-flight passed | `SAVE_FAILED_DISK_FULL` if the volume's free space dropped during the write, else `SAVE_FAILED_UNKNOWN` |
 | `rename_absolute` returns non-`OK` at step 4/5 | `SAVE_FAILED_RENAME` |
 | a read-back hash mismatch at step 3 / step 6 | `SAVE_FAILED_VERIFY` |
@@ -341,9 +341,11 @@ sweep. It invents no state. The distinction is stated once in the GDD and is a
 law here: **promoting a `.bak` restores bytes; it is not a repair write.**
 
 **The completion drain.** The worker's result record is drained at the **next
-tick boundary** on the game thread (ADR-0001 §5's pipeline phase), never from a
-signal callback into gameplay code. This keeps `save_completed` on a tick, which
-is what AC-SAV-12's frame probe asserts.
+`logic_tick` boundary** on the game thread. ADR-0001 §5 defines the *input*
+pipeline's phases 0–6 and has no save phase — the save service runs its own drain
+**after** that pipeline, on the same tick boundary, so `save_completed` lands on a
+tick without borrowing an input phase. This is what AC-SAV-12's frame probe
+asserts.
 
 **The close-save (the one legal block).** On the close request the save is
 written **synchronously** on the game thread — there is no frame to miss, the
@@ -382,7 +384,25 @@ at a non-integer key** is `REFUSE_TYPE`. `3.5` at a `String` key is therefore
 load sides) and AC-SAV-17's refusal matrix (the named code per fixture) — the two
 must agree on this input.
 
-**6b. Absence survives the hash.** A declared key that is absent **stays absent**
+**6b. Two refusal rules are decisions, not outcomes.** They are decided here
+because the GDD states them as laws and only an implementation choice makes them
+enforceable:
+
+- **The epoch guard sits upstream of SYS-10** (TR-SAV-024(2)): `truth_epoch` is
+  range-checked against SYS-02's `max_epoch` **inside the verdict** (F-SAV-04 row 8),
+  so an out-of-range epoch is `REFUSE_EPOCH_RANGE` and SYS-10 is never called. The
+  guard is a row in the ordered verdict, not a caller's check — that is the whole
+  difference between "upstream" and "hopefully before".
+- **A schema-ahead file never falls back to the `.bak`** (TR-SAV-020/021): the
+  `.bak` is older by construction, so falling back would silently downgrade the
+  session — the one lie the refusal exists to prevent. `REFUSE_SCHEMA_AHEAD` is
+  therefore the **only** refusal that skips the `.bak` retry, and the rule lives in
+  the load machine's transition (step 4 → `REFUSED`), not in a caller's policy.
+
+The verdict's ordered rows (§6's list) are where both rules are enforced; the
+validation list asserts them (AC-SAV-20/18).
+
+**6c. Absence survives the hash.** A declared key that is absent **stays absent**
 in the normalized payload — materializing the defaults there would change the
 hash input and turn a valid sparse file into `REFUSE_HASH_MISMATCH`. The defaults
 are applied **at restore, after the hash** (TR-SAV-023). This is the single
@@ -457,11 +477,14 @@ request with a new snapshot (a save is a snapshot of *now*).
 ### 9 · The E4 freeze queue
 
 The predicate is `writable(t) ≡ flip_sources_active(t) = ∅`, read from **SYS-29's
-`FreezeState` publication** (the base `truth_flip` source plus every admitted
-`truth_flip_ext_n`). `t_write = min { t ≥ t_req : writable(t) }` (F-SAV-03), and
-the bound `N_max` is **consumed from SYS-09** (`worst_case_hold_ticks`, base plus
-the two admitted extension spans) — SYS-03 never re-derives the ms→tick
-conversion.
+`FreezeState` publication** — which is the **flip-scoped projection of ADR-0001
+§3's `freeze_sources` set**: the base `truth_flip` source plus every admitted
+`truth_flip_ext_n`. The flip source's clear tick is the force-release boundary on
+the abort path and `freeze_close` (E6) on the committed path; ADR-0001 owns the
+set, SYS-29 owns the projection, and SYS-03 reads only the projection. `t_write =
+min { t ≥ t_req : writable(t) }` (F-SAV-03), and the bound `N_max` is **consumed
+from SYS-09** (`worst_case_hold_ticks`, base plus the two admitted extension
+spans) — SYS-03 never re-derives the ms→tick conversion.
 
 - **Coalescing**: one pending request per slot; a second for the same slot is
   latest-wins with one telemetry record. Different slots queue independently.
@@ -544,7 +567,7 @@ narrated.
 | 5 | `Thread.start(Callable)` + `Semaphore` + `Mutex` gives one in flight + one pending per slot with no lost wakeup | **PROBE-PENDING** | 1,000 alternating requests per slot: every request yields exactly one result, no result is duplicated, no job is dropped | lead-programmer | The first story |
 | 6 | `flush()` before `close()` makes a short write detectable by the step-3 re-read | **PROBE-PENDING** | inject a truncated buffer: step 3 fails 20/20 with `SAVE_FAILED_VERIFY`, and the previous `.sav` is byte-identical afterwards | lead-programmer | The first story; AC-SAV-09 |
 | 7 | `user://` resolves to the app's data dir on both platforms and survives a relaunch | **PROBE-PENDING** | write, kill, relaunch, load: the file is under the app data dir and the state restores | qa-lead | AC-SAV-14 |
-| 8 | The suspension notification is delivered **before** the platform kills the app (iOS background-kill; Android `onStop`) | **PROBE-PENDING** | background the app from gameplay on real hardware 10× per platform: the close-save lands 10/10 and the restored state equals the suspension state | qa-lead | AC-SAV-23 |
+| 8 | The suspension notification is delivered **before** the platform kills the app (iOS background-kill; Android `onStop`) | **PROBE-PENDING** | background the app from gameplay on real hardware 10× per platform: the close-save lands 10/10 and the restored state equals the suspension state | qa-lead | AC-SAV-23 — **the same notification family as ADR-0001 §16 item 14** (held-state semantics, still open there); this ADR scopes the probe to the save's use |
 | 9 | The `Error`→code classification separates a full volume from a read-only one (§5a) | **PROBE-PENDING** | an injected full-volume fake and an injected read-only fake yield `SAVE_FAILED_DISK_FULL` and `SAVE_FAILED_PERMISSION` respectively; the same pair on a device (a full volume via a disk-fill harness) agrees | devops-engineer | AC-SAV-09 |
 | 10 | `DirAccess.get_space_left()` (or the platform equivalent) exists in 4.7.2 and reports the slot's volume | **PROBE-PENDING** | the call returns a plausible byte count for `user://saves/` and falls back to the store-only path if absent | godot-specialist | §5a's pre-flight |
 
@@ -565,7 +588,8 @@ game thread                                   worker thread
   │                                    ◀────────────┘ (first unfrozen tick)
   ▼
 SNAPSHOTTED  (deep copy, ≤150 elements, ≤0.5 ms — SYNCHRONOUS)
-  │  job = {snapshot copy, slot, cause}      (the copy is the only game-thread work)
+  │  job = {snapshot copy, slot, cause}   (the copy is the only game-thread work;
+  │                                        the close-save is the one exception, §5)
   ▼
 job → one-deep queue ────────────────────────▶ 1 canon() + hash
                                                2 tmp write + store_* checks
@@ -841,10 +865,10 @@ probe register close at the first implementation story.
 **ADR acceptance.**
 
 - [ ] One canonicalizer: `canon(payload)` produces the fragment, the hash covers
-      `{schema_version, fragment}`, and the fragment appears byte-identically in
-      the file — asserted by the step-3/step-6 re-read (AC-SAV-09) **and** by a
-      CI grep for a second `to_json`/`JSON.stringify` site under `src/save/`
-      (V-SAV-04's grep family).
+      the projection `canon({schema_version, payload})`, and the fragment appears
+      byte-identically in the file — asserted by the step-3/step-6 re-read
+      (AC-SAV-09) **and** by a CI grep for a second `to_json`/`JSON.stringify`
+      site under `src/save/` (V-SAV-04's grep family).
 - [ ] The version is inside the hash: a `99 → 1` edit refuses with
       `REFUSE_HASH_MISMATCH`, never a gate bypass (AC-SAV-22).
 - [ ] The six-step write's fault injection names the outcome **per commit point**;
@@ -934,7 +958,9 @@ AC-SAV-05/07; V-SAV-06 by AC-SAV-20's no-clamp refusal; V-SAV-09 by AC-SAV-25 an
   2026-11-15); the story-gated engine half is named in §12.
 - **ADR-0001**: `docs/architecture/adr-0001-input-architecture.md` — §3 (freeze),
   §5 (tick boundary), and the probe-register pattern this ADR's §13 follows.
-- **ADR-0003**: `docs/architecture/adr-0003-audio-core.md` — consumes SYS-03's
-  `restore_complete` and the load seam (`restored_epoch`, obligation O-AUD-1).
+- **ADR-0003**: `docs/architecture/adr-0003-audio-core.md` — consumes SYS-05's
+  `load_complete` (its `restored_epoch` payload) and SYS-03's ordering guarantee
+  (`restore_complete` strictly before `load_complete`); see its §12 and obligation
+  O-AUD-1.
 - **Registry**: `save_contract`, `save_roundtrip_twin`, `epoch_mutation_reconciliation`
   (all `status: active`).
