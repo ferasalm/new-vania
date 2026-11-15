@@ -227,6 +227,14 @@ change scope, gates, WIP limits, model routing, or frozen contracts.
 The lane runner's model is the manifest `model`; seats are set per their briefs.
 A creative lane that ran on DS is rerun on GLM.
 
+**Failure fallback (user decision, 2026-11-15)**: up to 4 spawn attempts on
+server-side errors (`ProviderModelNotFoundError`, `AiError: Capacity temporarily
+exceeded`, HTTP 5xx / rate limits). Then the asymmetry applies: **DS → GLM** is
+an authorized autonomous fallback (recorded in `decisions.md`); **GLM → DS is
+forbidden** without an explicit user decision — creativity is not to be
+compromised by a fallback. Park the lane `PAUSED` and surface the decision, or
+issue a launch package for a parallel chat on the same model.
+
 ---
 
 ## 6. Context policy (summary)
