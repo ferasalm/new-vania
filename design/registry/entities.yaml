@@ -548,6 +548,7 @@ entities:
       - design/gdd/juice-feedback.md
       - design/gdd/audio-core.md
       - design/gdd/seam-borders.md
+      - design/gdd/cache-stations-death.md
     kind: published_contract
     published_by: SYS-29 Juice & Feedback (the schema; TR-JCE-027)
     consumed_by: SYS-04 (the single application site in src/audio/; the ratified
@@ -555,14 +556,138 @@ entities:
     values: "duck_request {bus, dB, hold} — exactly three fields: bus ∈ {MUSIC},
       dB ∈ [−12, 0], hold ∈ {UNTIL_OFFLINE_EXIT} · DEATH_DUCK_DB −6 (RATIFIED —
       OQ-J7) · attack 120 ms · release 240 ms · released on both exits
-      (reconstruct and revive) · exactly one request per death, one family in
-      the game"
+      (reconstruct and revive) and on the quit exit (the offline screen's third
+      exit — SYS-15's TR-CSD-015; the hold's `UNTIL_OFFLINE_EXIT` value already
+      covers it; the schema is unchanged) · exactly one request per death, one
+      family in the game"
     notes: "The no-duck law: no hit-stop/flip/seam/reveal-hold/pause duck
       (AR-SMB-03, SYS-09's sweep-not-beat ruling); V-AUD-01's static audit finds
       exactly one application site."
     added: 2026-11-14
     revised: "2026-11-14 (SYS-04's mix ratifies −6 dB — OQ-J7 resolved; no longer
-      provisional)"
+      provisional) · 2026-11-15 (SYS-15's release backstop names all three
+      offline exits — reconstruct, revive, quit)"
+
+  - name: system_offline_contract
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+      - design/gdd/health-damage.md
+      - design/gdd/audio-core.md
+      - design/gdd/juice-feedback.md
+    kind: published_contract
+    published_by: SYS-15 Cache Stations & Death-as-Story (TR-CSD-008/009)
+    consumed_by: SYS-07 (TR-HD-023's screen half — the options contract is consumed verbatim) ·
+      SYS-04 (the duck's release backstop — all three exits) · SYS-29 (the offline entry/exit
+      timing; the glitch component's host) · SYS-05 (the death/quit flow; the loading handoff) ·
+      SYS-24 (the rendering) · SYS-01 (the Death/respawn context rows) · SYS-28 (the copy's
+      co-ownership)
+    values: "three rows (SYSTEM OFFLINE / you are destroyed (lowercase, ratified standing) /
+      the cause row from the DeathRecord) + three options verbatim (RECONSTRUCT AT THE NEURAL
+      TERMINAL / DRAW THE RESTORE MODULE / QUIT); OFFLINE_HOLD_MS 400 [250, 800] gates the
+      options' selectability (wall-clock UI-feel); the DEATH state never time-limited; the
+      module option greys, never hides; a DeathRecord unreadable -> the generic fault row +
+      one telemetry record; the duck releases on every exit (reconstruct, revive, quit)"
+    notes: "SYS-07's OQ#8 closed at SYS-15's authoring. The presentation clock is context-time
+      (SYS-29's world-time law); no camera shake on the offline surface (TR-JCE-026)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: designation_counter
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+      - design/gdd/health-damage.md
+      - design/gdd/room-world-structure.md
+    kind: published_contract
+    published_by: SYS-15 (TR-CSD-011/012, F-CSD-01)
+    consumed_by: "SYS-07 (the increment points: reconstruct + revive, TR-HD-023/025) · SYS-03
+      (the cache namespace serialization at v2 — the named gate) · SYS-24 (the designation
+      readout — soft) · SYS-28/SYS-05 (the story-hook OQ, OQ-CSD-5)"
+    values: "counts remade bodies: exactly one increment per death resolved by reconstruct
+      (first logic tick after load_complete, before control returns) or revive (the revive
+      tick); a quit-resolved death increments nothing; the reconstruct carries the pre-load
+      live value across the restore (the store never lowers the live count; the saved value
+      seeds only a fresh session load); never decrements within a run; resets only on an
+      explicit new game (the pre-cache fallback carries the namespace, never resets it);
+      persists across quit/reload via the cache namespace at v2 at a save boundary —
+      the next event in the closed four-event trigger set (a station ack, or the
+      close/suspension save; TR-CSD-012's persist clause); an increment not yet saved
+      reverts with the rest of the unsaved world (a crash, or the offline screen's QUIT,
+      loses it — the count and the world always agree at a save boundary; never a partial
+      lie, TR-CSD-013's quit exception); DESIGNATION_PRINT_DIGITS 3
+      (zero-padded, widens naturally past 999)"
+    notes: "SYS-15 is the counter's writer (TR-RWS-025); SYS-02 writes neither the counter nor
+      the activation. The pre-cache fallback (no save present) re-initializes to the default
+      and the post-resume increment still applies — the stamp reads 001 (TR-CSD-014)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: cache_namespace_v2
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+      - design/gdd/save-serialization.md
+    kind: published_contract
+    published_by: SYS-15 (TR-CSD-016, F-CSD-04) — the shape; the mechanism is SYS-03's (TR-SAV-004)
+    consumed_by: "SYS-03 (the v1->v2 bump registration: MIGRATIONS[1] + CURRENT_SCHEMA_VERSION
+      1->2 at the namespace's implementation story; the snapshot deep-copy) · SYS-15 (the
+      owner-reader) · SYS-24 (the designation readout — soft)"
+    values: "cache: { designations: int >= 0, activated_caches: [id...] (ordered by most
+      recent activation; a revisit moves the id to the end; ids never removed; <= 128 at VS,
+      1 at MVP) }; the conservative default {designations: 0, activated_caches: []} at the
+      absent namespace, an explicit new game, and the M_1 migration step; active_cache is a
+      DERIVED read (the list's last entry = the most recently activated station) and is never
+      stored; no floats; a v1 payload carrying cache is REFUSE_UNKNOWN_KEY"
+    notes: "OQ-SAV-10 resolved. The named gate: the death counter persists at MVP — the bump
+      cannot be silently dropped. The OQ-CSD-9 rider: SYS-03's 'zero registered migrations'
+      posture sentence describes v1 and goes stale at the bump's landing; the rider lands at
+      SYS-03's next doc touch (the OQ-M1 pattern)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: revive_placement_resolver
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+      - design/gdd/health-damage.md
+      - design/gdd/room-world-structure.md
+    kind: published_contract
+    published_by: SYS-15 (TR-CSD-018, F-CSD-02) — ratifying OQ-RWS-4 (both signers present)
+    consumed_by: SYS-07 (TR-HD-025's revive application) · SYS-02 (last_grounded_safe_pos is
+      the consumed publication) · qa (the QA plan's S1 release-gate row references TR-CSD-018)
+    values: "revive_placement = last_grounded_safe_pos iff cause_kind = ENVIRONMENT; otherwise
+      the death spot (TR-HD-025's on-the-spot, unchanged); V-CSD-07 absolute: the placement is
+      never inside a hazard rect and never past a void bound; an unavailable publication
+      refuses the placement (the player stays DEAD + the fault row + telemetry)"
+    notes: "OQ-RWS-4's release gate is satisfied by this GDD + the implementation story: the
+      pit and the module revive may co-ship once F-CSD-02's fixture passes."
+    added: 2026-11-15
+    revised: ""
+
+  - name: cache_adjacency_doctrine
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+    kind: doctrine
+    published_by: SYS-15 (TR-CSD-019) — the benchmark audit's IP-6 authored
+    consumed_by: level-designer (every VS/Full-Vision zone pass runs it as a checklist item) ·
+      SYS-15 (the MVP instance)
+    values: "a terminal stands where the truth turns, and at the gate you cannot pass: every
+      epoch-shift threshold room carries a terminal; every boss-gate staging threshold carries
+      a terminal as the map scales (~10-14 across the 35-40-room Full Vision, the doctrine's
+      extrapolation, tunable per zone pass); the walk back from any plausible death crosses at
+      most one threshold-scale traversal segment"
+    notes: "The MVP instance is the doctrine's seed: RM-04 The Sanctum holds both the threshold
+      log and the terminal. Fast travel stays the Full-Vision OQ (TR-CSD-020, OQ-CSD-4) — not
+      built at MVP, enforced by the absence lint (AC-CSD-21)."
+    added: 2026-11-15
+    revised: ""
 
 # Example (remove when first real entry is added):
 #
@@ -1349,6 +1474,30 @@ constants:
       21 at 60 tps, 16 at 45; V-DR-04: never a universal tick floor). Fixed compliance
       value, not tunable (F-DR-03)."
     added: 2026-11-14
+    revised: ""
+
+  - name: offline_hold_ms
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+    value: 400
+    unit: ms (wall-clock UI-feel)
+    notes: "The offline screen's options unlock after the hold (TR-CSD-009); safe range
+      [250, 800]; the DEATH state itself is never time-limited (V-CSD-06)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: designation_print_digits
+    status: active
+    source: design/gdd/cache-stations-death.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+    value: 3
+    unit: digits
+    notes: "The designation's zero-padded print width (TR-CSD-011); safe range [3, 4];
+      the count never wraps (999 -> 1000)."
+    added: 2026-11-15
     revised: ""
 
 # Example:

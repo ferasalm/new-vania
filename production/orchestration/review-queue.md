@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-15 | +7 (5 contracts/doctrine + 2 knobs) + 1 rider on `duck_request_contract` | SYS-15 dependency-map bullet + MVP row → APPROVED + design order 12 | 2026-11-15 | queued |
+| 1 | SYS-15 | +7 (5 contracts/doctrine + 2 knobs) + 1 rider on `duck_request_contract` | SYS-15 dependency-map bullet + MVP row → APPROVED + design order 12 | 2026-11-15 | PR open, awaiting merge |
 | 2 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
 
 Full requests (read from the lane worktrees; `session-state` is gitignored but
