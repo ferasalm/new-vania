@@ -62,13 +62,18 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **released 2026-11-15** after the ART-BIBLE sync
-landed: PR #72 merged at `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads).
-Registry notes updated on `dual_reality_palette_tables` (the D-ORCH-02 pins)
-and `seam_admission_test` (D-ORCH-01: the purple declined); the index gained
-the SYS-11 qualification, the SYS-02 line-36 note (naming D-ORCH-01 +
-`5cc1377`), the OQ rider notes and the OQ-M1 rider list. The shared files are
-free.
+`shared_file_lock: SYNC-LANE` — **held from 2026-11-15** for the
+**SYS-07-REWORK** sync (branch `chore/sync-sys07`, branched from `ac6c623`; the
+request is the "Sync request" section of
+`../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`).
+Released only after the sync PR merges (§15).
+
+**Prior release 2026-11-15**: after the ART-BIBLE sync landed — PR #72 merged at
+`bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes updated on
+`dual_reality_palette_tables` (the D-ORCH-02 pins) and `seam_admission_test`
+(D-ORCH-01: the purple declined); the index gained the SYS-11 qualification, the
+SYS-02 line-36 note (naming D-ORCH-01 + `5cc1377`), the OQ rider notes and the
+OQ-M1 rider list.
 
 **Prior release 2026-11-15 (SYS-28)**: PR #69 merged at `a5a1f81` (head
 `eb85da4`; 4 CodeRabbit threads, all applied + resolved). Registry 77 → 80
@@ -303,3 +308,41 @@ hard blocker or the 350k hard trigger.
   `PAUSED → QUEUED` relaunch with a clean lane worktree.
 - **Prompts**: `NEXT.md` re-rendered at **v2.0.6** (`6106fa2cd614`); the
   manifest `next.version` bumped 2.0.1 → 2.0.6 through the review rounds.
+
+## 15. Sync receipt — SYS-07-REWORK (in flight)
+
+- **Lane**: SYS-07-REWORK (D-ORCH-03, the IP-17 low-stat baseline rework; baseline
+  PR #75, head `270b9ad`). **Request**: the "Sync request" section of
+  `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`
+  (+ the package's § 10, `design/reviews/sys07-baseline-rework-package.md`).
+- **Lock**: `shared_file_lock: SYNC-LANE` (held from `2d0a821`; released only after
+  this sync PR merges).
+- **Branch / PR**: `chore/sync-sys07` / **PR #76** (base `Main`, branched from
+  `ac6c623`; head `2d0a821` at open).
+- **Files**: `design/registry/entities.yaml` (11 value/note updates + 7 new entries:
+  `damage_event`, `player_max_hp`, `hp_per_point`, `training_data_l2..l5`,
+  `damage_ladder_mvp`; 81 → 88), `design/gdd/systems-index.md` (the SYS-07
+  bullet/row, design order 22, the SYS-16/17 unblock), `design/gdd/game-concept.md`
+  (the 5th Gate-2 probe — the one GDD touch, routed by the lane's CD gate so the
+  probe list stays single-sourced), `production/orchestration/{STATE,review-queue}.md`,
+  `production/orchestration/manifest.yaml` (the lane row → `SYNC`).
+- **Held**: `spitter_orb_damage` stays **8** until the coordinated SYS-13 rider lands
+  (`enemy-ai-telegraphs.md`); the hold is in the entry's history, not a silent skip.
+- **Validation**: YAML parse OK (entities + manifest) · duplicate-name scan OK
+  (88 entries: 30 entities / 0 items / 6 formulas / 52 constants) · every
+  `source`/`referenced_by` path exists · all 12 value/note checks + the 7 new entries
+  reproduce the request · design-order numbers 1–25 unique · `git diff --stat` shows
+  only the intended 6 files (+185/−47).
+- **Landing hash**: pending (the orchestrator merges after verifying the head).
+- **Head at verification**: `036ae9c` (3 commits: the sync, the two CodeRabbit
+  batches) — **5/5 CI green at that revision**. The receipt commit that carries this
+  line moves the head, so this is a snapshot, not a claim about the current head: the
+  orchestrator re-verifies the head and its checks immediately before merging and binds
+  the merge with `--match-head-commit`.
+- **CodeRabbit**: 3 threads across 2 passes, **all resolved** — 3 applied
+  (`d6eab95`: the `arc = ABILITY` dispatch stated in `damage_event` +
+  `damage_ladder_mvp`, and the merge order corrected to sync-first per
+  review-queue § 7 rule 4; `036ae9c`: SYS-17 keeps its own SYS-16 dependency — the
+  sync removes only the SYS-07-REWORK blocker). 0 rebutted, 0 deferred.
+- **Merge order**: the sync PR first, then PR #75 (review-queue § 7 rule 4).
+
