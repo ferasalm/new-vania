@@ -17,7 +17,7 @@
 ### B.1 CD gate (CD-GDD-ALIGN)
 
 - Model: GLM (`cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`), brief `seat-briefs/cd-gate.md`.
-- Verdict: **PENDING** (spawning).
+- Verdict: **APPROVED — 0 blockers** (2026-11-15). 6 recommendations: 5 applied as one-line non-gating fixes (AC-15's geared-state form; F-HUD-01 example 1's arithmetic; §13's directional-weights note; OQ-HUD-1's gate-manifest clause-flip recording; the `LOW_HP_PULSE_PERIOD_MS` floor 900 → 1000), 1 rebutted (§D.1 — the designation-row claim contradicts SYS-15's landed TR-CSD-015).
 
 ### B.2 Three-seat panel
 
@@ -41,11 +41,16 @@
 
 | # | Source seat | Blocker / recommendation | Disposition | Owner |
 |---|---|---|---|---|
-| — | — | — appends as the gates run — | — | — |
+| CD-1 | CD gate | AC-15's bundled fixture mixes the bare `HP 12/20` with the geared `ATK 3/5` as one state | APPLIED — the AC now names the bare state (`HP 12/20`, `ATK 2/4`) and SYS-16's own geared example (`HP 12/12` · `ATK 3/5`) separately | lane |
+| CD-2 | CD gate | F-HUD-01 example 1's center/rect arithmetic (202/176–228) mismatches the 24-px-feet premise | APPLIED — recomputed: feet y 246, center y 224, rect [198, 250]; the Attack visual (y ≥ 180) intersects | lane |
+| CD-3 | CD gate | §13's SYS-32 weight (hard) vs the camera's own Soft cell | APPLIED — the HUD-side hard + the camera-side Soft named as directional weights; the reconciliation rides the sync request | lane |
+| CD-4 | CD gate | OQ-HUD-1 should name the gate-manifest clause flips the promotion forces | APPLIED — OQ-HUD-1 now lists the SYS-01 chip-clause gate flips (VS → MVP) as part of the recorded promotion | lane |
+| CD-5 | CD gate | TR-HUD-010's revive-path Gameplay designation row "beyond SYS-15's three named print forms" | REBUTTED — §D.1 | lane |
+| CD-6 | CD gate | `LOW_HP_PULSE_PERIOD_MS` floor 900 ms ≈ 1.11 Hz contradicts the ≤ 1 Hz claim | APPLIED — the floor is 1000 ms | lane |
 
 ## D · Rebuttals (a blocker judged invalid gets its line here, never a silent skip)
 
-*(none yet)*
+1. **CD-5 (the revive path's Gameplay designation row)** — the seat read SYS-15's print forms as three (terminal readout, post-reconstruction print, stamp twin). SYS-15's **TR-CSD-015** states verbatim: "**The revive's exit prints the new designation row in Gameplay** — `DESIGNATION 005` — the machine's acknowledgment of the remade body, driven by SYS-15's own increment event **in the same print-slot family as MEMORY CACHED** (the reconstruct path sees the number at the terminal; the revive path sees it in the field — the scar is witnessed on both paths)." The row is SYS-15's own fourth named form; TR-HUD-010 consumes it, it does not extend SYS-15's contract. No change.
 
 ## E · Sync request
 
