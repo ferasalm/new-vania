@@ -100,6 +100,7 @@
 | # | Finding (the site) | Disposition |
 |---|---|---|
 | CR-11 | F-HUD-03's Output Range `[4, 32]` and the `hp_max` row "12–32" omit the point term (base 32 + HPP 1 × 4 points → 36 segments; base 32 + HPP 3 × 4 → hp_max 44) | **APPLIED** — the Output Range is `[4, 36]` (the segments max is the HPP-1 corner: ceil((32 + 4 × 1) ÷ 1)); the `hp_max` row is 12–44 (the curve's own range: min 12 + 1 × 0, max 32 + 3 × 4); AC-06's sweep names the 36-segment maximum (32/1/4). CodeRabbit's two suggested numbers are each right for their own quantity — the segments max and the hp_max max come from different legal corners, and both are now stated. |
+| CR-12 | the stated ranges omit the equipped Governor-207 (+2 frame → 38 segments at the max config; `hp_max` 46 at HPP 3) | **APPLIED** (`cd0e8ab`'s successor) — the Output Range is `[2, 38]` with both equipped corners named (the Governor max: ceil((32 + 4 × 1 + 2) ÷ 1) = 38 — the thread's arithmetic verified against SYS-16's F-PRG-06; the `hp_max` max 32 + 3 × 4 + 2 = 46) **and the symmetric floor the sweep had also missed** (the Coupler's −8 at the 12-base, zero points → hp_max 4 → 2 segments — the glass floor, named so the mirror bug cannot reopen); the `hp_max` row is 4–46; AC-06's sweep runs the loadout dimension (the frame: empty/Governor; the drive: empty/Coupler) and V-HUD-04's invariant states it |
 
 *(The CR threads resolve on GitHub after the fix commit — the dispositions above are the recorded resolutions.)*
 
