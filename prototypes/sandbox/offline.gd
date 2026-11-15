@@ -96,7 +96,9 @@ func _input(event: InputEvent) -> void:
 			_commit("quit")
 		KEY_ESCAPE:
 			_commit("quit")
-	get_viewport().set_input_as_handled()
+	var vp := get_viewport()
+	if vp != null:
+		vp.set_input_as_handled()
 
 
 func _move(dir: int) -> void:

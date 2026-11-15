@@ -1,0 +1,95 @@
+PROTOTYPE ASSET MANIFEST — built by tools/build_assets.py
+source library: inbox/downloads/organized/art (license-verified, user 2026-11-16)
+every pack here is itch.io/MIT-licensed; promotion to assets/ happens at the asset-spec pass.
+
+pandora/idle_00..11.png                              <- concepts/.../sprites/pandora-001-idle.gif   12 of 48 frames, 128x200
+pandora/dash_00..07.png                              <- concepts/.../sprites/pandora-001-dash.gif   8 of 48 frames, 128x200
+pandora/jump_00..04.png                              <- pandora-001-jump.gif (hue/blob key, 3 airborne poses) + idle_00 bookends   5 frames, 128x200, src frames [8, 13, 28]
+arnetria/idle.png                                    <- arnetria-concept-1.jpg crop (86, 34, 467, 512)   381x478
+arnetria/cast.png                                    <- arnetria-concept-1.jpg crop (540, 34, 984, 512)   444x478
+arnetria/attack.png                                  <- arnetria-concept-1.jpg crop (279, 547, 896, 972)   617x425
+arnetria/ring.png                                    <- arnetria-denial.jpg crop (188,8,902,586)   692x578
+arnetria/shard.png                                   <- arnetria-concept-1.jpg ATTACK flung shard   89x33
+arnetria/mirror.png                                  <- authored: diamond + flipped desaturated pandora/idle_00   72x96
+fx/slash_00..02.png                                  <- authored: 3-frame cyan crescent (#4FC8DC)
+env/boss_door.png                                    <- composite: Fort door.png + church column.png + authored arch   184x268
+miniboss/warden_idle_%02d.png                        <- WereWolf/Sprites/Idle   5 files (WereWolf idle (5))
+miniboss/warden_run_%02d.png                         <- WereWolf/Sprites/run   6 files (WereWolf run (6))
+miniboss/choir_idle_%02d.png                         <- gothicvania church files/Assets/SPRITES/angel/idle/sprites   8 files (church angel idle (8))
+miniboss/choir_attack_%02d.png                       <- gothicvania church files/Assets/SPRITES/angel/attack/sprites   3 files (church angel attack (3))
+miniboss/husk_%02d.png                               <- Super Grotto Escape Files/Assets/Characters/Enemies/Crab/Sprites/Idle   4 files (crab idle (4))
+miniboss/husk_walk_%02d.png                          <- Super Grotto Escape Files/Assets/Characters/Enemies/Crab/Sprites/Walk   6 files (crab walk (6))
+miniboss/spitter_%02d.png                            <- Super Grotto Escape Files/Assets/Characters/Enemies/Bat/Sprites   5 files (bat (5))
+env/church_%s.png                                    <- gothicvania church files/Assets/ENVIRONMENT   4 files (church ENVIRONMENT)
+env/fort_%s.png                                      <- Fort of Illusion Files/Assets/Layers/Props   5 files (Fort of Illusion props)
+env/rocky_%s.png                                     <- Rocky Pass Files/PNG   4 files (Rocky Pass parallax)
+env/mvkit_%s.png                                     <- Metroidvania Kit/Environment/Background parallax/Export   1 files (Metroidvania Kit parallax)
+env/mvkit_%s.png                                     <- Metroidvania Kit/Environment/Tiles/Export   1 files (Metroidvania Kit tiles)
+env/grotto_%s.png                                    <- Super Grotto Escape Files/Assets/Props/Sprites   12 files (Super Grotto props)
+fx/burst_%02d.png                                    <- explosion pack 1/Explosions pack/explosion-1-a/Sprites   8 files (explosion pack 1-a (8))
+fx/shatter_%02d.png                                  <- explosion pack 1/Explosions pack/explosion-1-c/Sprites   10 files (explosion pack 1-c (10))
+fx/spark_%02d.png                                    <- Magic Pack 9 files/sprites/spark   8 files (Magic Pack 9 spark (7))
+
+SIZES
+{
+  "pandora": {
+    "idle": {
+      "frames": 12,
+      "w": 128,
+      "h": 200
+    },
+    "dash": {
+      "frames": 8,
+      "w": 128,
+      "h": 200
+    },
+    "jump": {
+      "frames": 5,
+      "w": 128,
+      "h": 200,
+      "src": [
+        8,
+        13,
+        28
+      ],
+      "scores": [
+        2.19,
+        1.88,
+        1.72
+      ]
+    }
+  },
+  "Arnetria": {
+    "idle": {
+      "w": 381,
+      "h": 478
+    },
+    "cast": {
+      "w": 444,
+      "h": 478
+    },
+    "attack": {
+      "w": 617,
+      "h": 425
+    },
+    "ring": {
+      "w": 692,
+      "h": 578
+    }
+  },
+  "shard": {
+    "w": 89,
+    "h": 33
+  },
+  "mirror": {
+    "w": 72,
+    "h": 96
+  },
+  "slash": {
+    "frames": 3
+  },
+  "door": {
+    "w": 184,
+    "h": 268
+  }
+}

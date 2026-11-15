@@ -1,5 +1,10 @@
 # prototype artifacts — never committed
-*.png
+# (v1 ignored every *.png, which is why the first pass was flat rects. The built
+#  asset tree is the whole point of v2, so assets/ is allowed through.)
+/*.png
 *.log
 .godot/
 .import/
+*.import
+!assets/
+!assets/**/*.png

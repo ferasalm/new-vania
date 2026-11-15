@@ -1,12 +1,12 @@
 ; PROTOTYPE - NOT FOR PRODUCTION
 ; Question: does the game feel right when its LANDED numbers are played, not read?
-; Date: 2026-11-16
+; Date: 2026-11-16 (v2)
 
 config_version=5
 
 [application]
 
-config/name="Sandbox Suite — Three Rooms to Feel"
+config/name="The Sandbox Suite — v2"
 run/main_scene="res://menu.tscn"
 config/features=PackedStringArray("4.7")
 

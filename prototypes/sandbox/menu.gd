@@ -1,16 +1,20 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# Question: does the game feel right when its landed numbers are played, not read?
-# Date: 2026-11-16
-# The menu: three rooms + quit. Keyboard only, cold start.
+# Question: does the game feel right when its LANDED numbers are played, not read?
+# Date: 2026-11-16 (v2)
+# The menu: four rooms + quit. Keyboard only, cold start, no build step.
 extends Node2D
 
+const BG := preload("res://bg.gd")
+
 const ITEMS := [
-	{"title": "THE DUEL RANGE", "file": "res://duel.tscn",
-		"sub": "the combat feel — light 2 / heavy 4 / counter 3 or 6 / knockdown 1200 ms"},
+	{"title": "THE ONE BUTTON", "file": "res://training.tscn",
+		"sub": "one key — strike, clash, counter — with the timing windows on screen"},
+	{"title": "THE APPROACH", "file": "res://approach.tscn",
+		"sub": "real sprites · pits are routes · no locks · two named mini-bosses · her door"},
 	{"title": "THE CACHE LOOP", "file": "res://cache.tscn",
 		"sub": "death is a story — the offline screen, the module, the designation"},
-	{"title": "THE DENIAL LIE", "file": "res://denial.tscn",
-		"sub": "the boss read — hp 60, the floor 20, three unanswered sweeps"},
+	{"title": "ARNETRIA'S ARENA", "file": "res://arena.tscn",
+		"sub": "the Mirror Queen — her bar does not move, and the store is printed"},
 	{"title": "QUIT", "file": "", "sub": ""},
 ]
 
@@ -20,6 +24,11 @@ var t := 0.0
 
 func _ready() -> void:
 	K.frozen = false
+	var bg = BG.new()
+	bg.mode = "arena"
+	bg.floor_y = 470.0
+	bg.world_w = 960.0
+	add_child(bg)
 
 
 func _process(delta: float) -> void:
@@ -41,6 +50,8 @@ func _input(event: InputEvent) -> void:
 			_go(1)
 		KEY_3:
 			_go(2)
+		KEY_4:
+			_go(3)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			_go(sel)
 		KEY_ESCAPE:
@@ -57,17 +68,18 @@ func _go(i: int) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, 960, 540), K.C_BG)
-	# the three rooms as three flat rects on a line — the whole suite at a glance
-	for i in 3:
-		var x := 210.0 + i * 180.0
-		draw_rect(Rect2(x, 96, 120, 4), K.C_BONE if i == sel else K.C_BONE_DIM)
+	# the veil over her broken clock
+	draw_rect(Rect2(0, 0, 960, 540), Color(K.C_BG.r, K.C_BG.g, K.C_BG.b, 0.55))
 
-	_center("THREE ROOMS TO FEEL", 150, 30, K.C_BONE)
-	_center("no gates, no docs — play the landed numbers", 176, 11, K.C_BONE_DIM)
+	for i in ITEMS.size() - 1:
+		var x := 186.0 + i * 152.0
+		draw_rect(Rect2(x, 96, 110, 3), K.C_BONE if i == sel else K.C_BONE_DIM)
+
+	_center("THE SANDBOX SUITE", 148, 30, K.C_BONE)
+	_center("v2 — the playtest pass. no gates, no docs: play the landed numbers.", 174, 11, K.C_BONE_DIM)
 
 	for i in ITEMS.size():
-		var y := 250.0 + i * 52.0
+		var y := 240.0 + i * 50.0
 		var on := i == sel
 		var c := K.C_BONE if on else Color(K.C_BONE_DIM.r, K.C_BONE_DIM.g, K.C_BONE_DIM.b, 0.8)
 		if on:
@@ -83,8 +95,8 @@ func _draw() -> void:
 	_text("DESIGNATION %s    MODULE %s    TRAINING DATA %03d" % [
 		K.designation_text(K.designations),
 		"CARRIED" if K.restore_modules > 0 else "—",
-		K.training_data], 40, 500, 11, K.C_BONE_DIM)
-	_center("W/S  SELECT      ENTER  PLAY      ESC  QUIT", 522, 11, K.C_BONE_DIM)
+		K.training_data], 40, 508, 11, K.C_BONE_DIM)
+	_center("W/S  SELECT      ENTER  PLAY      ESC  QUIT", 528, 11, K.C_BONE_DIM)
 
 
 func _text(tt: String, x: float, y: float, sz: int, c: Color) -> void:

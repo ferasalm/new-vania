@@ -1,10 +1,10 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # Question: does the game feel right when its LANDED numbers are played, not read?
-# Date: 2026-11-16
+# Date: 2026-11-16 (v2 — the playtest feedback pass)
 #
 # THE PROVENANCE LAW: every constant below is copied from the landed contracts.
 # Source is named on the line. Nothing here is invented except lines marked PROTO
-# (animation/feel pacing the contracts are silent on).
+# (pacing/geometry the contracts are silent on).
 extends Node
 
 # ── the player body ──────────────────────────────────────────────────────────
@@ -14,8 +14,8 @@ const HP_SEGMENTS := 20          # SYS-24's segmentation; 1 segment = 1 hp of th
 const LOW_HP_RATIO := 0.25       # health-damage.md: low cue at <= 25% — slow pulse, NEVER a flash
 
 # ── the player's strikes ─────────────────────────────────────────────────────
-const ATK1_DAMAGE := 2           # entities.yaml atk1_damage (light strike, raw)
-const ATK2_DAMAGE := 4           # entities.yaml atk2_damage (heavy strike, raw)
+const ATK1_DAMAGE := 2           # entities.yaml atk1_damage (the tap's strike, raw)
+const ATK2_DAMAGE := 4           # entities.yaml atk2_damage (the counter's raw — see v2 ladder)
 const COUNTER_CLASH_MULT := 1.5  # combat.md F-CMB-06 — the counter's 1.5x
 const KNOCKDOWN_POWER := 2       # entities.yaml knockdown_power (power >= 2 knocks down)
 const KNOCKDOWN_MS := 500        # movement.md / health-damage.md
@@ -24,6 +24,19 @@ const KNOCKDOWN_TOTAL_MS := 1200 # KNOCKDOWN_MS + GETUP_MS — the 1200 ms floor
 const ATTACK_WINDOW_MS := 200    # entities.yaml attack_window_ms (combat's intent override)
 const INTENT_WINDOW_MS := 140    # entities.yaml intent_window_ms
 const BACKDASH_IFRAME_MS := 140  # entities.yaml backdash_iframe_ms
+
+# ── THE ONE BUTTON (v2) ──────────────────────────────────────────────────────
+# One button, three outcomes. The press is classified against the enemy's own
+# clock, so the ladder is a read, not a stance:
+#   press on the telegraph FLASH tail  -> COUNTER  (the big punish)
+#   press into an ACTIVE swing         -> CLASH    (safe, both stop)
+#   press anywhere else                -> STRIKE   (raw 2, you eat the swing)
+const STRIKE_RAW := ATK1_DAMAGE                      # the tap
+const COUNTER_RAW := ATK2_DAMAGE                     # the counter's raw (x1.5 = 6)
+const COUNTER_WINDOW_MS := 150   # PROTO: the telegraph tail that reads as a counter
+const CLASH_WINDOW_MS := 140     # PROTO (= intent_window_ms): the active-swing press
+const COUNTER_REACH := 210.0     # PROTO: you must be in the fight to read it
+const CLASH_REACH := 96.0        # PROTO: the swing's own reach + a body
 
 # ── the enemy's strikes (power -> hp) ────────────────────────────────────────
 const STRIKE_DMG := {1: 1, 2: 2, 3: 4}  # strike_dmg_p1 / p2 / p3
@@ -55,38 +68,59 @@ const FLASH_MIN_INTERVAL_MS := 350   # entities.yaml flash_min_interval_ms (<= 3
 # ── the boss (SYS-14 grief-boss-framework.md) ────────────────────────────────
 const BOSS_HP_POOL := 60         # TR-GBF-006: hp_max 60 (BOSS_HP, 40-80)
 const BOSS_HP_FLOOR := 20        # TR-GBF-012: the lie's floor — 20/60 = 1/3
-const CRACK_WHIFFS_REQUIRED := 3 # TR-GBF-014 / F-GBF-02: pinned at 3
-const CRACK_BEAT_MS := 2000      # TR-GBF-013: CRACK_BEAT_MS [1500, 3000]
 const BOSS_CADENCE_MS := 900     # TR-GBF-010: BOSS_DECISION_CADENCE_MS (LIE_WHOLE)
 const BOSS_CADENCE_CRACKED_MS := 700  # TR-GBF-010: the tightened cadence (LIE_CRACKED)
 const BOSS_COUNTER_STAGGER_MS := 800  # the counter order's 800 ms stagger
-const LOSE_STAGGER_MS := 500          # combat F-CMB-05 lose branch
 const XP_BOSS := 40              # TR-GBF-006: the award on the DefeatEvent
 const RECOGNITION_BEAT_MS := 2500     # TR-GBF-021 (she looks)
 const DISSOLVE_MS := 1500             # TR-GBF-021
 
-# The four strikes + the projectile: telegraph/active/recovery ms, reach px,
-# power, band [floor, ceiling], unclashable flag. TR-GBF-007/008.
-const BOSS_STRIKES := {
+# Arnetria's three moves (v2). The clock is hers; the names are hers.
+# telegraph / active / recovery ms, reach px, power, clashable, counterable.
+const ARN_MOVES := {
 	"sweep": {"name": "ring sweep", "power": 2, "telegraph": 350, "active": 80,
-		"recovery": 133, "reach": 56.0, "band": [6, 46], "clashable": false},
-	"lifted": {"name": "lifted ring", "power": 1, "telegraph": 500, "active": 350,
-		"recovery": 250, "reach": 40.0, "band": [30, 50], "clashable": true},
-	"thrust": {"name": "clasped thrust", "power": 2, "telegraph": 350, "active": 116,
-		"recovery": 133, "reach": 44.0, "band": [32, 48], "clashable": true},
-	"jab": {"name": "ring jab", "power": 2, "telegraph": 250, "active": 133,
-		"recovery": 250, "reach": 44.0, "band": [4, 44], "clashable": true},
+		"recovery": 133, "reach": 120.0, "clashable": false, "counterable": false},
+	"fling": {"name": "shard fling", "power": 2, "telegraph": 350, "active": 116,
+		"recovery": 133, "reach": 140.0, "clashable": true, "counterable": true},
+	"cast": {"name": "mirror cast", "power": 1, "telegraph": 500, "active": 120,
+		"recovery": 250, "reach": 90.0, "clashable": true, "counterable": true},
 }
-const RING_RETURN := {"damage": 2, "telegraph": 350, "speed": 200.0,
-	"lifetime": 1450, "deflect_speed": 360.0}  # TR-GBF-008
+const SHARD := {"damage": 2, "telegraph": 300, "speed": 210.0, "lifetime": 1600,
+	"deflect_speed": 380.0}   # PROTO: the shard's flight (the ring return's shape, re-skinned)
 
-# ── the palette (art bible's flat-rect language) ─────────────────────────────
+# ── THE STORED DAMAGE (v2) ───────────────────────────────────────────────────
+# Her lie, re-plumbed: hits land and print, the bar does not move. The damage is
+# STORED, and the only conduit is the mirror she casts. Break it in time and the
+# whole store lands at once; miss and it is gone. The phase ends when the bar
+# finally moves past the stall (hp <= BOSS_HP_FLOOR).
+const MIRROR_PERIOD_MS := 7000   # PROTO: how often she casts
+const MIRROR_TIMER_MS := 6000    # PROTO: the window to break it
+const MIRROR_HP := 4             # PROTO: two taps
+const MIRROR_HOVER := 60.0       # PROTO: it must hang inside a GROUND strike's reach
+                                 # (the strike's top is 94 px up; 60 leaves a 34 px bite)
+const STORED_CAP := 60           # PROTO: the store cannot exceed her pool
+const BAR_LURCH_MS := 320        # PROTO: the bar's drop after a break (it LURCHES)
+
+# ── the fall rule (v2) ───────────────────────────────────────────────────────
+# No fall damage, no death from falling. A fall is a route: fade, return to the
+# last safe ground. env_void_damage is NOT applied to pits any more.
+const FALL_FADE_MS := 140        # PROTO: the fade out/in
+const KILL_Y := 640.0            # PROTO: below the room = fell out
+
+# ── the rooms ────────────────────────────────────────────────────────────────
+const LEASH_PX := 300.0          # PROTO: how far you walk to leave a fight (no locks)
+const DOOR_PULSE_HZ := 0.85      # PROTO: the boss door's breath
+const PLAYER_SCALE := 0.8        # PROTO: the concept art's 131 px body at 0.8 = 105
+const ARN_SCALE := 0.62          # PROTO: 478 px of her at 0.62 = 296 = 2.8x the player
+
+# ── the palette ──────────────────────────────────────────────────────────────
 const C_BG := Color("#141210")        # dark ground
 const C_BG2 := Color("#1D1A16")       # the second value step
-const C_BONE := Color("#D9BC8F")      # pale bone — the bar, the bodies, the print
+const C_BONE := Color("#D9BC8F")      # pale bone — the bar, the print
 const C_BONE_DIM := Color("#7A6A52")
-const C_CYAN := Color("#4FC8DC")      # truth accent (A)
+const C_CYAN := Color("#4FC8DC")      # truth accent (A) — Pandora's circuits
 const C_AMBER := Color("#E8A94A")     # truth accent (B) — enemy damage numbers
+const C_ICE := Color("#BFE8F2")       # Arnetria's shards + mirrors
 const C_VOID := Color("#0A0908")      # the pit, the kill-zone
 
 # ── session state (the autoload survives scene changes) ──────────────────────
@@ -116,3 +150,7 @@ func knocks_down(power: int) -> bool:
 
 func designation_text(n: int) -> String:
 	return str(n).pad_zeros(DESIGNATION_PRINT_DIGITS)
+
+
+func stored_cap() -> int:
+	return mini(STORED_CAP, BOSS_HP_POOL)
