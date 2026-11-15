@@ -64,15 +64,15 @@ lanes:
     title: "Art Bible — visual identity, palette pins, SYS-11 OQ-1"
     branch: docs/art-bible
     worktree: ../new-vania-art-bible
-    worktree_state: planned
+    worktree_state: created
     prompt_path: production/orchestration/prompts/lanes/ART-BIBLE.md
     prompt_version: "1.0.0"
     prompt_hash: "fe36c9a4acd2"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: AUTHORING
+    status: SYNC
     dependencies: []
     review_state: "art-director + creative-director + user approval; asset-spec handoff"
-    next_action: "RESUMED — D-ORCH-01 decided (B: amend SYS-02 line 36, the commit names D-ORCH-01) and D-ORCH-02 approved as proposed. Apply the decisions to the OQ-1/OQ-4 items, finish the bible, run the gate trail (CD gate -> three-seat -> spot-check -> micro-check)."
+    next_action: "SYNC (order 1): the sync request is queued (review-queue.md §5); the sync lane applies it; then the orchestrator squash-merges PR #67 at the verified head. The ART-BIBLE manifest row's worktree_state is corrected in the same change."
 
   - id: SYS-03
     title: "Save & Serialization — the persistence bottleneck"
@@ -111,12 +111,12 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "85701ea84621"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: CODERABBIT
+    status: MERGED
     dependencies: [SYS-03, SYS-05, SYS-07]
     dependencies_waived: [SYS-03, SYS-05]
     dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring (the review-doctrine pending-obligation ledger)."
     review_state: "gates complete: CD APPROVED (after CONCERNS repair) · three-seat NEEDS REVISION (1+3+2) all repaired · spot-check PASS (11/11) · micro-check PASS; seats ran in-session on GLM (contract §3.6 fallback, recorded)"
-    next_action: "PR #59 open (CI green); CodeRabbit pending — resume the runner session (ses_e2318d2a8ffe1Ie7DIw934S1eg) to triage; the sync request is queued in review-queue.md §5; the orchestrator squash-merges after CodeRabbit triage is clean and the sync has landed."
+    next_action: "MERGED — done (PR #59 at 24efd09; sync PR #63 at 1e9e524). The OQ-CSD-9 rider lands at SYS-03's next doc touch."
 
   - id: SYS-28
     title: "Narrative Presentation — logs, briefings, telegraph text"
@@ -127,12 +127,12 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "e2e9a0f20532"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: CODERABBIT
+    status: MERGED
     dependencies: [SYS-05, SYS-10, SYS-09]
     dependencies_waived: [SYS-05]
     dependency_note: "SYS-05 is a pre-shaped contract; ratify at authoring."
     review_state: "gates complete: CD APPROVED · creative APPROVED · technical NEEDS REVISION (3) repaired · QA NEEDS REVISION (1) repaired · spot-check PASS (6/6) · micro-check PASS; §3.6 in-session fallback recorded (seats on GLM; a DS re-pass is a batched decision)"
-    next_action: "PR #58 open; CodeRabbit confirm pass re-running on the fix head (6 threads: 5 fixed + 1 rebutted, commit 3945b64); sync request queued (review-queue.md §5 order 2); the orchestrator squash-merges after the sync lands and the confirm check is green."
+    next_action: "MERGED — done (PR #58 at 2ff3096; sync PR #69 at a5a1f81). The SYS-03 non-dependency rider lands at SYS-03's next doc touch."
 
   - id: SYS-14
     title: "Grief-Boss Framework — Denial state"
