@@ -1,9 +1,7 @@
 # Art Bible — Five Errands for the Devil
 
-> **Status**: **AUTHORED — the gate trail runs on this draft.** The user decisions
-> D-ORCH-01/02 are recorded and applied (2026-11-15); the CD gate, the three-seat
-> panel, the qa-lead spot-check, and the final micro-check gate this document
-> before its PR merges. Section status table below carries the per-section state.
+> **Status**: **AUTHORED — the gate trail closed (2026-11-15).** CD-GDD-ALIGN CONCERNS → repaired (2 blockers + 7 recs) · three-seat panel NEEDS REVISION (3 creative + 6 technical + 8 QA, all valid) → repaired (14 text repairs) · qa-lead spot-check **PASS** (17/17 rows; 5 advisories applied) · final micro-check run 1 FAIL (2) → repaired → run 2 **PASS** (zero blockers). The user decisions D-ORCH-01/02 are recorded and applied (2026-11-15); the PR carries the trail. Section status table below carries the per-section state.
+> **Review record**: `design/gdd/reviews/art-bible-review-log.md` (§A authoring + the independent color-math verification; §B the gate trail).
 > **Last Updated**: 2026-11-15
 > **Author**: art-director (lane ART-BIBLE)
 > **Model**: `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash` (GLM — the lane's

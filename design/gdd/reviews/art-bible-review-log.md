@@ -104,4 +104,6 @@ Diff-scoped on `ef470d2..db48b9e`: **17/17 rows APPLIED-CORRECTLY** (plus the re
 
 Advisories (3) applied: "e.g." in the dimmer-members list; the §4.6 table footnote aligned ("a derived shade reads at its own L within its source's hue neighborhood"); §8B #21's exception reworded to its operative content ("the flash pair's truth-independence is the recorded exception").
 
-**Run 2**: *(appended after the re-run)*
+**Run 2 — **PASS** (2026-11-15, DS, nested subagent `ses_e22b5ae20ffeXsK3gjCHTBAhFb`, delta `b10cbd8..93b4892`): zero blockers.** Both run-1 blockers verified fixed (the falsified clause occurs zero times; the qualified form exactly once with the full e.g. list; the bookkeeping note re-derives: 17 findings = 3 creative + 6 technical + 8 QA, T5 on rows 1 and 7, 14 text repairs); all three run-1 advisories applied; the arithmetic re-derives; §8B #21's reword agrees with §2B, the semantic row, and SYS-13 L399; no collateral damage. **3 non-blocking advisories recorded for the next touch (the gate is closed; the document does not reopen):** the log's 15/14 pair closes with the row-1 overlap named as the third merge; §4.6's footnote harmonizes "hue neighborhood" vs "ramp neighborhood" on the next touch; `PROV_A_TRIM` 0.580 could be named in the e.g. list.
+
+**The gate trail is closed: CD CONCERNS → repaired · three-seat NEEDS REVISION (3+6+8, all valid) → repaired · spot-check PASS (17/17) · micro-check run 1 FAIL (2) → repaired → run 2 PASS (zero blockers).**
