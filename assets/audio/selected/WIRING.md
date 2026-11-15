@@ -23,9 +23,11 @@ Master (0 dB) ─[limiter: probe-gated, optional at MVP]─▶ device
   `default_bus_layout.tres` once and every player sets `bus` from the map. The
   Master limiter is probe-gated in the ADR — the prototype may ship Master at
   0 dB with no effect and add the limiter when the core lands.
-- **Gains are per-voice gain writes at play start** — the value the per-tick
-  wall-clock writer would hold (in SYS-04 terms: `volume_db = bus_nominal +
-  gain`). Each number below is precomputed per file: normalize the file's
+- **Gains are per-voice gain writes at play start** — write the listed value
+  directly to the player's `volume_db`; the bus nominal is applied once, by the
+  bus itself (in SYS-04 terms the per-tick wall-clock writer holds
+  `volume_db = gain`, **never** `bus_nominal + gain` — adding the nominal again
+  double-counts it). Each number below is precomputed per file: normalize the file's
   measured peak toward −3 dBFS (SYS-04's one-shot pin) plus an event trim for the
   mix hierarchy. One number per event; tune by ear at playtest, one line each.
 - **Retrigger floors** are clock-ms in the prototype; in SYS-04 they are tick
@@ -154,13 +156,20 @@ boss tells, `PROTO_UI`) are prototype-only until a sound-bible pass adopts them.
 2. One `SfxBank` autoload: preload the map as a dictionary —
    `event → {path, bus, gain_db, floor_ms, conc, stop_ms, pitch_range}` — and
    create one `AudioStreamPlayer` per distinct voice (18 SFX + 3 UI), `bus` set
-   from the map, `max_polyphony = 1`.
+   from the map, `max_polyphony = conc` — the row's own cap. Five voices allow
+   two concurrent instances; Godot cuts the oldest sound on a re-play at
+   polyphony 1, so a voice's player must carry the concurrency its row allows.
 3. `play(event)`: check the floor (`now − last[event] ≥ floor_ms`) and the cap,
    then `volume_db = gain_db`, `pitch_scale = 1 + randf_range(...)`, `play()`,
-   and for `stop_ms` rows arm a `get_tree().create_timer(stop_ms)` that calls
-   `stop()`.
+   and for `stop_ms` rows arm a `get_tree().create_timer(stop_ms / 1000.0)` (the
+   SceneTree timer takes **seconds**; the map's column is milliseconds) that
+   calls `stop()`.
 4. Wire the hooks from the map's Hook column — each is one line at the named
-   branch. The three UI hooks fire before `change_scene_to_file`/`quit()` so the
-   blip is audible.
+   branch. The UI move/confirm hooks fire before `change_scene_to_file` (the blip
+   is audible across the frame the scene change takes). The quit hook does **not**
+   call `quit()` in the same iteration as `play()` — Godot exits at the end of the
+   current iteration, which would cut the sound: arm
+   `get_tree().create_timer(0.25)` and call `quit()` from its timeout so the
+   blip is audible before the process exits.
 5. Arm the duck in the scenes' `_die()` and release it in the three choice
    handlers — one call site, `DuckStage`-shaped, inert until music exists.
