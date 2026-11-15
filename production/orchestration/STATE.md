@@ -63,11 +63,18 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **released 2026-11-15**: the SYS-07-REWORK sync
-landed (PR #76 merged at `6dd4651`; 4 CodeRabbit threads, all applied +
-resolved). The next writer is the **mini sync** (the `spitter_orb_damage`
-flip 8 → 2 + the index's Suture correction); it re-acquires the lock here
-before any edit.
+`shared_file_lock: SYNC-LANE` — **re-acquired 2026-11-15** for the
+**D-ORCH-03 riders mini sync** (branch `chore/sync-sys07-riders`, branched from
+`50ccd95`): three value flips — `spitter_orb_damage` 8 → 2,
+`enemy_strike_contract`'s payload `power_band` 1 → 2, and the index's SYS-07
+Suture 25 → 5. Held until this sync PR merges; the lock returns to `none` only
+after the merge succeeds, and the orchestrator's next receipt confirms it.
+**Merge order**: the two registry values mirror `enemy-ai-telegraphs.md` as
+authored in **PR #78** (the riders, open at this branch point) — this sync PR
+merges *after* #78, or Main's registry leads its source.
+
+**Prior release 2026-11-15 (SYS-07-REWORK sync)**: landed — PR #76 merged at
+`6dd4651`; 4 CodeRabbit threads, all applied + resolved.
 
 **Prior release 2026-11-15**: after the ART-BIBLE sync landed — PR #72 merged at
 `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes updated on
