@@ -139,7 +139,11 @@ Advisories: TR-GBF-014's prose retyped on the published event · TR-GBF-023's He
 
 **Micro-check (DS, fresh seat, on `3809b71..f1f4cba`): PASS — zero blockers.** The delta is prose-only (six lines; no count, ID, fixture or threshold touched); `FloorReleaseRequest`'s definition matches the new phrasings; the floor-request-only name agrees across TR-GBF-023/024 and AC-GBF-21. Two residual notes recorded (pre-existing, non-blocking): AC-GBF-21's "no HP writer beyond the floor-release request" is a vacuous-but-true carve-out under the request framing; TR-GBF-023's "six forbidden symbols" enumerates five plus the no-writer item. **The document is closed — not reopened.**
 
-## 4. Gate record (the summary)
+## 5. The CodeRabbit pass (one pass, 9 threads — all resolved)
+
+**Committed as the batch fix; the dispositions (7 applied, 1 partially applied + rebutted with the house precedent, 2 routed/rebutted):** CR-1 the Euclidean coverage bound + the lifetime re-derivation · CR-2 the threshold pinned at 3 (the stage ladder binds it) · CR-3 the two-term hold predicate (the resolved term) · CR-4 F-GBF-01's Variables line added; the structural rename REBUTTED with the house precedent (every APPROVED GDD uses this format) · CR-5 the early-crack case (the crack at 60 HP → the flat 10 chains — the skilled route's reward) · CR-6 the strike-side damage prohibition scoped · CR-7 B1's zero-tolerance precedence · CR-8 the lane prompt REBUTTED (the manifest-pinned render; the master-source correction routes to the orchestrator's next render pass) · CR-9 the SYS-15 rider ROUTED as a batched revision request (the sync request's A12).
+
+## 6. Gate record (the summary)
 
 | Gate | Verdict | Trail |
 |---|---|---|

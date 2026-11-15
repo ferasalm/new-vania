@@ -159,6 +159,8 @@
 
 **A11. UPDATE `room_bounds_contract`** — append `design/gdd/grief-boss-framework.md` to `referenced_by` (RM-06's bounds/anchor/framing consumed; the drop seal authored inside the shipped rect).
 
+**A12. BATCHED RIDER (the frozen-contract revision request — never applied by this lane):** SYS-15's GDD (`design/gdd/cache-stations-death.md`) — its "Explicit non-dependencies" line reads "SYS-12/14 (VS)" while SYS-14's GDD consumes the offline/revive contracts at MVP (the mid-fight handshake). The rider: the non-dependency list becomes "SYS-12 (VS); SYS-14 (the mid-fight handshake — the revive continues the fight mid-phase, the reconstruct resets it)" + the Interactions table gains a SYS-14 row. **This is a frozen-doc edit → the batched user-decision path** (recorded here; the CodeRabbit thread's disposition names it). Routed with the OQ-GBF-4 estate.
+
 ### B. `design/gdd/systems-index.md` — the row + the design order + the bullet + the 6 neighbor notes
 
 **B1. The enumeration row's Dependencies cell (SYS-14):**
@@ -188,7 +190,19 @@
 
 ## CodeRabbit
 
-Pending — one pass after the PR opens; every thread resolved (required-conversation-resolution). Dispositions will be recorded here and in the review log.
+**One pass, 9 threads — all resolved (7 applied, 2 routed/rebutted with recorded dispositions). The fix commit: the batch below.**
+
+| # | Thread | Disposition |
+|---|---|---|
+| CR-1 (Minor, 93) | The coverage bound counted only the horizontal half-width — vertical separation and the re-center's range could leave a dead zone. | **APPLIED** — the bound restated in Euclidean form from the anchor (`ceil(√(224² + anchor_rise²))` — the printed datum 284 px; the arena-story fixture computes the exact value); the defaults re-derived (lifetime 1450 [900, 1500] → 200 × 1.45 = 290 ≥ 284); the displacement term recorded (the re-center restores toward the anchor; nothing at MVP displaces her; a VS displacement source re-derives the bound — the re-open note); the fixtures updated (TR-GBF-008, F-GBF-05, V-GBF-09, AC-GBF-07/17). |
+| CR-2 (Minor, 109) | `CRACK_WHIFFS_REQUIRED` 2–4 broke the three-stage ladder (at 2 the break never appears; at 4 it appears early). | **APPLIED** — the knob pinned at 3 (the range 3–3): the stage ladder's three authored hairline states bind the count; a threshold change is an art-ladder re-author, not a tuning knob. |
+| CR-3 (Major, 115) | The hold's room-entry keying (`active = room == RM-06`) contradicted the `script_end` fall. | **APPLIED** — the predicate is one condition with two terms: `active = (room == RM-06) ∧ (the fight not resolved)` — the resolved term falls the hold at `script_end` while the room term governs the entry; the ≤ 21 ticks of fresh-FOLLOW in the basin are named (the glide killed by the midpoint swap); the resolved-term fixture added (AC-GBF-16). |
+| CR-4 (Minor, 226) | The formulas' structure vs the framework template's guideline (the variable tables, "Detailed Rules", the GWT playtest form). | **PARTIALLY APPLIED, PARTIALLY REBUTTED** — F-GBF-01's missing Variables line added (the valid half). The structural rename/rewrite REBUTTED with the house precedent: every APPROVED GDD in the corpus (SYS-13 `enemy-ai-telegraphs.md`, SYS-07 `health-damage.md`, SYS-32 `camera-framing.md`, SYS-15) uses this exact prose-formula format ("Core Rules", "If [condition] → [exact outcome]", the elicitor + coding-table playtest form) — the format IS the template's evolved house form, verified by the three-seat panel and the spot-checks; reformatting would diverge from every landed GDD. |
+| CR-5 (Minor, 255) | The eleven-chain result lacked its precondition (the crack can fire at 60 HP — the floor releases at 60 and the flat 10 chains govern). | **APPLIED** — F-GBF-04 states the floored envelope's precondition (the crack at or below the floor) and the **early-crack case** (three whiffs at 60 HP → the floor releases at 60 → the flat 10 chains — the skilled route's shorter fight); AC-GBF-26 asserts both shapes. |
+| CR-6 (Major, 455) | AC-GBF-01's "no damage field on any attack" would fail the projectile's required `damage: 2`. | **APPLIED** — the prohibition scoped to the strike side ("no damage field on any strike"; the projectile's damage is SYS-13's own schema data, TR-GBF-002's recorded scope); the knockback/i-frame/soul_class prohibitions unchanged. |
+| CR-7 (Minor, 488) | B1's zero-tolerance tokens could pass under the general majority rule (one "buggy" transcript + three positives). | **APPLIED** — B1's zero-tolerance precedence authored: any breakage token in any eligible transcript fails B1 outright before the majority rule; the majority rule governs B2/B3/B4. |
+| CR-8 (Minor, the lane prompt's 300 HP) | The rendered lane prompt still carries the stale 300-HP value. | **REBUTTED (recorded)** — the lane prompt is the manifest-pinned rendered launch contract (`a6ae5fbdfe32`); editing it mid-lane would invalidate the fail-closed precondition and the gate trail's provenance. The authoritative sources carry 60 (TR-GBF-006; the registry request A6; the index correction B1/B2). The master prompt source's correction routes to the **orchestrator's next render pass** (the next-action below). |
+| CR-9 (Minor, the report's SYS-15 row) | SYS-15's GDD lists SYS-14 as a VS non-dependency while SYS-14 consumes the offline/revive contracts at MVP. | **ROUTED as a batched rider (recorded)** — SYS-15's GDD is frozen; the rider (the non-dependency list's correction + the Interactions row) is batched in the sync request's A12 for the user-approved path. The systems-index's SYS-15 note (B5) carries the ruling in the meantime. |
 
 ## Landing receipt
 
