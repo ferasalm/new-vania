@@ -1,7 +1,7 @@
 # Orchestration State — the single live state/log
 
 > **Updated**: 2026-11-15 (orchestrator-launch chat)
-> **Main**: `9e20653` — operator-card landing receipt (PR #55)
+> **Main**: `4c0a05f` — launch record SYS-15/SYS-28 (PR #56)
 > **Mode**: parallel GDD/pre-production lanes; nested topology; WIP-limited.
 > **Source of truth**: `manifest.yaml`. **Paste source**: `prompts/NEXT.md`.
 > **Operating manual**: `README.md`. **Tooling**: `TOOLING.md`.
@@ -104,6 +104,7 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | Launch record SYS-15/SYS-28 | `4c0a05f` | #56 | verified this chat; both lanes AUTHORING, runners on GLM |
 | 2026-11-15 | Operator card + retry/fallback policy | `83989de` | #54 | verified this chat; OPERATOR.md + prompts v2.0.6 |
 | 2026-11-15 | Tooling (modules, DCP, Superpowers, 350k policy) | `b99ed48` | #51 | verified this chat; guide + policy landed |
 | 2026-11-14 | SYS-11 Seam Borders | `e8b194d` | #43 | verified this chat; lane state preserved |
