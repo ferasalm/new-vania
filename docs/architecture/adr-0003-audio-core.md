@@ -521,10 +521,10 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   probe's failure is **accepted for the score alone** — its loop point is authored
   at a musical bar boundary, where the material is continuous — with the measured
   seam delta recorded in the gate evidence rather than assumed.
-  **The two fallbacks are ceilings, not a joint budget**: the score's 6.85 MB
-  excludes its own 1.1 MB, and if probe 2 fails for *both* the beds and the score,
-  the bed ceiling drops by the score's Ogg size (≈7.95 MB → ≤ ~90 s of bed WAV) and
-  the sound-bible pass decides which asset keeps the space.
+  **The two fallbacks are ceilings, not a joint budget**: if probe 2 fails for
+  *both* the beds and the score, the score's 1.1 MB reserve is released to the pool
+  (6.85 → **7.95 MB shared**), which buys ≤ ~90 s of bed WAV **only if the score
+  takes none of it** — the sound-bible pass splits the pool between the two assets.
 - **No `AudioEffect` other than the limiter** may be added to the **production**
   graph without a new ADR: the "one effect" property is what makes the mix
   auditable. (Probe scenes and the dev-only probe layout are exempt and never

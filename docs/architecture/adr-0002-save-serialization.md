@@ -837,7 +837,7 @@ func remove(path: String) -> Error
 | Unchecked `store_*` → silent short write | Medium | High | The boolean discipline in §5; the step-3 re-read; AC-SAV-09's six-step fault injection |
 | Rename not atomic on a mobile filesystem | Low | High | Register item 4; the `.bak` promotion path; AC-SAV-14/23 |
 | Lost wakeup / lost job in the one-deep queue | Low | High | Register item 5; one job per slot; the completion drained on a tick |
-| Close-save blocks past the suspension window | Low | Medium | ≤ 2 KB by construction; `SAVE_JOIN_TIMEOUT_MS` 250 ms; the freeze-skip guard |
+| Close-save blocks past the suspension window | Low | Medium | The exit policy: the write is abandoned and the last station autosave stands (§5); the freeze-skip guard; ≤ 2 KB by construction |
 | Absent-key defaults materialized before the hash | Medium | High | TR-SAV-026 step 4 + TR-SAV-023; the twin's `ABS-defaults` |
 | Migration chain hole ships | Low | High | V-SAV-02's contiguity boot check; the synthetic `CURRENT = 3` harness |
 | A second write path appears (an ad-hoc `FileAccess` call) | Medium | High | V-SAV-04's CI grep; AC-SAV-26; the port is the only door |
