@@ -163,7 +163,7 @@ bullet, AC-ENM-18 (the deflected-orb kill), and TR-ENM-005's hp/award roster. A
 value-only edit would leave "damage: 2" beside "8 damage sits between P1 6 and P2 12"
 in the same sentence — worse than none. **SYS-13's rider must land as one coordinated
 doc touch** (§ 9's row): hp 6/12/24, awards 3/7/14, the orb 2, the flash band, the
-ceiling 12/18, V-HD-06's `6 < 12 < 24`, and the one-shot claim re-decided. Until it
+ceiling 12/18, V-HD-06's `6 < 12 < 24`, and the deflect's weight question open (§ 9.3). Until it
 lands, the registry sync must **not** flip `spitter_orb_damage` (recorded in the lane
 report's sync request).
 
@@ -358,7 +358,126 @@ file is the sync lane's to write): the index's SYS-07 dependency bullet still pr
 envelope/count sentence should be re-read against the row. Recorded here and in the lane
 report.
 
-## 8. The residual risks the seats did not block (recorded for the user)
+## 9. The D-ORCH-03 riders (the post-merge pass, 2026-11-15)
+
+The approved package's carried riders, executed after PR #75 merged (`3fcedc6`) and the
+sync landed (`6dd4651`). Branch `chore/d-orch-03-riders`. **Every value is the ÷5 mapping
+of the pre-revision text or the package's § 3/§ 8 figure**; the arithmetic is below.
+
+### 9.1 The rider inventory and what changed
+
+| File | Sites | Change |
+|---|---|---|
+| **`enemy-ai-telegraphs.md`** (the coordinated SYS-13 touch) | the header; the Contracts line; TR-ENM-004; **TR-ENM-005** (the roster); TR-ENM-009; **TR-ENM-011** (the orb); TR-ENM-013's test; **TR-ENM-018** (the ceiling); the Interactions rows (SYS-07, SYS-16, SYS-14); the traceability row; **F-ENM-04**; **F-ENM-07's example**; the edge bullet; the Dependencies row; the `ORB_DAMAGE` knob; the cross-system inputs; the Not-knobs line; **AC-ENM-03/06/12/16/18**; the answerability matrix's orb row; the **farms-orb-deflects** bullet; OQ#4 and OQ#8 | the strike table 1/2/4 · the tiers **6/12/24** · the awards **3/7/14** · V-HD-06's `6 < 12 < 24` · the counter **6** · the ceiling **12/18** (a T2's whole pool of damage, delivered to the Warden — half its 24) · **the orb 2**, its `power_band` **2** (the flash follows the hit's weight; the band is authored with the value), `ORB_DAMAGE` 2 (range 1–2), and the **weight consequence** (2 of a 12-HP T2 = 16.7%, up from 8 of 60 = 13.3%; it was never a one-shot) · the boss pool **60** (SYS-07's 40–80) |
+| **`audio-core.md`** | the header; TR-AUD-015's test; F-AUD-03's Variables, Scope and Examples; **AC-AUD-08** | the band boundaries are **symbol-anchored** (`BAND_2_MIN = max(2, ATK1_DAMAGE)`, `BAND_3_MIN = ATK2_DAMAGE`), so they moved with the arcs; the printed fixtures are now **1/2/3/4/6 → bands 1/2/2/3/3** |
+| **`juice-feedback.md`** | the header; the Killing Blow anchor; TR-JCE-018's test; F-JCE-06's Output/Examples; the strike-death edge bullet; **AC-JCE-18** | `hp_max` **20**; the pairs **4 into 3 → overkill 1 → 0.05 (LOW)**, **8/20 → 0.60 (MID, inclusive)**, **7/20 → 0.65 (HIGH)**; AC-JCE-18 → 0.00/**0.05**/0.40/**0.75**; the strike-death cap **≤ 4 of 20 → ratio ≤ 0.20 (LOW)** — the band thresholds themselves are unchanged |
+| **`cache-stations-death.md`** | the header; the terminal row set; **TR-CSD-006**; **AC-CSD-04**; **AC-CSD-05** | the `CHASSIS` row **+2** (was +8), the `CHASSIS` spend heals **2**; **the row's preview prints the ladder's per-move delta** (`ATK1 2→3 · chain 6→7`; `max HP 20→22`) rather than a bare attack number (the package's § 9 rider); AC-CSD-05's restore **7/20 → HP 20** |
+| **`room-world-structure.md`** | the header; **F-RWS-05**'s Example; **AC-RWS-14** | the pit's printed default profile **100 → 20** (the law `raw_damage = hp_max` is unchanged — it is scale-free) |
+
+### 9.2 The arithmetic (every value re-derived)
+
+| Quantity | Pre-rider | ÷5 / the package | Applied |
+|---|---|---|---|
+| strike table | 6/12/20 | ÷5 | **1/2/4** |
+| tiers | 30/60/120 | ÷5 | **6/12/24** |
+| awards | 15/35/70 | ÷5 | **3/7/14** |
+| the counter | 30 | ÷5 | **6** (Combat's TR-CMB-010 at ATK 100) |
+| the ceiling | 60 / 81 | ÷5 of 60 = 12; the ATK-132 value re-derived (the counter 8 + the chain 10) | **12 / 18** |
+| T3 survives at | 39 | 24 − 18 (the pool minus the ceiling) | **6** |
+| the orb | 8 | TR-CMB-015's registered deflect value on the baseline (not a ÷5 image — see § 9.2's note) | **2** |
+| `ORB_DAMAGE` range | 6–12 | ÷5 | **1–2** |
+| the orb's power band | 1 | the hit's weight (2 = the P2 row) | **2** |
+| the audio band of 2 | — | `1 + (≥2) + (≥4)` | **B2** |
+| the audio bands 1/2/3/4/6 | — | the same law | **1/2/2/3/3** |
+| the death ratios | 0.04 / 0.61 / 0.73 | the 1/20 grid | **0.05 / 0.65 / 0.75** |
+| the pit's default profile | 100 | ÷5 | **20** |
+| the TTK envelope | chain damage 20–41 | the knob floor (1+3 = 4) to the ladder's top row (4+6 = 10) | **4–10** (T1 6 → 1–2 · T2 12 → 2–3 · T3 24 → 3–6) |
+| the `CHASSIS` row | +8 | ÷5 → 1.6, rounded up (the HP point) | **+2** |
+
+**Two derivation notes** (the ÷5 column is the *mapping*, not always an exact division):
+the orb is **not** a ÷5 image — 8 ÷ 5 = 1.6, and the approved value is TR-CMB-015's
+registered deflect damage (**2**), which the package's § 3 adopted; the ATK-132 ceiling
+and the T3 remainder are **re-derived from the ladder**, not divided (81 ÷ 5 = 16.2, and
+39 ÷ 5 = 7.8 — the printed 18 and 6 come from the 8 + 10 chain at ATK 132). The
+`CHASSIS +2` is the HP point (8 ÷ 5 = 1.6 → 2, the same rounding `HP_PER_POINT` took in
+SYS-07).
+
+**The SYS-13 TTK check**: T1 6 at chain 4–10 → 1–2 chains; T2 12 → 2–3; T3 24 → 3–6 —
+the same envelope the SYS-07 GDD states (F-HD-10 / AC-HD-11), so the two documents now
+agree.
+
+### 9.3 The open point (recorded, not decided)
+**The deflect's weight.** At 2 damage the orb contributes 2 of a 12-HP T2's pool (16.7%) — up from 8 of 60 (13.3%), so the deflect is relatively *stronger*, not weaker. **It never one-shotted a Spitter** (8 into 60 was 13%; the frozen "it kills the Spitter for 8" was already conditional on prior damage), and the rider's text now says so at all four sites ("the killing blow after prior damage"). **What to do about the weight is not decided here** — the package left it to SYS-13. The candidates, for the user / SYS-13:
+- **accept** the change (the deflect is a positional tool — the reward is the reversal, and 2 damage on a 90-tick cadence is the faucet's bound). This is the only candidate executable inside the current contracts;
+- **lower `ORB_DAMAGE` to 1** (inside the printed 1–2 range) — it would make the deflect a pure positional tool, with the band re-authored to 1;
+- **give the deflect a bonus** (a multiplier on a deflected hit) — the largest change: it amends SYS-08's frozen TR-CMB-015 ("the deflected projectile keeps its original damage"), so it needs its own contract revision.
+
+**Recorded as an open point; no value was changed beyond the approved ÷5.**
+
+### 9.4 The process notes (no file edited)
+
+- **The qa-lead Gate-2 probe** (the parity-promise question: *"when a weapon or module
+  exceeds the band inside a named window, does the player read it as a reward or as a
+  broken promise?"*) — a session-script addition for the Gate-2 contact; recorded here,
+  not in a GDD.
+- **SYS-26's delta** (the pause/stat surface's presentation of the ladder) — a
+  future-lane note: SYS-26 does not exist yet; the terminal's preview (TR-CSD-006) is the
+  MVP surface, and the pause readout's four values are SYS-24's.
+
+### 9.5 The gate trail (this rider pass)
+
+| Gate | Pass | Verdict | Disposition |
+|---|---|---|---|
+| **Technical seat** (the full riders diff) | 1 | **NEEDS REVISION** — 5 blockers | 4 repaired, 1 deferred to the sync (§ 9.6) |
+| **CD-GDD-ALIGN** (scoped to the SYS-13 touch) | 1 | **CONCERNS** — 2 blockers | both repaired (the same two the technical seat found: the stale 30 in TR-ENM-009's test and F-ENM-04's example) |
+| **Micro-check** (diff-scoped) | 1 | see § 9.7 | — |
+
+**The repairs**: TR-ENM-009's test and F-ENM-04's example (the counter 30 → **6**, the
+ceiling's T2 note); **`BAND_2_MIN = max(2, ATK1_DAMAGE)`** — the seat found that at the
+knob's legal minimum (`ATK1_DAMAGE = 1`) every legal amount would collapse into B2 and
+AC-AUD-08's first case would fail, so the audio law gains a floor; TR-CSD-006's preview
+gains the **zero-delta rule** and AC-CSD-04 the preview fixture (the second point moves
+only the chain: `ATK1 3→3 · chain 7→8`); TR-ENM-011 gains the **`power_band` scope
+note** (the telegraph/audio vocabulary only — it is not `power` and drives no knockback,
+so the 1→2 flip cannot change the orb hit's knockback class); the header pointer moved
+§ 7 → § 9.
+
+### 9.6 The sync request (this pass does not touch the shared files)
+
+The registry's `enemy_strike_contract` payload still prints **`power_band 1`** (with
+`damage 2` already applied) while TR-ENM-011 now authors `power_band: 2`. The mini sync
+after this lands must flip **both**: `spitter_orb_damage` 8 → **2** *and* the payload's
+`power_band` 1 → **2**. Nothing else in the registry is stale (the strike table, the four
+arc damages, the roster, the stagger note, the void note and the new constants all agree
+with the riders).
+
+### 9.7 The micro-check
+
+**PASS** — zero blockers. The diff-scoped check verified the repair batch: the counter
+**6** at TR-ENM-009's test and F-ENM-04's example (with the T2 dying in one exchange,
+6 + 6); the **`BAND_2_MIN = max(2, ATK1_DAMAGE)`** floor with the 1/2/3/4/6 → 1/2/2/3/3
+fixture holding at both points of ATK1's legal range; TR-CSD-006's zero-delta preview
+with AC-CSD-04 asserting both points; TR-ENM-011's `power_band` scope note and its test's
+"after prior damage"; the header's § 9 pointer; the § 9.2 derivation column; and the
+counts (unchanged in all five GDDs; the answerability matrix still six rows).
+
+One observation, recorded and not actioned: `BAND_3_MIN = ATK2_DAMAGE` has the same
+class of edge at ATK2's legal minimum (3), where a 3-damage hit would read B3 rather than
+the fixture's B2 — the fixture is stated at the arc symbols/defaults (2/4), so the law is
+correct there; if a later pass wants symmetry with the ATK1 floor, the same `max(4, …)`
+form applies.
+
+**A second observation, from the confirm pass**: `ENEMY_STAGGER_MS`'s knob row (Combat's
+table, SYS-13's value) prints a safe range of **500–1000**, but F-ENM-04's full ceiling
+needs the window still running when the chain's damage lands at **T+37** —
+`stagger_ticks ≥ 38`, i.e. **617 ms** at 60 tps (616 ms → 37 ticks, and the chain lands on
+the expiry tick, so the ceiling is the counter alone — **6 at ATK 100, 8 at ATK 132**).
+F-ENM-04's Variables clause now states the convention, the 617 threshold and the sub-617
+result. **Whether the knob's
+floor should rise to 617** is SYS-13's call (the knob is Combat's row, the value
+SYS-13's); recorded, not decided.
+
+## 10. The residual risks the seats did not block (recorded for the user)
 
 - **R10 — the DEF axis collapses** at the low baseline (any `defense ≥ 1` ≡ DEF 25). The
   package turns this into a **D-1 input** rather than hiding it: a Chassis Module must not
@@ -370,5 +489,5 @@ report.
   repair, not a rule.
 - **The strike table loses its tuning room** (P1 fixed at 1) — the lever moves to the pool
   and the tiers.
-- **SYS-13's orb call**: at 2 the deflected orb no longer one-shots a Spitter
-  (F-ENM-07/TR-ENM-024/AC-ENM-18) and its flash band moves to 2 — SYS-13's to re-decide.
+- **SYS-13's orb call**: at 2 the deflect's share of a T2 rose (16.7% vs 13.3% of the
+  pool); whether that weight is right is the open point recorded in § 9.3.
