@@ -308,3 +308,30 @@ hard blocker or the 350k hard trigger.
   `PAUSED → QUEUED` relaunch with a clean lane worktree.
 - **Prompts**: `NEXT.md` re-rendered at **v2.0.6** (`6106fa2cd614`); the
   manifest `next.version` bumped 2.0.1 → 2.0.6 through the review rounds.
+
+## 15. Sync receipt — SYS-07-REWORK (in flight)
+
+- **Lane**: SYS-07-REWORK (D-ORCH-03, the IP-17 low-stat baseline rework; baseline
+  PR #75, head `270b9ad`). **Request**: the "Sync request" section of
+  `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`
+  (+ the package's § 10, `design/reviews/sys07-baseline-rework-package.md`).
+- **Lock**: `shared_file_lock: SYNC-LANE` (held from `2d0a821`; released only after
+  this sync PR merges).
+- **Branch / PR**: `chore/sync-sys07` / **PR #76** (base `Main`, branched from
+  `ac6c623`; head `2d0a821` at open).
+- **Files**: `design/registry/entities.yaml` (11 value/note updates + 7 new entries:
+  `damage_event`, `player_max_hp`, `hp_per_point`, `training_data_l2..l5`,
+  `damage_ladder_mvp`; 81 → 88), `design/gdd/systems-index.md` (the SYS-07
+  bullet/row, design order 22, the SYS-16/17 unblock), `design/gdd/game-concept.md`
+  (the 5th Gate-2 probe — the one GDD touch, routed by the lane's CD gate so the
+  probe list stays single-sourced), `production/orchestration/{STATE,review-queue}.md`,
+  `production/orchestration/manifest.yaml` (the lane row → `SYNC`).
+- **Held**: `spitter_orb_damage` stays **8** until the coordinated SYS-13 rider lands
+  (`enemy-ai-telegraphs.md`); the hold is in the entry's history, not a silent skip.
+- **Validation**: YAML parse OK (entities + manifest) · duplicate-name scan OK
+  (88 entries: 30 entities / 0 items / 6 formulas / 52 constants) · every
+  `source`/`referenced_by` path exists · all 12 value/note checks + the 7 new entries
+  reproduce the request · design-order numbers 1–25 unique · `git diff --stat` shows
+  only the intended 6 files (+185/−47).
+- **Landing hash**: pending (the orchestrator merges after verifying the head).
+

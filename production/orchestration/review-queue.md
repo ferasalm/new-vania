@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-07-REWORK | 1 entity (`damage_event`) + 7 constants (`player_max_hp`, `hp_per_point`, `training_data_l2..l5`, `damage_ladder_mvp`) + 11 value/note updates (`spitter_orb_damage` **HELD**) | SYS-07 row + bullet, design order 22, the SYS-16/17 unblock, game-concept's 5th Gate-2 probe | 2026-11-15 | SYNC — PR open |
+| 1 | SYS-07-REWORK | 1 entity (`damage_event`) + 7 constants (`player_max_hp`, `hp_per_point`, `training_data_l2..l5`, `damage_ladder_mvp`) + 11 value/note updates (`spitter_orb_damage` **HELD**) | SYS-07 row + bullet, design order 22, the SYS-16/17 unblock, game-concept's 5th Gate-2 probe | 2026-11-15 | SYNC — PR #76 open |
 
 The active request is the "Sync request" section of
 `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`

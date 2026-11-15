@@ -232,7 +232,7 @@ lanes:
     status: SYNC
     dependencies: [SYS-07]
     gates: [SYS-16, SYS-17]
-    review_state: "GATES CLOSED (2026-11-15, D-ORCH-03 option A, user-approved): CD APPROVED (2 passes) · technical NEEDS REVISION ×10 → all blockers repaired · the applied-diff gates: CD APPROVED, technical 9 repaired + 2 rebutted, qa-lead spot-check PASS 7/7, micro-check PASS (zero blockers) · CodeRabbit 19 threads across 2 passes, all resolved · CI 5/5 green on 270b9ad (PR #75). SYNC IN FLIGHT (PR pending): the registry value set + `damage_event` + the baseline constants, the index row/bullet/design-order/unblock, the 5th Gate-2 probe; `spitter_orb_damage` HELD for the SYS-13 rider."
+    review_state: "GATES CLOSED (2026-11-15, D-ORCH-03 option A, user-approved): CD APPROVED (2 passes) · technical NEEDS REVISION ×10 → all blockers repaired · the applied-diff gates: CD APPROVED, technical 9 repaired + 2 rebutted, qa-lead spot-check PASS 7/7, micro-check PASS (zero blockers) · CodeRabbit 19 threads across 2 passes, all resolved · CI 5/5 green on 270b9ad (PR #75). SYNC IN FLIGHT (PR #76): the registry value set + `damage_event` + the baseline constants, the index row/bullet/design-order/unblock, the 5th Gate-2 probe; `spitter_orb_damage` HELD for the SYS-13 rider."
     next_action: "The orchestrator verifies PR #75's head and merges it, then merges the sync PR; SYS-16/17 unblock on the landing receipt + the sync. The SYS-13 rider (one coordinated doc touch) then flips `spitter_orb_damage`."
 
   - id: SYS-16
