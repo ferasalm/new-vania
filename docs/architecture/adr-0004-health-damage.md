@@ -377,7 +377,7 @@ every branch produces the same six-stage walk, and no branch re-enters a stage.
 | 1 | **raw** | the producer's `raw_damage`, already including the counter's 1.5× | all | any SYS-07 re-application of `COUNTER_CLASH_MULT` |
 | 2 | **ladder / percent / taken** | `NORMAL`+arc → `LADDER[step][arc]`; `COUNTER`/`NORMAL`+`ABILITY` → `max(1, ceil(raw × attack ÷ 100))`; `ENEMY_STRIKE`/`ENVIRONMENT` → F-HD-03's `taken`; `DEFLECT` → the identity | 2–7 | a percent curve for `NORMAL`+arc; a DEF read on `ENVIRONMENT` |
 | 3 | **module** | `dealt = max(1, dealt + ctx.damage_bonus)` — **branch 2 only** | 2 | applying `damage_bonus` to `COUNTER`, `DEFLECT`, `ABILITY`, `ENEMY_STRIKE` or `ENVIRONMENT` |
-| 4 | **crit** | `dealt = floor(dealt × CRIT_MULT)` — **VS, `kind = NORMAL` only** | 2 **and 4** (VS) | a crit on `COUNTER` (no 2.25×), on `DEFLECT`, on `ENEMY_STRIKE`, or on the taken side |
+| 4 | **crit** | `dealt = floor(dealt × CRIT_MULT)` — **VS, `kind = NORMAL` only** | 2 **and 4** (VS) | a crit on `COUNTER` (no 2.25×), on `DEFLECT`, on `ENEMY_STRIKE`, on `ENVIRONMENT`, or on the taken side |
 | 5 | **floor** | `dealt = 0` if `raw = 0`, else `max(1, dealt)` | all | a floor on a zero-raw event (the zero-exempt rule) |
 | 6 | **cap** | `applied = min(dealt, profile.damage_cap_per_event)`, then the subtraction | all | a cap as a **gate** (it is a clamp: TR-HD-017 term 10) |
 
@@ -1040,7 +1040,7 @@ and an **Owner**, so a probe can be closed or failed rather than narrated.
 |---|---|---|---|---|---|
 | 1 | GDScript's `/` on two ints yields an int and **truncates toward zero** (not floor) | **DOCUMENTED** (language reference) | — | — | — |
 | 2 | `floori(float)` exists and floors correctly, including `floori(-0.5) = -1` | **DOCUMENTED** (language reference) | — | — | — |
-| 3 | The **four port calls per event** (`profile`, `invulnerable`, `anchor`, `publish`, all on `HealthPort`) stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the port reference read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
+| 3 | The **four port calls per event** (`profile`, `invulnerable`, `anchor`, `publish`, all on `HealthPort`; `now_tick()` is a **per-phase** call, not per event) stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the port reference read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
 | 4 | A preallocated typed `Array` of `RefCounted` records + an overwrite-oldest head performs **zero allocation** across 10,000 ticks | **PROBE-PENDING** | the soak with `Performance.MONITOR_OBJECT_COUNT`/`MEMORY_STATIC` sampled at the warm-up and at the end: net object delta 0, net resource delta 0, heap growth ≤ 256 KB, churn ≤ 16 KB / 1,000 ticks | lead-programmer | The first story; AC-HD-40 |
 | 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts, **keyed through `bind_phase`** | **PROBE-PENDING** | the same `(bound logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture); **and a late event's key uses the bound tick, not its `contact_tick`** (the two differ by 1–2 ticks, and the roll must not change with the event's lateness) | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
 | 6 | `HealthCore.damage_phase()` can assert "the freeze onset has not been applied for `t`" from the publication SYS-29 actually offers | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the damage phase for `T` observes the onset as *pending*, not *applied*, 100/100 runs; the same assertion fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer | §4's dev assert; AC-HD-30 |
@@ -1231,7 +1231,7 @@ than trusting the operator.
 | Integer truncation where the GDD writes `floor` | Medium | Medium | §3a's arithmetic form; register item 1; AC-HD-14's DEF 100 fixture |
 | The cap applied and reported at two sites → `dealt` and `applied` equal, `capped` unobservable | Medium | Medium | §3b's single-site law; AC-HD-23's cap fixture |
 | A second HP writer appears (a UI clamp, a debug setter, a restore path) | Medium | High | TR-HD-010's static assertion (AC-HD-10); the port is the only door; the reducer is the only writer |
-| Port overhead exceeds the 0.25 ms p99.9 allocation | Low | Medium | Register item 3; the per-phase port cache fallback; the four-port surface is small |
+| Port overhead exceeds the 0.25 ms p99.9 allocation | Low | Medium | Register item 3; the per-phase port cache fallback; the two-port, four-call surface is small |
 | A stateful RNG or the engine's `hash()` used for the VS roll → a replay diverges | Low | High | §7's explicit mixer; register item 5; AC-HD-39's two-key fixture |
 | A `Label` per number, or `str()` per hit, blows the churn bar | Medium | Medium | §10's ring + lease + the boot-built string table; AC-HD-40's soak |
 | A module's `hp_max` delta heals (the asymmetry inverted) | Low | Medium | §5's three clauses; AC-PRG-09's unequip/point/module fixtures |
@@ -1360,7 +1360,7 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 - [ ] **The RNG is inert at MVP**: zero rolls, `FixedRngPort` 0.5, and the VS mixer is
       stateless, explicit, platform-stable and keyed through `bind_phase` (AC-HD-39's
       two-key clause, runnable at MVP because the mixer ships inert; register item 5).
-- [ ] **No hot-path allocation**: the four rings plus the entity table are preallocated, the soak shows zero
+- [ ] **No hot-path allocation**: the four rings, the entity table and §9d's 8-slot death archive are preallocated, the soak shows zero
       net object/resource delta, ≤ 256 KB heap growth and ≤ 16 KB churn per 1,000
       ticks; the number ring is **32** and bounded (AC-HD-40's preallocation list,
       which is where the ring's size is asserted — AC-HD-38 does not assert it).
@@ -1438,7 +1438,7 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-034 — the weapon-parity law | Unchanged: the harness is a fixture over the ladder, not a resolver stage (§3) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-035 — the read contract | §11's records, read-only, no writer field |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-036 — the damage-number render law | §10's ring, the zero-frame law, the palette, the off-switch |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-037 — testability | §2/§11's split, the four ports, the two fakes, the stateless RNG |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-037 — testability | §2/§11's split, the **two** ports (four calls per event), the two fakes, the stateless RNG |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-038 — performance and allocation | §Performance: the four rings + the entity table + §9d's 8-slot archive, the soak's three bars, the device gate |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-039 — traceability | Consumed unchanged: 39 TR / 15 F / 50 AC / 15 V / 68 edge bullets / 20 OQ / 33 knobs |
 | `design/gdd/combat.md` | SYS-08 | TR-CMB-025 — the `DamageEvent` boundary (six fields, `arc`) | Consumed verbatim; `arc` is the ladder's column selector, `ABILITY` is not a column (§3) |
