@@ -13,8 +13,8 @@
 | Creative seat | game-designer · GLM-5.3-Flash | **NEEDS REVISION** | 3 | all repaired |
 | Technical seat | lead-programmer · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | 9 repaired, 1 rebutted-with-rider |
 | QA seat | qa-lead · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | all repaired |
-| qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | **PASS (round 2)** | 0 | §F — round 1 FAIL (3 blockers, repaired) |
-| Final micro-check | fresh seat · DeepSeek V4.1 Flash | **PASS** | 0 | §G |
+| qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | **PASS (round 3)** | 0 | §F — round 1 FAIL (3 blockers) → round 2 FAIL (4 blockers) → round 3 PASS |
+| Final micro-check | fresh seat · DeepSeek V4.1 Flash | *pending at the time of writing* | — | §G |
 
 **Process note (recorded, not a skip).** The contract calls for the three seats to be
 spawned in parallel. They were spawned in **two waves** — creative first, then
@@ -144,4 +144,56 @@ joins AC-09; OQ-PRG-4's target moves to before the SYS-02/SYS-24 stories.
 
 ## F. qa-lead spot-check
 
-*See §F below (appended after the run).*
+**Round 1 — FAIL (3 blockers, 5 advisories).** Blocker 1: the four-point ledger did
+not re-derive against the roster's boss (60 HP ÷ chains 6/7/8/9/10 = 10/9/8/7/6, so
+"no flip" was false for points 1 and 3). Blocker 2: `PACING_PASS_YIELD_MIN`'s safe
+range 24–40 admitted yields that fail both authored bars. Blocker 3: TR-PRG-014(c)
+still read "the pool cap" while F-PRG-06(c) had become the anti-stacking rule.
+Advisories: AC-03's recompute count omitted `UNEQUIP`; TR-008 said six fixtures vs
+AC-08's seven; AC-30's UI obligations were absent from TR-027; TR-005/AC-05 attributed
+the archetypes to SYS-13; the review log pre-recorded a PASS.
+
+**Round 2 — FAIL (4 blockers, 4 advisories).** The three blockers were genuinely
+fixed and the counts reproduced. The new blockers: (1) AC-PRG-05 still said "SYS-13's
+tier assignment (RM-03's pinned pair)"; (2) TR-PRG-005's repair **inverted** the
+ownership seam (making tiers SYS-02's in one clause and SYS-13's in the next);
+(3) the review log pre-recorded this seat's verdict and cited a §G that did not exist;
+(4) the IP-5 closure row still named "the pool cap". All four repaired: the archetypes
+are SYS-02's room data and the tiers are SYS-13's per archetype (the sentence and the
+AC aligned); the log's gate record is now honest (this section); the closure row reads
+"the no-stacking rule". Advisories applied: the ledger table moved out of TR-PRG-006's
+bullet into its own block (a list-terminating table rendered the following paragraph
+and test outside the TR); `BOSS_HP` 60 joins the cross-system inputs; AC-PRG-06 cites
+the table instead of restating its columns; TR-PRG-027's test names the systems index's
+SYS-24 entry instead of "the index correction".
+
+**Round 3 — PASS.** Every worklist row APPLIED-CORRECTLY; the counts reproduce
+(28 TR / 10 F / 12 V / 36 AC / 44 edge bullets / 8 OQ / 21 knobs; 29 + 2 + 5 + 0 = 36);
+no collateral damage, no new placeholder, no silent default.
+
+## G. Final micro-check
+
+*Appended after the run.*
+
+## H. The one item for the orchestrator / user
+
+**F-HD-10's module-build note — a reading, a rider request, and a pre-authorised
+fallback** (technical seat blocker 2; TR-PRG-013; rider (d)).
+
+- **The clause**: SYS-07's F-HD-10 says "a module build (a non-zero `damage_bonus`) is
+  measured against the parity bands (V-HD-14), not this envelope — a module's damage is
+  a situational source, not a TTK-ruler input."
+- **This lane's reading**: the sentence names the *ruler* (the sustained-damage
+  comparison, not the kill-count envelope) and calls module damage *situational*; the
+  ±10% ceiling itself is TR-HD-034/F-HD-13's, whose subject is the **weapon set**.
+- **Why it matters**: read as a hard ±10% ceiling on gear, **no damage lever can exist**
+  at the 20-HP baseline (the integral must stay ≤ 642 → chain ≤ 6.58 → no integer
+  damage step), which would make D-1's gear layer impossible — two user decisions
+  (D-1 and D-7) in collision.
+- **What the lane did**: recorded the reading in the GDD, requested rider (d), and
+  **pre-authorised the pool-only fallback** as a data switch (no redesign): if the
+  ceiling reading is upheld, `WINDOW_EXCEPTION_ENABLED` → false and the drive payload
+  is withdrawn.
+- **What is needed**: the orchestrator batches either (i) rider (d) at SYS-07's next
+  doc touch (the reading stands; the gear layer ships as authored), or (ii) the ceiling
+  reading upheld (the fallback executes). **No edit to SYS-07 is taken either way.**
