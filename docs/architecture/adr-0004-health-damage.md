@@ -6,8 +6,8 @@
 **Acceptance awaits the technical-director's TD-ADR verdict (D-ORCH-06)**: the
 `/architecture-review` gate and this lane's gate trail (CD · creative · technical ·
 QA · qa-lead spot-check · micro-check · `/architecture-review`) are recorded in
-`docs/architecture/adr-draft-review-log.md` **§9 — this pass's record**, written in
-the same commit as this document. An advisory review verdict does
+`docs/architecture/adr-draft-review-log.md` **§9 — this pass's record**, which lands
+in the same PR as this document. An advisory review verdict does
 not replace the TD-ADR gate, and `Status: Accepted` would let story-readiness start
 stories against this decision early. **The status is never self-assigned by the lane
 that drafts the document.** The engine-probe register in §12 is an **implementation
@@ -793,7 +793,7 @@ with a different name:
 | HP | `hp_max` — **no HP field is read** (TR-HD-032) | `hp_max` (F-HD-08) |
 | Quick slot | `CACHE_REFILL` (3) | `CACHE_REFILL` (3) |
 | **Restore modules** | **0** — no module is carried into a load (§9b) | the drawn module is consumed; the count is otherwise unchanged |
-| Ledger / latch / i-frames | ∅ / clear / none | ∅ / clear / the revive's own window only |
+| Ledger / latch | ∅ / clear | ∅ / clear |
 | `hp_floor` | the profile's base | **reset to the profile's base** (F-HD-08's list) |
 | Progression source | the **save** (`progression` namespace, SYS-16's carry) | the **live carry** — a level earned after the last save is never rolled back (TR-CSD-013's no-XP-loss law, the read-gated window) |
 | i-frames | **none at MVP** — the cache is a safe context; an in-place respawn would need a grant (VS, SYS-07 OQ#16) | the revive's 1000 ms window is the only grant |
@@ -806,8 +806,12 @@ file.
 **§9b · The body's persistence, quoted rather than paraphrased.** SYS-15's TR-CSD-013
 body row reads, verbatim: "**the body (store-absent: SYS-16/17's session-only
 namespaces) restores from the live session (the load never touches it — there is no
-file carrying it)**". Three things follow, and the ADR states them rather than letting
-a reader infer them:
+file carrying it)**". **The clause's parenthetical is already superseded for
+`progression`**: SYS-16's rider (b) — carried here as **O-HD-5** — makes the body
+store-carried for `progression` at v3, live-carried by the same read-gated window;
+what stays store-absent is exactly the part no namespace carries (the pools, the
+charges, the modules, the ledger, the latch). Three things follow, and the ADR states
+them rather than letting a reader infer them:
 
 1. **At MVP there is no file carrying the body** — no namespace exists for
    `hp_current`, `quick_charges`, `restore_modules`, the ledger or the latch. A load
@@ -961,7 +965,7 @@ and an **Owner**, so a probe can be closed or failed rather than narrated.
 | 6 | `HealthCore.damage_phase()` can assert "the freeze onset has not been applied for `t`" from the publication SYS-29 actually offers | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the damage phase for `T` observes the onset as *pending*, not *applied*, 100/100 runs; the same assertion fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer | §4's dev assert; AC-HD-30 |
 | 7 | A `Label` pool of 32 with a slot→node map shows a number on the **contact tick** with no `queue_free` and no instantiation | **PROBE-PENDING** | **the headless half first** (it is what AC-HD-38/40's GUT halves need): a 32-record burst in one tick fills the ring 32/32 with the head wrapped, a 33rd overwrites slot 0, and 10,000 ticks show zero ring growth; **then the render half**: all 32 nodes render on the frame, a re-lease resets the node's lifetime and animation, and no `Label` is instantiated after boot | ui-programmer (SYS-24's story) | AC-HD-38/40; the render side's churn bar |
 | 8 | `Node.process_physics_priority` (the documented fallback ordering) exists in 4.7.2 and orders the three gameplay services as §4 names | **PROBE-PENDING** | three probe nodes at priorities `-10/0/+10` log their `_physics_process` order: the log is stable across 1,000 ticks and matches the assigned order. **Only needed if the tick director defers to the scene tree**; the explicit call is the primary | godot-specialist | The fallback ordering only |
-| 9 | `ceil`/`floor` on the ms→tick conversion reproduce the GDD's tick fixtures at 60 tps | **PROBE-PENDING** | `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` = 42 ticks at 700 ms/60 tps; `REVIVE_IFRAME_MS` 1000 ms = 60 ticks; `GETUP_IFRAME_MS` 300 ms = 18 ticks; the backdash's 140 ms = **`ceil` → 9 ticks** as the lock's window, of which the GDD's "8-tick exposure" is the **first 8 protected ticks and the 9th is the first unprotected one** — the fixture asserts both numbers explicitly (window 9, exposure from tick 8), so the off-by-one is pinned rather than implied | qa-lead | AC-HD-20/38's tick fixtures |
+| 9 | `ceil`/`floor` on the ms→tick conversion reproduce the GDD's tick fixtures at 60 tps | **PROBE-PENDING** | `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` = 42 ticks at 700 ms/60 tps; `REVIVE_IFRAME_MS` 1000 ms = 60 ticks; `GETUP_IFRAME_MS` 300 ms = 18 ticks; the backdash's 140 ms = **9 protected ticks** (`t…t+8`) with the exposure at `t+9…t+16` (**8 ticks**), matching F-CMB-08's 140/9/8 fixture (protect `4000–4008`, expose `4009–4016`) — the fixture asserts both numbers so the off-by-one is pinned rather than implied | qa-lead | AC-HD-20/38's tick fixtures |
 
 `PROBE-PENDING` is an open verdict, not a pass: no story may consume items 3–9 as
 settled fact (the AC-74 pattern from ADR-0001). **Items 1 and 2 are the only language
@@ -1286,9 +1290,11 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
       unsatisfiable**).
 - [ ] **The damage-number law holds**: the record's `amount` is the **applied** value
       (a capped 6 publishes 2; a Suture at 18/20 publishes 2), the number is published
-      on the contact tick, the ring is overwrite-oldest with the lease token as the
-      slot index, the off-switch empties the ring, and the palette audit finds no
-      sigil-red (AC-HD-38; §10).
+      on the contact tick, the off-switch empties the ring, and the palette audit finds
+      no sigil-red (AC-HD-38's four clauses); **the ring's 32 slots are overwrite-oldest
+      and the lease token is the slot index** — asserted by the headless ring fixture,
+      not by AC-HD-38, which says nothing about size, overwrite or the lease
+      (AC-HD-40 for the size; register item 7 for the overwrite/lease fixture; §10).
 - [ ] **The two load regimes are distinct and total**: a session load and an
       in-session reconstruct both end at `hp_max` with the slot at `CACHE_REFILL`,
       differ on the progression source (the save vs the live carry — a level earned
@@ -1364,7 +1370,7 @@ device + 5 playtest + 0 VS) · 15 V-HD · 68 edge bullets · 20 OQ rows · 33 kn
 This ADR adds **no** TR, **no** formula and **no** AC — it is a decision record, not a
 second design.
 
-**V-invariant coverage** (all fifteen carried, none re-minted; **two carry a named
+**V-invariant coverage** (all fifteen carried, none re-minted; **five carry a named
 qualification**). V-HD-01 by §8's latch and AC-HD-16; V-HD-02 by the integer law and
 AC-HD-04/19, **with `heal > 0` carried by §8b's heal law and no dedicated fixture
 (part of O-HD-10)**; V-HD-03 by §8's exactly-once and AC-HD-17's fuzz; V-HD-04 by
