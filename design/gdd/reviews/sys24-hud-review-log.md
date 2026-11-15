@@ -28,7 +28,9 @@
 
 ### B.4 qa-lead spot-check
 
-- **PENDING**
+- **Round 1**: **FAIL** — 4 blockers (SP-1 the defaults tuple's screen_shake; SP-2 the stale `hp_ratio` in two cells; SP-3 the missing creative ledger row; SP-4 the untestable map-tab gate) + 4 advisories → all repaired (`spot-check-r1`).
+- **Round 2**: **FAIL** — 2 blockers (SP2-1 the census line did not sum; SP2-2 the before-state made the gate untestable) + 4 advisories → all repaired (`spot-check-r2`).
+- **Round 3**: **PASS — 0 blockers** (2026-11-15; the worklist rows SP2-1/SP2-2 + the advisories APPLIED-CORRECTLY; TR-HUD-011's integrity verified; the counts reproduce: 25 TR / 7 F / 8 V / 37 ACs, the manifest 30 + 5 + 2 + 0 = 37). 2 advisories recorded: TR-HUD-012's focus walk aligned to the map-tab gate (applied as a one-liner); the ledger's "worklist rows" label (applied).
 
 ### B.5 Final micro-check
 
