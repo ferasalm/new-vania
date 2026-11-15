@@ -471,8 +471,9 @@ form applies.
 table, SYS-13's value) prints a safe range of **500–1000**, but F-ENM-04's full ceiling
 needs the window still running when the chain's damage lands at **T+37** —
 `stagger_ticks ≥ 38`, i.e. **617 ms** at 60 tps (616 ms → 37 ticks, and the chain lands on
-the expiry tick, so the ceiling is the counter alone, **6**). F-ENM-04's Variables clause
-now states the convention, the 617 threshold and the sub-617 result. **Whether the knob's
+the expiry tick, so the ceiling is the counter alone — **6 at ATK 100, 8 at ATK 132**).
+F-ENM-04's Variables clause now states the convention, the 617 threshold and the sub-617
+result. **Whether the knob's
 floor should rise to 617** is SYS-13's call (the knob is Combat's row, the value
 SYS-13's); recorded, not decided.
 
