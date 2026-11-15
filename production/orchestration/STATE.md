@@ -62,13 +62,18 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **released 2026-11-15** after the ART-BIBLE sync
-landed: PR #72 merged at `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads).
-Registry notes updated on `dual_reality_palette_tables` (the D-ORCH-02 pins)
-and `seam_admission_test` (D-ORCH-01: the purple declined); the index gained
-the SYS-11 qualification, the SYS-02 line-36 note (naming D-ORCH-01 +
-`5cc1377`), the OQ rider notes and the OQ-M1 rider list. The shared files are
-free.
+`shared_file_lock: SYNC-LANE` — **held from 2026-11-15** for the
+**SYS-07-REWORK** sync (branch `chore/sync-sys07`, branched from `ac6c623`; the
+request is the "Sync request" section of
+`../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`).
+Released only after the sync PR merges (§15).
+
+**Prior release 2026-11-15**: after the ART-BIBLE sync landed — PR #72 merged at
+`bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes updated on
+`dual_reality_palette_tables` (the D-ORCH-02 pins) and `seam_admission_test`
+(D-ORCH-01: the purple declined); the index gained the SYS-11 qualification, the
+SYS-02 line-36 note (naming D-ORCH-01 + `5cc1377`), the OQ rider notes and the
+OQ-M1 rider list.
 
 **Prior release 2026-11-15 (SYS-28)**: PR #69 merged at `a5a1f81` (head
 `eb85da4`; 4 CodeRabbit threads, all applied + resolved). Registry 77 → 80

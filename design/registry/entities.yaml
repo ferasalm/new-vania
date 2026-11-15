@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-14"
+last_updated: "2026-11-15"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -63,7 +63,7 @@ entities:
     values: "EnemyStrike {strike_id, archetype_id, power 1-3, telegraph_ms, active_ms,
       recovery_ms, hitbox {shape RECT, reach_px, band_floor_px, band_ceiling_px},
       facing -1|+1 (locked at the telegraph's first tick), unclashable, source_entity,
-      display_name} · EnemyProjectile {projectile_id, owner_entity, damage 8,
+      display_name} · EnemyProjectile {projectile_id, owner_entity, damage 2,
       power_band 1, telegraph_ms 350, launch_tick, speed_px_s 170, hitbox 12x12,
       band [14,26], recovery_ms 250, lifetime_ms 3000, unclashable (type-constant),
       deflectable, display_name}"
@@ -74,7 +74,7 @@ entities:
       (the HealthProfile). Bands are closed intervals [floor, ceiling]; HIGH
       floors > 26.4 (V-ENM-13 binds every legal CROUCH_HURTBOX_RATIO pair)."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): the EnemyProjectile's `damage` 8 → 2 (the ÷5 rescale — the payload mirrors the orb; the SYS-13 rider re-derives the orb's own value and the one-shot claim)"
 
   - name: enemy_archetype_roster
     status: active
@@ -83,9 +83,9 @@ entities:
       - design/gdd/enemy-ai-telegraphs.md
       - design/gdd/health-damage.md
     kind: entity_set
-    values: "HUSK T1 hp30 award15 soul_class HUMAN (the quick swat) · SPITTER T2
-      hp60 award35 soul_class DEMONIC (the charge orb — its only attack) ·
-      WARDEN T3 hp120 award70 soul_class CYBORG (the tall overhead, the heavy
+    values: "HUSK T1 hp6 award3 soul_class HUMAN (the quick swat) · SPITTER T2
+      hp12 award7 soul_class DEMONIC (the charge orb — its only attack) ·
+      WARDEN T3 hp24 award14 soul_class CYBORG (the tall overhead, the heavy
       chop, the low sweep, the second breath)"
     notes: "SYS-07's OQ#11 resolved. MACHINE unassigned at MVP (recorded). The
       awards ride SYS-07's XP_T1/T2/T3 keyed on the tier SYS-13 assigns. The
@@ -93,7 +93,7 @@ entities:
       V-ENM-14); the sweep is the one authored unclashable strike (80 ms < 84,
       the denied lean). Poise: Warden telegraph_active; Husk/Spitter none."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): hp 30/60/120 → 6/12/24 and awards 15/35/70 → 3/7/14 (the ÷5 rescale); the SYS-13 rider re-prints its GDD's copies"
 
   - name: shake_request
     status: active
@@ -724,6 +724,21 @@ entities:
     added: 2026-11-15
     revised: ""
 
+# 2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline rework): SYS-08's damage boundary registered.
+  - name: damage_event
+    status: active
+    source: design/gdd/combat.md
+    referenced_by:
+      - design/gdd/combat.md
+      - design/gdd/health-damage.md
+    kind: published_contract
+    published_by: SYS-08 Combat
+    consumed_by: "SYS-07 (the resolver's input — HP, the ladder dispatch, the death edge) · SYS-02/SYS-15 (the ENVIRONMENT variant: `source = ENV`, `raw_damage = hp_max`)"
+    values: "DamageEvent {source, target, raw_damage, kind ∈ {NORMAL, COUNTER, DEFLECT, ENEMY_STRIKE, ENVIRONMENT}, arc ∈ {ATK1, ATK2, CROUCH, AIR, ABILITY, NONE}, contact_tick} — six fields; `raw_damage` already includes the counter's 1.5× (the producer law, TR-HD-005)"
+    notes: "TR-CMB-025's boundary: Combat publishes, SYS-07 owns HP/damage/death/respawn; Combat contains no HP field. `arc` was added by D-ORCH-03 — it is the ladder's column selector, and a NORMAL/COUNTER event with `arc = NONE` is a SYS-07 dispatch rejection (dev assert). The ENVIRONMENT variant carries the `ENV` sentinel source (SYS-02's pit, SYS-15's surfaces) and bypasses i-frames/defense per TR-HD-018."
+    added: 2026-11-15
+    revised: ""
+
 # Example (remove when first real entry is added):
 #
 # entities:
@@ -966,10 +981,10 @@ constants:
       TR-CMB-010 the value is SYS-13's (Combat's table carries the knob row;
       SYS-13 owns the value and the behavior — TR-ENM-018). The window grants
       the chain's answer: the chain cycle is 37 ticks; the counter+chain
-      ceiling is 60 = T2's pool at defaults (81 at ATK 132) — flagged for
+      ceiling is 12 = T2's pool at defaults (18 at ATK 132) — flagged for
       playtest (SYS-13's OQ-ENM-4)."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): the note's ceiling re-derived 60 → 12 (18 at ATK 132); the value 800 ms is unchanged"
   - name: warden_overhead_active_ms
     status: active
     source: design/gdd/enemy-ai-telegraphs.md
@@ -1011,9 +1026,16 @@ constants:
     notes: "The charge orb's damage — its own registered value (TR-CMB-015's
       prototype default), NOT a strike-table row. The deflected orb keeps this
       damage with the owner flipped (friendly fire — TR-HD-019); a deflected
-      kill publishes killer_id = player."
+      kill publishes killer_id = player. **HELD 2026-11-15 (D-ORCH-03):** the
+      ÷5 rescale re-derives 8 → 2, but the value stays 8 until the coordinated
+      SYS-13 rider lands in `enemy-ai-telegraphs.md` (hp/awards, the orb across
+      TR-ENM-011/F-ENM-07/TR-ENM-024/AC-ENM-18, the flash band, the ceiling,
+      V-HD-06, the one-shot re-decision) — flipping the mirror ahead of its
+      source would make the registry the second source the mirror rule
+      forbids. The strike contract's payload already reads 2; the two
+      re-converge at the rider."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03): HELD at 8 — the ÷5 re-derivation (8 → 2) waits for the coordinated SYS-13 rider; no value change"
   - name: spitter_orb_speed_px_s
     status: active
     source: design/gdd/enemy-ai-telegraphs.md
@@ -1254,84 +1276,84 @@ constants:
     referenced_by:
       - design/gdd/combat.md
       - design/gdd/health-damage.md
-    value: 10
+    value: 2
     unit: hp
-    notes: "Dirge-042's ATK1 damage; SYS-07 consumes it in the dealt pipeline.
-      TR-CMB-004 / F-HD-02."
+    notes: "Dirge-042's ATK1 damage; SYS-07 consumes it in the dealt pipeline
+      (the ladder's row 0 at ATK 100). TR-CMB-004 / F-HD-02."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 10 → 2 (the ÷5 rescale; the SYS-08 co-clause)"
   - name: atk2_damage
     status: active
     source: design/gdd/combat.md
     referenced_by:
       - design/gdd/combat.md
       - design/gdd/health-damage.md
-    value: 20
+    value: 4
     unit: hp
-    notes: "Dirge-042's ATK2 damage; the chain total is 30 at ATK 100.
+    notes: "Dirge-042's ATK2 damage; the chain total is 6 at ATK 100.
       TR-CMB-004 / F-HD-02."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 20 → 4 and the note's chain total 30 → 6 (the ÷5 rescale; the SYS-08 co-clause)"
   - name: crouch_attack_damage
     status: active
     source: design/gdd/combat.md
     referenced_by:
       - design/gdd/combat.md
       - design/gdd/health-damage.md
-    value: 8
+    value: 2
     unit: hp
     notes: "Dirge-042's crouch-attack damage; SYS-07 consumes it.
       TR-CMB-004 / F-HD-02."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 8 → 2 (the ÷5 rescale; the crouch loses its number gap to ATK1 — arc + hitbox carry the distinction)"
   - name: air_attack_damage
     status: active
     source: design/gdd/combat.md
     referenced_by:
       - design/gdd/combat.md
       - design/gdd/health-damage.md
-    value: 10
+    value: 2
     unit: hp
     notes: "Dirge-042's air-attack damage; SYS-07 consumes it.
       TR-CMB-004 / F-HD-02."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 10 → 2 (the ÷5 rescale; the SYS-08 co-clause)"
   - name: strike_dmg_p1
     status: active
     source: design/gdd/health-damage.md
     referenced_by:
       - design/gdd/health-damage.md
       - design/gdd/combat.md
-    value: 6
+    value: 1
     unit: hp
     notes: "SYS-07's enemy-strike damage for power 1; Combat stamps raw_damage
       from the table. TR-HD-003 / F-HD-01."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 6 → 1 (the ÷5 rescale; P1 is fixed at 1 by integer rounding)"
   - name: strike_dmg_p2
     status: active
     source: design/gdd/health-damage.md
     referenced_by:
       - design/gdd/health-damage.md
       - design/gdd/combat.md
-    value: 12
+    value: 2
     unit: hp
     notes: "SYS-07's enemy-strike damage for power 2 (the knockdown tier).
       TR-HD-003 / F-HD-01."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 12 → 2 (the ÷5 rescale)"
   - name: strike_dmg_p3
     status: active
     source: design/gdd/health-damage.md
     referenced_by:
       - design/gdd/health-damage.md
       - design/gdd/combat.md
-    value: 20
+    value: 4
     unit: hp
     notes: "SYS-07's enemy-strike damage for power 3 (the heavy tier).
       TR-HD-003 / F-HD-01."
     added: 2026-11-12
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): 20 → 4 (the ÷5 rescale; the spread widens to 1:2:4)"
   - name: hitstop_hit_ms
     status: active
     source: design/gdd/combat.md
@@ -1472,12 +1494,12 @@ constants:
     value: "hp_max"
     unit: hp (sentinel)
     notes: "The pit's ENVIRONMENT event payload (SYS-02's F-RWS-05): raw_damage = hp_max
-      (100 at the default profile), source = ENV (entity id 0), kind = ENVIRONMENT — the
+      (20 at the default profile), source = ENV (entity id 0), kind = ENVIRONMENT — the
       pairing TR-HD-002 demands; the i-frame/defense bypass is TR-HD-018's law; through the
       death edge + DeathRecord. Hazards never write HP. Release gate (OQ-RWS-4): the pit and
       the module revive must not co-ship until last_grounded_safe_pos is ratified."
     added: 2026-11-13
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline): the note's printed pool 100 → 20; the value `hp_max` is unchanged — the law is scale-free (SYS-02's F-RWS-05/AC-RWS-14 rider re-prints it)"
 
 # 2026-11-14 (dual-reality-state.md): OQ-J1's values authored (SYS-09).
   - name: flip_freeze_ms
@@ -1569,6 +1591,110 @@ constants:
       re-validated on every live edit; production keeps the last good table
       (SYS-02's validation law consumed). LINE_MAX_CHARS re-pins at the font
       lock (OQ-NAR-3)."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline rework): the low-stat baseline's
+# cross-boundary constants. `atk_per_point` is registered when SYS-16 lands (the ladder's
+# index divisor crosses to OQ#20).
+  - name: player_max_hp
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+      - design/gdd/juice-feedback.md
+    value: 20
+    unit: hp
+    notes: "TR-HD-010's level-1 pool (PLAYER_MAX_HP; safe range 12–32). The VS
+      curve re-bases on it (`hp_max = PLAYER_MAX_HP + HP_PER_POINT × (L−1)` =
+      58 at L20 — OQ#20). SYS-15's AC-CSD-05 fixture prints it; SYS-24 reads
+      `HealthRead.hp_max`, never the constant. The pit's `raw_damage = hp_max`
+      is scale-free (`env_void_damage`); SYS-29's `overkill_ratio` divides by it."
+    added: 2026-11-15
+    revised: ""
+  - name: hp_per_point
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+    value: 2
+    unit: hp per training point
+    notes: "F-HD-14's CHASSIS step (safe range 1–3): `hp_max = PLAYER_MAX_HP +
+      HP_PER_POINT × hp_points` (20 → 28 on four points; +10% of the pool per
+      point). SYS-15's cache spend surface prints the per-point delta (the
+      CHASSIS row) at MVP; SYS-26's preview is VS."
+    added: 2026-11-15
+    revised: ""
+  - name: training_data_l2
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+    value: 20
+    unit: training data (cumulative)
+    notes: "TR-HD-007's cumulative threshold for level 2 (safe range 12–32).
+      SYS-07 publishes `HealthRead.training_data`; SYS-15's terminal renders
+      the level and the banked points; SYS-24 renders the level-up cue."
+    added: 2026-11-15
+    revised: ""
+  - name: training_data_l3
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+    value: 50
+    unit: training data (cumulative)
+    notes: "TR-HD-007's cumulative threshold for level 3 (safe range 36–70)."
+    added: 2026-11-15
+    revised: ""
+  - name: training_data_l4
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+    value: 90
+    unit: training data (cumulative)
+    notes: "TR-HD-007's cumulative threshold for level 4 (safe range 70–120)."
+    added: 2026-11-15
+    revised: ""
+  - name: training_data_l5
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+    value: 140
+    unit: training data (cumulative)
+    notes: "TR-HD-007's cumulative threshold for level 5 — the MVP cap
+      (`LEVEL_CAP_MVP` 5; safe range 110–180). No further training data accrues
+      past it (SYS-15's TR-CSD-006 consumes the cap)."
+    added: 2026-11-15
+    revised: ""
+  - name: damage_ladder_mvp
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/combat.md
+      - design/gdd/cache-stations-death.md
+    value: "step 0 (attack 100) 2/4/2/2 chain 6 · 1 (108) 3/4/2/3 chain 7 ·
+      2 (116) 3/5/3/3 chain 8 · 3 (124) 4/5/3/3 chain 9 · 4 (132) 4/6/3/4
+      chain 10 — columns ATK1 / ATK2 / crouch / air + the derived chain"
+    unit: hp
+    notes: "F-HD-14's printed 5×4 ladder (D-ORCH-03) — the MVP dealt law, not a
+      percent curve. Row 0 is validated against the four raw weapon knobs (a
+      disagreement is a boot failure) and row 4's chain ≤ 10 (V-HD-12; a live
+      edit splits by case: reject for row-0/row-4/ATK1-crouch-air,
+      clamp-and-revalidate for ATK2/chain). `step(attack) = clamp(floor((attack
+      − PLAYER_ATK_BASE) ÷ ATK_PER_POINT), 0, 4)`, scoped to attack ≤ 132 —
+      above it the VS sheet governs (OQ#20). **SYS-15 is the MVP consumer**
+      (the cache spend surface: a committed STRIKES row moves the step the
+      player feels; SYS-26's per-step preview is VS)."
     added: 2026-11-15
     revised: ""
 
