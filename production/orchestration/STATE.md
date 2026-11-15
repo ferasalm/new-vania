@@ -75,14 +75,15 @@ or failed PR keeps the lock and the request in `review-queue.md` §5 for retry.
 squash-merged as `fac409f` — but its release edit never landed, so `Main` still
 read "acquired by the SYS-16 sync" / "PR open". This sync therefore **releases
 the SYS-16 hold and re-acquires the lock in one edit** (a landed sync may not
-keep the lock nominally). **The release to `shared_file_lock: none` happens with
-the orchestrator's next receipt after this sync's merge** — the orchestrator
-merges PR #82 (the SYS-14 GDD) next and records the release, #82's landing and
-this sync's landing hash together.
+keep the lock nominally). **The release to `shared_file_lock: none` is recorded
+with the orchestrator's receipt for this sync's merge** — together with this
+sync's landing hash. **PR #82 (the SYS-14 GDD) does not gate the release**: it
+merges after this sync by review-queue §7 rule 4, and its landing is recorded
+separately in its own receipt.
 
 The request being applied: `../new-vania-sys14-grief-boss-framework/production/session-state/lane-SYS-14-report.md`
-§A–§B (order 2 in `review-queue.md` §5; order 1 — the SYS-16 sync — landed as
-`fac409f`).
+§A–§B (order 1 in `review-queue.md` §5 — the SYS-16 sync that held it landed as
+`fac409f` and is out of the active queue).
 
 **Landed receipt 2026-11-15 (order 1, the SYS-16 sync)** — **PR #84**
 (`chore/sync-sys16` → `Main`), squash-merged as **`fac409f`**:

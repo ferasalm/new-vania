@@ -855,11 +855,12 @@ entities:
     kind: published_contract
     attributes:
       shape: "arena_hold {zone_id, active} — published every physics tick, idempotent (the TR-MOV-022 level pattern)"
-      keying: "room-entry keyed: active = (the player's current room == RM-06); the rise at the entry swap, the fall at the room swap or the death script's tail"
+      keying: "room-entry keyed, ONE predicate with two terms: `active = (the player's current room == RM-06) ∧ (the fight not resolved)` — the room term governs the rise at the entry swap and the fall at the room swap; the resolved term falls the hold at `script_end` (so the exit arc runs with the hold already down — the glide killed by the midpoint swap; ≤ 21 ticks of fresh-FOLLOW in the basin, AC-GBF-16's fixture)"
       intro_mask: "INTRO_BEAT_MS 600 >= HOLD_EASE_MS 400 (the OQ-RWS-8 rider) — the approach hides under the intro"
-      exit: "the scripted exit arc ARENA_EXIT_MS 700 at the death script's tail — the swap at the arc's midpoint (F-RWS-03's law), the re-anchor at RM-05's anchor behind the door frame"
+      exit: "the scripted exit arc ARENA_EXIT_MS 700 at the death script's tail — the hold is already down at `script_end` (the resolved term), the swap at the arc's midpoint (F-RWS-03's law), the re-anchor at RM-05's anchor behind the door frame"
       notes: "SYS-32 owns the hold law (TR-CAM-012); SYS-14 publishes the level and keeps the fight in the staging band; ARENA_FOLLOW_FALLBACK stays off"
     added: 2026-11-15
+    revised: "2026-11-15 (the CodeRabbit thread: the keying restated as the GDD's final two-term predicate — the sync request's text predated the lane's own CR-3 repair, which the approved GDD carries)"
 
   - name: staging_band_denial
     status: active
