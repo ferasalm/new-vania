@@ -72,7 +72,9 @@ merge, required-review-only; 3 threads: 2 applied, 1 rebutted).
 
 The sync lane acquires the lock in `STATE.md`, rebases on `origin/Main`
 immediately before the edit, applies serially, validates, commits, pushes,
-updates the manifest, releases the lock. Never force-push.
+opens the PR, updates the manifest — and **releases the lock only after the
+sync PR merges** (`prompts/sync-lane.md` §6; a blocked PR keeps the lock and
+the request in place for retry). Never force-push.
 
 ## 6. Blocked / waiting
 
