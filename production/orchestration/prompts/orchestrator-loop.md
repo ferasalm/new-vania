@@ -121,8 +121,12 @@ For each launch:
    - **Retry policy**: up to **4 spawn attempts** on server-side errors
      (`ProviderModelNotFoundError`, `AiError: Capacity temporarily exceeded`,
      HTTP 5xx / rate limits). After the 4th failure, apply the §3 fallback
-     asymmetry — DS→GLM autonomously; GLM→DS never.
-6. Update the manifest status to `AUTHORING`; update `STATE.md`.
+     asymmetry — DS→GLM autonomously; GLM→DS only on an explicit user decision
+     (otherwise park `PAUSED`).
+6. After a runner spawns successfully (including a DS→GLM fallback spawn),
+   update the manifest status to `AUTHORING`; update `STATE.md`. If every
+   attempt fails, keep the lane `PAUSED` — never set `AUTHORING` on a failed
+   launch.
 
 ## 6. At every lane boundary
 

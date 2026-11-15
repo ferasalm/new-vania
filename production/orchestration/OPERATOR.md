@@ -14,8 +14,10 @@
    block** (below).
 5. **Approve** section drafts in the lane chats: `Approved — write it.`
 6. **Decide** the batch when presented — one message, `ID: choice` lines.
-7. At **~250k** in the orchestrator chat: paste `NEXT.md` into a **fresh chat**.
-   Never `/clear` and never compact the orchestrator chat.
+7. At **~250k** in the orchestrator chat: once the current atomic step is
+   finished and `STATE.md` + `active.md` are updated with the handoff, paste
+   `NEXT.md` into a **fresh chat**. Never `/clear` and never compact the
+   orchestrator chat.
 
 ## Where everything lives
 
@@ -79,8 +81,9 @@ UNATTENDED RUN AUTHORIZATION (this run only):
   handoff.
 - Routing: creative → **GLM-5.3-flash**; technical → **DS v4.1-flash**.
 - Spawn failures: up to **4 attempts** on server-side errors, then a technical
-  (DS) lane may fall back to GLM; a creative (GLM) lane **never** falls back to
-  DS — it is parked `PAUSED` and the decision comes to you.
+  (DS) lane may fall back to GLM autonomously; a creative (GLM) lane never
+  falls back to DS **autonomously** — it is parked `PAUSED`, and only your
+  explicit decision can authorize DS.
 
 ## The three rules
 
