@@ -57,6 +57,7 @@ entities:
       - design/gdd/enemy-ai-telegraphs.md
       - design/gdd/combat.md
       - design/gdd/health-damage.md
+      - design/gdd/grief-boss-framework.md
     kind: published_contract
     published_by: SYS-13 Enemy AI & Telegraphs
     consumed_by: SYS-08 Combat (the exchange resolution — the probe, the clash matrix, the orders) · SYS-07 (the damage stamp from the power table)
@@ -129,6 +130,7 @@ entities:
     referenced_by:
       - design/gdd/room-world-structure.md
       - design/gdd/seam-borders.md
+      - design/gdd/grief-boss-framework.md
     kind: published_contract
     published_by: SYS-02 Room & World Structure
     consumed_by: SYS-32 Camera & Framing (the bounds are the camera's default limits — "room limits first")
@@ -594,6 +596,7 @@ entities:
       - design/gdd/health-damage.md
       - design/gdd/audio-core.md
       - design/gdd/juice-feedback.md
+      - design/gdd/grief-boss-framework.md
     kind: published_contract
     published_by: SYS-15 Cache Stations & Death-as-Story (TR-CSD-008/009)
     consumed_by: SYS-07 (TR-HD-023's screen half — the options contract is consumed verbatim) ·
@@ -619,6 +622,7 @@ entities:
       - design/gdd/cache-stations-death.md
       - design/gdd/health-damage.md
       - design/gdd/room-world-structure.md
+      - design/gdd/grief-boss-framework.md
     kind: published_contract
     published_by: SYS-15 (TR-CSD-011/012, F-CSD-01)
     consumed_by: "SYS-07 (the increment points: reconstruct + revive, TR-HD-023/025) · SYS-03
@@ -813,6 +817,96 @@ entities:
     notes: "**The load-time validation (the law for a catalogue that moved under a save):** LOAD validates every equipped id against the catalogue and the loadout against the guardrail, and **a slot or `owned` entry whose payload cannot be validated is cleared (the slot to `null`, the id from `owned`) with exactly ONE report naming it — the load itself never fails for gear.** That is the defined outcome for the two instabilities CodeRabbit found at review: a save from a build that shipped a removed module, and `owned` ids with no payload. **The joint case — a valid-payload pair that fails the guardrail together** (a save made while the exception was open restores Regulator-000 + Governor-207 into a build where it is closed: both ids valid, the pair unpayable at `Δhp` −4 against the required −6, TR-PRG-017/F-PRG-07): LOAD repairs it by the same law, not a second one — it clears **the slot whose removal restores validity, the drive first where either would do** (the damage payload is the one that must pay under term (b), and clearing the frame cannot fix a payment shortfall), reports the cleared id once, and **never weakens the guardrail to admit the pair**. The bump is the named gate: without it progression state is session-only, so it cannot be silently dropped."
     added: 2026-11-15
     revised: ""
+
+# 2026-11-15 (lane SYS-14, the grief-boss sync — report §A): the grief-boss layer's published
+# surfaces. SYS-14 publishes the rig, the arena hold and the crack route; the boss's death beats.
+# Every value is authored against SYS-07's 20-HP baseline (D-ORCH-03): the boss pool is 60, the
+# lie's floor is 20, the kill award is 40 (registered on the existing `xp_boss` entry, not a
+# duplicate — see its note).
+  - name: grief_boss_rig_contract
+    status: active
+    source: design/gdd/grief-boss-framework.md
+    referenced_by:
+      - design/gdd/grief-boss-framework.md
+      - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/health-damage.md
+      - design/gdd/camera-framing.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/dual-reality-state.md
+      - design/gdd/cache-stations-death.md
+    kind: published_contract
+    attributes:
+      grief_states: "DENIAL | ANGER | BARGAINING | DEPRESSION | ACCEPTANCE (one rig, five truths)"
+      authored_at_mvp: "DENIAL only (V-GBF-01: exactly one authored BossRig row; the other four are gated placeholders with zero values)"
+      boss_archetype: "grief_denial — tier boss, hp_max 60, soul_class HUMAN, poise telegraph_active, death_scripted TRUE"
+      interaction_rule: "Denial: the lie holds — hp_floor 20 in LIE_WHOLE (the death edge cannot fire), cracked by 3 unanswered ring sweeps (the whiff counter), the crack beat releases the floor to 0 (the FloorReleaseRequest — SYS-07 executes the write)"
+      arena: "arena_hold {zone_id: denial_arena, active} — idempotent level, room-entry keyed; the staging band x [3296, 3744] x y [65, 287]; the drop seal (authored geometry, never a mutation set); the scripted exit arc at the death script's tail"
+      knowledge_route: "IP-10: the crack route — the scuff + the halo hairlines + the bar's stall; no new interactable (RM-06's set = empty), no tell (V-DR-01)"
+    added: 2026-11-15
+
+  - name: arena_hold_level
+    status: active
+    source: design/gdd/grief-boss-framework.md
+    referenced_by:
+      - design/gdd/grief-boss-framework.md
+      - design/gdd/camera-framing.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/dual-reality-state.md
+    kind: published_contract
+    attributes:
+      shape: "arena_hold {zone_id, active} — published every physics tick, idempotent (the TR-MOV-022 level pattern)"
+      keying: "room-entry keyed: active = (the player's current room == RM-06); the rise at the entry swap, the fall at the room swap or the death script's tail"
+      intro_mask: "INTRO_BEAT_MS 600 >= HOLD_EASE_MS 400 (the OQ-RWS-8 rider) — the approach hides under the intro"
+      exit: "the scripted exit arc ARENA_EXIT_MS 700 at the death script's tail — the swap at the arc's midpoint (F-RWS-03's law), the re-anchor at RM-05's anchor behind the door frame"
+      notes: "SYS-32 owns the hold law (TR-CAM-012); SYS-14 publishes the level and keeps the fight in the staging band; ARENA_FOLLOW_FALLBACK stays off"
+    added: 2026-11-15
+
+  - name: staging_band_denial
+    status: active
+    source: design/gdd/camera-framing.md
+    referenced_by:
+      - design/gdd/camera-framing.md
+      - design/gdd/grief-boss-framework.md
+      - design/gdd/room-world-structure.md
+    kind: contract
+    attributes:
+      band: "x [3296, 3744] (448 px) x y [65, 287] (222 px) — 16 px horizontal / 24 px vertical interior margin"
+      duty: "every fight participant and threat effect (both fighters, the strikes, the ring return, the beat); the player's reachable space sealed to the band (the walkable-tile check)"
+      ratification: "ratified at SYS-14 authoring (OQ-CAM-3, 2026-11-15) — SYS-14 + level-designer author to it; the validator's live check runs at the arena story (AC-CAM-11b)"
+    added: 2026-11-15
+
+  - name: boss_crack_route
+    status: active
+    source: design/gdd/grief-boss-framework.md
+    referenced_by:
+      - design/gdd/grief-boss-framework.md
+      - design/gdd/health-damage.md
+      - design/gdd/enemy-ai-telegraphs.md
+    kind: published_contract
+    attributes:
+      floor_gate: "LIE_WHOLE: hp_floor 20 (the lie's armor — the death edge cannot fire while floor > 0, TR-HD-021/F-HD-05 verbatim); damage applies; the boss bar stalls at 1/3"
+      crack: "3 unanswered ring sweeps (the whiff counter; a contact publication — application rejected or not — denies the whiff) fire the crack beat (CRACK_BEAT_MS 2000): the decisions suspend, the floor releases to 0, the halo breaks"
+      cues: "crack_stage = clamp(whiff_count, 0, 3) — the derived view (the counter's, never the beat's); value-only hairlines; no HUD counter"
+      knowledge_route: "IP-10's answer — the grind route walls at the floor; the route past the grind is behavioral (the reads), taught by the scuff + the cues + the stall"
+    added: 2026-11-15
+
+  - name: boss_death_script
+    status: active
+    source: design/gdd/grief-boss-framework.md
+    referenced_by:
+      - design/gdd/grief-boss-framework.md
+      - design/gdd/juice-feedback.md
+      - design/gdd/audio-core.md
+      - design/gdd/cache-stations-death.md
+      - design/gdd/camera-framing.md
+    kind: published_contract
+    attributes:
+      flag: "death_scripted TRUE on the boss's HealthProfile — the defeat publishes once with the scripted flag; SYS-14 owns the transition"
+      beats: "death_script_start -> the recognition beat (RECOGNITION_BEAT_MS 2500: the ring falls, the crack spreads, she looks — the fight's first and only acknowledgment) -> the dissolve (DISSOLVE_MS 1500) -> script_end -> the exit arc (ARENA_EXIT_MS 700, the swap at the arc's midpoint per F-RWS-03)"
+      edge_discipline: "SYS-14 authors the beats and publishes the edge list — no VFX values, no audio dB (SYS-29/SYS-04 design against the edges)"
+      award: "XP_BOSS 40 on the DefeatEvent (SYS-07's knob — registered as `xp_boss`)"
+      persistence: "no boss-defeated save family at MVP — the denial repeats on re-entry (the VS family is a batched SYS-02/SYS-03 revision request, OQ-GBF-4)"
+    added: 2026-11-15
 
 # Example (remove when first real entry is added):
 #
@@ -1219,6 +1313,7 @@ constants:
       - design/gdd/camera-framing.md
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
+      - design/gdd/grief-boss-framework.md
     value: "2.45 / 6.55"
     unit: "ms p99.9 / ms max"
     notes: "The MVP gameplay-tick envelope's fourth record (the name is the
@@ -1238,9 +1333,13 @@ constants:
       in its GDD's performance-envelope ruling — recorded 2026-11-14). SYS-10
       explicitly does NOT join either (the event-driven mutation state — the edge
       signal, the one-store transaction, the load-phase reconcile; the not-join +
-      re-open condition printed in TR-WME-011 — recorded 2026-11-14, S1-002b)."
+      re-open condition printed in TR-WME-011 — recorded 2026-11-14, S1-002b). SYS-14
+      explicitly does NOT join (the boss layer executes inside SYS-13's 0.25/0.75
+      allocation — the not-join and the re-open condition are printed in its GDD's
+      TR-GBF-024: a layer share > 0.05 ms of SYS-13's budget fires the
+      eighth-allocation request to the QA-plan sync; recorded 2026-11-15)."
     added: 2026-11-13
-    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system); 2026-11-14 (SYS-10's not-join recorded — S1-002b)"
+    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system); 2026-11-14 (SYS-10's not-join recorded — S1-002b); 2026-11-15 (SYS-14's not-join recorded — the boss layer runs inside SYS-13's allocation; the composition stays seven-system)"
 
   - name: intent_window_ms
     status: active
@@ -1945,15 +2044,21 @@ constants:
     referenced_by:
       - design/gdd/health-damage.md
       - design/gdd/progression.md
+      - design/gdd/grief-boss-framework.md
     value: 40
     unit: training data
     notes: "TR-HD-007's boss award — **SYS-07's constant, not SYS-14's**: SYS-14 authors the
       boss's profile, phases and caps, never its award (the two-owner ambiguity this lane
       found and named; SYS-16's TR-PRG-004/005 consume it from SYS-07's registration). It is
       what makes the fourth pass land L5 (120 + 40 = 160; the 20 excess is discarded at the
-      cap) — `PACING_PASSES_L5_MAX` 4 counts it, and pure farm alone would need five passes."
+      cap) — `PACING_PASSES_L5_MAX` 4 counts it, and pure farm alone would need five passes.
+      **SYS-14 ratifies 40 (2026-11-15)** at its authored default: the award rides the
+      DefeatEvent, range 20-60 (SYS-07's `XP_BOSS` knob). The re-fight re-grant (no
+      boss-defeated persistence at MVP) is OQ-GBF-9's economy rider at the QA-plan sync. This
+      entry is the sync's fold target for the lane request's `boss_kill_award` — one fact, one
+      entry (the no-duplicate rule)."
     added: 2026-11-15
-    revised: ""
+    revised: "2026-11-15 (lane SYS-14: the boss's ratification of 40 recorded; the request's separate `boss_kill_award` entry folded here)"
 
 # 2026-11-15 (lane SYS-16, the progression sync — report §4b): SYS-16's own constants. All
 # designer-only at MVP (no player-facing knob); every one is validated at config load and
@@ -2121,6 +2226,26 @@ constants:
       (3 passes = 90, + the fourth pass 30 = 120, + `xp_boss` 40 = 160 ≥ 140; the 20 excess is
       discarded at the cap). Pure farm alone needs five passes — the boss is the fifth rung of
       the curve, not an optional detour."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-14, the grief-boss sync — report §A6): the boss's pool, re-derived at the
+# D-ORCH-03 baseline. The lane's request also carried `boss_kill_award` 40; it is registered on the
+# existing `xp_boss` entry (same source, same value, same SYS-07 knob) — this file's no-duplicate
+# rule, and the request's own fold clause, put the award there rather than in a second entry.
+  - name: boss_hp_pool
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/grief-boss-framework.md
+      - design/gdd/enemy-ai-telegraphs.md
+    kind: constant
+    value: 60
+    range: "40-80 (SYS-07's BOSS_HP knob; <40: the boss is a room, >80: a slog)"
+    notes: "SYS-07 owns the range (TR-HD-011); SYS-14 ratifies 60 at its authored default (the
+      OQ-HD-10 answer, 2026-11-15). The systems-index SYS-14 bullet's stale '300 HP' is corrected
+      to 60 by this sync (the pre-rework value)."
     added: 2026-11-15
     revised: ""
 
