@@ -527,6 +527,22 @@ its sorted position when the target is already `DEAD` is rejected and never rewr
 the recorded cause. **Because this reads TR-HD-020's sentence rather than restating
 it, it is filed as CR-HD-02** — a one-clause rider, not a silent reading.
 
+**§4b-i · The third key's reachability, which is what makes the order
+delivery-stable.** The third key is `publication_index` — SYS-07's **arrival** index —
+so it is only consulted when the first two keys tie: two events sharing both a
+`contact_tick` and a `source_id`. **At MVP that pair is unreachable**, for two
+independent reasons: two identical events are rejected by term 9's idempotence key
+(the six-tuple includes `raw_damage`, `kind` and `arc`), and SYS-13 does not ship
+same-tick multi-hit strikes — SYS-07's **OQ#17** says a per-strike id "would replace
+the tuple key **if** SYS-13 ever ships same-tick multi-hit strikes". So over every
+reachable batch the order is fixed by `(contact_tick, source_id)` alone and is
+**identical for every delivery order**, which is what the conformance criterion
+asserts. Two consequences are stated rather than left implicit: a **VS** same-tick
+multi-hit strike makes the third key load-bearing, and the answer is then the
+producer's `strike_id` (OQ#17's own remedy — a SYS-08 schema addition, not this ADR's);
+and a producer bug that publishes two distinct events from one source in one tick is a
+**dev assert** (the case the arrival key would otherwise paper over).
+
 The **heal/use phase resolves after the damage phase in the same tick**: a heal whose
 target reached `DEAD` is refused and its charge is preserved. The reducer exposes
 `heal_phase()` as a distinct entry so the order is a call order, not a hope.
@@ -675,11 +691,15 @@ func roll(attacker_id: int, defender_id: int, contact_tick: int) -> float   # [0
 through the **port's per-phase binding**: the reducer calls `bind_phase(logic_tick)`
 once at the top of `damage_phase`, and every `roll()` in that phase composes the
 four-part key with the bound tick. For a same-tick event the bound tick **is** the
-`contact_tick`; for a late event (the 1–2-tick window §4a exists for) they differ,
-and the key uses the **bound** tick — the tick the roll is taken on, which is the
-only value that makes two replays of the same event stream agree. This is why the
-resolver needs no change at the VS handoff: the key's fourth part is the port's
-business, and the resolver's signature is already correct.
+`contact_tick`; for a late event (the 1–2-tick window §4a exists for) they differ, and
+the key uses the **bound** tick — the tick the roll is taken on. **That is TR-HD-037's
+letter, not a shortcut**: `logic_tick` is the *resolution* tick, so the roll is a
+function of when the event resolved, and a late event delivered at a different tick
+legitimately takes a different roll. What determinism requires is narrower and is what
+the fixtures assert: **two replays that deliver the same stream at the same ticks agree
+bit-for-bit**, including the late events. This is why the resolver needs no change at
+the VS handoff: the key's fourth part is the port's business, and the resolver's
+signature is already correct.
 
 - **`FixedRngPort`** returns the **median roll, 0.5**, for every key — the fixture
   port. It makes a trace bit-identical and it is what AC-HD-39's replay uses.
@@ -813,7 +833,7 @@ with a different name:
 | Path | `restore_complete` (SYS-03/ADR-0002) → `load_complete` (SYS-05) → `ALIVE` | `DEAD` → `RECONSTRUCTING` → `load_complete` → `ALIVE` |
 | HP | `hp_max` — **no HP field is read** (TR-HD-032) | `hp_max` (F-HD-08) |
 | Quick slot | `CACHE_REFILL` (3) | `CACHE_REFILL` (3) |
-| **Restore modules** | **0** — no module is carried into a load (§9b) | the drawn module is consumed; the count is otherwise unchanged |
+| **Restore modules** | **0** — no module is carried into a load (§9b) | **reconstruct: unchanged** — the carried module is neither consumed nor re-granted (it is live session state, TR-CSD-013's "except the revive's consumption"); **revive: consumed** — that *is* the revive (§8b) |
 | Ledger / latch | ∅ / clear | ∅ / clear |
 | `hp_floor` | the profile's base | **reset to the profile's base** (F-HD-08's list) |
 | Progression source | the **save** (`progression` namespace, SYS-16's carry) | the **live carry** — a level earned after the last save is never rolled back (TR-CSD-013's no-XP-loss law, the read-gated window) |
@@ -940,14 +960,17 @@ the pool, the off-switch". Both are true once the boundary is drawn at the recor
   ring exposes its `head` and `occupancy`, so a fixture asserts 32/32 with the head
   wrapped — a dropped number is a diagnostic of the ring, not a gate rejection, and
   the GDD's telemetry set gains nothing here.
-- **`amount` is `applied`, always.** The record's amount is the **value the
-  subtraction actually did** — `DamageResult.applied` (post-cap), and for a heal the
-  applied portion (`min(amount, hp_max − hp_current)`, F-HD-06) — never `dealt` and
-  never the requested amount. A boss's 6-into-cap-2 publishes **2**, and a Suture at
-  18/20 publishes **2**, so the number and the bar can never disagree. That is the one
-  lie the fantasy's first term forbids ("every number is earned and shown"), and §3b
-  makes `dealt` and `applied` deliberately distinct, so the record has to say which.
-  `capped` stays in `DamageResult` for telemetry only.
+- **`amount` is the HP change, always.** The record's amount is the **HP the
+  subtraction actually removed or restored** — `hp_before − hp_after` for damage, and
+  for a heal the applied portion (`min(amount, hp_max − hp_current)`, F-HD-06) — never
+  `dealt`, **never `DamageResult.applied`** (post-cap, but it can still exceed the HP
+  removed: a 1-HP target taking an uncapped 6 loses **1**, and a boss held at its
+  `hp_floor` loses 0), and never the requested amount. `overkill` carries the excess
+  separately. A boss's 6-into-cap-2 publishes **2**, a 6-into-1-HP publishes **1**, and
+  a Suture at 18/20 publishes **2**, so the number and the bar can never disagree. That
+  is the one lie the fantasy's first term forbids ("every number is earned and shown"),
+  and §3b makes `dealt` and `applied` deliberately distinct, so the record has to say
+  which. `capped` and `overkill` stay in `DamageResult` for telemetry only.
 - **SYS-07 owns the zero-frame law.** The record is written **on the contact tick**,
   in the same damage phase that applies it — zero frames relative to the hit-stop
   onset, because the onset is next tick's phase 0 (§4).
@@ -961,10 +984,16 @@ the pool, the off-switch". Both are true once the boundary is drawn at the recor
   700 ms lifetime is measured on the **freeze-holding clock** (`logic_tick`,
   `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` ticks) — a number must not outlive
   its own hit-stop's clock law.
-- **The off-switch suppresses publication**, not rendering: with the switch off the
-  ring stays empty (AC-HD-38's "the off-switch hides all numbers" becomes a ring
-  occupancy of 0, which is falsifiable headless), and no telemetry record is emitted
-  for a suppressed number.
+- **The off-switch suppresses publication, and the toggle also clears.** With the
+  switch off the reducer does not write the ring, so a session that starts with it off
+  has an occupancy of 0. **A mid-session toggle to off clears the ring in the same
+  call** (`set_numbers_enabled(false)` empties the ring and resets the head) and
+  **publishes the same flag** so the render side releases every active lease on that
+  signal — otherwise a visible number would outlive its own record by up to its 42-tick
+  lifetime, and AC-HD-38's "hides all numbers" would hold only for numbers not already
+  on screen. The **owner of the release is SYS-24/SYS-29** (they own the labels); the
+  **owner of the signal is SYS-07** (it owns the ring and the setting read, §8b). No
+  telemetry record is emitted for a suppressed number.
 - **The render side's text is not SYS-07's**, but the churn bar is: a `Label.text`
   assignment allocates a `String`, and `str(amount)` allocates one per hit. Because
   the legal amounts are a **small bounded integer set**, the render side builds its
@@ -1042,7 +1071,7 @@ and an **Owner**, so a probe can be closed or failed rather than narrated.
 | 2 | `floori(float)` exists and floors correctly, including `floori(-0.5) = -1` | **DOCUMENTED** (language reference) | — | — | — |
 | 3 | The **four port calls per event** (`profile`, `invulnerable`, `anchor`, `publish`, all on `HealthPort`; `now_tick()` is a **per-phase** call, not per event) stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the port reference read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
 | 4 | A preallocated typed `Array` of `RefCounted` records + an overwrite-oldest head performs **zero allocation** across 10,000 ticks | **PROBE-PENDING** | the soak with `Performance.MONITOR_OBJECT_COUNT`/`MEMORY_STATIC` sampled at the warm-up and at the end: net object delta 0, net resource delta 0, heap growth ≤ 256 KB, churn ≤ 16 KB / 1,000 ticks | lead-programmer | The first story; AC-HD-40 |
-| 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts, **keyed through `bind_phase`** | **PROBE-PENDING** | the same `(bound logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture); **and a late event's key uses the bound tick, not its `contact_tick`** (the two differ by 1–2 ticks, and the roll must not change with the event's lateness) | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
+| 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts, **keyed through `bind_phase`** | **PROBE-PENDING** | the same `(bound logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture); **and a late event's key uses the bound (resolution) tick, not its `contact_tick`** — a *different* delivery tick is a different key **by design** (TR-HD-037's `logic_tick`), so the fixture asserts replay agreement for the **same** delivery timing, never lateness-invariance | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
 | 6 | `HealthCore.damage_phase()` can assert "the freeze onset has not been applied for `t`" from the publication SYS-29 actually offers | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the damage phase for `T` observes the onset as *pending*, not *applied*, 100/100 runs; the same assertion fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer | §4's dev assert; AC-HD-30 |
 | 7 | A `Label` pool of 32 with a slot→node map shows a number on the **contact tick** with no `queue_free` and no instantiation | **PROBE-PENDING** | **the headless half first** (it is what AC-HD-38/40's GUT halves need): a 32-record burst in one tick fills the ring 32/32 with the head wrapped, a 33rd overwrites slot 0, and 10,000 ticks show zero ring growth; **then the render half**: all 32 nodes render on the frame, a re-lease resets the node's lifetime and animation, and no `Label` is instantiated after boot | ui-programmer (SYS-24's story) | AC-HD-38/40; the render side's churn bar |
 | 8 | `Node.process_physics_priority` (the documented fallback ordering) exists in 4.7.2 and orders the three gameplay services as §4 names | **PROBE-PENDING** | three probe nodes at priorities `-10/0/+10` log their `_physics_process` order: the log is stable across 1,000 ticks and matches the assigned order. **Only needed if the tick director defers to the scene tree**; the explicit call is the primary | godot-specialist | The fallback ordering only |
@@ -1240,7 +1269,7 @@ than trusting the operator.
 | The four-system envelope quoted as current (it is seven-system) | **Occurred** | Low | **O-HD-8**; SYS-07's own 0.25/0.75 allocation is unchanged and is what this ADR prices |
 | The energy/mana round-trip clause has no namespace | **Occurred** | Low | **O-HD-7**; both pools are inert at MVP so nothing reads them |
 | The body's field list (charges/modules) has no namespace and contradicts SYS-15's body row | **Occurred** | Medium | **O-HD-9**; §9b states the landed behaviour and regime 1's `restore_modules = 0` rather than leaving it undefined |
-| A display amount sourced from `dealt` makes the number and the bar disagree on a capped hit | **Occurred** (raised by two seats) | High | §10's "`amount` is `applied`, always" — the one lie the fantasy's first term forbids |
+| A display amount sourced from `dealt` **or from `applied`** makes the number and the bar disagree (a capped hit, or a 6 into 1 HP) | **Occurred** (raised by two seats + CodeRabbit) | High | §10's "`amount` is the HP change, always" (`hp_before − hp_after`, with `overkill` carrying the excess) — the one lie the fantasy's first term forbids |
 
 ## Performance Implications
 
@@ -1325,9 +1354,11 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
       applies 2"; the capped-overkill fixture is this criterion's own).
 - [ ] **The batch has one total order.** A three-event batch ordered by
       `(contact_tick, source_id, publication_index)` resolves identically on two
-      different delivery orders; a late event sorts ahead of the fresh ones and
-      **applies** when the target is `ALIVE` (the case AC-HD-22's late-event fixture
-      ends `DEAD` and therefore does not cover) (AC-HD-22; §4b).
+      different delivery orders **whenever the first two keys are distinct — the whole
+      reachable MVP domain** (§4b-i: two same-tick same-source events are a duplicate,
+      rejected by term 9, or a producer bug, dev-asserted); a late event sorts ahead of
+      the fresh ones and **applies** when the target is `ALIVE` (the case AC-HD-22's
+      late-event fixture ends `DEAD` and therefore does not cover) (AC-HD-22; §4b).
 - [ ] **The `attack > 132` extension is one function** that reduces exactly to the
       ladder for `attack ≤ 132`, is flat across the L5→L6 seam (132 and 138 both
       4/6/3/4), and continues at 162 (chain 11) and 222 (chain 16) (AC-PRG-10; §3d).
@@ -1369,13 +1400,14 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
       state, and progression persists only through SYS-16's namespace (AC-HD-34;
       AC-HD-08 **except its energy/mana round-trip clause, which O-HD-7 records as
       unsatisfiable**).
-- [ ] **The damage-number law holds**: the record's `amount` is the **applied** value
-      (a capped 6 publishes 2; a Suture at 18/20 publishes 2), the number is published
-      on the contact tick, the off-switch empties the ring, and the palette audit finds
-      no sigil-red (AC-HD-38's four clauses); **the ring's 32 slots are overwrite-oldest
-      and the lease token is the slot index** — asserted by the headless ring fixture,
-      not by AC-HD-38, which says nothing about size, overwrite or the lease
-      (AC-HD-40 for the size; register item 7 for the overwrite/lease fixture; §10).
+- [ ] **The damage-number law holds**: the record's `amount` is the **HP change** (a
+  capped 6 publishes 2; a 6 into 1 HP publishes 1; a Suture at 18/20 publishes 2), the
+  number is published on the contact tick, the off-switch suppresses publication **and
+  its mid-session toggle empties the ring and releases the leases**, and the palette
+  audit finds no sigil-red (AC-HD-38's four clauses); **the ring's 32 slots are
+  overwrite-oldest and the lease token is the slot index** — asserted by the headless
+  ring fixture, not by AC-HD-38, which says nothing about size, overwrite or the lease
+  (AC-HD-40 for the size; register item 7 for the overwrite/lease fixture; §10).
 - [ ] **The two load regimes are distinct and total**: a session load and an
       in-session reconstruct both end at `hp_max` with the slot at `CACHE_REFILL`,
       differ on the progression source (the save vs the live carry — a level earned
