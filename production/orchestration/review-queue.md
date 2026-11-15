@@ -60,10 +60,18 @@ row/bullet, design order 22, the SYS-16/17 unblock and game-concept's 5th
 Gate-2 probe. `spitter_orb_damage` stayed HELD at 8. The full request was
 `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`.
 
-**Queued next (order 1)**: the **mini sync** after the D-ORCH-03 riders PR
-lands — the `spitter_orb_damage` flip 8 → 2 + the index's Suture correction
-(the heal bullet still prints 25; the approved value is 5). One branch, one
-PR; the lane re-acquires the lock in `STATE.md` §4 first.
+**Queued next (order 1: the SYS-16 sync; order 2, serial: the SYS-14 sync)**:
+**SYS-16** — the lane report's §4a–4e (7 pending SYS-07 constants + 11 new
+SYS-16 constants + 4 published contracts + `progression_namespace` + 2
+formulas + the `damage_ladder_mvp` note; the index row/design-order 23/
+dependency bullet + the 8 corrections). **SYS-14** — 6 new registry entries +
+`boss_kill_award` + 4 referenced_by/note updates; the index dependency cell +
+bullet (the stale 300-HP → 60) + design order + tracker row + 6 neighbor
+notes. One writer at a time; each re-acquires the lock in `STATE.md` §4.
+
+**Landed 2026-11-15** (removed from the active queue): **SYS-07-REWORK riders
+mini sync** — PR #80, `fe38c4c` (0 CodeRabbit threads; merged after its
+source PR #78 at `b4ec55b` per the mirror-after-source rule).
 
 **Landed 2026-11-15** (removed from the active queue): **ART-BIBLE** — PR #72,
 `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes on

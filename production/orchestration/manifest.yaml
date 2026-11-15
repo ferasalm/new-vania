@@ -143,10 +143,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: QUEUED
+    status: AUTHORING
     dependencies: [SYS-13, SYS-08, SYS-32]
     review_state: "not-started"
-    next_action: "Starts when a review slot frees."
+    next_action: "PR #82 open (CLEAN, head 9b172a8; 11 CodeRabbit threads resolved; all gates closed — 24 TR / 6 F / 11 V / 30 AC; OQ-ENM-8/OQ-HD-10/OQ-CAM-3/OQ-RWS-8/IP-10 closed). D-ORCH-14 decided A. The sync is order 2 (serial after SYS-16's); the orchestrator merges after it lands."
 
   - id: SYS-05
     title: "Game Flow & Session Structure — linear stub"
@@ -233,7 +233,7 @@ lanes:
     dependencies: [SYS-07]
     gates: [SYS-16, SYS-17]
     review_state: "GATES CLOSED + LANDED (2026-11-15, D-ORCH-03 option A, user-approved): the package gates (CD APPROVED · technical NEEDS REVISION ×10 all repaired · micro-check repaired to PASS) + the applied-diff gates on PR #75's text (CD APPROVED · technical 9 repaired + 2 rebutted · qa-lead spot-check PASS 7/7 · micro-check PASS zero blockers). CodeRabbit 24 threads across 4 passes, all resolved. SYNC LANDED — PR #76 at 6dd4651 (the registry values, `damage_event` + the baseline constants, the index row/unblock, the 5th Gate-2 probe; `spitter_orb_damage` HELD at 8). PR #75 squash-merged at 3fcedc6 — SYS-07 `health-damage.md` + the SYS-08 `combat.md` co-revision are on Main."
-    next_action: "The riders PR (`chore/d-orch-03-riders`, in flight) applies the coordinated SYS-13 touch + the one-line riders; then the mini sync flips `spitter_orb_damage` 8 → 2 + corrects the index's Suture value (25 → 5); SYS-16 launches after the riders land (fresh `lane-runner` session — the old session is retired as bloated)."
+    next_action: "LANDED COMPLETE (2026-11-15): the package PR #75 (3fcedc6), the sync PR #76 (6dd4651), the receipt PR #77 (50ccd95), the riders PR #78 (b4ec55b — the coordinated SYS-13 touch + the four mechanical riders), and the mini sync PR #80 (fe38c4c — spitter_orb_damage 8→2, power_band 1→2, the Suture 5). Open recorded items: the SYS-13 deflect-weight question (review log §9.3), the stagger-knob floor (§9.7), the qa-lead Gate-2 probe note, SYS-26's spend-UI delta for its future lane."
 
   - id: SYS-16
     title: "Progression — level 1–5 + gear layer"
@@ -244,10 +244,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: QUEUED
+    status: AUTHORING
     dependencies: [SYS-07-REWORK, SYS-08, SYS-13]
     review_state: "not-started"
-    next_action: "Unblocked by D-ORCH-03's landing (PR #75, `3fcedc6`). Launch after the D-ORCH-03 riders PR and the mini sync land — the rider re-derives SYS-13's numbers (hp 6/12/24, awards 3/7/14, the orb 2) that the progression consumes, and the mini sync flips the registry's `spitter_orb_damage`/`power_band` to match. Render `--lane SYS-16` first; fresh `lane-runner` session."
+    next_action: "PR #81 open (CLEAN, head 18d8e75; 12 CodeRabbit threads resolved; all gates closed — 28 TR / 10 F / 12 V / 36 AC). D-ORCH-13 decided (i): the gear layer ships as authored, rider (d) to SYS-07's next touch. The sync (the lane report's §4a–4e) is order 1; the orchestrator merges after it lands; SYS-17 unblocks on the merge."
 
   - id: SYS-17
     title: "Inventory & Items — MVP carve-out + gear loadout"
@@ -272,10 +272,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "9c08ed965d14"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: STANDBY
+    status: MERGED
     dependencies: []
-    review_state: "architecture-review gate per ADR"
-    next_action: "Draft the SYS-03/SYS-04/SYS-05 ADRs in parallel; no /create-architecture."
+    review_state: "architecture-review gate per ADR — LANDED: PR #79 merged at b991714 (ADR-0002 Save & Serialization + ADR-0003 Audio Core, both Status: Proposed; 29 CodeRabbit threads across five waves all applied + resolved; the TD-ADR acceptance verdict is a batched user decision, not a merge blocker)"
+    next_action: "LANDED. Follow-ups: the TD-ADR verdict (D-ORCH-06) flips the two status lines + the two technical-preferences rows; the next ADR candidate is SYS-07's Health/Damage ADR; SYS-05's ADR queues behind its GDD (recorded gap)."
 
   - id: QA-PLAN
     title: "QA plan support — probe registers and AC→gate ledgers"
