@@ -64,31 +64,38 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **acquired 2026-11-15 by the SYS-16 sync**
-(branch `chore/sync-sys16`, worktree `../new-vania-sync-shared-files`, based on
-`origin/Main` `ca04a1d`). Writer: the sync lane only. Scope:
+`shared_file_lock: SYNC-LANE` — **transferred 2026-11-15 to the SYS-14 sync**
+(branch `chore/sync-sys14`, worktree `../new-vania-sync-shared-files`, based on
+`origin/Main` `6db8c38`). Writer: the sync lane only. Scope:
 `design/registry/entities.yaml` + `design/gdd/systems-index.md`. **The lock is
 released only after the sync PR merges** (`prompts/sync-lane.md` §6) — a blocked
 or failed PR keeps the lock and the request in `review-queue.md` §5 for retry.
 
-The request being applied: `../new-vania-sys16-progression/production/session-state/lane-SYS-16-report.md`
-§4a–4e (order 1 in `review-queue.md` §5). The **SYS-14 sync** follows serially
-(writer limit 1).
+**The transfer (dated 2026-11-15)**: the SYS-16 sync **landed** — PR #84
+squash-merged as `fac409f` — but its release edit never landed, so `Main` still
+read "acquired by the SYS-16 sync" / "PR open". This sync therefore **releases
+the SYS-16 hold and re-acquires the lock in one edit** (a landed sync may not
+keep the lock nominally). **The release to `shared_file_lock: none` happens with
+the orchestrator's next receipt after this sync's merge** — the orchestrator
+merges PR #82 (the SYS-14 GDD) next and records the release, #82's landing and
+this sync's landing hash together.
 
-**Receipt (in flight, 2026-11-15)** — **PR #84** (`chore/sync-sys16` → `Main`):
+The request being applied: `../new-vania-sys14-grief-boss-framework/production/session-state/lane-SYS-14-report.md`
+§A–§B (order 2 in `review-queue.md` §5; order 1 — the SYS-16 sync — landed as
+`fac409f`).
+
+**Landed receipt 2026-11-15 (order 1, the SYS-16 sync)** — **PR #84**
+(`chore/sync-sys16` → `Main`), squash-merged as **`fac409f`**:
 `fa91299` (the lock) + `e71183a` (the sync) + `7590599` (the CodeRabbit batch).
 Registry **88 → 113** entries (+18 constants, +5 published contracts, +2
 `kind: formula`; `damage_ladder_mvp`'s note revised, value unchanged). Index: the
 SYS-16 APPROVED row, design order 23, the dependency bullet, 9 row corrections,
 the six riders recorded. Validation: YAML parses · no duplicate names · no
-missing `source`/`referenced_by` path (`design/gdd/progression.md` is the one
-pending path — it lands with PR #81, which merges **after** this sync by
+missing `source`/`referenced_by` path (`design/gdd/progression.md` was the one
+pending path — it landed with PR #81 at `6db8c38`, after the sync by
 review-queue §7 rule 4) · the counts reproduce · no entry deleted. CodeRabbit:
-**5 threads, 5 applied, 0 rebutted, 0 deferred, all resolved** (the SYS-17
-unblock trigger; the joint-guardrail load repair; the `gear_budget` predicate's
-grouping + the exception's admission clause; the banked-point row condition; the
-gear knobs' joint ranges). **Do not merge before PR #81's dependency order is
-respected: this sync lands first, then #81.**
+**5 threads, 5 applied, 0 rebutted, 0 deferred, all resolved**. Its lock release
+rides the transfer above.
 
 **Prior release 2026-11-15 (the riders mini sync)**: PR #80 at `fe38c4c` —
 `spitter_orb_damage` 8 → 2, `enemy_strike_contract`'s payload `power_band`
