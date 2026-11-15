@@ -82,6 +82,17 @@ rows until their download page and license text are captured. Per-pack promotion
 (bulk copy into `assets/`) happens on use, at the asset-spec pass — capture the
 evidence for a pending row at that moment and replace the stub note before copying.
 
+## Open items
+
+- **Metroidvania Kit (luem)** — the license sheet states CC0 and also forbids
+  redistributing the raw files on their own. Only the rights holder can resolve that
+  contradiction, and this sweep has no channel to them, so it is recorded rather than
+  resolved. Until it is: the pack is used inside the game only, and its raw files stay
+  out of the public `assets/` tree (see the promotion gate above).
+- **Seven `provenance pending` rows** — author, store page and license text are
+  outstanding. They are usable under the user authorization above; the detail is
+  captured at promotion time.
+
 If a license changes or a pack is replaced, add a new row rather than overwriting the
 previous verification.
 
