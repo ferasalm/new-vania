@@ -129,7 +129,7 @@
 20. SYS-25 Map/Fog — *pulled up (D-4): after SYS-02/SYS-03's foundations (the `cells_discovered` round-trip); the diff-scoped first-pass leaf*
 21. SYS-28 Narrative Presentation *(APPROVED 2026-11-15)* — *MVP-minimal; Sprint-1 background lane*
 22. **SYS-07 low-stat baseline rework (the IP-17 amendment session)** — *rework applied 2026-11-15 (D-ORCH-03; PR #75, head `270b9ad`): strikes/tiers/boss/bands/identity fixtures re-derived together from 20 HP — the printed 5-step ladder, the gear riders (D-1), the mana-free Stinger (M1), the parity restatement, OQ#20; SYS-16/17 unblocked*
-23. SYS-16 Progression → SYS-17 Inventory → SYS-18 Essence → SYS-19 Contracts → SYS-21 Reality-Laws — *SYS-16 **APPROVED (2026-11-15, lane SYS-16)**: 28 TR-PRG / 10 F-PRG / 12 V-PRG / 36 ACs; the seam (OQ#20), the gear layer + its one exception, DEF retired with its revisit gate, the ladder with zero MVP grants, the `progression` v2→v3 namespace — **SYS-17 unblocks on this lane's merge***
+23. SYS-16 Progression → SYS-17 Inventory → SYS-18 Essence → SYS-19 Contracts → SYS-21 Reality-Laws — *SYS-16 **APPROVED (2026-11-15, lane SYS-16)**: 28 TR-PRG / 10 F-PRG / 12 V-PRG / 36 ACs; the seam (OQ#20), the gear layer + its one exception, DEF retired with its revisit gate, the ladder with zero MVP grants, the `progression` v2→v3 namespace — **SYS-17 unblocks on PR #81's merge (the progression GDD landing on Main), not on the sync's***
 24. SYS-26 Sanctuary Menus → SYS-27 Gallery/Bestiary
 25. SYS-22 Story-Revealing Item → SYS-23 Variety Bosses → SYS-30 Endings → SYS-31 Post-Launch
 

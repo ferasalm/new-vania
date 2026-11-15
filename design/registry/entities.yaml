@@ -810,7 +810,7 @@ entities:
     published_by: SYS-16 (TR-PRG-025, F-PRG-10) — the shape, the writer, the carry, the conservative default; the mechanism is SYS-03's (TR-SAV-004)
     consumed_by: "SYS-03 (the **v2→v3** bump registration: `MIGRATIONS[2]` + `CURRENT_SCHEMA_VERSION` 2→3 at the namespace's implementation story — the OQ-M1 rider pattern, mirroring SYS-15's OQ-CSD-9, including the same obligation to reconcile SYS-03's stale 'zero registered migrations at MVP' posture sentence at that touch) · SYS-05 (SYS-16's carry-complete acknowledgment is a named input to `load_complete`) · SYS-17 (the VS v3→v4 migration that moves `owned`/`equipped` to the `inventory` namespace — OQ-PRG-5)"
     values: "progression: {level, training_data, atk_points, hp_points, grants, owned, equipped: {drive, frame}} — the conservative default is the identity `{1, 0, 0, 0, [], [], {null, null}}`; **no floats**; `banked_points` is DERIVED from SYS-07's `training_points`, never stored. SYS-16 is the namespace's ONLY writer: it snapshots SYS-07's `level`/`training_data` on the save request and never competes with the runtime source. **The carry law:** the namespace is live-carried across the reconstruct inside the restore window, read-gated (TR-CSD-012's pattern consumed verbatim) — a level earned after the last save is never rolled back (TR-CSD-013's no-XP-loss law); the saved value seeds only a fresh session load. A v2 payload carrying `progression` is `REFUSE_UNKNOWN_KEY`; an absent namespace or key at v3 reads its default."
-    notes: "**The load-time validation (the law for a catalogue that moved under a save):** LOAD validates every equipped id against the catalogue and the loadout against the guardrail, and **a slot or `owned` entry whose payload cannot be validated is cleared (the slot to `null`, the id from `owned`) with exactly ONE report naming it — the load itself never fails for gear.** That is the defined outcome for the two instabilities CodeRabbit found at review: a save from a build that shipped a removed module, and `owned` ids with no payload. The bump is the named gate: without it progression state is session-only, so it cannot be silently dropped."
+    notes: "**The load-time validation (the law for a catalogue that moved under a save):** LOAD validates every equipped id against the catalogue and the loadout against the guardrail, and **a slot or `owned` entry whose payload cannot be validated is cleared (the slot to `null`, the id from `owned`) with exactly ONE report naming it — the load itself never fails for gear.** That is the defined outcome for the two instabilities CodeRabbit found at review: a save from a build that shipped a removed module, and `owned` ids with no payload. **The joint case — a valid-payload pair that fails the guardrail together** (a save made while the exception was open restores Regulator-000 + Governor-207 into a build where it is closed: both ids valid, the pair unpayable at `Δhp` −4 against the required −6, TR-PRG-017/F-PRG-07): LOAD repairs it by the same law, not a second one — it clears **the slot whose removal restores validity, the drive first where either would do** (the damage payload is the one that must pay under term (b), and clearing the frame cannot fix a payment shortfall), reports the cleared id once, and **never weakens the guardrail to admit the pair**. The bump is the named gate: without it progression state is session-only, so it cannot be silently dropped."
     added: 2026-11-15
     revised: ""
 
@@ -1058,8 +1058,15 @@ formulas:
       - MODULE_HP_PER_CHAIN_POINT (3)
       - WINDOW_EXCEPTION_ENABLED / WINDOW_EXCEPTION_CHAIN_POINTS (the exception's switch and bound)
     output_range: [0, 1]
-    expression: "pass ⇔ (a) pool% ≤ GEAR_BAND_PCT ∧ (b) chain% ≤ GEAR_BAND_PCT ∨ Δhp ≤ −MODULE_HP_PER_CHAIN_POINT × chain_points ∧ (c) at most one frame payload contributes (no pool stacking) ∧ (d) the loadout is not the exception while WINDOW_EXCEPTION_ENABLED"
+    expression: "pass ⇔ (c) no pool stacking (at most one frame payload contributes) ∧ [ ((a) pool% ≤ GEAR_BAND_PCT ∧ ((b1) chain% ≤ GEAR_BAND_PCT ∨ (b2) Δhp ≤ −MODULE_HP_PER_CHAIN_POINT × chain_points)) ∨ ((d) the loadout is exactly the enumerated exception — Regulator-000 in the drive slot — with WINDOW_EXCEPTION_ENABLED ∧ chain_points ≤ WINDOW_EXCEPTION_CHAIN_POINTS) ]"
     notes: "F-PRG-06 — the two-axis guardrail (the Quantisation Law's *paid* answer, TR-PRG-013/014).
+      **How to read the predicate:** (a)∧(b) is the ordinary loadout's test — (b1) is the free
+      band and (b2) is the payment, and (b) passes if EITHER holds; (c) applies to every loadout
+      (no pool stacking is structural); (d) is the SEPARATE admission clause for the one
+      enumerated exception, which is why Regulator-000 alone (chain 8 vs 6, Δhp 0) is FALSE under
+      (a)∧(b) and TRUE only through (d) — an implementer must not use (a)∧(b) as the equip check
+      or it rejects a module the catalogue allows. The grouping is explicit because `∧` binds
+      tighter than `∨`.
       The six-loadout table at L1 (chain 6, pool 20): ∅ chain 6/pool 20 pass (a) · Governor-207
       6/22 pass (a, 10% ≤ 10%) · Coupler-034 8/12 pass (b, −8 ≤ −6) · Coupler+Governor 8/14
       pass (b, AT the floor) · Regulator-000 8/20 and Regulator+Governor 8/22 are the
@@ -1887,7 +1894,10 @@ constants:
       (`training_data_l5` 140 is the last threshold). It is the seam's branch point in both
       seam laws — F-PRG-01/F-PRG-02 add their VS step only for `L > LEVEL_CAP_MVP` — and
       `min(level − 1, POINT_BUDGET_CAP)` makes level 5 the last level that banks a point
-      (F-PRG-08). SYS-15's TR-CSD-006 consumes the cap (the spend rows vanish at it)."
+      (F-PRG-08). SYS-15's TR-CSD-006 consumes the cap, and the cap **stops accrual, not
+      spending**: the spend rows render while `banked_points > 0` and vanish at **zero banked
+      points** (TR-PRG-006), never at the cap — a capped player holding a banked point keeps the
+      rows and may still allocate it."
     added: 2026-11-15
     revised: ""
   - name: xp_t1
@@ -2001,7 +2011,12 @@ constants:
     notes: "F-PRG-06(b)'s exchange (safe range 2–4): beyond the free band on the damage axis a
       loadout must pay 3 HP per chain point (`chain% > 10% ⇒ Δhp ≤ −3 × chain_points`). The
       Coupler's 8-HP premium exists so the designed pair (Coupler + Governor-207) pays exactly
-      6 — the floor (TR-PRG-019)."
+      6 — the floor (TR-PRG-019). **The range is a config envelope, not a validity proof:** it is
+      jointly constrained with `MODULE_COUPLER_HP_COST` (the pair's floor is
+      `3 × chain_points` = 6) and with `MODULE_FRAME_HP_BONUS` (the free band is
+      `GEAR_BAND_PCT × hp_max`), so a value inside a range can still fail F-PRG-06 for a given
+      loadout — the guardrail, not the range, is the validity law, and V-PRG validates the pair
+      at config load and on every live edit."
     added: 2026-11-15
     revised: ""
   - name: module_coupler_hp_cost
@@ -2014,7 +2029,11 @@ constants:
     notes: "Coupler-034's payment (safe range 6–10; TR-PRG-019). Alone it is the glass build
       (pool 20 → 12, OQ-PRG-1's playtest question); paired with Governor-207 it lands exactly
       on the exchange floor (20 → 14, Δhp −6 ≤ −6). Not the derived
-      `MODULE_DAMAGE_HP_COST` (6 = 3 × 2 × 1) — the premium over it is deliberate."
+      `MODULE_DAMAGE_HP_COST` (6 = 3 × 2 × 1) — the premium over it is deliberate. **The range's
+      ends are recorded consequences, not supported loadouts:** at 6 the pair pays only 4 against
+      the required 6 (it overshoots the floor by 2, TR-PRG-019) and at 10 the pair over-pays
+      (Δhp −8). A value in the range is a legal config; whether a given loadout passes is
+      F-PRG-06's call, validated by V-PRG at load and on live edit."
     added: 2026-11-15
     revised: ""
   - name: module_frame_hp_bonus
@@ -2027,7 +2046,10 @@ constants:
     notes: "Governor-207's payload (safe range 2–4): the frame axis's step. At the 20-HP
       baseline +2 is exactly `GEAR_BAND_PCT`'s 10% free band — the largest value that passes
       term (a) alone (4 would be +20%, over the band). The frame is the defensive build
-      because `defense` is retired from gear (TR-PRG-016)."
+      because `defense` is retired from gear (TR-PRG-016). **The upper end of the range is a
+      recorded consequence, not a supported loadout:** 4 fails term (a) at the 20-HP pool (the
+      band is a ratio, so a larger pool re-admits it) — the guardrail is the validity law and
+      V-PRG validates it at config load and on every live edit."
     added: 2026-11-15
     revised: ""
   - name: gear_band_pct
@@ -2040,7 +2062,10 @@ constants:
     notes: "F-PRG-06(a)'s free band (safe range 0.05–0.15): a loadout may gain up to 10% on
       the pool axis free. The ratio is the bound, so it scales with the pool. It is the one
       place the game's ±10% promise is expressible — one chain point is +16.7% at the
-      baseline, which is why the damage axis is *paid* rather than bounded (TR-PRG-013)."
+      baseline, which is why the damage axis is *paid* rather than bounded (TR-PRG-013).
+      **Joint constraint:** the band is what makes `MODULE_FRAME_HP_BONUS` 2 legal at a 20-HP
+      pool and 4 illegal — the two knobs are read together, never independently, and V-PRG
+      validates the pair at config load and on every live edit."
     added: 2026-11-15
     revised: ""
   - name: progression_schema_version
