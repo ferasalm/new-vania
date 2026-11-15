@@ -356,11 +356,13 @@ player. The mapping is explicit and auditable:
   the arriving) and a room-entry crossfade may need a second pair; the pool is the
   bound, and a fifth concurrent bed is a design error, not a config.
 - **The draw is seeded and injected.** `VariationRng` takes the run's **seed** from
-  the adapter at arm time (one seed per run; the adapter derives it from the run
-  identity, not from wall time), and the core never reads a clock or a global RNG.
-  A replay reuses the recorded seed, so the draw sequence is identical (AC-AUD-30);
-  a fresh run gets a different seed, so the sequence is not memorisable across
-  sessions.
+  a declared `SeedPort` at arm time: one 32-bit value per run, drawn **once by the
+  adapter at boot** (never per draw, never from wall time), recorded in the run
+  record. A replay reuses the recorded seed, so the draw sequence is identical
+  (AC-AUD-30); a fresh run gets a fresh seed, so the sequence is not memorisable
+  across sessions. **The draw** reads neither a clock nor a global RNG — the
+  injected seed is its only entropy; the core's `ClockPort` remains the envelopes'
+  tick source (§6, §8).
 - **The gate is a boolean on the core, not a bus mute.** `set_bus_mute` on SFX
   would silence already-sounding voices (a cut is a click and reads as a bug —
   §D.3's ring-out law). The gate refuses **new** starts and leaves the ringing
@@ -505,8 +507,8 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
 
 ### 11 · Epoch-blindness and the ports
 
-The core consumes **five inbound signal sources plus the clock** and publishes
-**none**:
+The core consumes **five inbound signal sources, plus the clock and the variation
+seed**, and publishes **none**:
 
 | Inbound | Owner | Port | Missing → |
 |---|---|---|---|
@@ -516,6 +518,7 @@ The core consumes **five inbound signal sources plus the clock** and publishes
 | Room activation | SYS-02 | adapter signal | **no record** — the only inbound whose absence has no distinct behaviour: the bed stays as it is and the next real room entry re-applies the room's bed. Named here as the one exception to R9, so "every missing input has a record" is not silently false |
 | Load-complete (`restored_epoch`) | SYS-05 (§12, O-AUD-1) | adapter signal | `AUD_LOAD_MISSING`; the derived state stands |
 | The tick | ADR-0001 | `ClockPort` | a boot-order defect; the dev assert |
+| The variation seed | the adapter (boot) | `SeedPort` | a boot failure: no seed, no deterministic draw (§5) |
 
 **The allowlist** is exactly two read-only ports: the tuning read
 (`MASTER_VOLUME`/`MUSIC_VOLUME`/`SFX_VOLUME`/`MONO` + the bus group map, for
@@ -573,6 +576,8 @@ text is edited here.
   `stop(slot)`, `is_playing(slot)`, `playhead(slot)`; the fake is the pool's
   audit surface (AC-AUD-07/11).
 - **`TelemetryPort`** — the 256-record ring; the fixtures drain it (AC-AUD-14).
+- **`SeedPort`** — the run's one 32-bit variation seed (§5); a fake returns a fixed
+  seed so AC-AUD-30's 40-draw fixture is reproducible.
 - **The static audits** (LINT) are greps over `src/audio/`: no truth symbols
   (V-AUD-04), exactly thirteen registered voices (V-AUD-02), exactly one duck
   application site (V-AUD-01), only the two allowlisted ports (AC-AUD-19).
@@ -922,7 +927,7 @@ the device measurements close at the first implementation story.
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-009 — the stillness bracket | `gate_open = false`; drop-never-queue; no loop restart; zero snapshot changes; ring-out (§5, §9) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-010 — the tear | The reserved P0 slot outside the steal table; 24 ticks in a 26-tick window; the silent-asset path (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-011 — the abort path | Zero orders; the force-release-derived `freeze_close` as an event; `DEGRADED` precedence; no `RELEASED` (§6, §9) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace encodes **relative to the raise tick** (F-AUD-06), so the post-resume span hashes identically to the fresh flip's; the comparison starts at R′ (§6) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace encodes **relative to the raise tick** (F-AUD-06: `tick` and `arrive_not_before_tick` hashed as `value − raise_tick`), so the post-resume span hashes identically to the fresh flip's; the compared span starts at R′ (F-AUD-06's rule, AC-AUD-05's fixture) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-013/014 — the arena hum; the wing's no-op | RM-06 excluded by the order record; no separate wing bed; the room-entry path only at real entries (§6) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-015…021 — **the eleven** one-shot voices of the SYS-29 list (015 damage; 016 clash contact + midpoint; 017 deflect; 018 heal + death; 019 revive + level-up; 020 memory; 021 jump-2 + defeat) | The voice table's slots, classes, retrigger floors and signatures; the conc-2 slot mapping (§5); the variation law's deterministic draw (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-022/024/025 — the bed table; the seam's exemption; the transition law | The derived bed map + `restored_epoch`; the room-entry crossfade only at a real entry; no restart, no duck (§6, §12) |

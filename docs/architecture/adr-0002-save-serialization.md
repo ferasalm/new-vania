@@ -325,7 +325,7 @@ explicit**, never inferred from the message:
 | Condition (in this order) | Code |
 |---|---|
 | the path is not writable / the directory cannot be created (`ERR_UNAUTHORIZED`, `ERR_FILE_NO_PERMISSION`) | `SAVE_FAILED_PERMISSION` |
-| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (**a constant, not a knob** — 4× the largest expected file; §Tuning Knobs' doctrine) | `SAVE_FAILED_DISK_FULL` |
+| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (**a constant, not a knob** — 4× the largest expected file; the GDD's §Tuning Knobs "not a knob" doctrine; registered at GDD sync) | `SAVE_FAILED_DISK_FULL` |
 | a `store_*` returns `false` **and** the pre-flight passed | `SAVE_FAILED_DISK_FULL` if the volume's free space dropped during the write, else `SAVE_FAILED_UNKNOWN` |
 | `rename_absolute` returns non-`OK` at step 4/5 | `SAVE_FAILED_RENAME` |
 | a read-back hash mismatch at step 3 / step 6 | `SAVE_FAILED_VERIFY` |
@@ -340,12 +340,15 @@ AC-SAV-09's injected-IO fixtures assert the code, not the message.
 sweep. It invents no state. The distinction is stated once in the GDD and is a
 law here: **promoting a `.bak` restores bytes; it is not a repair write.**
 
-**The completion drain.** The worker's result record is drained at the **next
-`logic_tick` boundary** on the game thread. ADR-0001 §5 defines the *input*
-pipeline's phases 0–6 and has no save phase — the save service runs its own drain
-**after** that pipeline, on the same tick boundary, so `save_completed` lands on a
-tick without borrowing an input phase. This is what AC-SAV-12's frame probe
-asserts.
+**The completion drain.** The worker's result record is drained at the **next tick
+boundary** on the game thread — `physics_tick`, this ADR's `ClockPort` (§12), the
+clock that runs during a freeze and in a non-Gameplay context. It is **not** the
+`logic_tick`, which advances only in Gameplay and only unfrozen: a drain pinned to
+it would defer a completed write through a flip freeze and could never run on the
+quit-from-menu path. ADR-0001 §5 defines the *input* pipeline's phases 0–6 and has
+no save phase — the save service runs its own drain **after** that pipeline, on the
+same tick boundary, so `save_completed` lands on a tick without borrowing an input
+phase. This is what AC-SAV-12's frame probe asserts.
 
 **The close-save (the one legal block).** On the close request the save is
 written **synchronously** on the game thread — there is no frame to miss, the
@@ -397,10 +400,12 @@ enforceable:
   `.bak` is older by construction, so falling back would silently downgrade the
   session — the one lie the refusal exists to prevent. `REFUSE_SCHEMA_AHEAD` is
   therefore the **only** refusal that skips the `.bak` retry, and the rule lives in
-  the load machine's transition (step 4 → `REFUSED`), not in a caller's policy.
+  the load machine's **step 5** (TR-SAV-018's version gate → the GDD's `REFUSED`
+  state; the slot records `REFUSED_READ_ONLY`), not in a caller's policy.
 
-The verdict's ordered rows (§6's list) are where both rules are enforced; the
-validation list asserts them (AC-SAV-20/18).
+Both rules are enforced inside the verdict — the epoch guard is **F-SAV-04 row 8**
+and the version gate is **row 4** — and the validation list asserts them
+(AC-SAV-20/18).
 
 **6c. Absence survives the hash.** A declared key that is absent **stays absent**
 in the normalized payload — materializing the defaults there would change the
@@ -523,7 +528,10 @@ static func save_path(slot: StringName, suffix: StringName) -> String
 States: `EMPTY` · `OK` · `BAK_ONLY` · `REFUSED_READ_ONLY`. Edges are total
 (`EMPTY → OK` on the first successful write; `OK → BAK_ONLY` on a step-5 rename
 failure; `BAK_ONLY → OK` on the sweep or the next successful write;
-`OK|BAK_ONLY → REFUSED_READ_ONLY` **only when both files fail the load**).
+`OK|BAK_ONLY → REFUSED_READ_ONLY` when **both** files fail the load — **or
+immediately on `REFUSE_SCHEMA_AHEAD`**, where the `.bak` is never attempted
+(§6b), so the "both files fail" condition is unreachable by design and the
+carve-out is stated rather than implied).
 
 The **boot sweep** runs per slot, in this order, before any load: (1) if
 `<slot>.tmp` exists, delete it (`tmp_swept`); (2) if `<slot>.sav` is missing and
