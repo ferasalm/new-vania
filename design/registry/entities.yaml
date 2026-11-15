@@ -739,6 +739,81 @@ entities:
     added: 2026-11-15
     revised: ""
 
+# 2026-11-15 (lane SYS-16, the progression sync — report §4c): the growth layer's published
+# surfaces. SYS-16 publishes read-only; it owns no HP, no resolver, no render, no per-tick work
+# (TR-PRG-003), and no consumer writes back (there is no writer field).
+  - name: chassis_module
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    kind: published_contract
+    published_by: SYS-16 (TR-PRG-018/F-PRG-05) — the catalogue's payloads, the slot typing and the loadout law
+    consumed_by: "SYS-17 (the item entities, the `TAKE` pickup, the VS inventory screen + its namespace) · SYS-24 (the two loadout rows: the name + the effect line generated from the payload) · SYS-29 (the pickup-class chime, TR-JCE-021's treatment)"
+    values: "ChassisModule {module_id, display_name, slot ∈ {drive, frame}, payload {damage_bonus?, hp_max?}, lore_lines: 2, source_room} — deterministic, unique, no RNG, no affixes, no rarity. The payload set is CLOSED: `attack`, `defense` and every behavioural field are rejected at the boot (TR-PRG-012; `defense` is retired, TR-PRG-016). The three MVP entries: **Coupler-034** (drive, `damage_bonus` +1, `hp_max` −8; a fixed pre-flip pickup) · **Governor-207** (frame, `hp_max` +2; a fixed pre-flip pickup) · **Regulator-000** (drive, `damage_bonus` +1; the Warden's own regulator — a guaranteed placed `TAKE` in the Cold Corridor wing beside memory M4, behind the post-flip partition, the guardrail's ONE enumerated exception, TR-PRG-017)."
+    notes: "A drive may carry a negative `hp_max` (the payment of the guardrail's term (b)) but never a positive one — a positive pool payload is a frame's job; a frame carries no `damage_bonus` (TR-PRG-015's typing). The lore is exactly two lines in the print voice, never a stat line (SYS-28's language law). A pickup adds the id to `owned` and never auto-equips; equipping is a player act on SYS-24's pause surface (TR-PRG-020). The catalogue's *entities* are SYS-17's; the payloads and the loadout law are SYS-16's — the split is TR-PRG-027's, and at VS `owned`/`equipped` move to SYS-17's namespace in a v3→v4 migration (OQ-PRG-5)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: gear_aggregate
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+      - design/gdd/health-damage.md
+    kind: published_contract
+    published_by: SYS-16 (F-PRG-05, TR-PRG-026) — the aggregation, the max-law, the revision
+    consumed_by: "SYS-07 (folding it into the `StatBlock` at the equip — TR-HD-006's equipment-change `StatRevision` cause, one revision per change; `damage_bonus` reaches `AttackContext` through F-HD-02's branch-2 module stage)"
+    values: "GearAggregate {damage_bonus, hp_max_delta, attack_delta, defense_delta, revision} — `damage_bonus = max({m.damage_bonus : m equipped ∧ m.slot = drive} ∪ {0})` (never a sum: a VS second drive slot cannot silently stack); **`hp_max_delta = Σ {m.hp_max : m equipped} over BOTH slots** — the frame contributes its gain and a drive contributes its cost, so the Coupler's −8 lands in the aggregate (without it the exchange would be unpayable and the budget table would disagree with the formula); `attack_delta` 0 and `defense_delta` 0 at MVP (the lever set; they exist so a VS module needs no new schema); `revision = revision + 1` on every change. Identity (∅): {0, 0, 0, 0}."
+    notes: "The loadout is the unit the player fields, so every gear law is evaluated on the loadout, never on a module in isolation (TR-PRG-014). `hp_max_effective = hp_max(L, h) + aggregate.hp_max_delta`, clamped ≥ 1; a negative delta CLAMPS the current HP at the swap (the trade's cost, not a bug — a Coupler fitted at 20/20 leaves the body at 12/12), while a point's +2 HEALS (the asymmetry is a SYS-07 input — rider (e)). Worked examples: Governor-207 {0, +2, 0, 0} · Coupler-034 {1, −8, 0, 0} · Coupler + Governor {1, −6, 0, 0} · Regulator-000 {1, 0, 0, 0} · Regulator + Governor {1, +2, 0, 0}."
+    added: 2026-11-15
+    revised: ""
+
+  - name: progression_read
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+      - design/gdd/health-damage.md
+      - design/gdd/cache-stations-death.md
+    kind: published_contract
+    published_by: SYS-16 (TR-PRG-026) — the read-only publication; no writer field
+    consumed_by: "SYS-24 (the three-value pause readout, the two loadout rows, the dormant Dash socket) · SYS-07 (the spend's ack: one `StatRevision` per spend and per equip) · SYS-15 (the preview's values on the frozen spend rows) · SYS-17 (the VS inventory's gear state)"
+    values: "ProgressionRead {atk_points, hp_points, banked_points, atk_pair {atk1, atk2}, grants, owned, equipped {drive, frame}, aggregate} — **`atk_pair` is the printed EFFECTIVE pair**: the ladder row's ATK1/ATK2 plus the loadout's `damage_bonus` (with the Coupler equipped it prints `ATK 3/5`), so SYS-24 renders a number it does not re-derive and the printed number equals the dealt one by construction. It carries **no `level` and no `training_data`** — those are SYS-07's `HealthRead` and are not re-owned. `banked_points` is an alias, asserted equal to SYS-07's `HealthRead.training_points` at every publication (a divergence is refused with telemetry, never silently reconciled)."
+    notes: "The point's transport is the spend's ack: SYS-15's commit → SYS-16 writes the counter → SYS-07 reads `ProgressionRead` and applies exactly one `StatRevision`. The aggregate is computed on a change and cached (TR-PRG-003: the layer has no tick); the read is a copy. ATK never prints the raw 100–132 resolver scale — that is the designer's ruler, not player copy — and `DEF` is omitted while it has no source (a dead value on a readout is a lie about a choice the player does not have, TR-PRG-011)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: grant_event
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+      - design/gdd/movement.md
+      - design/gdd/input-control-mapping.md
+      - design/gdd/juice-feedback.md
+    kind: published_contract
+    published_by: SYS-16 (TR-PRG-021/022, F-PRG-09) — the set, the strict order, the latch, the persistence
+    consumed_by: "SYS-06 (the behaviour-level gates on Jump: Wall Jump, Double Jump — TR-INP-057) · SYS-01 (Dash's action-registry flip — TR-INP-003) · SYS-24 (the socket's active state) · SYS-29 (the grant cue — one chime-class edge + one print row, no haptic, no flash, TR-JCE-021)"
+    values: "GrantEvent {grant ∈ {DASH, WALL_JUMP, DOUBLE_JUMP, STINGER}, source, tick} — **once per grant, latched**: a repeat publishes nothing and changes nothing (F-PRG-09's idempotence); persisted in the `progression` namespace. Order law: `WALL_JUMP ∈ grants ⇒ DASH ∈ grants`; `DOUBLE_JUMP ∈ grants ⇒ WALL_JUMP ∈ grants`; `STINGER` is off-ladder and never satisfies a rung (a violation is refused at boot, naming the missing rung). **The late-consumer law: a consumer that starts AFTER the grant reads the persisted set at its init and restore and applies each recorded grant without a new `GrantEvent`** — the latch blocks *re-publication*, not *re-application from stored state*."
+    notes: "MVP posture: **zero grants** — the frozen MVP definition says Dash stays locked (RJ-1 stands) and no wall-jump/double-jump content ships in the six rooms; the ladder's content at MVP is the anticipation design (the dormant Dash socket: hidden → dimmed-after-tease with the lock glyph → active; SYS-01's `DORMANT_DIM_AFTER_TEASE`, SYS-24's render), which never errors when pressed. The unlock moments are authored as data, not runtime: Dash → the VS slice's first-errand traversal gate · Wall Jump → Full-Vision errand 2's tagged-wall shaft · Double Jump → the Leap-Stone, errand 3. The no-softlock law (TR-PRG-024) passes vacuously at MVP and the build audit reports the vacuous pass explicitly — a silent skip is forbidden. A grant never fires from a load, a level-up or a region entry unless the slice's own trigger says so."
+    added: 2026-11-15
+    revised: ""
+
+  - name: progression_namespace
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+      - design/gdd/save-serialization.md
+    kind: published_contract
+    published_by: SYS-16 (TR-PRG-025, F-PRG-10) — the shape, the writer, the carry, the conservative default; the mechanism is SYS-03's (TR-SAV-004)
+    consumed_by: "SYS-03 (the **v2→v3** bump registration: `MIGRATIONS[2]` + `CURRENT_SCHEMA_VERSION` 2→3 at the namespace's implementation story — the OQ-M1 rider pattern, mirroring SYS-15's OQ-CSD-9, including the same obligation to reconcile SYS-03's stale 'zero registered migrations at MVP' posture sentence at that touch) · SYS-05 (SYS-16's carry-complete acknowledgment is a named input to `load_complete`) · SYS-17 (the VS v3→v4 migration that moves `owned`/`equipped` to the `inventory` namespace — OQ-PRG-5)"
+    values: "progression: {level, training_data, atk_points, hp_points, grants, owned, equipped: {drive, frame}} — the conservative default is the identity `{1, 0, 0, 0, [], [], {null, null}}`; **no floats**; `banked_points` is DERIVED from SYS-07's `training_points`, never stored. SYS-16 is the namespace's ONLY writer: it snapshots SYS-07's `level`/`training_data` on the save request and never competes with the runtime source. **The carry law:** the namespace is live-carried across the reconstruct inside the restore window, read-gated (TR-CSD-012's pattern consumed verbatim) — a level earned after the last save is never rolled back (TR-CSD-013's no-XP-loss law); the saved value seeds only a fresh session load. A v2 payload carrying `progression` is `REFUSE_UNKNOWN_KEY`; an absent namespace or key at v3 reads its default."
+    notes: "**The load-time validation (the law for a catalogue that moved under a save):** LOAD validates every equipped id against the catalogue and the loadout against the guardrail, and **a slot or `owned` entry whose payload cannot be validated is cleared (the slot to `null`, the id from `owned`) with exactly ONE report naming it — the load itself never fails for gear.** That is the defined outcome for the two instabilities CodeRabbit found at review: a save from a build that shipped a removed module, and `owned` ids with no payload. The bump is the named gate: without it progression state is session-only, so it cannot be silently dropped."
+    added: 2026-11-15
+    revised: ""
+
 # Example (remove when first real entry is added):
 #
 # entities:
@@ -934,6 +1009,68 @@ formulas:
       bytes (V-NAR-03; the L2 epoch-invariance fixture is the consumed
       instance). No ms operand — no rate conversion (the reading estimate is
       review-side CI math, never runtime timing)."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-16, the progression sync — report §4c): the two cross-boundary laws the
+# growth layer publishes. Both are TRUE LAWS, not knobs (the GDD's own class column).
+  - name: attack_seam
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+      - design/gdd/health-damage.md
+    kind: formula
+    variables:
+      - L (the level; 1–20; the MVP cap 5 — LEVEL_CAP_MVP)
+      - a (atk_points; 0–4 — POINT_BUDGET_CAP)
+      - PLAYER_ATK_BASE (100 — SYS-07's fixed identity base)
+      - ATK_PER_POINT (8 — SYS-07's ladder index step)
+      - VS_ATTACK_STEP (6 — SYS-16's VS step)
+      - LEVEL_CAP_MVP (5 — SYS-07's)
+    output_range: [100, 222]
+    expression: "attack(L, a) = PLAYER_ATK_BASE + ATK_PER_POINT × a + VS_ATTACK_STEP × max(0, L − LEVEL_CAP_MVP)"
+    notes: "F-PRG-01 — **SYS-07's OQ#20 answered**. At L5 it is exactly SYS-07's points law
+      (100 + 8a); from L6 the level adds a flat +6, so the stat never decreases on any
+      level-up. It supersedes the frozen VS candidate `100 + 6×(L−1)`, which gives 130 at L6 —
+      below the 132 points cap, i.e. a player who spent four points would LOSE 2 attack. The
+      OQ asked for monotonicity in the stat and in the dealt value; this law gives both (the
+      dealt side is `damage_ladder_mvp`'s above-132 extension). Fixtures: L1/a0 100 · L5/a4
+      132 · L6/a0 106 · L6/a4 138 · L6/a2 122 · L20/a0 190 · L20/a4 222; ∂/∂L = 6 above the
+      cap, ∂/∂a = 8, so the L5→L6 step is +6 for every split. **SYS-07's F-HD-14 attack
+      candidate and its 'up to L20 (214)' ceiling are superseded by this law** — the rider
+      rides SYS-07's next doc touch (SYS-07's frozen text is NOT edited by this sync)."
+    added: 2026-11-15
+    revised: ""
+
+  - name: gear_budget
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    kind: formula
+    variables:
+      - chain_nogear (F-PRG-03's dealt law — dealt(ATK1) + dealt(ATK2); NEVER step()'s clamp, which saturates at row 4 and under-reports every L6+ build)
+      - chain_loadout (chain_nogear + 2 × aggregate.damage_bonus)
+      - chain_points (chain_loadout − chain_nogear) and chain% (chain_points ÷ chain_nogear)
+      - Δhp (aggregate.hp_max_delta) and pool% (Δhp ÷ hp_max(L, h))
+      - GEAR_BAND_PCT (0.10)
+      - MODULE_HP_PER_CHAIN_POINT (3)
+      - WINDOW_EXCEPTION_ENABLED / WINDOW_EXCEPTION_CHAIN_POINTS (the exception's switch and bound)
+    output_range: [0, 1]
+    expression: "pass ⇔ (a) pool% ≤ GEAR_BAND_PCT ∧ (b) chain% ≤ GEAR_BAND_PCT ∨ Δhp ≤ −MODULE_HP_PER_CHAIN_POINT × chain_points ∧ (c) at most one frame payload contributes (no pool stacking) ∧ (d) the loadout is not the exception while WINDOW_EXCEPTION_ENABLED"
+    notes: "F-PRG-06 — the two-axis guardrail (the Quantisation Law's *paid* answer, TR-PRG-013/014).
+      The six-loadout table at L1 (chain 6, pool 20): ∅ chain 6/pool 20 pass (a) · Governor-207
+      6/22 pass (a, 10% ≤ 10%) · Coupler-034 8/12 pass (b, −8 ≤ −6) · Coupler+Governor 8/14
+      pass (b, AT the floor) · Regulator-000 8/20 and Regulator+Governor 8/22 are the
+      **exception** (d). **Level-invariance:** the exchange is point-for-point, so it holds
+      unchanged at L5 all-ATK and at L5 all-HP. **The exception** is exactly {Regulator-000},
+      bounded at `WINDOW_EXCEPTION_CHAIN_POINTS` 2 (+33.3% at row 0, decaying to +20% at row 4),
+      and closable by ONE coded 'broken promise' at the Gate-2 probe (AC-PRG-34) — closing it
+      turns the module into the paid payload {damage_bonus +1, hp_max −6}, which may not be
+      equipped alongside a frame (its cost becomes unpayable with term (b)). The 60 s integral
+      is blind to the pool (779 vs 584), which is WHY the guardrail is a pair of axes and not
+      one number. Weapons are untouched: TR-HD-034/F-HD-13 keep the weapon set's ±10% ceiling."
     added: 2026-11-15
     revised: ""
 
@@ -1594,8 +1731,9 @@ constants:
     revised: ""
 
 # 2026-11-15 (D-ORCH-03, the SYS-07 low-stat baseline rework): the low-stat baseline's
-# cross-boundary constants. `atk_per_point` is registered when SYS-16 lands (the ladder's
-# index divisor crosses to OQ#20).
+# cross-boundary constants. The seven this comment once promised — `atk_per_point`,
+# `player_atk_base`, `level_cap_mvp`, `xp_t1/t2/t3`, `xp_boss` — landed with the SYS-16 sync
+# (2026-11-15): the ladder's index divisor crossed to OQ#20, which SYS-16 answered.
   - name: player_max_hp
     status: active
     source: design/gdd/health-damage.md
@@ -1694,7 +1832,270 @@ constants:
       above it the VS sheet governs (OQ#20). An `arc = ABILITY` event never reads
       this table (branch 4's percent law — see `damage_event`). **SYS-15 is the MVP
       consumer** (the cache spend surface: a committed STRIKES row moves the step
-      the player feels; SYS-26's per-step preview is VS)."
+      the player feels; SYS-26's per-step preview is VS). **SYS-16's F-PRG-03 extends
+      the ladder above 132**: `dealt(arc) = max(LADDER[4][arc], floor(LADDER[4][arc] ×
+      attack ÷ 132))` — the seam is flat by construction (132 and 138 both 4/6/3/4,
+      chain 10; 162 gives chain 11; 222 at L20 gives chain 16), so the dealt value is
+      monotone non-decreasing across L5→L6 for every point split. The row itself is
+      unchanged and **SYS-15 remains the MVP consumer** (SYS-16 is the
+      above-the-cap/VS consumer of the same table)."
+    added: 2026-11-15
+    revised: "2026-11-15 (SYS-16 sync: the note gains F-PRG-03's above-132 extension — the
+      printed row, the value and SYS-15's MVP consumption are unchanged)"
+
+# 2026-11-15 (lane SYS-16, the progression sync — report §4a): the seven SYS-07 constants the
+# registry's own comment promised when SYS-16 landed. SYS-07 owns every one (TR-HD-007's
+# economy); SYS-16 consumes them as boot-validated cross-system inputs (a missing or invalid
+# value is a dev boot failure, never a silent default — TR-PRG-001).
+  - name: atk_per_point
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+    value: 8
+    unit: attack per training point
+    notes: "TR-HD-007's ladder index step and F-HD-14's row width:
+      `step(attack) = clamp(floor((attack − PLAYER_ATK_BASE) ÷ ATK_PER_POINT), 0, 4)`.
+      It is also F-PRG-01's ∂/∂a (one point = +8 attack, +16.7% of row 0's chain), which
+      is why the gear layer's damage lever cannot be an `attack` payload (TR-PRG-012)."
+    added: 2026-11-15
+    revised: ""
+  - name: player_atk_base
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+    value: 100
+    unit: attack (identity base)
+    notes: "F-HD-14's fixed identity base — the ladder's row-0 attack and F-PRG-01's origin
+      (`attack(L, a) = PLAYER_ATK_BASE + ATK_PER_POINT × a + VS_ATTACK_STEP × max(0, L −
+      LEVEL_CAP_MVP)`). Not a knob: the identity law is anchored here."
+    added: 2026-11-15
+    revised: ""
+  - name: level_cap_mvp
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+      - design/gdd/cache-stations-death.md
+    value: 5
+    unit: level
+    notes: "TR-HD-007's MVP cap (the VS cap is 20). No training data accrues past it
+      (`training_data_l5` 140 is the last threshold). It is the seam's branch point in both
+      seam laws — F-PRG-01/F-PRG-02 add their VS step only for `L > LEVEL_CAP_MVP` — and
+      `min(level − 1, POINT_BUDGET_CAP)` makes level 5 the last level that banks a point
+      (F-PRG-08). SYS-15's TR-CSD-006 consumes the cap (the spend rows vanish at it)."
+    added: 2026-11-15
+    revised: ""
+  - name: xp_t1
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+      - design/gdd/enemy-ai-telegraphs.md
+    value: 3
+    unit: training data
+    notes: "TR-HD-007's award for a T1 kill (the Husk archetype — SYS-13's tier assignment
+      keys the award, SYS-07 owns the value). F-PRG-04's pacing ledger consumes it: the
+      pass yield (30) is the spawn list's tiers summed through these three awards."
+    added: 2026-11-15
+    revised: ""
+  - name: xp_t2
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+      - design/gdd/enemy-ai-telegraphs.md
+    value: 7
+    unit: training data
+    notes: "TR-HD-007's award for a T2 kill (the Spitter). Consumed by F-PRG-04's pass yield."
+    added: 2026-11-15
+    revised: ""
+  - name: xp_t3
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+      - design/gdd/enemy-ai-telegraphs.md
+    value: 14
+    unit: training data
+    notes: "TR-HD-007's award for a T3 kill (the Warden — RM-05's single spawn, the slice's
+      per-pass ceiling). Consumed by F-PRG-04's pass yield (14 of the 30)."
+    added: 2026-11-15
+    revised: ""
+  - name: xp_boss
+    status: active
+    source: design/gdd/health-damage.md
+    referenced_by:
+      - design/gdd/health-damage.md
+      - design/gdd/progression.md
+    value: 40
+    unit: training data
+    notes: "TR-HD-007's boss award — **SYS-07's constant, not SYS-14's**: SYS-14 authors the
+      boss's profile, phases and caps, never its award (the two-owner ambiguity this lane
+      found and named; SYS-16's TR-PRG-004/005 consume it from SYS-07's registration). It is
+      what makes the fourth pass land L5 (120 + 40 = 160; the 20 excess is discarded at the
+      cap) — `PACING_PASSES_L5_MAX` 4 counts it, and pure farm alone would need five passes."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-16, the progression sync — report §4b): SYS-16's own constants. All
+# designer-only at MVP (no player-facing knob); every one is validated at config load and
+# re-validated on a live edit (V-PRG: clamp + rate-limited telemetry in production, assert in dev).
+  - name: vs_attack_step
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 6
+    unit: attack per level from L6
+    notes: "F-PRG-01's VS step (safe range 4–8): `+6 attack` per level above `LEVEL_CAP_MVP`,
+      flat for every point split. It supersedes the frozen VS candidate `100 + 6×(L−1)`,
+      which gives 130 at L6 — *below* the 132 points cap and therefore a decrease. VS-only in
+      practice (the MVP cap is 5); the value is registered now so the seam's arithmetic has
+      one home."
+    added: 2026-11-15
+    revised: ""
+  - name: point_budget_cap
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 4
+    unit: points (fixed at MVP)
+    notes: "F-PRG-08's identity: `atk_points + hp_points + banked_points = min(level − 1,
+      POINT_BUDGET_CAP)`. The four points are the whole game's allocation budget; levels 6–20
+      grow the sheet through the level curve, never through more points. Fixed at 4: the
+      level-up rule grants one point per level to L5 only, so a cap above 4 is a non-fixpoint
+      and fails the boot."
+    added: 2026-11-15
+    revised: ""
+  - name: module_damage_bonus
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 1
+    unit: damage (the drive payload; 2 chain points)
+    notes: "The drive axis's only value (fixed identity): one drive contributes
+      `damage_bonus` 1 = two chain points (F-PRG-06's `chain_loadout = chain_nogear + 2 ×
+      damage_bonus`). The value crosses to SYS-07 inside `gear_aggregate` and lands in
+      `StatBlock.damage_bonus`, which F-HD-02 copies into the `AttackContext` at the contact
+      (the module stage, branch 2 only). `damage_bonus` never sums — the loadout's value is
+      the maximum over equipped drives (TR-PRG-015's max-law)."
+    added: 2026-11-15
+    revised: ""
+  - name: module_hp_per_chain_point
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 3
+    unit: hp per chain point
+    notes: "F-PRG-06(b)'s exchange (safe range 2–4): beyond the free band on the damage axis a
+      loadout must pay 3 HP per chain point (`chain% > 10% ⇒ Δhp ≤ −3 × chain_points`). The
+      Coupler's 8-HP premium exists so the designed pair (Coupler + Governor-207) pays exactly
+      6 — the floor (TR-PRG-019)."
+    added: 2026-11-15
+    revised: ""
+  - name: module_coupler_hp_cost
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 8
+    unit: hp
+    notes: "Coupler-034's payment (safe range 6–10; TR-PRG-019). Alone it is the glass build
+      (pool 20 → 12, OQ-PRG-1's playtest question); paired with Governor-207 it lands exactly
+      on the exchange floor (20 → 14, Δhp −6 ≤ −6). Not the derived
+      `MODULE_DAMAGE_HP_COST` (6 = 3 × 2 × 1) — the premium over it is deliberate."
+    added: 2026-11-15
+    revised: ""
+  - name: module_frame_hp_bonus
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 2
+    unit: hp
+    notes: "Governor-207's payload (safe range 2–4): the frame axis's step. At the 20-HP
+      baseline +2 is exactly `GEAR_BAND_PCT`'s 10% free band — the largest value that passes
+      term (a) alone (4 would be +20%, over the band). The frame is the defensive build
+      because `defense` is retired from gear (TR-PRG-016)."
+    added: 2026-11-15
+    revised: ""
+  - name: gear_band_pct
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 0.10
+    unit: ratio (pool axis)
+    notes: "F-PRG-06(a)'s free band (safe range 0.05–0.15): a loadout may gain up to 10% on
+      the pool axis free. The ratio is the bound, so it scales with the pool. It is the one
+      place the game's ±10% promise is expressible — one chain point is +16.7% at the
+      baseline, which is why the damage axis is *paid* rather than bounded (TR-PRG-013)."
+    added: 2026-11-15
+    revised: ""
+  - name: progression_schema_version
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+      - design/gdd/save-serialization.md
+    value: 3
+    unit: schema version
+    notes: "F-PRG-10 / TR-PRG-025: the `progression` namespace is the **v2→v3** bump
+      (`MIGRATIONS[2]`, `CURRENT_SCHEMA_VERSION` 2 → 3 — SYS-03's schema facts, registered
+      through SYS-03's own change path at the implementation story). SYS-15's `cache` took
+      v1→v2; this is the next step, **not** the `v1→v2` the index's OQ-SAV-11 clause once
+      claimed. A v2 payload carrying `progression` is `REFUSE_UNKNOWN_KEY`."
+    added: 2026-11-15
+    revised: ""
+  - name: pacing_pass_yield_min
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 30
+    unit: training data per pass
+    notes: "F-PRG-04's floor (safe range 30–40), derived: `ceil(TRAINING_DATA_L4 ÷
+      PACING_PASSES_L4_MAX)` = `ceil(90 ÷ 3)` = 30, asserted at boot. The slice's derived yield
+      is exactly 30 (2 Husks + 1 Husk + 1 Spitter + 1 Warden = 6 + 10 + 14), so a spawn-list or
+      tier change that drops it below the floor flags the pass count it would take. The
+      placement is SYS-02's room data and the tiers are SYS-13's; this is the budget those
+      owners satisfy."
+    added: 2026-11-15
+    revised: ""
+  - name: pacing_passes_l4_max
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 3
+    unit: passes
+    notes: "The authored bar's first landmark (safe range 2–4): L4 by the third pass
+      (`passes_to(L4) = ceil(90 ÷ 30) = 3`). It is the floor's own derivation input, so the two
+      knobs move together (a 4th pass would need a yield of 23)."
+    added: 2026-11-15
+    revised: ""
+  - name: pacing_passes_l5_max
+    status: active
+    source: design/gdd/progression.md
+    referenced_by:
+      - design/gdd/progression.md
+    value: 4
+    unit: passes (including the boss's)
+    notes: "The authored bar's second landmark (safe range 3–5): L5 at the fourth pass's boss
+      (3 passes = 90, + the fourth pass 30 = 120, + `xp_boss` 40 = 160 ≥ 140; the 20 excess is
+      discarded at the cap). Pure farm alone needs five passes — the boss is the fifth rung of
+      the curve, not an optional detour."
     added: 2026-11-15
     revised: ""
 
