@@ -18,10 +18,11 @@ queue).
 
 | Lane | Document | Phase | Owner | Prompt |
 |---|---|---|---|---|
-| ART-BIBLE | `design/art/art-bible.md` | AUTHORING | art-director + creative-director | v1.0.0 |
+| ART-BIBLE | `design/art/art-bible.md` | AUTHORING (parked; D-ORCH-01/02) | art-director + creative-director | v1.0.0 |
 
-SYS-03 and SYS-04 left this queue: both GDDs are authored and both lanes are in
-`SYNC` (§5). Their merges are the orchestrator's, after their syncs land.
+SYS-15 left this queue: its GDD is authored, its gates are complete (CD
+APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS), and its
+PR (#59) is open with CodeRabbit pending (§4).
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
 
@@ -33,7 +34,7 @@ SYS-03 and SYS-04 left this queue: both GDDs are authored and both lanes are in
 
 | Lane | PR | Pass | Threads | Dispositions | Status |
 |---|---|---|---|---|---|
-| — | — | — | — | — | idle |
+| SYS-15 | #59 | 1 (in flight) | — | — | pending |
 
 Batched cadence: one pass per landed milestone; triage in one batch → one fix
 commit → resolve threads manually with recorded dispositions. A confirm pass only
@@ -43,7 +44,9 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| — | — | — | — | — | idle |
+| 1 | SYS-15 | +7 (5 contracts/doctrine + 2 knobs) + 1 rider on `duck_request_contract` | SYS-15 dependency-map bullet + MVP row → APPROVED + design order 12 | 2026-11-15 | queued |
+
+Full request: `../new-vania-sys15-cache-stations-death/production/session-state/lane-SYS-15-report.md` §Sync (the exact YAML + rows). Counts for validation: TR 20 / F 4 / V 7 / ACs 26 (21 smoke = 17 GUT + 4 LINT · 3 device · 2 lock · 0 VS) / OQs 9; registry N + 7, no renames/retypes.
 
 **Landed 2026-11-14** (removed from the active queue; the receipts are in
 `STATE.md` §11/§12): **SYS-03** — PR #47, `50a9a93` (head `07f9b27`; 3 threads:

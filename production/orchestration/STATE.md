@@ -40,7 +40,7 @@
 | ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING (GLM rerun complete `bda8d96`; D-ORCH-01/02 open) | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
 | SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
 | SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
-| SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **AUTHORING** — runner launched 2026-11-15 on GLM (base `9e20653`) | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
+| SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **PR #59 open** — gates complete (CD APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS); CodeRabbit pending | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
 | SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **AUTHORING** — runner launched 2026-11-15 on GLM (base `9e20653`) | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
@@ -49,12 +49,13 @@ inside their own worktree.
 
 ## 3. Review queue (WIP ledger)
 
-- **Three-seat review**: 0 of 2 slots in use (SYS-15 and SYS-28 are authoring;
-  ART-BIBLE is parked on D-ORCH-01/02). Next review slot: the first lane to
-  reach CD GATE.
-- **CodeRabbit**: 0 of 1 in flight.
-- **Shared-file writer**: **idle; lock free** — SYS-03 landed (PR #47,
-  `50a9a93`) and SYS-04 landed (PR #48, `dd33658`). The queue is empty.
+- **Three-seat review**: 0 of 2 slots in use (SYS-28 is authoring; ART-BIBLE is
+  parked on D-ORCH-01/02; SYS-15's gates are complete). Next review slot: the
+  next lane to reach CD GATE.
+- **CodeRabbit**: 1 of 1 in flight — **PR #59** (SYS-15), pending. The triage is
+  the runner's (the session resumes when the review posts).
+- **Shared-file writer**: idle; the lock is free. The SYS-15 sync request is
+  queued (§5 of `review-queue.md`); the sync lane launches next.
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
@@ -115,11 +116,16 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **SYS-15 and SYS-28 are AUTHORING** — runners launched 2026-11-15 on GLM at
-   base `9e20653` (sessions `ses_e2318d2a8ffe1Ie7DIw934S1eg` /
-   `ses_e2318d2a3ffeD0307IK5kC2NyM`). When a lane report arrives: queue its sync
-   request in `review-queue.md` §5, run the sync lane, then verify + merge the
-   lane PR, and write the landing receipt.
+1. **SYS-15 is at PR #59** — gates complete (CD APPROVED · three-seat 1+3+2
+   repaired · spot-check PASS · micro-check PASS; §3.6 in-session fallback
+   recorded). CodeRabbit pending on #59: when it posts, resume the runner
+   (`ses_e2318d2a8ffe1Ie7DIw934S1eg`) to triage (one batch → one fix commit →
+   recorded dispositions). The sync request is queued in `review-queue.md` §5 —
+   launch the sync lane (DS). When BOTH the triage is clean and the sync has
+   landed: verify the head and squash-merge #59; write the landing receipt.
+2. **SYS-28 is AUTHORING** — runner in flight on GLM at base `9e20653`
+   (`ses_e2318d2a3ffeD0307IK5kC2NyM`). When its report arrives: same treatment
+   as SYS-15 (queue sync, run sync lane serially, merge).
 2. **ART-BIBLE lane** — D-ORCH-01 (the purple) and D-ORCH-02 (palette/grief pins)
    await the user; the lane resumes when they are decided.
 3. **SYS-04 header** — the audio-director countersign; then flip the GDD header
