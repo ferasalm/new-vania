@@ -157,10 +157,11 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 2. **The mini sync** after the riders land: the `spitter_orb_damage` flip
    8 → 2 + the index's Suture correction (25 → 5). One branch, one PR.
 3. **Launch SYS-16** (DS, `lane-runner` agent) after the riders PR **and the
-   mini sync** land — render
-   `--lane SYS-16` first (`prompt_hash` pending), worktree via
-   `npm run task:new -- docs/sys16-progression` (already prepared). SYS-17
-   stays BLOCKED on SYS-16.
+   mini sync** land — render `--lane SYS-16` first (`prompt_hash` pending);
+   the worktree `../new-vania-sys16-progression` (branch
+   `docs/sys16-progression`) is **already prepared — reuse it**; run
+   `npm run task:new -- docs/sys16-progression` only if it does not exist.
+   SYS-17 stays BLOCKED on SYS-16.
 4. **Next queued GDD lanes**: SYS-14 (GLM), SYS-05, SYS-24, SYS-12, SYS-20,
    SYS-25 — within the WIP limits (3 runners).
 5. At any lane boundary: refresh `NEXT.md`
