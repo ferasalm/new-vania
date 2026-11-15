@@ -128,10 +128,11 @@ unchanged. Validation: YAML parses · no duplicate names (122) · no missing
 `source`/`referenced_by` path (`design/gdd/hud.md` is the one pending path — it
 lands with **PR #86**, which merges **after** this sync by review-queue §7 rule 4)
 · the counts reproduce (25 TR / 7 F / 8 V / 37 ACs = 30 smoke + 5 device + 2 lock
-+ 0 VS) · no entry deleted. CodeRabbit: **1 thread, 1 applied, 0 rebutted, 0
++ 0 VS) · no entry deleted. CodeRabbit: **2 threads, 2 applied, 0 rebutted, 0
 deferred, all resolved** (the SYS-24 dependency list gains SYS-16 + SYS-04 — the
-GDD's own dependency table marks SYS-16 **hard** and SYS-04 soft; the
-enumeration row carries the same two for consistency). **The lock stays
+GDD's own dependency table marks SYS-16 **hard** and SYS-04 soft; then SYS-06's
+read-only boot-constant edge, which the enumeration row already carried — the
+enumeration and the bullet are now the same set). **The lock stays
 `SYNC-LANE`; the release to `none` is the orchestrator's receipt for this sync's
 merge.** Landing order: **this sync first, then PR #86.**
 
