@@ -1,4 +1,4 @@
-# The Sandbox Suite — v2
+﻿# The Sandbox Suite — v2
 
 **PROTOTYPE — NOT FOR PRODUCTION.** Throwaway code. It exists to answer one
 question: *does the game feel right when its landed numbers are played, not read?*
@@ -152,7 +152,7 @@ asset-spec pass; this prototype is the "use".
 ## Smoke test
 
 ```bash
-# the contract rules, asserted (69 checks)
+# the contract rules, asserted (71 checks)
 "C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --headless --path prototypes/sandbox res://smoke.tscn --quit-after 900
 ```
 
