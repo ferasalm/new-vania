@@ -49,13 +49,18 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | PR #69 open (`chore/sync-shared-files`, base `Main`), awaiting merge |
-| 2 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | queued |
+| 1 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | queued |
 
-Full requests (read from the lane worktrees; `session-state` is gitignored but
+Full request (read from the lane worktree; `session-state` is gitignored but
 on disk):
-- SYS-28: `../new-vania-sys28-narrative-presentation/production/session-state/lane-SYS-28-report.md` — counts TR 13 / F 3 / V 6 / ACs 15 (13 smoke = 8 LINT + 5 GUT · 0 device · 2 MVP-lock · 0 VS) / OQs 5.
 - ART-BIBLE: `../new-vania-art-bible/production/session-state/lane-ART-BIBLE-report.md` §3 (the exact diffs).
+
+**Landed 2026-11-15** (removed from the active queue): **SYS-28** — PR #69,
+`a5a1f81` (head `eb85da4`; 4 CodeRabbit threads, all applied + resolved);
+registry 77 → 80 entries (`narrative_beat_contract`, `beat_variant_selector`,
+`micro_copy_budget`); the index gained the SYS-28 APPROVED row, design order 21
+and the 10 request diffs. The full request was
+`../new-vania-sys28-narrative-presentation/production/session-state/lane-SYS-28-report.md`.
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-15** — PR #63,
 `1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
