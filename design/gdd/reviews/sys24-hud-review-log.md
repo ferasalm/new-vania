@@ -90,12 +90,23 @@
 | CR-4 | `THUMB_BAND_CEILING_ART_PX`'s range 20–32 lets a knob turn break SYS-32's authored 24-px margin | **APPLIED** — the range is 20–24 (the inset's support band; a larger value is a contract touch, not a knob turn) |
 | CR-5 | F-HUD-06's variables cite `ProgressionRead.aggregate` — a row must speak its own module's word | **APPLIED** — the variables are the row's own payload fields; the both-slots fixture added (the drive row `damage +1 · chassis -8`, the frame row `chassis +2` — the rows never share a text); AC-16's fixture extended |
 | CR-6 | F-HUD-04's strip placement needs an explicit contract for the body-rect contact case | **APPLIED** — the placement contract stated: the strip anchors to the live view bottom; the guarantee is **legibility-through** (≤ 12 px-equivalent ink over any body pixel — the ≤ 24-px band at ≤ 0.5 alpha), not zero-intersection (which the authored margin forbids); the fixture named (AC-33 + AC-26) |
-| CR-7 | the seven formula sections should use the house's uniform structure (the intro, the symbolic equation, the five-column variable table, the output range, the worked example) | **APPLIED** — all seven tables converted to `Variable | Symbol | Type | Range | Description`; F-HUD-02 given the full form; F-HUD-03's Output Range made general (`[4, 32]`) with the examples as worked examples |
+| CR-7 | the seven formula sections should use the house's uniform structure (the intro, the symbolic equation, the five-column variable table, the output range, the worked example) | **APPLIED** — all seven tables converted to the five-column form (`Variable` · `Symbol` · `Type` · `Range` · `Description`); F-HUD-02 given the full form; F-HUD-03's Output Range made general (`[4, 32]`) with the examples as worked examples |
 | CR-8 | the review log's prompt/manifest references are not repo-root-relative | **APPLIED** — both paths now `production/orchestration/…` |
 | CR-9 | the lane prompt's merge instructions look circular (the merge requires the sync; the sync's validation requires this GDD's path) | **REBUTTED** — the order is feasible without an edit: review-queue §7 rule 4's recorded mechanism (the SYS-03/SYS-14 precedent) has the sync lane apply on a fresh Main with the GDD's path **excepted-as-pending and recorded**, then this PR merges; the lane prompt's step 10 already states exactly this order. The prompt is the orchestrator's generated artifact — editing it requires the master-source regeneration + the hash re-pin (the orchestrator's §6 path), outside this lane's write scope. The disposition rides the lane report for the orchestrator. |
 | CR-10 | the review log's line 13 records `player_screen_px + shake_offset_px` as "binding" | **REBUTTED** — that line is §B.2's verbatim record of the technical seat's blocker **as raised** (the pre-repair state); §C's T-4 records the applied correction (the minus). The log is the finding-then-fix trail; editing the finding's text would falsify the record. |
 
 *(The CR threads resolve on GitHub after the fix commit — the dispositions above are the recorded resolutions.)*
+
+**The confirm pass (CodeRabbit's second review on the Major-class batch, 2026-11-15):** 5 findings — 4 applied, 1 already-fixed:
+
+| # | Finding (the site) | Disposition |
+|---|---|---|
+| CF-1a | the collapsed strips' glyphs would overlap (the strips all sharing the view's bottom rows) | **ALREADY FIXED by `77a92b9`** — the confirm pass reviewed the pre-rebase state; the strips pin to their own visuals' bottom edges (the horizontal bounds preserved; the glyphs at their controls' positions) |
+| CF-1b | Attack's strip at the view's bottom would fall outside its hit region | **ALREADY FIXED by `77a92b9`** — the strip [216, 240] ⊆ the hit circle's realization [174, 246] at hit-scale 1.5 |
+| CF-2 | `CAPS_COLLAPSE_ALPHA`'s range 0.3–0.7 breaches the 12 px-equivalent ink bound at 0.7 | **APPLIED** — the range is 0.3–0.5 (the ink bound is the law: 24 × alpha ≤ 12; the knob row and the variable table re-derived) |
+| CF-3 | F-HUD-03's `partial_px` divided by `final_capacity` for every segment (5/23 would render the second segment full) | **APPLIED** — the per-segment capacity law: ordinary segments divide by `HP_PER_POINT`, only the final segment by `final_capacity`; the 5/23 two-thirds fixture added to the law and to AC-06 |
+| CF-4 | the full-health invariant was stated as `final_fill_num == final_capacity`, false for divisible pools | **APPLIED** — the invariant restated over the complete rendered bar (divisible: all segments full via `full_segments`; non-divisible: the last segment exactly full) |
+| CF-5 | the review log's CR-7 disposition had unescaped pipes (the table row broke) | **APPLIED** — the pipes escaped; the full disposition renders in its cell |
 
 ## E · Sync request
 
