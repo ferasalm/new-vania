@@ -270,7 +270,7 @@ lanes:
     worktree_state: planned
     prompt_path: production/orchestration/prompts/lanes/ADR-DRAFT.md
     prompt_version: "1.0.0"
-    prompt_hash: "pending"
+    prompt_hash: "9c08ed965d14"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
     status: STANDBY
     dependencies: []
