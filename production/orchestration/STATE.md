@@ -1,8 +1,7 @@
 # Orchestration State — the single live state/log
 
-> **Updated**: 2026-11-15 (tooling/ops chat)
-> **Main**: `b99ed48` — tooling landing: modules audited, DCP + Superpowers,
-> 350k context policy (PR #51)
+> **Updated**: 2026-11-15 (operator-card chat)
+> **Main**: `83989de` — operator card + retry/fallback policy (PR #54)
 > **Mode**: parallel GDD/pre-production lanes; nested topology; WIP-limited.
 > **Source of truth**: `manifest.yaml`. **Paste source**: `prompts/NEXT.md`.
 > **Operating manual**: `README.md`. **Tooling**: `TOOLING.md`.
@@ -104,6 +103,7 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | Operator card + retry/fallback policy | `83989de` | #54 | verified this chat; OPERATOR.md + prompts v2.0.6 |
 | 2026-11-15 | Tooling (modules, DCP, Superpowers, 350k policy) | `b99ed48` | #51 | verified this chat; guide + policy landed |
 | 2026-11-14 | SYS-11 Seam Borders | `e8b194d` | #43 | verified this chat; lane state preserved |
 | 2026-11-14 | SYS-10 World Mutation & Epochs | `5b2a1f9` | #42 | batch co-review pilot |
@@ -113,7 +113,7 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **The user pastes `prompts/NEXT.md`** (v2.0.0, hash `555c18812b03`) in a fresh
+1. **The user pastes `prompts/NEXT.md`** (v2.0.6, hash `6106fa2cd614`) in a fresh
    chat. It is the mode-agnostic handoff + orchestrator loop; it reads this file +
    the manifest and launches the next lane(s).
 2. **Launch SYS-15 and SYS-28** — both `QUEUED`, both prompts rendered
@@ -138,7 +138,7 @@ SYS-12, SYS-20, SYS-25, SYS-07-REWORK; SYS-16/SYS-17 blocked on SYS-07-REWORK.
 **User must decide**: D-ORCH-01 (the purple / SYS-02 line 36), D-ORCH-02 (the
 palette/grief pins), D-ORCH-03 (the SYS-07 rework package). The art-bible
 direction approval is the one-click action that unblocks the most.
-**Next orchestrator chat**: paste `NEXT.md` (v2.0.0, `555c18812b03`); read this
+**Next orchestrator chat**: paste `NEXT.md` (v2.0.6, `6106fa2cd614`); read this
 file + `manifest.yaml`; do not author; launch SYS-15/SYS-28 within the WIP limits;
 update this file at every lane boundary; batch decisions; stop only on a hard
 blocker or the 350k hard trigger.
@@ -239,3 +239,30 @@ blocker or the 350k hard trigger.
   handoff prompt; `prompts/handoff.md` added as the template; `NEXT.md`
   re-rendered (hash `555c18812b03`); `SYS-15.md` and `SYS-28.md` rendered
   (`85701ea84621`, `e2e9a0f20532`).
+
+## 14. Operator card + retry/fallback landing (2026-11-15)
+
+- **Landed**: **`83989de`** — `chore(orchestration): add the operator card and
+  pin the fallback policy (#54)`, squash-merged 2026-11-15 with the head pinned
+  at `ecc1df6`. 5 CI checks green on every round; 10 CodeRabbit threads across
+  5 review rounds, all valid, all applied, all resolved; **no admin merge
+  needed** (final `mergeStateStatus: CLEAN`).
+- **`OPERATOR.md`**: the one-page TL;DR card for the human operator — the
+  paste/approve/decide loop, the file map, the `ID: choice` pre-answer format,
+  the unattended-run authorization block, WIP/context/model quick facts, and
+  the three rules. Linked from the manual header and the file map.
+- **Retry/fallback policy (user decision, recorded in `decisions.md`)**: up to
+  **4 spawn attempts** on server-side errors (`ProviderModelNotFoundError`,
+  `AiError: Capacity temporarily exceeded`, 5xx/rate limits). Then: **DS→GLM**
+  is an authorized autonomous fallback; **GLM→DS never autonomously** — only an
+  explicit user decision can authorize it (creativity is not to be
+  compromised). Pinned in the routing rule (§3), the launch procedure (§5),
+  and `TOOLING.md` §5.
+- **Fallback mechanics (CodeRabbit-honed)**: a fallback first updates the
+  lane's manifest `model`, re-renders + validates the lane prompt (the header
+  embeds the model), lands `model` + `status` on `origin/Main` through the §6
+  path (branch + PR, or the sync lane), keeps `AUTHORING` conditional on a
+  successful spawn (a failed launch stays `PAUSED`), and defines the
+  `PAUSED → QUEUED` relaunch with a clean lane worktree.
+- **Prompts**: `NEXT.md` re-rendered at **v2.0.6** (`6106fa2cd614`); the
+  manifest `next.version` bumped 2.0.1 → 2.0.6 through the review rounds.
