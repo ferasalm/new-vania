@@ -133,9 +133,11 @@ For each launch:
      user's authorization to run a GLM lane on DS, first set the lane's
      manifest `model` to the DS model, re-render + validate (`--lane <ID>`,
      then `--check`), land the model change on `origin/Main` as above, then
-     set the lane back to `QUEUED` and relaunch it from step 1. When the
-     routing issue is resolved without a model change, set the lane back to
-     `QUEUED` and relaunch it from step 1.
+     commit or reset the lane's `manifest.yaml` and `lanes/<ID>.md` edits so
+     the step-3 merge runs on a clean worktree, set the lane back to
+     `QUEUED`, and relaunch it from step 1. When the routing issue is
+     resolved without a model change, set the lane back to `QUEUED` and
+     relaunch it from step 1.
 6. After a runner spawns successfully (including a DS→GLM fallback spawn),
    update the manifest status to `AUTHORING`; update `STATE.md`. If every
    attempt fails, keep the lane `PAUSED` — never set `AUTHORING` on a failed
