@@ -1,0 +1,23 @@
+License record — Metroidvania Library Asset Pack
+Category:   art
+Author:     unknown — no record in repo
+Source:     unknown — no record in repo
+License:    Unrecorded in repo — per user verification 2026-11-16
+Status:     Verified — user authorization 2026-11-16 (provenance pending)
+Verified:   2026-11-16
+Evidence:   pending — author unknown; user authorization stands
+
+Staging record only: the license travels with the pack, the pack itself stays in
+inbox/ until it is promoted on use (see assets/LICENSE-MANIFEST.md).
+
+========================================================================
+No license file, readme, or store record for this pack was present anywhere in the
+repository when this sweep ran, so the author and source could not be reconstructed
+without guessing. Nothing here is invented.
+
+User verification, 2026-11-16: the user confirmed that every pack in this collection was
+obtained from itch.io or from an MIT-licensed GitHub repository, and that no pack
+contains copyrighted material or was obtained illegally. That authorization is why this
+row is recorded as Verified in assets/LICENSE-MANIFEST.md. The provenance detail
+(author / store URL / license text) is still outstanding. Capture it from the original
+download page and replace this note before the pack is copied into `assets/`.
