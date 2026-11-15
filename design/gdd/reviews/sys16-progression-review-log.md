@@ -14,7 +14,7 @@
 | Technical seat | lead-programmer · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | 9 repaired, 1 rebutted-with-rider |
 | QA seat | qa-lead · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | all repaired |
 | qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | **PASS (round 4)** | 0 | §F — rounds 1–3 FAILed (3, then 4, then 1 blocker), all repaired |
-| Final micro-check | fresh seat · DeepSeek V4.1 Flash | *pending — after the spot-check returns* | — | §G |
+| Final micro-check | fresh seat · DeepSeek V4.1 Flash | **PASS (round 2)** | 0 | §G — round 1 FAIL (1 blocker), repaired |
 
 **Process note (recorded, not a skip).** The contract calls for the three seats to be
 spawned in parallel. They were spawned in **two waves** — creative first, then
@@ -190,7 +190,25 @@ same-fight claim (OQ-PRG-6 owns whether the fourth point is spendable).
 
 ## G. Final micro-check
 
-*Appended after the run.*
+**Round 1 — FAIL (1 blocker).** TR-PRG-006 still compressed the ledger into a
+same-fight claim ("meets the boss at seven chains and finishes it at six") while the
+ledger block had been qualified as the post-boss build and then deferred to TR-PRG-006
+as the authority — the fact existed twice with two subjects. **Repaired:** the authority
+states two builds with two subjects, the ledger block reduces to a pointer, and
+AC-PRG-06's column order matches the table.
+
+**Round 2 — PASS (zero blockers).** The blocker is resolved; the arithmetic re-derives
+(boss 10/9/8/7/6, Warden 4/4/3/3/3, Husk 1×5, Spitter 2×5, `attack = 100 + 8·p`); the
+counts are unmoved and still sum (28 / 10 / 12 / 36 / 44 / 8 / 21; 29 + 2 + 5 + 0 = 36,
+with 24 GUT + 4 dual + 1 LINT); the cross-references resolve; no placeholder. **The
+document is closed at this point** (the lane contract: "then stop; do not reopen").
+
+**Deferred advisories (non-blocking, recorded not applied — the document is closed):**
+(1) the prose "10/9/8/7/6" is the only boss-chain figure a `BOSS_HP` change would not
+re-derive automatically (the clause covers the table); (2) two consecutive pointers to
+the same fixture could be one; (3) AC-PRG-06 pins the Warden and boss columns but leaves
+the Husk/Spitter to "cell for cell". All three are cosmetic or covered by the
+re-derivation clause; none blocks a story.
 
 ## H. The one item for the orchestrator / user
 

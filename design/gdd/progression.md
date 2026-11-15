@@ -1,9 +1,10 @@
 # Progression
 
-> **Status**: **DRAFT — authoring (lane SYS-16, 2026-11-15)**. Scope: the MVP-minimal level 1–5 progression layer, the **MVP gear layer** (D-1, 2026-11-14) and the ability unlock ladder. Consumes SYS-07's authored economy without re-deriving it; owns the spend/progression layer *around* the printed damage ladder (SYS-15 is the ladder's MVP consumer; SYS-16 owns the growth law the ladder sits in).
+> **Status**: **APPROVED (2026-11-15, lane SYS-16)** — CD-GDD-ALIGN APPROVED (two passes; pass 1 CONCERNS → repaired) · three-seat panel NEEDS REVISION (3 creative + 10 technical + 10 QA blockers) → all revised in-session → qa-lead spot-check **PASS (round 4)** → final micro-check **PASS (round 2)**. Scope: the MVP-minimal level 1–5 progression layer, the **MVP gear layer** (D-1, 2026-11-14) and the ability unlock ladder. Consumes SYS-07's authored economy without re-deriving it; owns the spend/progression layer *around* the printed damage ladder (SYS-15 is the ladder's MVP consumer; SYS-16 owns the growth law the ladder sits in).
 > **Author**: user + systems-designer (creative seat, GLM-5.3-Flash) + gameplay-programmer (technical seat, DeepSeek V4.1 Flash) — via /design-system
 > **Last Updated**: 2026-11-15
-> **Design Review**: not yet run (CD gate → three seats → repairs → qa-lead spot-check → micro-check)
+> **Last Verified**: 2026-11-15 (qa-lead spot-check PASS round 4 + final micro-check PASS round 2; the counts and every worked example re-derived against the consumed fixtures)
+> **Design Review**: CD-GDD-ALIGN **APPROVED** (2026-11-15) · three-seat review NEEDS REVISION (3 + 10 + 10) → all revised · qa-lead spot-check **PASS** · micro-check **PASS** — record at `design/gdd/reviews/sys16-progression-review-log.md`
 > **Implements Pillar**: "SotN, Not Hollow Knight" (levels, drops, gear, save sanctuaries as structure, not decoration) · "Read, Then Strike" (gear changes *how* you read an exchange; it never buys the read) · "Remade Every Death" (growth is the machine's memory of what it learned, and it survives the print)
 > **System ID**: SYS-16 (Feature layer, MVP)
 > **Counts**: 28 TR-PRG · 10 formulas · 12 V-PRG · 36 ACs · 44 edge bullets · 8 OQ rows · 21 knob rows · gate manifest 29 + 2 + 5 + 0 = 36
