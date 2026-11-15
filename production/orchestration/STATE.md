@@ -117,6 +117,11 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | SYS-28 Narrative Presentation | `2ff3096` | #58 | verified this chat; GDD + sync (PR #69, `a5a1f81`); counts 13/3/6/15 |
+| 2026-11-15 | SYS-15 Cache Stations & Death-as-Story | `24efd09` | #59 | verified this chat; GDD + sync (PR #63, `1e9e524`); counts 20/4/7/26 |
+| 2026-11-15 | ART-BIBLE gates closed (PR #67; sync queued) | `4629bb8` | #68 | verified this chat; D-ORCH-01 executed (`5cc1377`), D-ORCH-02 pinned |
+| 2026-11-15 | The decision batch (D-ORCH-01/02/05, D-ORCH-03 round 2) | `ce46fac` | #65 | verified this chat; D-ORCH-03 = revise again |
+| 2026-11-15 | SYS-04 header countersign + flip | `01a9442` | #66 | verified this chat; D-ORCH-05 executed |
 | 2026-11-15 | Launch record SYS-15/SYS-28 | `4c0a05f` | #56 | verified this chat; both lanes AUTHORING, runners on GLM |
 | 2026-11-15 | Operator card + retry/fallback policy | `83989de` | #54 | verified this chat; OPERATOR.md + prompts v2.0.6 |
 | 2026-11-15 | Tooling (modules, DCP, Superpowers, 350k policy) | `b99ed48` | #51 | verified this chat; guide + policy landed |

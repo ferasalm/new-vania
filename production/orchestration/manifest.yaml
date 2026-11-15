@@ -64,15 +64,15 @@ lanes:
     title: "Art Bible — visual identity, palette pins, SYS-11 OQ-1"
     branch: docs/art-bible
     worktree: ../new-vania-art-bible
-    worktree_state: planned
+    worktree_state: created
     prompt_path: production/orchestration/prompts/lanes/ART-BIBLE.md
     prompt_version: "1.0.0"
     prompt_hash: "fe36c9a4acd2"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: AUTHORING
+    status: SYNC
     dependencies: []
     review_state: "art-director + creative-director + user approval; asset-spec handoff"
-    next_action: "RESUMED — D-ORCH-01 decided (B: amend SYS-02 line 36, the commit names D-ORCH-01) and D-ORCH-02 approved as proposed. Apply the decisions to the OQ-1/OQ-4 items, finish the bible, run the gate trail (CD gate -> three-seat -> spot-check -> micro-check)."
+    next_action: "SYNC (order 1): the sync request is queued (review-queue.md §5); the sync lane applies it; then the orchestrator squash-merges PR #67 at the verified head. The ART-BIBLE manifest row's worktree_state is corrected in the same change."
 
   - id: SYS-03
     title: "Save & Serialization — the persistence bottleneck"
@@ -111,7 +111,7 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "85701ea84621"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: CODERABBIT
+    status: MERGED
     dependencies: [SYS-03, SYS-05, SYS-07]
     dependencies_waived: [SYS-03, SYS-05]
     dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring (the review-doctrine pending-obligation ledger)."
@@ -127,7 +127,7 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "e2e9a0f20532"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: CODERABBIT
+    status: MERGED
     dependencies: [SYS-05, SYS-10, SYS-09]
     dependencies_waived: [SYS-05]
     dependency_note: "SYS-05 is a pre-shaped contract; ratify at authoring."
