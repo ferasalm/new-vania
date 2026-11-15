@@ -210,6 +210,22 @@ the same fixture could be one; (3) AC-PRG-06 pins the Warden and boss columns bu
 the Husk/Spitter to "cell for cell". All three are cosmetic or covered by the
 re-derivation clause; none blocks a story.
 
+## I. CodeRabbit (PR #81) — one pass, one batch, six threads, all resolved
+
+| # | Class | Finding | Disposition |
+|---|---|---|---|
+| 1 | Major | The pool-only fallback would strand the Coupler-dependent ACs (the catalogue, the pair, the trade rubric) — it cannot pass the gates as a data-only change. | **APPLIED.** TR-PRG-013's fallback names its **conditional criteria** (one frame entry; AC-PRG-19 and AC-PRG-35 vacated with the Coupler; AC-PRG-14's table becomes the two frame states; AC-PRG-32's G5 still runs), and AC-PRG-18 carries the fallback clause. |
+| 2 | Minor | A grant recorded while SYS-06 is absent never reaches a consumer that starts later — the latch blocks re-publication, not re-application. | **APPLIED.** TR-PRG-022 states the reader contract (a consumer reads the persisted set at init/restore and applies each grant without a new event); AC-PRG-22 gains the late-consumer fixture. |
+| 3 | Major | Unequipping one slot cleared the other — BUILT had no defined partial exit. | **APPLIED.** The loadout table's EMPTY/BUILT transitions are corrected (BUILT → FRAMED on `UNEQUIP(drive)`, → DRIVEN on `UNEQUIP(frame)`), transition law 2 states it, AC-PRG-15 gains the unequip fixture. |
+| 4 | Minor | The formulas use inline variables rather than the rule's variable tables. | **REBUTTED.** The requirement's substance (types, ranges, an Output clause, a worked example) is met in all ten; every APPROVED, merged GDD in this corpus uses the inline form (`health-damage.md`, `cache-stations-death.md`, `seam-borders.md`, `enemy-ai-telegraphs.md`), and a late ten-formula reformat carries arithmetic-drift risk. Recorded here, not silently skipped. |
+| 5 | Major | **`hp_max_delta` summed only frame modules**, so the Coupler's `−8` never reached the aggregate and the exchange was unpayable. | **APPLIED — a real defect the three seats and both spot-checks missed.** F-PRG-05 now sums **both** slots (`Σ {m.hp_max : m equipped}`); AC-PRG-15 gains the aggregate fixture (Coupler `−8`, Coupler+Governor `−6`, Regulator+Governor `+2`), which matches the budget table's rows exactly. |
+| 6 | Major | **The closed Regulator + a frame fails term (b)** (`Δhp −4` vs the required `−6`), so the closure's "zero exceptions" claim was false for that pair. | **APPLIED — and it followed from #5.** F-PRG-07's closure now states the **refusal**: the paid module alone passes; the paid module with a frame is refused at equip with the shortfall printed. The closure narrows the loadout rather than raising the derived `MODULE_DAMAGE_HP_COST` (which V-PRG-06 forbids). AC-PRG-17 asserts both arms. |
+
+**Outcome:** 6 threads, **5 applied, 1 rebutted, 0 deferred, 0 unresolved**. All five CI
+checks green at head `0501aa5`; CodeRabbit SUCCESS. **The merge is not taken by this
+lane** — the contract merges only after the sync lands, and merge authority is the
+orchestrator's.
+
 ## H. The one item for the orchestrator / user
 
 **F-HD-10's module-build note — a reading, a rider request, and a pre-authorised
