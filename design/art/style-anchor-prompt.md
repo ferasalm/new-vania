@@ -28,11 +28,13 @@ per tile with one 1px course line per 16px tile;
 detail level: pixel-grid production art — value-first legibility, threats
 separate from backdrops by 2+ value steps before any color is spent;
 camera: side-on 2D game view, medium distance, eye-level for scenes;
-negative: no bloom, no halo, no lens flare, no opacity-pulse telegraphs,
+negative: no bloom, no halo glow, no lens flare, no opacity-pulse telegraphs,
 no subpixel sampling, no frame-rate-dependent motion, no cutscene framing,
 no helpless-horror composition, no gore, no timers/speed lines, no
 stat-spreadsheet density, no gibberish text, no characters in environment
-concepts, no hybrid cross-pack materials]
+concepts, no hybrid cross-pack materials]  ← "no halo glow" bans glow/bloom
+effects, not the Denial halo ring — that ring is a required hard-edged
+silhouette element (the crown invariant's Denial state), never a glow
 ```
 
 ## Usage

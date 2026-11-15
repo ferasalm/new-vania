@@ -34,6 +34,10 @@
     { "name": "PROV_B_VOID",   "hex": "#1E1610", "oklch": { "L": 0.208, "C": 0.017, "h": 59 }, "status": "PLACEHOLDER", "role": "The unlit warm read; the print layer's ink on B paper", "context": "world", "source": "same" },
     { "name": "PROV_B_SEAL",   "hex": "#8E2A3C", "oklch": { "L": 0.443, "C": 0.134, "h": 14 }, "status": "PLACEHOLDER", "dormant": true, "dormancy_rule": "OQ-DR-8: dormant table member at MVP", "role": "The wine-red seal family", "context": "world", "source": "same" }
   ],
+  "presentation_shades": [
+    { "name": "TELEGRAPH_BAND_1", "hex": "#7DF0FF", "oklch": { "L": 0.893, "C": 0.107, "h": 207 }, "status": "PLACEHOLDER", "member": "PROV_A_HAZARD", "meaning": "The telegraph's light-strike flash (power band 1) — truth-independent by SYS-13 TR-ENM-013's designer-fixed bands (OQ-ENM-3, pinned in art-bible §2B)", "context": "vfx" },
+    { "name": "TELEGRAPH_BAND_2", "hex": "#C78B28", "oklch": { "L": 0.68, "C": 0.13, "h": 75 }, "status": "PLACEHOLDER", "member": null, "derived_from": "PROV_B_GLOW family", "meaning": "The telegraph's heavy-strike flash (power band 2) — a fixed derived presentation shade (not a table member); truth-independent; ΔL 0.213 from band 1 (>= 0.20 = >= 2 ramp steps); band 3 is VS-recorded", "context": "vfx" }
+  ],
   "variants": [
     {
       "name": "The Cistern reveal set — one geometry, two palettes",
