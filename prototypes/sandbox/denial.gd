@@ -183,6 +183,7 @@ func _on_choice(choice: String) -> void:
 			K.designations += 1
 			K.pending_stamp = "DESIGNATION " + K.designation_text(K.designations)
 			player.revive(K.RESTORE_MODULE_HEAL_PCT)
+			player.locked = false
 			dead = false
 			offline.queue_free()
 			offline = null
