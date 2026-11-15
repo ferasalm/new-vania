@@ -37,7 +37,7 @@
 
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
-| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING (GLM rerun complete `bda8d96`; D-ORCH-01/02 open) | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
+| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | **PR #67 open** — gates complete (CD APPROVED · seats 3+6+8 all repaired · spot-check PASS 17/17 · micro-check PASS run 2); D-ORCH-01 executed (`5cc1377` names it), D-ORCH-02 pinned; CodeRabbit clean, threads resolved | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
 | SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
 | SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
 | SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **PR #59 open** — gates complete (CD APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS); CodeRabbit pending | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
