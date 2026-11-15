@@ -163,7 +163,7 @@ bullet, AC-ENM-18 (the deflected-orb kill), and TR-ENM-005's hp/award roster. A
 value-only edit would leave "damage: 2" beside "8 damage sits between P1 6 and P2 12"
 in the same sentence — worse than none. **SYS-13's rider must land as one coordinated
 doc touch** (§ 9's row): hp 6/12/24, awards 3/7/14, the orb 2, the flash band, the
-ceiling 12/18, V-HD-06's `6 < 12 < 24`, and the one-shot claim re-decided. Until it
+ceiling 12/18, V-HD-06's `6 < 12 < 24`, and the deflect's weight question open (§ 9.3). Until it
 lands, the registry sync must **not** flip `spitter_orb_damage` (recorded in the lane
 report's sync request).
 
@@ -368,8 +368,8 @@ of the pre-revision text or the package's § 3/§ 8 figure**; the arithmetic is 
 
 | File | Sites | Change |
 |---|---|---|
-| **`enemy-ai-telegraphs.md`** (the coordinated SYS-13 touch) | the header; the Contracts line; TR-ENM-004; **TR-ENM-005** (the roster); TR-ENM-009; **TR-ENM-011** (the orb); TR-ENM-013's test; **TR-ENM-018** (the ceiling); the Interactions rows (SYS-07, SYS-16); the traceability row; **F-ENM-04**; **F-ENM-07's example**; the edge bullet; the Dependencies row; the `ORB_DAMAGE` knob; the cross-system inputs; the Not-knobs line; **AC-ENM-03/06/12/16/18**; the answerability matrix's orb row; the **farms-orb-deflects** bullet; OQ#4 | the strike table 1/2/4 · the tiers **6/12/24** · the awards **3/7/14** · V-HD-06's `6 < 12 < 24` · the counter **6** · the ceiling **12/18** (T3 survives at 6) · **the orb 2**, its `power_band` **2** (the flash follows the hit's weight), `ORB_DAMAGE` 2 (range 1–2), and the one-shot consequence (below) |
-| **`audio-core.md`** | the header; TR-AUD-015's test; F-AUD-03's Variables, Scope and Examples; **AC-AUD-08** | the band boundaries are **symbol-anchored** (`BAND_2_MIN = ATK1_DAMAGE`), so they moved with the arcs automatically; the printed fixtures are now **1/2/3/4/6 → bands 1/2/2/3/3** |
+| **`enemy-ai-telegraphs.md`** (the coordinated SYS-13 touch) | the header; the Contracts line; TR-ENM-004; **TR-ENM-005** (the roster); TR-ENM-009; **TR-ENM-011** (the orb); TR-ENM-013's test; **TR-ENM-018** (the ceiling); the Interactions rows (SYS-07, SYS-16, SYS-14); the traceability row; **F-ENM-04**; **F-ENM-07's example**; the edge bullet; the Dependencies row; the `ORB_DAMAGE` knob; the cross-system inputs; the Not-knobs line; **AC-ENM-03/06/12/16/18**; the answerability matrix's orb row; the **farms-orb-deflects** bullet; OQ#4 and OQ#8 | the strike table 1/2/4 · the tiers **6/12/24** · the awards **3/7/14** · V-HD-06's `6 < 12 < 24` · the counter **6** · the ceiling **12/18** (a T2's whole pool of damage, delivered to the Warden — half its 24) · **the orb 2**, its `power_band` **2** (the flash follows the hit's weight; the band is authored with the value), `ORB_DAMAGE` 2 (range 1–2), and the **weight consequence** (2 of a 12-HP T2 = 16.7%, up from 8 of 60 = 13.3%; it was never a one-shot) · the boss pool **60** (SYS-07's 40–80) |
+| **`audio-core.md`** | the header; TR-AUD-015's test; F-AUD-03's Variables, Scope and Examples; **AC-AUD-08** | the band boundaries are **symbol-anchored** (`BAND_2_MIN = max(2, ATK1_DAMAGE)`, `BAND_3_MIN = ATK2_DAMAGE`), so they moved with the arcs; the printed fixtures are now **1/2/3/4/6 → bands 1/2/2/3/3** |
 | **`juice-feedback.md`** | the header; the Killing Blow anchor; TR-JCE-018's test; F-JCE-06's Output/Examples; the strike-death edge bullet; **AC-JCE-18** | `hp_max` **20**; the pairs **4 into 3 → overkill 1 → 0.05 (LOW)**, **8/20 → 0.60 (MID, inclusive)**, **7/20 → 0.65 (HIGH)**; AC-JCE-18 → 0.00/**0.05**/0.40/**0.75**; the strike-death cap **≤ 4 of 20 → ratio ≤ 0.20 (LOW)** — the band thresholds themselves are unchanged |
 | **`cache-stations-death.md`** | the header; the terminal row set; **TR-CSD-006**; **AC-CSD-04**; **AC-CSD-05** | the `CHASSIS` row **+2** (was +8), the `CHASSIS` spend heals **2**; **the row's preview prints the ladder's per-move delta** (`ATK1 2→3 · chain 6→7`; `max HP 20→22`) rather than a bare attack number (the package's § 9 rider); AC-CSD-05's restore **7/20 → HP 20** |
 | **`room-world-structure.md`** | the header; **F-RWS-05**'s Example; **AC-RWS-14** | the pit's printed default profile **100 → 20** (the law `raw_damage = hp_max` is unchanged — it is scale-free) |
@@ -407,21 +407,10 @@ the same envelope the SYS-07 GDD states (F-HD-10 / AC-HD-11), so the two documen
 agree.
 
 ### 9.3 The open point (recorded, not decided)
-
-**The deflect's one-shot read.** At 2 damage the deflected orb no longer one-shots a
-12-HP Spitter (it dealt 8 into 60 before — 13%). The **fact** is applied (TR-ENM-011,
-F-ENM-07's example, the edge bullet and AC-ENM-18 all say "the killing blow after prior
-damage, not a one-shot"). **What to do about it is not decided here** — the package
-explicitly left it to SYS-13 ("a behaviour change, SYS-13's call"). The candidates, for
-the user / SYS-13:
-- **accept** the change (the deflect is a positional tool — the reward is the reversal,
-  not the kill). This is the only candidate executable inside the current contracts;
-- **raise `ORB_DAMAGE`** — **not executable inside the knob's own printed range (1–2)**:
-  restoring the one-shot on a 12-HP T2 needs ≥ 12, a range change of an order of
-  magnitude;
-- **give the deflect a bonus** (a multiplier on a deflected hit) — the largest change: it
-  amends SYS-08's frozen TR-CMB-015 ("the deflected projectile keeps its original
-  damage"), so it needs its own contract revision.
+**The deflect's weight.** At 2 damage the orb contributes 2 of a 12-HP T2's pool (16.7%) — up from 8 of 60 (13.3%), so the deflect is relatively *stronger*, not weaker. **It never one-shotted a Spitter** (8 into 60 was 13%; the frozen "it kills the Spitter for 8" was already conditional on prior damage), and the rider's text now says so at all four sites ("the killing blow after prior damage"). **What to do about the weight is not decided here** — the package left it to SYS-13. The candidates, for the user / SYS-13:
+- **accept** the change (the deflect is a positional tool — the reward is the reversal, and 2 damage on a 90-tick cadence is the faucet's bound). This is the only candidate executable inside the current contracts;
+- **lower `ORB_DAMAGE` to 1** (inside the printed 1–2 range) — it would make the deflect a pure positional tool, with the band re-authored to 1;
+- **give the deflect a bonus** (a multiplier on a deflected hit) — the largest change: it amends SYS-08's frozen TR-CMB-015 ("the deflected projectile keeps its original damage"), so it needs its own contract revision.
 
 **Recorded as an open point; no value was changed beyond the approved ÷5.**
 
@@ -490,5 +479,5 @@ form applies.
   repair, not a rule.
 - **The strike table loses its tuning room** (P1 fixed at 1) — the lever moves to the pool
   and the tiers.
-- **SYS-13's orb call**: at 2 the deflected orb no longer one-shots a Spitter
-  (F-ENM-07/TR-ENM-024/AC-ENM-18) and its flash band moves to 2 — SYS-13's to re-decide.
+- **SYS-13's orb call**: at 2 the deflect's share of a T2 rose (16.7% vs 13.3% of the
+  pool); whether that weight is right is the open point recorded in § 9.3.
