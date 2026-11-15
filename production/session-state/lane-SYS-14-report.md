@@ -1,7 +1,7 @@
 # Lane SYS-14 — report
 
-- **Status**: PR_OPEN (gates closed; awaiting the sync application + CodeRabbit; merge stays with the orchestrator)
-- **Branch / worktree / PR**: `docs/sys14-grief-boss-framework` / `../new-vania-sys14-grief-boss-framework` / PR #<n> (`--base Main`, opened after the push below)
+- **Status**: PR_OPEN — **PR #82: mergeState CLEAN · 0 unresolved CodeRabbit threads · 5/5 CI checks green** (the final head `268398e`). Awaiting the orchestrator: the sync application → the merge (the required-reviewer rule is the only recorded blocker; the admin-merge fallback is pre-authorized per the lane contract §5.4 — bind the head with `--match-head-commit`).
+- **Branch / worktree / PR**: `docs/sys14-grief-boss-framework` / `../new-vania-sys14-grief-boss-framework` / **PR #82** (https://github.com/ferasalm/new-vania/pull/82, `--base Main`, opened on `9aff9e8`; the final head `268398e`)
 - **Prompt**: v1.0.0 / `a6ae5fbdfe32` (matches manifest: **yes** — verified by `node tools/orchestration/render-prompts.mjs --check` → ✔; the lane ran on the manifest model GLM — a creative lane on GLM, as required)
 - **Base SHA**: `b99171429273271db2c0867b3c0a805469ad7888` (ancestry verified: `git merge-base --is-ancestor` → OK)
 - **Gate trail**: CD CONCERNS (3 blockers, all repaired) → **CD APPROVED** (round 2, 0 blockers) · creative **NEEDS REVISION (2)** → repaired · technical **NEEDS REVISION (5)** → repaired · QA **NEEDS REVISION (6)** → repaired · spot-check #1 FAIL (5 residues) → #2 FAIL (1) → #3 FAIL (2) → **#4 PASS** · final micro-check **PASS** (zero blockers). Review record: `design/gdd/reviews/sys14-grief-boss-framework-review-log.md`.
@@ -215,6 +215,6 @@ Not merged (the merge stays with the orchestrator).
 ## Next action
 
 1. The orchestrator queues this sync request; the sync lane applies it on a fresh `origin/Main` (the lock's discipline).
-2. The CodeRabbit passes are done (10/10 threads resolved); the CI checks are green (5/5 on the final head).
+2. The CodeRabbit passes are done (11/11 threads resolved); the CI checks are green (5/5 on the final head); **mergeState CLEAN**.
 3. The **required-review blocker** is the branch protection's reviewer rule (reviewDecision null; the threads are all resolved) — per the lane contract §5.4, if that is the only blocker at merge time, the admin merge is pre-authorized: bind the head with `--match-head-commit` (re-verify the head immediately before merging).
 4. **The orchestrator's next render pass** corrects the master prompt source's stale 300-HP value (CR-8's disposition) at the next lane boundary — the authoritative sources already carry 60.
