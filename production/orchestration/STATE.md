@@ -63,13 +63,17 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **released 2026-11-15** after the SYS-15 sync
-landed: PR #63 merged at `1e9e524` (head `5f67ee0`; 1 CodeRabbit thread
-applied — the `designation_counter` wording narrowed to the GDD's own law; 1
-rebuttal — the fifth-save-event suggestion closed by AC-CSD-19/OQ-SAV-4).
-Registry 70 → 77 entries; the index gained the SYS-15 bullet, the APPROVED MVP
-row and design order 12. SYS-28 (the queue's order 1) re-acquires the lock when its sync
-run launches. **Prior release 2026-11-14**: SYS-03 at `50a9a93` (PR #47) and
+`shared_file_lock: SYNC-LANE` — **acquired 2026-11-15** for the SYS-28 sync
+(the queue's order 1). Branch `chore/sync-shared-files`, branched from
+`origin/Main` `ce46fac`. The lock is released only after the sync PR merges
+(the #49 pattern); ART-BIBLE (order 2) waits.
+
+**Prior release 2026-11-15**: after the SYS-15 sync landed — PR #63 merged at
+`1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
+`designation_counter` wording narrowed to the GDD's own law; 1 rebuttal — the
+fifth-save-event suggestion closed by AC-CSD-19/OQ-SAV-4). Registry 70 → 77
+entries; the index gained the SYS-15 bullet, the APPROVED MVP row and design
+order 12. **Prior release 2026-11-14**: SYS-03 at `50a9a93` (PR #47) and
 SYS-04 at `dd33658` (PR #48).
 
 ## 5. Blockers
