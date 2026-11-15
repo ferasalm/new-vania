@@ -10,6 +10,9 @@
     "auto": true,
     "buffer": 150000
   },
+  "experimental": {
+    "subagent_depth": 2
+  },
   "agents": {
     "lane-runner": {
       "description": "OCGS lane runner — authors one GDD lane end-to-end in its worktree and spawns its review seats (CD gate, creative, technical, QA, spot-check, micro-check) as nested subagents. Spawned by the orchestrator with the lane's manifest model passed explicitly; it must never run seats in-session when the subagent tool is available.",

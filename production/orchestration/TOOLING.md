@@ -255,6 +255,11 @@ The §3.6 in-session fallback in `prompts/lane-runner.md` is demoted to a
 last-resort path that requires the orchestrator's explicit order. The SYS-15
 and SYS-28 fallback records stand (both gate trails closed under it).
 
+Nesting also requires the depth setting: `experimental.subagent_depth: 2` in
+`opencode.json` (OpenCode's default depth of one lets the orchestrator launch
+the runner but blocks the runner's seats; the permission alone does not lift
+it).
+
 ---
 
 ## 6. Context policy (summary)

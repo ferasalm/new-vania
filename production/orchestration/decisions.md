@@ -76,7 +76,9 @@
   agents it may launch."
 - **Decision (user-approved 2026-11-15)**:
   1. Add an `agents.lane-runner` definition to project `opencode.json`
-     (`mode: subagent`; `subagent` permission allowed for `*`). The
+     (`mode: subagent`; `subagent` permission allowed for `*`) and set
+     `experimental.subagent_depth: 2` (the schema-verified depth setting; the
+     default of one blocks the runner's seats). The
      orchestrator spawns lanes as `agent: "lane-runner"` with the manifest
      model passed explicitly.
   2. Demote the §3.6 in-session fallback in `prompts/lane-runner.md` to a
