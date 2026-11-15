@@ -467,6 +467,13 @@ the fixture's B2 — the fixture is stated at the arc symbols/defaults (2/4), so
 correct there; if a later pass wants symmetry with the ATK1 floor, the same `max(4, …)`
 form applies.
 
+**A second observation, from the confirm pass**: `ENEMY_STAGGER_MS`'s knob row (Combat's
+table, SYS-13's value) prints a safe range of **500–1000**, but F-ENM-04's ceiling needs
+`37 ticks ≤ stagger_ticks` — **617 ms**. A sub-617 value shortens the window and the
+ceiling is unreachable, so F-ENM-04's Variables clause now states **617–1000** for this
+formula and names the knob's wider range. **Whether the knob's floor should rise to 617**
+is SYS-13's call (the knob is Combat's row, the value SYS-13's); recorded, not decided.
+
 ## 10. The residual risks the seats did not block (recorded for the user)
 
 - **R10 — the DEF axis collapses** at the low baseline (any `defense ≥ 1` ≡ DEF 25). The
