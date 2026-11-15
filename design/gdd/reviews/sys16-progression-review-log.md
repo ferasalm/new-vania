@@ -13,8 +13,8 @@
 | Creative seat | game-designer · GLM-5.3-Flash | **NEEDS REVISION** | 3 | all repaired |
 | Technical seat | lead-programmer · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | 9 repaired, 1 rebutted-with-rider |
 | QA seat | qa-lead · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | all repaired |
-| qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | *pending — the round-4 run* | — | §F — rounds 1 and 2 FAILed (3 then 4 blockers), all repaired |
-| Final micro-check | fresh seat · DeepSeek V4.1 Flash | *pending — after the spot-check PASS* | — | §G |
+| qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | **PASS (round 4)** | 0 | §F — rounds 1–3 FAILed (3, then 4, then 1 blocker), all repaired |
+| Final micro-check | fresh seat · DeepSeek V4.1 Flash | *pending — after the spot-check returns* | — | §G |
 
 **Process note (recorded, not a skip).** The contract calls for the three seats to be
 spawned in parallel. They were spawned in **two waves** — creative first, then
@@ -178,9 +178,15 @@ TR-scoped read finds it; AC-PRG-06 names the boss column explicitly so an edited
 cannot pass silently; TR-PRG-005's placement parenthetical re-attached; a `BOSS_HP`
 change now re-derives the ledger and is flagged.
 
-**Round 4 — the verdict is appended after the run.** No verdict is claimed here in
-advance; the gate row in §A stays *pending* until this section can be written from the
-seat's own output.
+**Round 4 — PASS.** The seat returned PASS with every worklist row APPLIED-CORRECTLY,
+the counts reproducing (28 TR / 10 F / 12 V / 36 AC / 44 edge bullets / 8 OQ / 21
+knobs; 29 + 2 + 5 + 0 = 36), the touched arithmetic re-deriving (the boss 10/9/8/7/6,
+the Warden 4/4/3/3/3, 30 per pass, 120 + 40 = 160), and no collateral damage. Its five
+advisories are applied: this section's gate rows now name only returned verdicts and
+count rounds 1–3 as FAILs; AC-PRG-06 pins the Warden column as well as the boss's; the
+boss/Warden summary is stated once (in TR-PRG-006) and the ledger block points at it;
+and "met at seven, finished at six" is named as the **post-boss** build rather than a
+same-fight claim (OQ-PRG-6 owns whether the fourth point is spendable).
 
 ## G. Final micro-check
 
