@@ -64,12 +64,16 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **released 2026-11-15** after the SYS-28 sync
-landed: PR #69 merged at `a5a1f81` (head `eb85da4`; 4 CodeRabbit threads, all
-applied + resolved). Registry 77 → 80 entries (`narrative_beat_contract`,
-`beat_variant_selector`, `micro_copy_budget`); the index gained the SYS-28
-APPROVED row, design order 21 and the 10 request diffs. ART-BIBLE (order 2)
-re-acquires the lock when its sync run launches.
+`shared_file_lock: SYNC-LANE` — **acquired 2026-11-15** for the ART-BIBLE sync
+(the queue's order 1). Branch `chore/sync-artbible`, branched from `origin/Main`
+`ffaa1af`; the sync PR opens on `Main`. The lock is released only after the sync
+PR merges (the #49 pattern); no other writer runs meanwhile.
+
+**Prior release 2026-11-15 (SYS-28)**: PR #69 merged at `a5a1f81` (head
+`eb85da4`; 4 CodeRabbit threads, all applied + resolved). Registry 77 → 80
+entries (`narrative_beat_contract`, `beat_variant_selector`,
+`micro_copy_budget`); the index gained the SYS-28 APPROVED row, design order 21
+and the 10 request diffs.
 
 **Prior release 2026-11-15**: after the SYS-15 sync landed — PR #63 merged at
 `1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
