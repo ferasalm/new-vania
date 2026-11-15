@@ -4,16 +4,20 @@
 
 **Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support), pass 2.
 **Acceptance awaits the technical-director's TD-ADR verdict (D-ORCH-06)**: the
-`/architecture-review` gate and the lane's six-seat trail are recorded in
-`docs/architecture/adr-draft-review-log.md` §9, but an advisory review verdict does
+`/architecture-review` gate and this lane's gate trail (CD · creative · technical ·
+QA · qa-lead spot-check · micro-check · `/architecture-review`) are recorded in
+`docs/architecture/adr-draft-review-log.md` **§9 — this pass's record**, written in
+the same commit as this document. An advisory review verdict does
 not replace the TD-ADR gate, and `Status: Accepted` would let story-readiness start
 stories against this decision early. **The status is never self-assigned by the lane
 that drafts the document.** The engine-probe register in §12 is an **implementation
 gate**, not an ADR-status gate. Carried obligations (not status gates): the six
 SYS-16 riders (O-HD-1…6), the DEF retirement (O-HD-2), the AC-HD-13 DEFLECT fixture
-(CR-HD-01), the energy/mana round-trip (O-HD-7), and the superseded four-system
-envelope (O-HD-8). If a later architecture review finds a contradiction with a newer
-Accepted ADR, this ADR reverts to `Proposed` and is superseded explicitly.
+(CR-HD-01), the energy/mana round-trip (O-HD-7), the superseded four-system
+envelope (O-HD-8), the body-state persistence contradiction (O-HD-9) and the
+tier/strike ordering coverage gap (O-HD-10). If a later
+architecture review finds a contradiction with a newer Accepted ADR, this ADR
+reverts to `Proposed` and is superseded explicitly.
 
 ## Date
 
@@ -299,6 +303,58 @@ running "its own drain **after** that pipeline, on the same tick boundary". The 
 phase is that shape with one extra constraint: it must also run **after Combat's
 contact detection**. §4 pins it.
 
+**§2a · The three records, with their fields.** TR-HD-037 names the resolver's two
+inputs and the profile; this ADR fixes their shapes so a fixture can construct one.
+The `StatBlock` is the **source** of three of these values, copied in by the reducer
+before the call — the resolver never reads a `StatBlock` (that is what makes it pure).
+
+```gdscript
+class_name AttackContext extends RefCounted
+var attacker_id: int
+var target_id: int
+var raw_damage: int          # the producer's, already including the counter's 1.5x
+var kind: int                # NORMAL | COUNTER | DEFLECT | ENEMY_STRIKE | ENVIRONMENT
+var arc: int                 # ATK1 | ATK2 | CROUCH | AIR | ABILITY | NONE
+var contact_tick: int        # a LOGIC tick (TR-INP-076)
+var attack: int              # the ATTACKER's StatBlock.attack (100-132 at MVP)
+var damage_bonus: int        # the ATTACKER's StatBlock.damage_bonus (0 at no gear)
+
+class_name DefenderSnapshot extends RefCounted
+var target_id: int
+var defense: int             # the TARGET's StatBlock.defense; ALWAYS 0 at MVP
+var hp_current: int
+var hp_max: int
+var profile: HealthProfile
+var invulnerable: bool       # the lock's verdict, read once per event by the reducer
+
+class_name HealthProfile extends RefCounted
+var entity_id: int
+var hp_max: int
+var tier: int                # 1 | 2 | 3 | boss
+var iframe_windows: Array    # the entity's own published windows
+var damage_cap_per_event: int # 0 = UNCAPPED (§8a)
+var hp_floor: int            # 0 = NO FLOOR (§8a)
+var immune_kinds: int        # a bitmask over the five-value enum
+var death_scripted: bool
+var soul_class: int          # DEMONIC | HUMAN | CYBORG | MACHINE
+```
+
+**Which record carries which value** — so no value has two homes: `attack` and
+`damage_bonus` are the **attacker's** and live in `AttackContext`; `defense` is the
+**target's** and lives in `DefenderSnapshot`; `damage_cap_per_event`, `hp_floor`,
+`immune_kinds`, `death_scripted` and `soul_class` are the **profile's**. The reducer
+copies `StatBlock.attack`/`damage_bonus` into the context and
+`StatBlock.defense` into the snapshot at the phase's top, so the resolver stays pure
+and the `StatBlock` stays SYS-16's publication.
+
+**A non-player attacker.** TR-HD-019 forbids a team assumption, and AC-HD-21
+exercises an enemy-sourced `DEFLECT`. `AttackContext.attack` is therefore the
+**attacker's own** `attack`: an enemy attacker publishes its own value from its
+profile (SYS-13's, 0 at MVP), and the ladder/percent branches read it as they would
+the player's. At MVP only the player carries a ladder arc, so a non-player
+`NORMAL`-with-arc event is a **dev assert** — the law is general, the MVP content is
+not.
+
 ### 3 · The six stages, and the dispatch that selects them
 
 The order is TR-HD-005's and V-HD-15's: **raw → ladder/percent (dealt) or F-HD-03
@@ -338,16 +394,19 @@ validation's rule (V-HD), not this one.
 7. `ENVIRONMENT` → `taken = raw_damage` (no DEF, no i-frame lock), then the cap.
 8. else → reject with telemetry.
 
-**§3a · The arithmetic form is part of the law.** Every division in the pipeline is
-written as a **floor on a non-negative numerator**, and GDScript's `/` on two ints
-**truncates toward zero** — the two agree only while the numerator is non-negative.
-The implementation therefore uses `floori(a / b)` with an explicit float division (or
-an equivalent non-negative integer form) and **never** bare `a / b` for a law the GDD
-writes with `floor`. The clamp before the division is what keeps the numerator
-non-negative: `defense = min(DEF_CAP_PCT, max(0, defense))` is applied **before**
-`(100 − defense)`. AC-HD-14's DEF 100 fixture (clamps to 25 → 1/1/3) is the same
-assertion from the other side. Register item 1 records the language fact; this
-paragraph is why it matters.
+**§3a · The arithmetic form is part of the law.** The GDD writes the ladder's index,
+the mitigation and the crit with **floor**; it writes the counter and the ability
+percent law with **ceil**. GDScript's `/` on two ints **truncates toward zero**, and
+the two agree with `floor` only while the numerator is non-negative — and with
+`ceil` never. The implementation therefore makes the rounding **explicit at every
+site**: `floori(a / float(b))` where the GDD writes `floor`, `ceili(a / float(b))`
+where it writes `ceil`, and **never** bare `a / b` for either law. The clamp before
+the division is what keeps the floor's numerator non-negative:
+`defense = clampi(defense, 0, DEF_CAP_PCT)` is applied **before** `(100 − defense)`.
+AC-HD-14's DEF 100 fixture (clamps to 25 → 1/1/3) is the same assertion from the
+other side. Register items 1–2 record the language facts; this paragraph is why they
+matter — a `floori` applied to the counter law would return 3/3/3/3/3 where F-HD-11
+promises 3/4/4/4/4, and the counter's reward would vanish one step at a time.
 
 **§3b · The cap is one site, and `dealt`/`applied` are the two sides of it.** F-HD-02
 ends with `dealt = min(dealt, profile.damage_cap_per_event)` and F-HD-04 says
@@ -379,10 +438,18 @@ on the whole MVP domain (`attack ≤ 132`) and the ADR implements **one function
 
 ```
 dealt_for_arc(attack, arc):
-    if attack <= 132:  return LADDER[step(attack)][arc]
-    else:              return max(LADDER[4][arc], floori(LADDER[4][arc] * attack / 132.0))
+    if attack <= ATTACK_POINTS_CAP:  return LADDER[step(attack)][arc]
+    else:  return max(LADDER[4][arc],
+                      floori(LADDER[4][arc] * attack / float(ATTACK_POINTS_CAP)))
 step(attack) = clampi(floori((attack - PLAYER_ATK_BASE) / float(ATK_PER_POINT)), 0, 4)
+ATTACK_POINTS_CAP = PLAYER_ATK_BASE + ATK_PER_POINT * POINT_BUDGET_CAP   # 132
 ```
+
+`ATTACK_POINTS_CAP` is a **named symbol, not a literal** (the GDD's named-symbol
+law): it is derived from `PLAYER_ATK_BASE`, `ATK_PER_POINT` and SYS-16's
+`POINT_BUDGET_CAP` (4, fixed at MVP), so the day the budget moves the cap moves with
+it instead of becoming a second number that disagrees. It is not a knob — it is a
+derived symbol, and the "not knobs" discipline applies to it.
 
 At 132 and at 138 both give 4/6/3/4 (chain 10) — the seam is flat by construction,
 so the dealt value is monotone non-decreasing across L5→L6 for every point split
@@ -424,16 +491,38 @@ law ("a freeze holds the clocks, not the reducer") and the reason a scripted voi
 during a freeze still applies. `physics_tick` remains the **phase** clock; the two
 are ADR-0001's two clocks and this ADR consumes both, for different jobs.
 
-**§4b · Same-tick ordering is total, and the heal phase follows.** Damage events
-apply in ascending `(contact_tick, source_id, publication_index)`; each sees the HP
-after the previous; the first **applied** lethal event is the `DeathRecord`'s cause;
-later events in the same tick see `DEAD` and are rejected (TR-HD-020). A late event
-whose `contact_tick` precedes the phase it arrives in is applied **in arrival order**
-if the target is `ALIVE`, and rejected if it is `DEAD` — it never rewrites the
-recorded cause. The **heal/use phase resolves after the damage phase in the same
-tick**: a heal whose target reached `DEAD` is refused and its charge is preserved.
-The reducer exposes `heal_phase()` as a distinct entry so the order is a call order,
-not a hope.
+**§4b · Same-tick ordering is total, and the heal phase follows.** **One rule, no
+second clause**: the batch is sorted by `(contact_tick, source_id, publication_index)`
+and that sort is the only order the phase applies. Every event sees the HP after the
+previous; the first **applied** lethal event is the `DeathRecord`'s cause; later
+events in the same tick see `DEAD` and are rejected (TR-HD-020).
+
+**The late event, and why the GDD's "arrival order" clause is subsumed rather than
+contradicted.** A late event is a batch member whose `contact_tick` precedes the
+phase it arrives in; its `publication_index` **is** its arrival index, so it sorts
+into its own `contact_tick` group and — because that group's key is lower — **ahead
+of every fresh event in the batch**. The GDD's sentence ("applied in arrival order if
+the target is `ALIVE`") describes exactly this whenever the producer's publication
+order matches its contact order, which the GDD itself guarantees ("Combat publishes
+every contact event in its contact tick's damage phase … the age bound is a safety
+net"). Where the two could disagree — a batch mixing a late and a fresh event — the
+**sort wins**, because the sort is total and the arrival clause is not, and a
+non-total rule makes `hp_before` (and therefore `overkill`, and therefore SYS-29's
+sting) depend on delivery order. Stated as the law: *the batch has one total order;
+a late event is ordered by its stamp, not by its lateness.* A late event that reaches
+its sorted position when the target is already `DEAD` is rejected and never rewrites
+the recorded cause.
+
+The **heal/use phase resolves after the damage phase in the same tick**: a heal whose
+target reached `DEAD` is refused and its charge is preserved. The reducer exposes
+`heal_phase()` as a distinct entry so the order is a call order, not a hope.
+
+**§4c · The non-Gameplay context.** The damage phase is a **Gameplay** service: it
+does not run in the loading, menu or System Offline contexts, because no producer
+publishes a contact there. Pending damage events **drop at gate entry** (TR-HD-027) —
+the gate's entry is ADR-0001's phase 3, and the drop is the same `clear_intents_at_entry`
+shape applied to SYS-07's event ring, which is why the ring is cleared *before* the
+freeze/unfreeze application in a context transition rather than after it.
 
 ### 5 · The `StatBlock`, the revision discipline, and identity at default
 
@@ -464,7 +553,14 @@ writer** of the stat values; SYS-07 is the **sole writer** of the pool they boun
 **The revision discipline.** `revision` bumps **exactly once** per point spend or
 equipment change; there is **no per-tick recompute** (AC-HD-06 asserts a recompute
 spy counts 1 over a spend and 0 over 600 ticks). The reducer's `apply_stat_revision`
-is the only consumer, and it is where the **gear-delta asymmetry** lives — rider (e),
+is the only consumer, and it **guards on the revision itself**: a revision whose
+`rev.revision <= current.revision` is a **no-op with one telemetry record** — without
+that guard a re-published revision would apply the `hp_max` delta a second time and
+double-heal a point, which is the one way the asymmetry below can be turned into a
+bug. The guard is also what makes the reducer idempotent against a duplicate
+publication, the same discipline the damage ledger enforces on events.
+
+The **gear-delta asymmetry** is the same entry point's second law — rider (e),
 decided by TR-PRG-009:
 
 ```
@@ -483,10 +579,14 @@ AC-PRG-09's, and this ADR implements the mechanism that makes them true.
 at boot and **fails closed** on: the eight approved numbers not reproducing at level
 1/no gear; the ladder's four V-HD-12 checks (monotone columns, a strictly increasing
 derived chain, row-0 equality with the four raw knobs, row 4's chain ≤ 10); a
-`defense` outside `[0, DEF_CAP_PCT]`; a `hp_floor ≥ hp_max`; a non-integer anywhere.
-AC-HD-05's "the reworked Combat fixtures pass unmodified" is the same assertion from
-the other side. **A config that cannot be a fixpoint is a dev boot failure;
-production keeps the last good config** (V-HD's law).
+`DEF_CAP_PCT` outside its own safe range (`0–25` at MVP, `0–40` VS); a
+`hp_floor ≥ hp_max` in any registered profile; a non-integer anywhere. **The
+assertion is about the config, not about an entity's `defense`**: a per-entity
+`defense` outside `[0, DEF_CAP_PCT]` is a **runtime clamp** (`clampi`, V-HD-13's own
+resolution), never a boot failure — the two are different surfaces and this ADR does
+not make the clamp a boot check. AC-HD-05's "the reworked Combat fixtures pass
+unmodified" is the same assertion from the other side. **A config that cannot be a
+fixpoint is a dev boot failure; production keeps the last good config** (V-HD's law).
 
 ### 6 · The ladder: one table, one transaction, four checks
 
@@ -537,14 +637,39 @@ only** — the ladder's promise is that growth never loses a step.
 ## The resolver's only randomness. Stateless by contract: the same key always
 ## yields the same roll, in any branch order, on any platform.
 class_name RngPort extends RefCounted
-func roll(key: int) -> float          # [0.0, 1.0)
+
+## Called ONCE by the reducer at the top of damage_phase. It binds the phase's
+## LOGIC tick into the port, so the resolver never needs a clock (§7a).
+func bind_phase(logic_tick: int) -> void
+
+## The roll for one event. TR-HD-037's key is
+## (logic_tick, attacker_id, defender_id, contact_tick): the tick comes from
+## bind_phase, the other three are the event's own.
+func roll(attacker_id: int, defender_id: int, contact_tick: int) -> float   # [0,1)
 ```
+
+**§7a · How the tick reaches a clock-free resolver.** TR-HD-037's key includes
+`logic_tick`, and the resolver is deliberately clock-free (`AttackContext` carries
+`contact_tick`, not `now_tick`). Rather than widen a frozen schema, the tick enters
+through the **port's per-phase binding**: the reducer calls `bind_phase(logic_tick)`
+once at the top of `damage_phase`, and every `roll()` in that phase composes the
+four-part key with the bound tick. For a same-tick event the bound tick **is** the
+`contact_tick`; for a late event (the 1–2-tick window §4a exists for) they differ,
+and the key uses the **bound** tick — the tick the roll is taken on, which is the
+only value that makes two replays of the same event stream agree. This is why the
+resolver needs no change at the VS handoff: the key's fourth part is the port's
+business, and the resolver's signature is already correct.
 
 - **`FixedRngPort`** returns the **median roll, 0.5**, for every key — the fixture
   port. It makes a trace bit-identical and it is what AC-HD-39's replay uses.
 - **At MVP the port is never called.** Crit is VS; the resolver asserts a **call
   count of 0** over the MVP fixture set (AC-HD-39: "the MVP run performs zero
-  rolls"). A non-zero count at MVP is a defect, not a rounding difference.
+  rolls"). A non-zero count at MVP is a defect, not a rounding difference. **The VS
+  mixer is nevertheless implemented and unit-tested at MVP** — inert, not absent — so
+  AC-HD-39's VS clause ("two different hash keys yield different rolls but identical
+  timing") is a real, runnable assertion in the MVP smoke suite rather than a
+  deferred one. The crit's *consumption* is what is VS-gated; the mixer's *contract*
+  is not.
 - **At VS the roll is a stateless counter hash** over
   `(logic_tick, attacker_id, defender_id, contact_tick)` — **no `swing_seq`, no
   mutable RNG state** — so a trace is bit-identical regardless of branch path and two
@@ -573,6 +698,55 @@ func roll(key: int) -> float          # [0.0, 1.0)
 publish once. Three lethal events in one tick → one edge; every later event sees
 `DEAD` and is rejected with telemetry; the latch clears **only** on reconstruct or
 revive. There is no 0-HP `ALIVE` state and no timer that can produce an edge.
+
+**§8b · The two writers the predicate needs, and where they live.** F-HD-05's
+`released` and TR-HD-025's revive grant are both **reducer state**, not port reads —
+the port only *reads* invulnerability, and a window SYS-07 itself wrote cannot come
+back through it:
+
+```gdscript
+## SYS-14's scripted phase release. The ONLY writer of `released`, and it is
+## per-entity reducer state; a second call is a no-op (idempotent by construction).
+func release_hp_floor(target_id: int) -> void
+
+## TR-HD-025's grant. Draws the module in DEAD, sets hp = ceil(hp_max * 50%),
+## consumes it, and opens SYS-07's OWN window `[t, t + 60)` on the same entity.
+func draw_restore_module() -> bool
+```
+
+**The lock is a disjunction, and that is the second lock's whole point.** TR-HD-018's
+`invulnerable(target, contact_tick)` is evaluated as
+`port.invulnerable(id, tick) or self._own_iframes_active(id, tick)` — the published
+windows (Combat's backdash/getup grants, an enemy's profile windows) **or** SYS-07's
+own revive window. A Combat bug cannot leak damage through the first half; a
+mis-published grant cannot leak it through the second. `FakeHealthPort` therefore
+carries only the *published* windows, and the revive's 60 ticks are asserted against
+the reducer's own state — which is exactly what AC-HD-27's "60 ticks of
+invulnerability" needs.
+
+**The enemy's mirrored latch and `DefeatEvent` (TR-HD-009).** The same latch runs per
+entity: an enemy's HP reaching 0 publishes **one** `DefeatEvent {target, soul_class,
+killer_id, contact_tick}` from the same edge, and a second lethal event in the same
+tick publishes nothing (the entity is already `DEAD`). `soul_class` is SYS-13's tag on
+the profile; the mana payoff is VS and consumed by SYS-12/SYS-18/SYS-27, not here. A
+deflected orb that kills an enemy publishes with the orb's `source` as `killer_id` —
+friendly fire is real (TR-HD-019).
+
+**The heal API (TR-HD-029/030/031), stated once.** `heal(amount, source)` clamps to
+`hp_max`; a heal at full HP is a **no-op that consumes nothing**; a heal on a `DEAD`
+target is refused with its charge preserved (§4b); overheal is discarded but the
+charge is consumed **on a legal use**, at the **commit tick** — the charge is spent on
+the commit, not on the press, and a committed use is not interruptible between commit
+and application (same tick). A pickup adds **+1 charge** through the same entry
+(`add_charge()`), is **refused at `QUICK_SLOT_MAX`** with the item left on the ground,
+and never auto-applies — the Interact bubble is SYS-01's and the item is SYS-17's.
+`CACHE_REFILL` and the revive's `ceil(hp_max × 50%)` are the two other writers, and
+both are F-HD-06's.
+
+**The off-switch's injection path.** TR-HD-036's damage-number off-switch is a
+**readability/a11y setting**, and it is injected into the reducer at construction as a
+`bool` (`number_publish_enabled`), updated from the setting's change signal — **not** a
+sixth port. The reducer is the only place that reads it, and §10 says what it does.
 
 **The ledger (idempotence).** The key is the six-tuple `(source, target, raw_damage,
 kind, arc, contact_tick)`; a bounded ring of **256**. The 2-tick age bound is what
@@ -618,14 +792,40 @@ with a different name:
 | Path | `restore_complete` (SYS-03/ADR-0002) → `load_complete` (SYS-05) → `ALIVE` | `DEAD` → `RECONSTRUCTING` → `load_complete` → `ALIVE` |
 | HP | `hp_max` — **no HP field is read** (TR-HD-032) | `hp_max` (F-HD-08) |
 | Quick slot | `CACHE_REFILL` (3) | `CACHE_REFILL` (3) |
-| Ledger / latch / i-frames | ∅ / clear / none | ∅ / clear / none |
+| **Restore modules** | **0** — no module is carried into a load (§9b) | the drawn module is consumed; the count is otherwise unchanged |
+| Ledger / latch / i-frames | ∅ / clear / none | ∅ / clear / the revive's own window only |
+| `hp_floor` | the profile's base | **reset to the profile's base** (F-HD-08's list) |
 | Progression source | the **save** (`progression` namespace, SYS-16's carry) | the **live carry** — a level earned after the last save is never rolled back (TR-CSD-013's no-XP-loss law, the read-gated window) |
-| i-frames | **none at MVP** — the cache is a safe context; an in-place respawn would need a grant (VS, SYS-07 OQ#16) | the revive's own 1000 ms window is the only grant |
+| i-frames | **none at MVP** — the cache is a safe context; an in-place respawn would need a grant (VS, SYS-07 OQ#16) | the revive's 1000 ms window is the only grant |
 
 Both consume ADR-0002's ordering (`restore_complete` strictly before
 `load_complete`) and both end at a full pool. **Neither reads an HP field**, because
 none exists: the body is reconstructed from the station's law, not restored from a
 file.
+
+**§9b · The body's persistence, quoted rather than paraphrased.** SYS-15's TR-CSD-013
+body row reads, verbatim: "**the body (store-absent: SYS-16/17's session-only
+namespaces) restores from the live session (the load never touches it — there is no
+file carrying it)**". Three things follow, and the ADR states them rather than letting
+a reader infer them:
+
+1. **At MVP there is no file carrying the body** — no namespace exists for
+   `hp_current`, `quick_charges`, `restore_modules`, the ledger or the latch. A load
+   therefore starts with `restore_modules = 0` and `quick_charges = CACHE_REFILL`,
+   and the module's faucet is re-evaluated per station **activation** (TR-CSD-017),
+   not restored: the station the player loads at is already in `activated_caches`, so
+   it grants nothing, and the next *new* station grants one.
+2. **SYS-07's own save field list is therefore an unmet obligation, not a law this
+   ADR can implement.** `design/gdd/health-damage.md`'s Interactions/Save row names
+   "(level, training data/points, stat sources, **charges, modules, quickslot**)" and
+   its Dependencies row names SYS-03 as hard at save time — but SYS-03 lists SYS-07
+   as an explicit runtime non-dependency and registers no such namespace. Only the
+   level/training-data/points half is actually persisted (SYS-16's `progression`).
+   → **O-HD-9**, with the two candidate resolutions named there.
+3. **The consequence is a design consequence, not a bug**: a save→quit→load loses a
+   carried module. That is the landed MVP behaviour of TR-CSD-013 + TR-CSD-017, and
+   this ADR does not paper over it by inventing a namespace — a new namespace is
+   SYS-03's + SYS-16's decision and a schema bump, not an ADR's.
 
 **The persistence boundary, stated once.** What persists and what does not is a
 landed-contract fact, not a choice this ADR makes:
@@ -635,16 +835,13 @@ landed-contract fact, not a choice this ADR makes:
   writer, snapshotting SYS-07's `level`/`training_data` at the save request.
 - **Derived, never stored** — `banked_points` from SYS-07's `training_points`
   (SYS-16's namespace note); `active_cache` from `activated_caches`.
-- **Never persists** — `hp_current`, `quick_charges`, `restore_modules`, the
-  idempotence ledger, the death latch, the revive window: **live session state**
-  (SYS-15's body row, TR-CSD-013: "the store never carries it, so the restore cannot
-  touch it"). A load therefore starts at the station with the cache restore's values,
-  and the restore module's faucet is re-evaluated per station activation
-  (TR-CSD-017), not restored.
+- **Never persists at MVP** — `hp_current`, `quick_charges`, `restore_modules`, the
+  idempotence ledger, the death latch, the revive window: live session state, because
+  no namespace carries them (§9b).
 - **The gap this ADR records rather than fills** — `energy`/`mana` have **no**
-  registered namespace, while AC-HD-08 asserts "the save round-trips both". Both pools
-  are inert at MVP (TR-HD-008: no consumer, no HUD field), so the clause is currently
-  unsatisfiable rather than violated. → **O-HD-7**.
+  registered namespace either, while AC-HD-08 asserts "the save round-trips both".
+  Both pools are inert at MVP (TR-HD-008: no consumer, no HUD field), so the clause is
+  currently unsatisfiable rather than violated. → **O-HD-7**.
 
 ### 10 · The damage-number ring and the label lease
 
@@ -657,16 +854,31 @@ the pool, the off-switch". Both are true once the boundary is drawn at the recor
   writes the next slot and advances a head — **overwrite-oldest, never allocate**.
   A full ring in a swarm drops the oldest number, which is the honest behaviour (the
   newest hit is the one the player needs) and is what makes the ring's bound a *law*
-  rather than a hope.
+  rather than a hope. The drop is **observable without a new telemetry record**: the
+  ring exposes its `head` and `occupancy`, so a fixture asserts 32/32 with the head
+  wrapped — a dropped number is a diagnostic of the ring, not a gate rejection, and
+  the GDD's telemetry set gains nothing here.
+- **`amount` is `applied`, always.** The record's amount is the **value the
+  subtraction actually did** — `DamageResult.applied` (post-cap), and for a heal the
+  applied portion (`min(amount, hp_max − hp_current)`, F-HD-06) — never `dealt` and
+  never the requested amount. A boss's 6-into-cap-2 publishes **2**, and a Suture at
+  18/20 publishes **2**, so the number and the bar can never disagree. That is the one
+  lie the fantasy's first term forbids ("every number is earned and shown"), and §3b
+  makes `dealt` and `applied` deliberately distinct, so the record has to say which.
+  `capped` stays in `DamageResult` for telemetry only.
 - **SYS-07 owns the zero-frame law.** The record is written **on the contact tick**,
   in the same damage phase that applies it — zero frames relative to the hit-stop
   onset, because the onset is next tick's phase 0 (§4).
 - **SYS-24/SYS-29 own the label nodes.** The ring's slot index is the **lease token**:
   the render side keeps a 32-entry slot→node map and shows the node whose slot was
   last written, so it never allocates, never searches, and never needs the record's
-  identity to survive a frame. The 700 ms lifetime is measured on the **freeze-holding
-  clock** (`logic_tick`, `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` ticks) — a
-  number must not outlive its own hit-stop's clock law.
+  identity to survive a frame. **A re-lease resets the node's state**: the overwrite
+  of a slot is a fresh number, so the node's lifetime counter and its rise animation
+  restart from zero — otherwise a 33rd hit in one tick would make a dying number
+  teleport and re-age mid-fade, which reads as a second hit that never happened. The
+  700 ms lifetime is measured on the **freeze-holding clock** (`logic_tick`,
+  `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` ticks) — a number must not outlive
+  its own hit-stop's clock law.
 - **The off-switch suppresses publication**, not rendering: with the switch off the
   ring stays empty (AC-HD-38's "the off-switch hides all numbers" becomes a ring
   occupancy of 0, which is falsifiable headless), and no telemetry record is emitted
@@ -699,24 +911,28 @@ class_name HealthCore extends RefCounted
 func damage_phase(t: int, events: Array[DamageEvent]) -> void   # §4's entry point
 func heal_phase(t: int) -> void                                 # strictly after damage
 func heal(amount: int, source: StringName) -> int               # 0 = refused
+func add_charge() -> bool                                       # the pickup; false = full
 func apply_stat_revision(rev: StatRevision, source: StatDeltaSource) -> void
-func draw_restore_module() -> bool                              # DEAD only
+func release_hp_floor(target_id: int) -> void                    # SYS-14's phase release (§8b)
+func draw_restore_module() -> bool                              # DEAD only; opens SYS-07's window
 func reconstruct_complete() -> void
 func read() -> HealthRead
 
 # ---- the ports (the only doors) ---------------------------------------------
 class_name HealthPort extends RefCounted
 func profile(id: int) -> HealthProfile
-func invulnerable(id: int, tick: int) -> bool
-func now_tick() -> int                      # LOGIC_TICK (§4a) — never physics
+func invulnerable(id: int, tick: int) -> bool     # the PUBLISHED windows only (§8b)
+func now_tick() -> int                            # LOGIC_TICK (§4a) — never physics
 func anchor(id: int) -> Vector2
 func publish(event: HealthEvent) -> void
 
 class_name RngPort extends RefCounted
-func roll(key: int) -> float                # [0,1); stateless by contract
+func bind_phase(logic_tick: int) -> void          # once per damage_phase (§7a)
+func roll(attacker_id: int, defender_id: int, contact_tick: int) -> float   # [0,1)
 
 # ---- the fakes the GDD names ------------------------------------------------
-# FakeHealthPort  — a fixture table for profile/invulnerable/anchor/publish
+# FakeHealthPort  — a fixture table for profile/invulnerable/anchor/publish;
+#                   it carries the PUBLISHED windows only, never SYS-07's own
 # FixedRngPort    — 0.5 for every key, and a call counter the MVP asserts is 0
 
 # ---- the result records (stable API; never display text) --------------------
@@ -741,11 +957,11 @@ and an **Owner**, so a probe can be closed or failed rather than narrated.
 | 2 | `floori(float)` exists and floors correctly, including `floori(-0.5) = -1` | **DOCUMENTED** (language reference) | — | — | — |
 | 3 | Four `Callable` ports per event stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the four port references read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
 | 4 | A preallocated typed `Array` of `RefCounted` records + an overwrite-oldest head performs **zero allocation** across 10,000 ticks | **PROBE-PENDING** | the soak with `Performance.MONITOR_OBJECT_COUNT`/`MEMORY_STATIC` sampled at the warm-up and at the end: net object delta 0, net resource delta 0, heap growth ≤ 256 KB, churn ≤ 16 KB / 1,000 ticks | lead-programmer | The first story; AC-HD-40 |
-| 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts | **PROBE-PENDING** | the same `(logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture) | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
+| 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts, **keyed through `bind_phase`** | **PROBE-PENDING** | the same `(bound logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture); **and a late event's key uses the bound tick, not its `contact_tick`** (the two differ by 1–2 ticks, and the roll must not change with the event's lateness) | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
 | 6 | `HealthCore.damage_phase()` can assert "the freeze onset has not been applied for `t`" from the publication SYS-29 actually offers | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the damage phase for `T` observes the onset as *pending*, not *applied*, 100/100 runs; the same assertion fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer | §4's dev assert; AC-HD-30 |
-| 7 | A `Label` pool of 32 with a slot→node map shows a number on the **contact tick** with no `queue_free` and no instantiation | **PROBE-PENDING** | a 32-number burst in one tick renders all 32 on that frame; a 33rd overwrites slot 0 (the oldest); a 10,000-tick run shows zero `Label` instantiations after boot | ui-programmer (SYS-24's story) | AC-HD-38/40; the render side's churn bar |
+| 7 | A `Label` pool of 32 with a slot→node map shows a number on the **contact tick** with no `queue_free` and no instantiation | **PROBE-PENDING** | **the headless half first** (it is what AC-HD-38/40's GUT halves need): a 32-record burst in one tick fills the ring 32/32 with the head wrapped, a 33rd overwrites slot 0, and 10,000 ticks show zero ring growth; **then the render half**: all 32 nodes render on the frame, a re-lease resets the node's lifetime and animation, and no `Label` is instantiated after boot | ui-programmer (SYS-24's story) | AC-HD-38/40; the render side's churn bar |
 | 8 | `Node.process_physics_priority` (the documented fallback ordering) exists in 4.7.2 and orders the three gameplay services as §4 names | **PROBE-PENDING** | three probe nodes at priorities `-10/0/+10` log their `_physics_process` order: the log is stable across 1,000 ticks and matches the assigned order. **Only needed if the tick director defers to the scene tree**; the explicit call is the primary | godot-specialist | The fallback ordering only |
-| 9 | `ceil`/`floor` on the ms→tick conversion reproduce the GDD's tick fixtures at 60 tps | **PROBE-PENDING** | `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` = 42 ticks at 700 ms/60 tps; `REVIVE_IFRAME_MS` 1000 ms = 60 ticks; `GETUP_IFRAME_MS` 300 ms = 18 ticks; the backdash's 140 ms = 9 ticks with the 8-tick exposure asserted separately | qa-lead | AC-HD-20/38's tick fixtures |
+| 9 | `ceil`/`floor` on the ms→tick conversion reproduce the GDD's tick fixtures at 60 tps | **PROBE-PENDING** | `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` = 42 ticks at 700 ms/60 tps; `REVIVE_IFRAME_MS` 1000 ms = 60 ticks; `GETUP_IFRAME_MS` 300 ms = 18 ticks; the backdash's 140 ms = **`ceil` → 9 ticks** as the lock's window, of which the GDD's "8-tick exposure" is the **first 8 protected ticks and the 9th is the first unprotected one** — the fixture asserts both numbers explicitly (window 9, exposure from tick 8), so the off-by-one is pinned rather than implied | qa-lead | AC-HD-20/38's tick fixtures |
 
 `PROBE-PENDING` is an open verdict, not a pass: no story may consume items 3–9 as
 settled fact (the AC-74 pattern from ADR-0001). **Items 1 and 2 are the only language
@@ -938,6 +1154,8 @@ than trusting the operator.
 | `defense` assumed to have an MVP source → a dead DEF path or a bogus module | **Occurred** | Medium | **O-HD-2**; §5's `defense` comment states "ALWAYS 0 at MVP"; AC-HD-14 stays green at 0/5/25 |
 | The four-system envelope quoted as current (it is seven-system) | **Occurred** | Low | **O-HD-8**; SYS-07's own 0.25/0.75 allocation is unchanged and is what this ADR prices |
 | The energy/mana round-trip clause has no namespace | **Occurred** | Low | **O-HD-7**; both pools are inert at MVP so nothing reads them |
+| The body's field list (charges/modules) has no namespace and contradicts SYS-15's body row | **Occurred** | Medium | **O-HD-9**; §9b states the landed behaviour and regime 1's `restore_modules = 0` rather than leaving it undefined |
+| A display amount sourced from `dealt` makes the number and the bar disagree on a capped hit | **Occurred** (raised by two seats) | High | §10's "`amount` is `applied`, always" — the one lie the fantasy's first term forbids |
 
 ## Performance Implications
 
@@ -985,61 +1203,109 @@ laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** The **decision-conformance** list (15 criteria) states what
+**Two gates, two lists.** The **decision-conformance** list (19 criteria) states what
 this decision must be able to prove; several are verified by fixtures that land with
 the implementation (`src/health/` does not exist yet), so they are the criteria the
-*decision* fixes. The **story gate** (2 criteria) closes at the first implementation
-story.
+*decision* fixes. The **story gate** (3 criteria) closes at the first implementation
+story. A criterion that cites a GDD AC states **which clause** of that AC it rests
+on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 
 **Decision conformance (what the decision must be able to prove).**
 
-- [ ] One pure resolver, one stateful reducer: the resolver takes
-      `(AttackContext, DefenderSnapshot, RngPort, DamageLadder)` and reads no port, no
-      clock and no singleton; the reducer is the only writer of HP (AC-HD-10's static
-      assertion, AC-HD-39's replay).
-- [ ] The six stages run once each, in order, on every branch; the module stage is
-      branch 2 only and is identity at `damage_bonus = 0`; the counter never crits; a
-      crit is asserted only on `kind = NORMAL` (AC-HD-13).
-- [ ] The damage phase runs after Combat's contact detection and before the freeze
-      onset on the contact `logic_tick`; the freeze onset is next tick's phase 0; a
+- [ ] **One pure resolver, one stateful reducer.** The resolver takes
+      `(AttackContext, DefenderSnapshot, RngPort, DamageLadder)` — the three records
+      with §2a's field lists — and reads no port, no clock and no `StatBlock`; the
+      reducer is the only writer of HP (AC-HD-10's static assertion; AC-HD-39's
+      replay).
+- [ ] **The six stages run once each, in order, on every branch**; the module stage is
+      branch 2 only and identity at `damage_bonus = 0`; the counter never crits; a
+      crit is asserted only on `kind = NORMAL` (AC-HD-13 — **except its `DEFLECT`
+      fixture's value, which CR-HD-01 corrects to raw 2 → 2 at 132**).
+- [ ] **The arithmetic form is explicit at every site**: `floori` where the GDD writes
+      floor, `ceili` where it writes ceil, never bare `a / b`; the counter returns
+      3/4/4/4/4 and 6/7/7/8/8 (F-HD-11) and the ladder's index is exact at all five
+      steps (AC-HD-13/14; register items 1–2).
+- [ ] **The damage phase runs after Combat's contact detection and before the freeze
+      onset on the contact `logic_tick`**; the freeze onset is next tick's phase 0; a
       scripted `ENVIRONMENT` event during a freeze applies (AC-HD-30).
-- [ ] `now_tick()` returns `logic_tick`; the 2-tick age bound is frozen during a
-      freeze; a hit landing during a hit-stop is not aged out (AC-HD-30/19).
-- [ ] `dealt` is post-floor pre-cap, `applied` is post-cap, `capped = applied < dealt`;
-      the cap and the floor are clamps, never gate terms (AC-HD-23, TR-HD-017 term 10).
-- [ ] The `attack > 132` extension is one function that reduces exactly to the ladder
-      for `attack ≤ 132` and is flat across the L5→L6 seam (AC-PRG-10's seam fixture).
-- [ ] The ladder is one unit with its knobs: a two-field transaction is atomic, a
-      single-field row-0 break is rejected, the live-edit split rejects three cases
-      and accept-clamps two with a terminating loop (AC-HD-13's negative fixtures).
-- [ ] Identity at default is a boot assertion: the eight approved numbers reproduce,
-      row 0 equals the four raw knobs, and a disagreement fails the boot (AC-HD-05).
-- [ ] The revision discipline holds: exactly one `StatRevision` per spend or equip and
-      zero per-tick recomputes over 600 ticks; the gear-delta asymmetry (a point
-      heals, a module does not, a shrink clamps) is the reducer's (AC-HD-06,
-      AC-PRG-09).
-- [ ] The edge is a latch: exactly one `DeathEdge` per life, `hp_before > 0 ∧
+- [ ] **The age bound is frozen with the clocks** — its own fixture, not AC-HD-19's:
+      stamp `contact_tick` on the `logic_tick`, open a 70 ms freeze, deliver the event
+      in the freeze: it **applies**, and the assertion records that
+      `now − contact` is 0–2 **logic** ticks while 4–5 **physics** ticks have
+      elapsed. The negative control — `now_tick()` returning `physics_tick` — must
+      fail this fixture with term 5 (AC-HD-30/19; §4a).
+- [ ] **`dealt` is post-floor pre-cap, `applied` is post-cap, `capped = applied <
+      dealt`**; the cap and the floor are clamps, never gate terms; a capped hit's
+      overkill is computed on the **applied** value (AC-HD-23's "a 6 hit with cap 2
+      applies 2"; the capped-overkill fixture is this criterion's own).
+- [ ] **The batch has one total order.** A three-event batch ordered by
+      `(contact_tick, source_id, publication_index)` resolves identically on two
+      different delivery orders; a late event sorts ahead of the fresh ones and
+      **applies** when the target is `ALIVE` (the case AC-HD-22's late-event fixture
+      ends `DEAD` and therefore does not cover) (AC-HD-22; §4b).
+- [ ] **The `attack > 132` extension is one function** that reduces exactly to the
+      ladder for `attack ≤ 132`, is flat across the L5→L6 seam (132 and 138 both
+      4/6/3/4), and continues at 162 (chain 11) and 222 (chain 16) (AC-PRG-10; §3d).
+- [ ] **The ladder is one unit with its knobs**: the two-field transaction is atomic, a
+      single-field row-0 break is rejected, and the live-edit split rejects three
+      cases and accept-clamps two with a terminating loop (AC-HD-13's negative
+      fixtures).
+- [ ] **Identity at default is a boot assertion**: the eight approved numbers
+      reproduce at level 1/no gear (AC-HD-05 **plus AC-HD-08's pool values and
+      AC-HD-10's boot HP 20**), row 0 equals the four raw knobs, and a disagreement
+      fails the boot.
+- [ ] **The revision discipline holds**: exactly one `StatRevision` per **point spend
+      and** per **equipment change** (AC-HD-06 covers the spend; the equip-bump
+      fixture is this criterion's own), zero per-tick recomputes over 600 ticks, a
+      stale revision is a no-op, and the gear-delta asymmetry (a point heals, a module
+      does not, a shrink clamps) is the reducer's (AC-PRG-09).
+- [ ] **The edge is a latch**: exactly one `DeathEdge` per life, `hp_before > 0 ∧
       hp_after = 0 ∧ ALIVE ∧ (floor = 0 ∨ released)`, and every later event is
-      rejected (AC-HD-16/17).
-- [ ] The 11-term gate rejects the whole event with a named first-failing term, and
-      the ledger's 256-ring never overwrites a live key (AC-HD-19/18).
-- [ ] The RNG is inert at MVP: zero rolls, `FixedRngPort` 0.5, and the VS mixer is
-      stateless, explicit and platform-stable (AC-HD-39; register item 5).
-- [ ] No hot-path allocation: the five rings are preallocated, the soak shows zero net
-      object/resource delta, ≤ 256 KB heap growth and ≤ 16 KB churn per 1,000 ticks
-      (AC-HD-40).
-- [ ] The persistence boundary holds: no HP field exists, a load is always full, the
-      ledger/latch/charges/modules are session state, and progression persists only
-      through SYS-16's namespace (AC-HD-34, AC-HD-08's non-pool clauses).
-- [ ] The damage-number ring is 32, overwrite-oldest, zero-frame on the contact tick,
-      with the lease token as the slot index; the off-switch empties the ring
-      (AC-HD-38).
+      rejected; the **release** is `release_hp_floor`'s and a floor-held lethal hit
+      fires no edge (AC-HD-16/17/23).
+- [ ] **The lock is a disjunction**: a hit inside the revive's 60-tick window is
+      rejected **through SYS-07's own state**, with `FakeHealthPort` carrying no such
+      window; a hit inside the published backdash/getup windows is rejected; a void
+      hit during any window still kills (AC-HD-20/27; §8b).
+- [ ] **The 11-term gate rejects the whole event with a named first-failing term** —
+      including a **multi-term fixture** (an event that fails terms 1 and 11) that
+      asserts *which* term is reported, which AC-HD-19's one-per-term set cannot
+      cover — and the ledger's 256-ring never overwrites a live key (an occupancy spy
+      over AC-HD-17's fuzz; AC-HD-19/18).
+- [ ] **The RNG is inert at MVP**: zero rolls, `FixedRngPort` 0.5, and the VS mixer is
+      stateless, explicit, platform-stable and keyed through `bind_phase` (AC-HD-39's
+      two-key clause, runnable at MVP because the mixer ships inert; register item 5).
+- [ ] **No hot-path allocation**: the five rings are preallocated, the soak shows zero
+      net object/resource delta, ≤ 256 KB heap growth and ≤ 16 KB churn per 1,000
+      ticks; the number ring is **32** and bounded (AC-HD-40's preallocation list,
+      which is where the ring's size is asserted — AC-HD-38 does not assert it).
+- [ ] **The persistence boundary holds**: no HP field exists, a load is always full,
+      `restore_modules = 0` on a load, the ledger/latch/charges/modules are session
+      state, and progression persists only through SYS-16's namespace (AC-HD-34;
+      AC-HD-08 **except its energy/mana round-trip clause, which O-HD-7 records as
+      unsatisfiable**).
+- [ ] **The damage-number law holds**: the record's `amount` is the **applied** value
+      (a capped 6 publishes 2; a Suture at 18/20 publishes 2), the number is published
+      on the contact tick, the ring is overwrite-oldest with the lease token as the
+      slot index, the off-switch empties the ring, and the palette audit finds no
+      sigil-red (AC-HD-38; §10).
+- [ ] **The two load regimes are distinct and total**: a session load and an
+      in-session reconstruct both end at `hp_max` with the slot at `CACHE_REFILL`,
+      differ on the progression source (the save vs the live carry — a level earned
+      after the last save is never rolled back), and both reset `hp_floor` to the
+      profile's base (§9, F-HD-08; AC-HD-26/34).
 
 **Story gate (the first SYS-07 implementation story).**
 
 - [ ] Every `PROBE-PENDING` item in §12 has a verdict; zero remain open.
 - [ ] The boot assertion runs in-engine against the shipped config and the identity
       fixtures reproduce exactly.
+- [ ] **The three qualified citations are reconciled before their fixtures are
+      written**: **CR-HD-01** (AC-HD-13's DEFLECT value), **O-HD-7** (AC-HD-08's
+      energy/mana round-trip) and **O-HD-2** (AC-HD-14's DEF 0/5/25 fixtures stay
+      green while `defense` is constant 0 — the axis is carried, the *MVP source*
+      clause is retired). A story that writes any of those three ACs against the
+      unqualified text would assert something this decision forbids.
 
 ## GDD Requirements Addressed
 
@@ -1053,8 +1319,8 @@ story.
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-006 — the `StatBlock` and identity at default | §5's schema, the revision discipline, the boot assertion, the DEF retirement note |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-007 — MVP progression (1–5, points-only) | §5/§9: the points are SYS-16's `atk_points`/`hp_points`; the reducer applies the pool delta |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-008 — the inert pools | §9: no consumer, no HUD field, no namespace (O-HD-7) |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-009 — the defeat edge and `soul_class` | `DefeatEvent` published from the enemy's mirrored latch (§8) |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-010 — the player pool and the only writer | `HealthCore` is the sole writer; the static assertion is AC-HD-10 (§5, §8) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-009 — the defeat edge and `soul_class` | §8b's mirrored latch and `DefeatEvent`, one per entity per life |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-010 — the player pool and the only writer | `HealthCore` is the sole writer; the static assertion is AC-HD-10; the revision guard is §5 (§5, §8) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-011 — the enemy tiers | Consumed as profile `hp_max` values; the TTK ruler is F-HD-10's, unchanged |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-012 — the `HealthProfile` | §8a's shape + the two sentinels; registration validated, a bad profile a boot failure |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-013 — apply and overkill | §3c: the subtraction, the cap-then-floor order, the overkill's definition |
@@ -1072,9 +1338,9 @@ story.
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-025 — the restore module | The revive's clamp and the 1000 ms grant through the i-frame lock (§9) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-026/027 — the non-ack gate request; terminality | The edge queues through ADR-0001 §6; no damage on the transition frame (§4) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-028 — freeze; the damage phase's position | §4's pin: the entry point, the position, the clock, the freeze onset, the assert |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-029 — the heal API | `heal()` clamps, refuses at full, refuses a `DEAD` target, publishes `HealEdge` (§9) |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-030 — the Suture and the quick slot | The charge is spent on the commit tick; the chip is SYS-01's pull (§11) |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-031 — the pickup rule | No automatic pickup; the charge add is the reducer's; the item stays when full |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-029 — the heal API | §8b's heal law: clamp, refuse at full, refuse a `DEAD` target, publish `HealEdge` |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-030 — the Suture and the quick slot | The charge is spent on the commit tick (§8b); the chip is SYS-01's pull (§11) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-031 — the pickup rule | §8b's `add_charge()`: no automatic pickup, refused at `QUICK_SLOT_MAX`, the item stays |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-032 — the cache restore; no HP in the save | §9's persistence boundary |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-033 — the inventory boundary | SYS-17 supplies the id and amount; SYS-07 applies; no inventory screen exists here |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-034 — the weapon-parity law | Unchanged: the harness is a fixture over the ladder, not a resolver stage (§3) |
@@ -1098,16 +1364,27 @@ device + 5 playtest + 0 VS) · 15 V-HD · 68 edge bullets · 20 OQ rows · 33 kn
 This ADR adds **no** TR, **no** formula and **no** AC — it is a decision record, not a
 second design.
 
-**V-invariant coverage** (all fifteen carried, none re-minted): V-HD-01 by §8's latch
-and AC-HD-16; V-HD-02 by the integer law and AC-HD-04/19; V-HD-03 by §8's
-exactly-once and AC-HD-17's fuzz; V-HD-04 by §9's reset list and AC-HD-26; V-HD-05 by
-§9's revive window and AC-HD-20; V-HD-06/07 by §6's validation and the boot
-assertion; V-HD-08 by `heal()`'s clamp (AC-HD-31); V-HD-09 by §8a's sentinel and the
-boot check; V-HD-10 by §4a's `logic_tick` bound; V-HD-11 by the reducer's clamps
+**V-invariant coverage** (all fifteen carried, none re-minted; **two carry a named
+qualification**). V-HD-01 by §8's latch and AC-HD-16; V-HD-02 by the integer law and
+AC-HD-04/19, **with `heal > 0` carried by §8b's heal law and no dedicated fixture
+(part of O-HD-10)**; V-HD-03 by §8's exactly-once and AC-HD-17's fuzz; V-HD-04 by
+§9's reset list and AC-HD-26; V-HD-05 by §8b's disjunction and AC-HD-20/27; **V-HD-06
+and V-HD-07 by §5's boot assertion's ordering checks on the tier and strike tables —
+with no AC asserting the clamp/raise resolution, which is O-HD-10**; V-HD-08 by
+`heal()`'s clamp (AC-HD-31); V-HD-09 by §8a's sentinel and the boot check; V-HD-10 by
+§4a's `logic_tick` bound, **with the knob's ≤ 2 clamp carried by the config
+validation and no dedicated fixture (O-HD-10)**; V-HD-11 by the reducer's clamps
 (AC-HD-27/33); V-HD-12 by §6's four checks and the two-field transaction
-(AC-HD-05/13); V-HD-13 by §3a's clamp-before-division (AC-HD-14); V-HD-14 by the
-parity harness's unchanged consumption (AC-HD-36); V-HD-15 by §3's "once each" and
-§4b's heal phase.
+(AC-HD-05/13); **V-HD-13 by §3a's clamp-before-division and AC-HD-14, except its
+third clause ("the MVP DEF source is the module layer"), which TR-PRG-016 retires —
+O-HD-2**; V-HD-14 by the parity harness's unchanged consumption (AC-HD-36); V-HD-15 by
+§3's "once each" and §4b's total order.
+
+**Two coverage gaps are named rather than claimed** (O-HD-10): V-HD-06/07's ordering
+resolution and V-HD-02/10's two minor clauses have **no MVP fixture**, because the GDD
+gives them none — AC-HD-03 has no ordering case, AC-HD-11 is TTK values, AC-HD-12 is
+profile fields. The ADR implements the checks (the boot assertion's ordering pass and
+the config's clamp) and records the gap; inventing an AC would be a second design.
 
 ## 13 · The carried obligations
 
@@ -1122,6 +1399,8 @@ parity harness's unchanged consumption (AC-HD-36); V-HD-15 by §3's "once each" 
 | **O-HD-6** | SYS-07's **F-HD-02 branch 2** — the `attack > 132` dealt law is F-PRG-03's extension; F-HD-02's "an MVP module that raises `attack` above 132 holds row 4" describes a module TR-PRG-012's closed payload forbids. Rider (f). | SYS-07's next doc touch | nothing: §3d satisfies both laws on their domains |
 | **O-HD-7** | **The energy/mana round-trip has no registered namespace** — AC-HD-08 asserts "the save round-trips both"; SYS-03 declares SYS-07 a runtime non-dependency and SYS-16's `progression` carries no pool. | SYS-03/SYS-16 at their next touch | AC-HD-08's save clause only; both pools are inert at MVP |
 | **O-HD-8** | **AC-HD-41's "four-system arithmetic envelope" is superseded** by the registry's seven-system 2.45/6.55; SYS-07's own 0.25/0.75 allocation is unchanged. | qa-lead (the QA-plan sync) | nothing: the allocation this ADR prices is unchanged |
+| **O-HD-9** | **The body's persistence contradiction.** SYS-07's save field list names "charges, modules, quickslot"; SYS-03 declares SYS-07 a runtime non-dependency and registers no namespace; SYS-15's TR-CSD-013 body row says the body is store-absent ("there is no file carrying it"). At MVP the landed behaviour is session-only, so a save→quit→load loses a carried restore module. **Two candidate resolutions, for the user batch**: (i) declare the body session-only at MVP and re-scope SYS-07's field list (a one-line rider, no schema bump); or (ii) register a `body` namespace at a future v3→v4 bump (SYS-03's mechanism, SYS-16's writer discipline) — which the carried module's one-per-station faucet would then need to reconcile with TR-CSD-017. | SYS-03 + SYS-15 + SYS-16 (the user batches the choice) | nothing in this ADR: §9b states the landed behaviour and regime 1's `restore_modules = 0` explicitly |
+| **O-HD-10** | **Two V-invariant coverage gaps** — V-HD-06/07's ordering resolution (the tier ladder `T1<T2<T3<boss` and the strike ladder `P1<P2<P3`, with their clamp/raise rules) and V-HD-02's `heal > 0` / V-HD-10's `≤ 2` knob clamp have **no MVP fixture**: the GDD's AC set never asserts them. The ADR implements the checks and records the gap. | qa-lead (the SYS-07 QA plan) | the first SYS-07 story's evidence pack, which cannot claim full V coverage without them |
 
 ## Related
 
@@ -1144,4 +1423,6 @@ parity harness's unchanged consumption (AC-HD-36); V-HD-15 by §3's "once each" 
   `six_system_perf_envelope` (all `status: active`).
 - **Carried**: **CR-HD-01** (AC-HD-13's DEFLECT fixture value — §13); **O-HD-1…6**
   (the six SYS-16 riders, SYS-07's next doc touch); **O-HD-7** (the energy/mana
-  round-trip's missing namespace); **O-HD-8** (the superseded four-system envelope).
+  round-trip's missing namespace); **O-HD-8** (the superseded four-system envelope);
+  **O-HD-9** (the body-state persistence contradiction and its two candidate
+  resolutions); **O-HD-10** (the two V-invariant coverage gaps).
