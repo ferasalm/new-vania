@@ -1,8 +1,8 @@
 <!--
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
-Version: 2.0.0
-Hash: 555c18812b03
+Version: 2.0.1
+Hash: fe4454ebe950
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-15
 -->
@@ -79,6 +79,14 @@ The lane runner's model is the manifest `model`; the seats' models are set per
 their briefs (creative/CD seats GLM; technical/QA/spot-check seats DS). A
 creative lane that ran on DS is rerun on GLM.
 
+**Fallback asymmetry (hard rule)**: after 4 failed spawn attempts on
+server-side errors (`ProviderModelNotFoundError`, `AiError: Capacity temporarily
+exceeded`, HTTP 5xx / rate limits), a **DS** lane may fall back to **GLM**
+autonomously — record it in `decisions.md`. A **GLM** lane must **never** fall
+back to DS on its own: park the lane `PAUSED` and surface the decision, or
+issue a launch package for a parallel chat on the same model. Only an explicit
+user decision can authorize a creative lane to run on DS.
+
 ## 4. WIP limits
 
 | Resource | Limit |
@@ -119,6 +127,10 @@ For each launch:
    - `production/orchestration/prompts/lane-runner.md` **inside that worktree**,
    - the instruction: work only in the worktree; write
      `production/session-state/lane-<ID>-report.md`; return the report.
+   - **Retry policy**: up to **4 spawn attempts** on server-side errors
+     (`ProviderModelNotFoundError`, `AiError: Capacity temporarily exceeded`,
+     HTTP 5xx / rate limits). After the 4th failure, apply the §3 fallback
+     asymmetry — DS→GLM autonomously; GLM→DS never.
 6. Update the manifest status to `AUTHORING`; update `STATE.md`.
 
 ## 6. At every lane boundary
