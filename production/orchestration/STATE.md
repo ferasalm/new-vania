@@ -37,7 +37,7 @@
 
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
-| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | AUTHORING (GLM rerun complete `bda8d96`; D-ORCH-01/02 open) | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
+| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | **PR #67 open** — gates complete (CD APPROVED · seats 3+6+8 all repaired · spot-check PASS 17/17 · micro-check PASS run 2); D-ORCH-01 executed (`5cc1377` names it), D-ORCH-02 pinned; CodeRabbit clean, threads resolved | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
 | SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
 | SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
 | SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **PR #59 open** — gates complete (CD APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS); CodeRabbit pending | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
@@ -50,11 +50,10 @@ inside their own worktree.
 ## 3. Review queue (WIP ledger)
 
 - **Three-seat review**: 0 of 2 slots in use (both SYS lanes' gates are closed;
-  ART-BIBLE is parked on D-ORCH-01/02).
-- **CodeRabbit**: both lane passes ran concurrently (a serial-rule deviation by
-  the autonomous runners — recorded): PR #59 triage in flight (8 threads,
-  resumed runner) and PR #58 confirm re-running on the fix head (5 fixed + 1
-  rebutted). NEW passes (the sync PRs) queue behind recorded dispositions.
+  ART-BIBLE is at PR #67, gates complete).
+- **CodeRabbit**: the lane passes are done — PR #59 triaged + merged (8+4
+  threads dispositioned), PR #58's confirm resolved; PR #67's pass clean. NEW
+  passes (the sync PRs) queue behind recorded dispositions.
 - **Shared-file writer**: **idle; the lock is free** — the SYS-15 sync landed
   (PR #63, `1e9e524`) and the lock released (§4). The queue's next request:
   SYS-28 (order 1, per `review-queue.md` §5); the sync lane re-acquires the
@@ -74,21 +73,21 @@ SYS-04 at `dd33658` (PR #48).
 
 ## 5. Blockers
 
-None hard. Soft: SYS-15 and SYS-28 are AUTHORING (runners in flight on GLM);
-ART-BIBLE is parked on D-ORCH-01/02; the first review slot is open.
+None hard. Soft: SYS-15 landed (PR #59 merged at `24efd09`); SYS-28 is at PR
+#58 (its sync queued, order 1); ART-BIBLE is at PR #67 (its sync queued, order
+2).
 
 ## 6. Decisions (batched — see `decisions.md`)
 
-- **D-ORCH-01** — SYS-11 OQ-1: the purple bridge's art-bible ratification vs the
-  SYS-02 line-36 amendment. Owner: art-director + lead-programmer. The ART-BIBLE
-  lane prepares the package; the user decides. **Blocks the art bible's first
-  item, not the grey default.**
-- **D-ORCH-02** — SYS-11 OQ-4: the `PROV_LIM_*` L gaps + the grief C/L/hue pins.
-  Owner: art-director. The ART-BIBLE lane prepares the values; the user approves
-  the direction.
+- **D-ORCH-01** — **RESOLVED (2026-11-15): B.** The SYS-02 line-36 amendment
+  executed by the ART-BIBLE lane (commit `5cc1377` names D-ORCH-01); the
+  SYS-11 index-row qualification rides the sync (order 2). See `decisions.md`.
+- **D-ORCH-02** — **RESOLVED (2026-11-15): approved as proposed.** The
+  `PROV_LIM_*` pins and the grief tint are in the bible §4. See `decisions.md`.
 - **D-ORCH-03** — SYS-07-REWORK: the IP-17 baseline contract revision. Owner:
-  systems-designer + lead-programmer. The lane prepares the package; the user
-  approves before any edit to the frozen SYS-07 GDD.
+  systems-designer + lead-programmer. **ROUND 2 REQUESTED** (2026-11-15) — the
+  lane prepares the revised package; the user approves before any edit to the
+  frozen SYS-07 GDD.
 
 ## 7. SYS-11 OQ handoff (OQ-1..7)
 
@@ -132,30 +131,30 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
    6 threads (5 fixed + 1 rebutted); the confirm pass re-runs on the fix head —
    wait for it green. When the sync has landed: verify the head and
    squash-merge #58.
-3. **Launch the sync lane** — both requests are queued in `review-queue.md` §5
-   (SYS-15 order 1, SYS-28 order 2); one branch + PR per request, serial.
-4. **ART-BIBLE lane** — D-ORCH-01 (the purple) and D-ORCH-02 (palette/grief pins)
-   await the user; the lane resumes when they are decided.
+3. **Launch the sync lane** — the active queue is SYS-28 (order 1), then
+   ART-BIBLE (order 2); one branch + PR per request, serial.
+4. **ART-BIBLE lane** — PR #67 open (gates complete, CodeRabbit clean); its
+   sync is queued (order 2); the orchestrator merges after it lands.
 5. **SYS-04 header** — the audio-director countersign; then flip the GDD header
    `In Review` → `APPROVED` (or downgrade the index row). A user decision.
 6. **Keep SYS-16/SYS-17 BLOCKED** on SYS-07-REWORK (D-ORCH-03). Do not launch.
-7. **Batch the user decisions** — D-ORCH-01/02 and D-ORCH-03 (see
-   `decisions.md`). Do not interrupt for soft blockers.
+7. **Batch the user decisions** — D-ORCH-03 round 2 (see `decisions.md`). Do
+   not interrupt for soft blockers.
 8. At any lane boundary: refresh `NEXT.md`
    (`node tools/orchestration/render-prompts.mjs --next`).
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: SYS-15 (PR #59, CodeRabbit triage) + SYS-28 (PR #58, CodeRabbit
-confirm) + the sync lane (launching); ART-BIBLE parked; D-ORCH-01/02 pending.
+**Running**: SYS-28 (PR #58, its sync queued order 1) + ART-BIBLE (PR #67, its
+sync queued order 2); SYS-15 is LANDED (PR #59 merged at `24efd09`).
 **Landed**: SYS-03 `66ae957` (PR #45), SYS-04 `ba07158` (PR #46).
 **Queued**: SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25, SYS-07-REWORK;
 SYS-16/SYS-17 blocked on SYS-07-REWORK.
 **Support**: ADR-DRAFT (standby, parallel), QA-PLAN (standby), SYNC-LANE
 (standby, single writer).
-**User must decide**: D-ORCH-01 (the purple / SYS-02 line 36), D-ORCH-02 (the
-palette/grief pins), D-ORCH-03 (the SYS-07 rework package). The art-bible
-direction approval is the one-click action that unblocks the most.
+**User must decide**: D-ORCH-03 round 2 (the revised SYS-07 rework package,
+when the lane re-presents it). The art-bible decisions (D-ORCH-01/02) are
+resolved and executed; D-ORCH-05 (the SYS-04 header) is executed (PR #66).
 **Next orchestrator chat**: paste `NEXT.md` (v2.0.6, `6106fa2cd614`); read this
 file + `manifest.yaml` + the lane reports; do not author; process the
 SYS-15/SYS-28 results (sync → merge → receipts), keep launching within the WIP

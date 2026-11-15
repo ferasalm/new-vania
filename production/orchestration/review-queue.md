@@ -18,11 +18,11 @@ queue).
 
 | Lane | Document | Phase | Owner | Prompt |
 |---|---|---|---|---|
-| ART-BIBLE | `design/art/art-bible.md` | AUTHORING (parked; D-ORCH-01/02) | art-director + creative-director | v1.0.0 |
+| — | — | — | — | — |
 
-SYS-15 left this queue: its GDD is authored, its gates are complete (CD
-APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS), and its
-PR (#59) is open with CodeRabbit pending (§4).
+The authoring table is empty. **SYS-15** landed (its GDD merged — PR #59 at
+`24efd09`). **SYS-28** is at PR #58 (gates closed; its sync queued, order 1). 
+**ART-BIBLE** is at PR #67 (gates complete; its sync queued as order 2).
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
 
@@ -50,10 +50,12 @@ for a Major-class fix batch.
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
 | 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
+| 2 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | queued |
 
-Full request (read from the lane worktree; `session-state` is gitignored but
+Full requests (read from the lane worktrees; `session-state` is gitignored but
 on disk):
 - SYS-28: `../new-vania-sys28-narrative-presentation/production/session-state/lane-SYS-28-report.md` — counts TR 13 / F 3 / V 6 / ACs 15 (13 smoke = 8 LINT + 5 GUT · 0 device · 2 MVP-lock · 0 VS) / OQs 5.
+- ART-BIBLE: `../new-vania-art-bible/production/session-state/lane-ART-BIBLE-report.md` §3 (the exact diffs).
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-15** — PR #63,
 `1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
@@ -78,7 +80,6 @@ updates the manifest, releases the lock. Never force-push.
 |---|---|---|---|---|---|
 | SYS-16 | SYS-07-REWORK (IP-17) | hard dependency | systems-designer + lead-programmer | D-ORCH-03 | 2026-11-14 |
 | SYS-17 | SYS-07-REWORK + SYS-16 | hard dependency | systems-designer + lead-programmer | D-ORCH-03 | 2026-11-14 |
-| ART-BIBLE | SYS-11 OQ-1 direction | user decision | art-director + lead-programmer | D-ORCH-01 | 2026-11-14 |
 
 ## 7. Queue rules
 
