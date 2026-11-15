@@ -64,7 +64,7 @@ entities:
       recovery_ms, hitbox {shape RECT, reach_px, band_floor_px, band_ceiling_px},
       facing -1|+1 (locked at the telegraph's first tick), unclashable, source_entity,
       display_name} · EnemyProjectile {projectile_id, owner_entity, damage 2,
-      power_band 1, telegraph_ms 350, launch_tick, speed_px_s 170, hitbox 12x12,
+      power_band 2, telegraph_ms 350, launch_tick, speed_px_s 170, hitbox 12x12,
       band [14,26], recovery_ms 250, lifetime_ms 3000, unclashable (type-constant),
       deflectable, display_name}"
     notes: "Ratifies TR-CMB-028's required fields exactly plus the six enumerated
@@ -1021,21 +1021,20 @@ constants:
     referenced_by:
       - design/gdd/enemy-ai-telegraphs.md
       - design/gdd/combat.md
-    value: 8
+    value: 2
     unit: hp
     notes: "The charge orb's damage — its own registered value (TR-CMB-015's
-      prototype default), NOT a strike-table row. The deflected orb keeps this
-      damage with the owner flipped (friendly fire — TR-HD-019); a deflected
-      kill publishes killer_id = player. **HELD 2026-11-15 (D-ORCH-03):** the
-      ÷5 rescale re-derives 8 → 2, but the value stays 8 until the coordinated
-      SYS-13 rider lands in `enemy-ai-telegraphs.md` (hp/awards, the orb across
-      TR-ENM-011/F-ENM-07/TR-ENM-024/AC-ENM-18, the flash band, the ceiling,
-      V-HD-06, the one-shot re-decision) — flipping the mirror ahead of its
-      source would make the registry the second source the mirror rule
-      forbids. The strike contract's payload already reads 2; the two
-      re-converge at the rider."
+      deflect value on the D-ORCH-03 baseline), NOT a strike-table row. The
+      deflected orb keeps this damage with the owner flipped (friendly fire —
+      TR-HD-019); a deflected kill publishes killer_id = player. **FLIPPED
+      2026-11-15 (D-ORCH-03 riders, PR #78):** 8 → 2, the ÷5 rescale. The
+      coordinated SYS-13 touch landed the source first — `ORB_DAMAGE` 2
+      (range 1–2) in `enemy-ai-telegraphs.md`, with the payload `damage: 2`,
+      the band-2 flash, TR-ENM-011/F-ENM-07/TR-ENM-024/AC-ENM-18, the ceiling
+      and V-HD-06. The strike contract's payload `power_band` now reads 2 to
+      match. The registry mirrors the GDD; it never leads it."
     added: 2026-11-13
-    revised: "2026-11-15 (D-ORCH-03): HELD at 8 — the ÷5 re-derivation (8 → 2) waits for the coordinated SYS-13 rider; no value change"
+    revised: "2026-11-15 (D-ORCH-03 riders, PR #78): 8 → 2 — the ÷5 rescale; the coordinated SYS-13 touch landed ORB_DAMAGE 2 (1–2) + power_band 2 in `enemy-ai-telegraphs.md` first"
   - name: spitter_orb_speed_px_s
     status: active
     source: design/gdd/enemy-ai-telegraphs.md
