@@ -230,3 +230,132 @@ the grant to SYS-10's row.
 - Ratifications recorded: SYS-05's close ≡ completion input ratified verbatim
   (TR-NAR-007); SYS-15's pre-shaped System Offline shape consumed
   (TR-NAR-009/013); TR-WME-008 countersigned (§Countersign above).
+- **Authored copy re-verified mechanically**: all 26 authored lines ≤ 46
+  chars (max 45); beat totals 91 / 107 / 117 chars; reading estimates
+  8 / 9 / 10 s at the 12-cps floor — all inside the FIELD budget. The
+  refusal rows: max 39 chars, single-line each.
+
+## 2026-11-15 — gate phase opens
+
+- **Fallback record (contract §3.6)**: the nested subagent tool is
+  unavailable in this session (the harness exposes no Task/subagent spawn in
+  the tool catalog; the `execute` code-mode catalog confirms — only
+  MCP_DOCKER + opencode session tools). **Every seat pass is therefore run
+  by the lane runner itself, in a separate pass, with the seat's neutral
+  brief, and is recorded below.** No seat is skipped. The runner is GLM
+  (the manifest model) — the creative/CD routing is honored; the
+  technical/QA seats run under the documented fallback (the DS-only routing
+  is a subagent-spawn property; the fallback pass is recorded as such, and
+  the routing-rule's GLM→DS ban is not implicated — no DS model was
+  invoked anywhere).
+
+### CD gate — CD-GDD-ALIGN (the cd-gate brief, GLM; fallback pass 1)
+
+- **Read**: the document in full; `game-concept.md` (the pillars, the
+  anti-pillars, the MVP definition, the fantasy); the consumed contracts
+  (TR-RWS-021/019/020/014/018 · TR-DR-007/008/010/014 · TR-WME-008 · the
+  SYS-11 no-interface row · TR-SAV-020/022 · TR-HD-023 · the index row +
+  the dependency map).
+- **Check results**: pillar service — every mechanic names its pillar (the
+  budget → Read-Then-Strike; the print voice → the diegetic doctrine; the
+  no-spoiler law → D-6's tell contract; the refusal lines → Remade Every
+  Death's honesty; L2 → the One-World-Two-Truths spine). Anti-pillar — no
+  cutscene pattern introduced (the text-only law is the anti-pillar's
+  enforcement); the reading budget is a copy lint, never a player-facing
+  timer (no speed pressure). Player fantasy — the attributable death prose,
+  the house's dramatization, the irony bookends contracted; no drift. Scope
+  — MVP is honest: 2 logs, 17 display lines, 3 laws; the VS session copy is
+  registered-but-absent (the SYS-03 namespace precedent), the device gate
+  honestly 0 with the legibility carried to SYS-24. Contract alignment —
+  TR-WME-008 countersigned verbatim; OQ-DR-1 ratified (SYS-05 keeps the
+  amend right); the option rows verbatim; the codes stay API; SYS-11's
+  no-text honored; the boundary audit's generalization is additive (SYS-02's
+  audit untouched). Tone/voice — the registers closed, the print doctrine
+  held, the copy passes the voice read.
+- **Verdict: APPROVED** (0 blockers).
+- **Recommendations (non-blocking, recorded)**: (1) print the envelope
+  not-join explicitly in TR-NAR-001 (the SYS-02 precedent's wording) —
+  applied in the repair pass; (2) name the telemetry rate-limit constant —
+  applied in the repair pass; (3) one line in TR-NAR-006 recording why L1's
+  flag-keyed alternate is legal under term 2 (the flag is the flip's
+  trigger, the alt never references a tell) — applied in the repair pass.
+
+### Three-seat review (fallback passes 2–4, run sequentially per §3.6)
+
+**Seat 1 — creative (the creative brief; GLM; fallback pass 2)**
+
+- **Check results**: fantasy delivery — the house's paperwork carries the
+  "win by reading the world" fantasy; the budget is the discipline that
+  keeps reading a room's flavor, not a chore; L2 is the payoff beat and the
+  flip's trigger (the reading matters mechanically — via SYS-02's close
+  edge, not the text). Legibility — the overlay is two states; the
+  ARCHIVED stamp explains the variant change diegetically; the refusal
+  lines are printable at a glance. Decision texture — no decisions from
+  text by law (a presentation system's honest shape); the read/skip choice
+  is free and untracked. Pacing/feel — the instant print matches the
+  diagnostic frame (the anti-cutscene stance made sensory); no typewriter
+  romance. Scope discipline — the MVP surface set is small and the VS
+  content is explicitly absent. Pillar/anti-pillar — held. Narrative/world
+  coherence — the registers are closed; the concept's diegetic doctrine
+  (MEMORY CACHED as printed output, the sigil-red reservation, the death
+  counter) is consumed, never contradicted.
+- **Verdict: APPROVED** (0 blockers).
+- **Recommendations (recorded)**: (1) the memory texts carry the Five
+  Goodbyes burden at SYS-20 — the permutation fixture should re-run with
+  the real rows at SYS-20's gate (already OQ-NAR-5; no change); (2) the
+  death-cause row's copy law could name one worked format example at
+  SYS-15's gate rather than here (ownership correct; no change).
+
+**Seat 2 — technical (the technical brief; DS routing under fallback,
+pass 3)**
+
+- **Blockers found (3, all valid, repaired below)**:
+  1. **TR-NAR-004's schema does not bind the keyed variant's id** —
+     F-NAR-01 says "k's declared variant id" but the `NarrativeBeat` block
+     only shows `variants {default, <keyed>}` with no field naming which
+     variant is the keyed one; the copy section uses `post_threshold`, so
+     the binding exists in prose but not in the data model. An implementer
+     would guess. **Fix**: name the field (`keyed_variant_id`, present iff
+     `selector_key ≠ none`, validated to resolve in `variants`) and make
+     F-NAR-01 reference it.
+  2. **AC-NAR-03's orphan-row check conflicts with AC-NAR-12** — the
+     boot lint fails "a dangling row (no placement)" while the SESSION
+     rows are intentionally registered-but-absent (no placement at MVP).
+     As written the two fixtures contradict. **Fix**: scope the orphan
+     check to FIELD/DEATH rows; SESSION rows are the recorded exception.
+  3. **The AC-NAR-14/15 eligibility rule diverges from the house pattern**
+     — the house rule (SYS-02's E1, AC-WME-13's preamble) is "fewer than 3
+     eligible → the run is topped up", not merely "reports unevaluated".
+     **Fix**: align the preamble wording (top up, then evaluate; never a
+     pass by default).
+- **Recommendations (one-line, non-gating, applied)**: (1) print the
+  envelope not-join in TR-NAR-001 (the CD recommendation, same fix);
+  (2) name the telemetry rate-limit constant (`NAR_TELEMETRY_RATE_LIMIT_MS`
+  60000) in TR-NAR-001/V-NAR-01; (3) cite `TR-JCE-027`'s rate-limit
+  pattern as the shape consumed — folded into (2)'s wording.
+- **Counts re-derived**: 13 TR / 3 F / 6 V / 15 ACs; the partition sums
+  13+0+2+0 = 15 ✓. Formula audit: variables typed+ranged, Output clauses,
+  worked examples, the ceil honored, zero ms→tick conversions ✓.
+
+**Seat 3 — QA (the qa brief; DS routing under fallback, pass 4)**
+
+- **Blockers found (0 new beyond the technical seat's #3 — the eligibility
+  rule is the same defect seen from the QA side; one blocker, counted
+  once)**:
+  1. **The eligibility preamble** (the technical seat's blocker 3; the
+     top-up rule). Repaired below.
+- **Check results**: AC coverage — every TR has ≥ 1 AC, every AC cites its
+  TR(s), no orphan AC. Falsifiability — every AC has a GIVEN/WHEN/THEN with
+  a countable assertion; the negatives are seeded (the violating row, the
+  unmapped code, the row-less placement). Test types — [LINT] for greps, a
+  [GUT] for fixtures, a [PLAYTEST] for the codes; no DEVICE AC exists; no
+  pixel assertion in a GUT AC. Gate partition — 13+0+2+0 = 15, printed and
+  reproducible. Boundaries — every edge case carries a fixture or a named
+  playtest question; every missing-input path is tested (AC-NAR-09 + the
+  surface table). Counts — reproduce. Placeholders — none: the deferred
+  copy is registered-but-absent with its own lint (AC-NAR-12) and named
+  owner gates (OQ-NAR-4/5), the SYS-03 namespace precedent. Playtest
+  rubric — elicitors, tokens, thresholds, sample size, the unevaluated
+  rules present.
+- **Verdict: NEEDS REVISION** (1 blocker — shared with the technical seat's
+  #3) → repaired below.

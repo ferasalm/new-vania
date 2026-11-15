@@ -88,13 +88,16 @@ assassin while the player reads the woman underneath.
   rows and nothing else**: zero gameplay writes, zero flag writes, zero
   grants, zero camera/audio/HUD orders, zero input reads, zero tick work
   (the overlay renders on the context's entry state and the close's; no
-  per-tick loop exists). The one world-truth edge in the reading flow — L2's
-  Reading **close** setting `sanctum_log_read` — is SYS-02's flag edge at
-  SYS-05's context close (TR-RWS-014), consumed, never re-implemented here;
-  the module does not listen to its own content. *Test: the write-surface
-  audit (V-NAR-01; AC-NAR-01) — no state-write/flag/grant/camera/audio-call
-  symbol in the narrative module; the render-side reads are the selector's
-  saved-source reads only.*
+  per-tick loop exists — **SYS-28 prices no gameplay-tick envelope row**
+  (the SYS-02 not-join precedent); the one telemetry family is
+  rate-limited (`NAR_TELEMETRY_RATE_LIMIT_MS` 60000; the SYS-03 TR-SAV-017
+  record shape consumed)). The one world-truth edge in the reading flow —
+  L2's Reading **close** setting `sanctum_log_read` — is SYS-02's flag edge
+  at SYS-05's context close (TR-RWS-014), consumed, never re-implemented
+  here; the module does not listen to its own content. *Test: the
+  write-surface audit (V-NAR-01; AC-NAR-01) — no state-write/flag/grant/
+  camera/audio-call symbol in the narrative module; the render-side reads
+  are the selector's saved-source reads only.*
 - **TR-NAR-002 — The print voice (the diegetic android-diagnostics
   register, IP-8).** Every player-facing line is a **printed readout** one of
   the fiction's machines produced — never narration. Three registers, closed:
@@ -129,13 +132,17 @@ assassin while the player reads the woman underneath.
   hardcoded strings), loaded and boot-validated by the narrative module's
   beat store. `NarrativeBeat {beat_id (the registry key), class ∈
   {FIELD, SESSION, DEATH}, variants {default: [lines…] (always present),
-  <keyed>: [lines…] (only where a selector key is declared)}, selector_key
-  ∈ {none} ∪ {registered truth-flag names} (closed at MVP: none,
-  `sanctum_log_read`), source_ref (the owning rule, for traceability)}`.
+  <variant_id>: [lines…] (one per declared alternate)}, keyed_variant_id
+  (present iff selector_key ≠ none; the alternate's id, validated at boot
+  to resolve in variants), selector_key ∈ {none} ∪ {registered truth-flag
+  names} (closed at MVP: none, `sanctum_log_read`), source_ref (the owning
+  rule, for traceability)}`.
   The boundary audit is SYS-02's law (TR-RWS-021) **generalized**: no
   narrative string literal anywhere in `src/` — a grep-enforced invariant
   (V-NAR-02). *Test: the boundary audit (AC-NAR-03); the boot join (a placed
-  interactable's `beat_id` with no row fails the boot naming the beat).*
+  interactable's `beat_id` with no row fails the boot naming the beat; a
+  keyed row whose `keyed_variant_id` does not resolve fails the boot
+  naming the beat).*
 - **TR-NAR-005 — The variant-selector derivation law.** Which variant a
   beat renders is **derived, never stored**: F-NAR-01 reads only the
   restored save's source families (SYS-02's five; SYS-03's restore), never
@@ -153,7 +160,11 @@ assassin while the player reads the woman underneath.
   single epoch-invariant text** under SYS-10's TR-WME-008: the three ban
   clauses + no epoch-conditional variants; the allusion audit is this GDD's
   review-gate item, recorded in the review log). L2's copy is authored
-  below; L1's two variants are authored below. *Test: AC-NAR-05 (the
+  below; L1's two variants are authored below. **L1's keying is legal
+  under the term-2 binding**: the flag is the flip's public trigger, the
+  alternate renders only after the world has changed, and it never
+  references a tell (the clause binds tell-confirmation, not the world's
+  own bookkeeping). *Test: AC-NAR-05 (the
   epoch-invariance fixture + the two-state fixture); AC-NAR-06 (the
   allusion-audit greps).*
 - **TR-NAR-007 — The Reading context (SYS-05's pre-shaped input,
@@ -380,8 +391,8 @@ The `variant_selector` formula is defined as:
 
 `text(beat, save) = variants[beat][ selector(beat, save) ]` where
 `selector(beat, save) = beat.selector_key = none → "default"`;
-`beat.selector_key = k → (save.flags[k] (absent key reads false) ? k's
-declared variant id : "default")`
+`beat.selector_key = k → (save.flags[k] (absent key reads false) ?
+beat.keyed_variant_id : "default")`
 
 **Variables:**
 
@@ -724,8 +735,9 @@ rule).
   and the placements, **WHEN** the boundary audit runs, **THEN** the grep
   finds no narrative string literal in `src/`, the boot join resolves every
   placed `beat_id`, **and the negative fixtures hold**: a row-less placed
-  beat fails the boot naming the beat; a dangling row (no placement)
-  fails the boot lint as an orphan.
+  beat fails the boot naming the beat; a dangling FIELD/DEATH row (no
+  placement) fails the boot lint as an orphan — SESSION rows are the
+  registered-but-absent exception (AC-NAR-12's shape).
 - **AC-NAR-04** [GUT] *(TR-NAR-005, F-NAR-01, V-NAR-06)* — **GIVEN** the
   selector fixtures over an injected beat store, **WHEN** each runs,
   **THEN**: L1 + flag unset → `default`; L1 + flag set → `post_threshold`;
@@ -809,8 +821,10 @@ The playtest set runs the SYS-01 AC-63 protocol (the preamble's rules).
 **Eligibility (both codes): testers who reached RM-04 and read L2 during
 the session** (the threshold log is the flow's pull; a tester who skipped
 L2 is ineligible for AC-NAR-14 and counted only in AC-NAR-15's base if
-they read any beat); fewer than 3 eligible → the code reports
-unevaluated, never a pass. **The collection channels:** the post-flip
+they read any beat); **if fewer than 3 are eligible, the run is topped up
+before scoring** (the SYS-02 E1 rule) — until then the code is
+unevaluated, never a pass by default. **The collection channels:** the
+post-flip
 debrief only, sequenced **after** SYS-09's and SYS-02's protocols (the
 probes below never name a tell or a room feature first); the free-play log
 is read for the anti-tokens.
