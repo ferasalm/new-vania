@@ -166,10 +166,12 @@ boss tells, `PROTO_UI`) are prototype-only until a sound-bible pass adopts them.
    calls `stop()`.
 4. Wire the hooks from the map's Hook column — each is one line at the named
    branch. The UI move/confirm hooks fire before `change_scene_to_file` (the blip
-   is audible across the frame the scene change takes). The quit hook does **not**
-   call `quit()` in the same iteration as `play()` — Godot exits at the end of the
-   current iteration, which would cut the sound: arm
-   `get_tree().create_timer(0.25)` and call `quit()` from its timeout so the
-   blip is audible before the process exits.
+   is audible across the frame the scene change takes). **The quit row splits by
+   site:** the offline quit (`offline.gd _commit("quit")`) is a scene change to
+   `res://menu.tscn` — fire before `change_scene_to_file`, no timer; only the
+   menu's exit (`menu.gd` Esc / the QUIT item) calls `quit()`, and it does **not**
+   do so in the same iteration as `play()` — Godot exits at the end of the current
+   iteration, which would cut the sound: arm `get_tree().create_timer(0.25)` and
+   call `quit()` from its timeout so the blip is audible before the process exits.
 5. Arm the duck in the scenes' `_die()` and release it in the three choice
    handlers — one call site, `DuckStage`-shaped, inert until music exists.
