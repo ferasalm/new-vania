@@ -110,7 +110,10 @@ For each launch:
    is `pending`, run `node tools/orchestration/render-prompts.mjs --lane <ID>`
    first; then `node tools/orchestration/render-prompts.mjs --check`. Do not
    spawn on a stale body or an unrendered lane.
-5. Spawn the lane runner (a nested subagent or a parallel chat) with:
+5. Spawn the lane runner (a nested subagent with `agent: "lane-runner"` — the
+   dedicated definition in `opencode.json` that grants the `subagent`
+   permission; never `general`, which cannot spawn seats — or a parallel chat)
+   with:
    - the lane worktree path,
    - the verified base SHA (`git rev-parse origin/Main`),
    - the lane's `model` from the manifest — pass it as the subagent `model`,
