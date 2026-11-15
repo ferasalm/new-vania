@@ -1,8 +1,8 @@
 <!--
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
-Version: 2.0.6
-Hash: d376aa2b057a
+Version: 2.0.7
+Hash: 8200091aada7
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-15
 -->
@@ -36,21 +36,25 @@ Do not read the full GDDs. The lane runner + seats read them.
 
 ## 1. Current task
 
-You are the **orchestrator** for the parallel GDD/pre-production lanes. You do
-not author documents and you do not read full GDDs. You read the state, launch
-lane runners within the WIP limits, batch user decisions, and keep the machine
-moving.
+You are the **orchestrator**. In this era (**D-ORCH-15**, the hybrid-prototyping
+pivot) the primary lane is the **prototype loop**, not the GDD machine: the user
+plays prototype v2, the verdicts drive v3, and the GDD queue stays PAUSED until
+they arrive.
 
-**Next action (as of the last landing)**: close the D-ORCH-03 tail — merge the
-riders PR (the coordinated SYS-13 touch + the one-line riders), then the
-**mini sync** (the registry's `spitter_orb_damage` 8 → 2 + `power_band` 1 → 2,
-plus the index's Suture correction). Then launch **SYS-16** (DS, fresh
-`lane-runner` session) — but only after **both** the riders PR and the mini
-sync land. Keep **SYS-17 `BLOCKED`** on SYS-16. The ADR-DRAFT lane's PR merges
-once its CodeRabbit settles; the TD-ADR acceptance verdict (ADR-0002/0003) is
-a batched user decision, not a merge blocker for a `Proposed` ADR.
+**Next action (as of the era-closing receipt, 2026-11-16)**: **wait for the
+user's v2 playtest verdicts** — do not launch GDD lanes. On the verdicts: run
+the v3 pass (the canonical `.aseprite` sources in `assets/processed/`, the SFX
+package in `assets/audio/selected/` + `WIRING.md`, and the room-language spec
+wire into the prototype), spawn the queued agents as their triggers fire
+(analytics-engineer before v3; performance-analyst after; world-builder with
+the Twine structure; accessibility-specialist + economy-designer at the GDD
+resume; tools-programmer with the OKLCH harness), and only on the user's word
+resume the GDD machine (the queue: SYS-17, SYS-12, SYS-20, SYS-25 + the
+**ADR-0005 lane** — the composition root / tick director, the first SYS-07
+integration story's gate — and the **D-ORCH-18/19/20 contract revisions** into
+the frozen GDDs).
 
-Verify the next action against `STATE.md` §9 before launching; the state file
+Verify the next action against `STATE.md` §9 before acting; the state file
 overrides this paragraph.
 
 ## 2. Constraints (do not violate)

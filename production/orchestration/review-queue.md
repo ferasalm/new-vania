@@ -49,7 +49,18 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-05 Game Flow & Session | 4 contracts (`context_machine`, `load_complete_gate`, `cache_activation`, `flow_grant_trigger`) + 3 formulas (`gate_priority`, `load_complete_ready`, `session_anchor`) + 1 constant (`LOAD_STALL_ASSERT_MS` 5000 [1000, 15000]) (registry 122 → 130) | the SYS-05 APPROVED row + design order 17 + the dependency bullet + 13 neighbor row notes (SYS-01, SYS-02 ×2, SYS-03, SYS-04, SYS-07, SYS-12, SYS-15, SYS-16, SYS-24, SYS-25, SYS-28, SYS-30) + the ADR-0001 §6 rider record | 2026-11-15 | **applied on `chore/sync-sys05` — PR open; the lock is held until it merges** |
+
+**The active sync queue is empty** — the last queued request landed and the lock
+is released (STATE §4).
+
+**Landed 2026-11-16** (removed from the active queue): **SYS-05 Game Flow &
+Session** — PR #92 squash-merged as `9365b56` (registry 122 → 130: 4 contracts +
+3 formulas + `LOAD_STALL_ASSERT_MS`; the index's SYS-05 APPROVED row, design
+order 17, the dependency bullet, 13 neighbor notes; 4 CodeRabbit threads, 2
+applied + 2 rebutted, all resolved). Its GDD followed per §7 rule 4 as PR #87,
+`2164181`. The full request was
+`../new-vania-sys05-game-flow-session/production/session-state/lane-SYS-05-report.md`
+§A–§C.
 
 **Landed 2026-11-16** (removed from the active queue): **SYS-24 HUD** — PR #89,
 `bdc8380` (2 CodeRabbit threads, both applied + resolved).
@@ -151,12 +162,10 @@ the request in place for retry). Never force-push.
 
 | Lane | Blocker | Type | Owner | Decision | Since |
 |---|---|---|---|---|---|
-| SYS-17 | SYS-16 | hard dependency | systems-designer + lead-programmer | — | 2026-11-15 |
 
-SYS-16 is **unblocked** (D-ORCH-03 landed — PR #75, `3fcedc6`; the sync PR #76
-removed the blocker and the index carries the unblock clause). It launches
-after the D-ORCH-03 riders PR lands (the rider re-derives SYS-13's numbers the
-progression consumes). SYS-17 keeps its own SYS-16 dependency.
+**None blocked.** SYS-17 unblocked (SYS-07-REWORK `3fcedc6` + SYS-16 `6db8c38`
+both landed); the entire GDD queue (SYS-17, SYS-12, SYS-20, SYS-25) is PAUSED
+by user decision (D-ORCH-15) until the prototype-v2 playtest verdicts.
 
 ## 7. Queue rules
 

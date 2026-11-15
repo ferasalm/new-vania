@@ -749,3 +749,90 @@ review found that **`applied` itself** is not the HP change. Three passes to rea
 true law (`hp_before − hp_after`) is the honest record of how a "the number and the bar
 agree" law is actually proved — the first two answers were each *nearly* right, and the
 fixture that discriminates them is the 1-HP target, not the capped boss.
+
+---
+
+## §10 — The TD-ADR verdict on ADR-0004 (D-ORCH-23, 2026-11-16)
+
+**Verdict: ACCEPT WITH CONDITIONS.** ADR-0004 is architecturally sound — the strongest
+of the set; it decides the five delegated things checkably, and its two sharpest claims
+(the freeze-onset order "by construction", `now_tick()` = `logic_tick`) are correct
+against ADR-0001 as landed. The TD verified the numbers rather than re-asserting them:
+the ladder 2/4/2/2 → 4/6/3/4, the counters 3/4/4/4/4 and 6/7/7/8/8, the `attack > 132`
+extension fixtures (138/162/222), the pool arithmetic (5/tick × 60), ring-32's
+attribution to AC-HD-40 — all reproduce; **AC-HD-13's "raw 2 → 3 at 132" DEFLECT
+fixture is confirmed wrong** (the identity is the law — CR-HD-01's substance ratified).
+
+**The conditions (applied in the same PR as the status flip):**
+- **C1 → §4d** — the producer's door (`CombatBodyPort.apply_damage`, TR-CMB-031's
+  method, resolving the conflict with `combat.md`), the event ring as the batch
+  (32-slot preallocated, `EVENT_RING_FULL` = a named refusal, the first story owes
+  the reachability argument), the pooled `HealthEvent` union.
+- **C2 → §8b** — `heal()` is the admission (0/1), `heal_phase()` the application;
+  the applied amount reports on the `HealEdge`, never as `heal()`'s return.
+- **C3 → §4/§4d + register item 6** — the freeze-onset assert is the composition
+  root's; `HealthPort` stays five-method; register item 6 is a director probe.
+- **Editorial batch (no gate, applied at the same touch)** — the zero-branch
+  wording, the `Callable`→virtual-dispatch corrections (four sites), the
+  TR-HD-026/027 citation (§4c + the DEAD term), the `HealthEvent` definition (C1),
+  the `assert()`-is-stripped-in-release note.
+
+**The nine judged items: all APPROVED** (the resolver/reducer split; the six-stage
+order + single cap site; the tick position + `now_tick()`; the `StatBlock`
+discipline; the ladder transaction + extension; the inert RNG port; the two load
+regimes; the `DeathRecord` archive; the number ring/label lease with
+`amount = hp_before − hp_after`).
+
+**O-HD dispositions:** O-HD-1 keep, trigger sharpened (before any VS stat-curve
+story) · O-HD-2 ratified at the story gate (the TR-PRG-016 revisit gate `raw ≥ 12`
+quoted in the rider) · O-HD-3/4/6 keep, demoted (transcription) · O-HD-5 keep with
+the mitigation note (do not let a SYS-15-only reader conclude progression is
+session-only) · **O-HD-7 re-owned to SYS-07 and ruled: no namespace — amend AC-HD-08**
+(both pools inert at MVP; initialised at max on every load; a VS rider when a
+consumer lands) · O-HD-8 keep, two homes (qa-lead's plan + the O-HD-1…6 rider batch)
+· **O-HD-9: resolution (i) recommended — the body is session-only at MVP** (what the
+design already says twice; re-earnable by construction; no schema bump against an
+unaccepted ADR-0002; the loss bounded and legible; the reopen trigger = a persistent
+module economy at VS) — **batched to the user** · O-HD-10: the V-HD-06/07 +
+V-HD-10 half promoted to the story gate (S2); V-HD-02's `heal > 0` stays a recorded
+gap · O-HD-11 keep, the split ratified now (SYS-15 publishes the three rows and
+options; SYS-07 publishes `DeathOptions{revive_available}` + the `DeathRecord`).
+**CR-HD-01 and CR-HD-02: substance ratified as TD** (an erratum and a total order;
+kept in the user batch for the nod).
+
+**New story-gate obligations (block the first SYS-07 story, not the flip):**
+**O-HD-12** (C1's door/ring/reachability/pooled records) · **O-HD-13** (C2's
+admission/drain) · **O-HD-14** (C3's director-owned assert) · **O-HD-15** (the
+entity-table lifecycle: register/unregister + the id-reuse-within-2-ticks collision
+rule or a spawn generation in the key) · **O-HD-16** (the re-entrancy rule for
+`publish()` + `apply_stat_revision()`'s tick-boundary position) · **O-HD-17** (the
+telemetry ring's schema: fields, drain owner, retention, rate limit).
+
+**Probes: run #6, #4, #5 first** (all headless; each failure changes a decision, not
+a number — #6 fails for the *right* reason and its failure is C3, already applied).
+
+**§4.1 — the verdict's biggest finding: the tick director has no ADR, and now has
+three masters.** ADR-0001 owns phases 0–6; ADR-0002 the save drain's position;
+ADR-0004 the damage phase's — three fragments of one per-tick order, none owning the
+composite, and the fragments are non-obviously compatible on a **frozen** tick.
+**ADR-0005 (the composition root / tick director) is queued as the next ADR-DRAFT
+candidate — ahead of SYS-05's — and gates the first SYS-07 *integration* story**
+(migration step 3; the pure core, steps 1–2, may start on this verdict).
+Also filed: the re-entrancy gap (§4.2 → O-HD-16), the entity lifecycle (§4.3 →
+O-HD-15), the telemetry ring (§4.4 → O-HD-17), and the `read()` aliasing pin (§4.5 —
+one sentence in §11 at the next touch).
+
+**Story gates (ratified):** S1 the ADR's own (CR-HD-01/02, O-HD-2, O-HD-7
+reconciled before their fixtures) · S2 the ordering fixtures promoted · S3 probes
+#6/#4/#5 closed before the first story's code merges · S4 the pure core may start,
+the integration story waits for ADR-0005 · **S5 `tr-registry.yaml` is still empty —
+`/story-readiness` blocks every story until `/architecture-review` Phase 8 populates
+it; nobody currently owns that write.**
+
+**Administrative, executed in the same PR:** ADR-0002 and ADR-0003's status lines
+flipped to `Accepted` per **D-ORCH-06** (the user's 2026-11-16 batched verdict; the
+user acted as the de-facto TD); the `technical-preferences.md` rows updated for all
+three ADRs.
+
+— recorded by the orchestrator from the technical-director's verdict (DS seat,
+session ses_e1e91c9b3ffeWaOt1XKrz4q1Xk, 2026-11-16).

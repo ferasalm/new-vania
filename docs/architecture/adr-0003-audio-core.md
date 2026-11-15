@@ -2,14 +2,13 @@
 
 ## Status
 
-**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support). **Acceptance
-awaits the technical-director's TD-ADR verdict**: the `/architecture-review` gate
-returned `CONCERNS` with **zero blockers** and all ten recommendations were applied
-and confirmed (the gate trail is `docs/architecture/adr-draft-review-log.md` §5),
-but an advisory architecture-review verdict does not replace the TD-ADR gate, and
-`Status: Accepted` would let story-readiness start stories against this decision
-early. The acceptance text is prepared and recorded in the log; the status flips to
-`Accepted` on the TD's verdict. The engine-probe register in §14 is an
+**Accepted** — accepted 2026-11-16 by the user's TD-ADR verdict (**D-ORCH-06**:
+ADR-0002 and ADR-0003 accepted together; the user acted as the de-facto
+technical-director on the batched decision), drafted 2026-11-15 by the ADR-DRAFT
+lane (support). The `/architecture-review` gate returned `CONCERNS` with **zero
+blockers** and all ten recommendations were applied and confirmed (the gate trail
+is `docs/architecture/adr-draft-review-log.md` §5); the prepared acceptance record
+is the log's §5. The engine-probe register in §14 is an
 **implementation gate**, not an ADR-status gate. Carried obligations (not status
 gates): O-AUD-1, CR-AUD-03, CR-AUD-04, **OQ-AUD-9**. If a later architecture review
 finds a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed`

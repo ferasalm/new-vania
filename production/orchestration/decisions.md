@@ -93,58 +93,90 @@
 
 ### D-ORCH-06 — the TD-ADR acceptance verdict (ADR-0002/0003)
 
-- **Lane**: ADR-DRAFT (landed — PR #79, `b991714`).
-- **Question**: does the technical-director accept ADR-0002 (Save & Serialization) and ADR-0003 (Audio Core)? On acceptance, the two `Status:` lines + the two `technical-preferences.md` rows flip (the acceptance record is already written in the review log §5).
-- **Why it is a decision**: an advisory `/architecture-review` verdict does not admit `Accepted`; the framework's TD-ADR gate does. `Accepted` lets story-readiness start stories against these decisions.
-- **Blocking?** Not the merge (they landed as `Proposed`); it gates the first save/audio STORY.
-- **Status**: **OPEN** — the user's return.
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: **ACCEPT both.** ADR-0002 (Save & Serialization) and ADR-0003 (Audio Core) flip `Proposed` → `Accepted`; the two `docs/framework/technical-preferences.md` rows flip with them; the prepared acceptance records in the review log §5 get signed. The flip executes with the orchestrator's next receipt (a `docs(adr)` commit naming D-ORCH-06).
+- **Status**: **RESOLVED.**
 
 ### D-ORCH-07 — CR-SAV-01: the close-save exit path (four clauses)
 
-- **Lane**: ADR-DRAFT (filed by the repair pass; ADR-0002's two-regime exit policy needs SYS-03's contract to agree).
-- **Question**: approve the four close-save exit clauses (AC-SAV-23 clause 1 restores the suspension snapshot even for a commit completing after the bound; the fallback only where the write is abandoned before its rename / interrupted before step 5 / fails on the exit path; TR-SAV-014's join; clause (c)'s code-assertion scoped to a surviving process).
-- **Blocking?** The first save story.
-- **Status**: **OPEN** — batched.
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: approved as filed — the four clauses: AC-SAV-23 clause 1 (a completed commit restores the suspension snapshot even after the bound); the fallback only where the write is abandoned before its rename, interrupted before step 5, or fails on the exit path; TR-SAV-014's join; clause (c)'s code-assertion scoped to a process that survives to observe it. No mechanism change.
+- **Status**: **RESOLVED** — a recorded SYS-03 rider at its next doc touch.
 
 ### D-ORCH-08 — CR-AUD-03: the mono fold is a 30th file
 
-- **Lane**: ADR-DRAFT (ADR-0003's MonoStage fold + the three loop-seam fallback rows need SYS-04's counts/audit to agree).
-- **Question**: approve the SYS-04 contract riders (the counts line 29→30, the §G.6 Score row, AC-AUD-32's scope, the three loop-seam fallback rows).
-- **Blocking?** The first audio story.
-- **Status**: **OPEN** — batched.
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: approved — the counts line 29 → 30, the §G.6 Score row, AC-AUD-32's scope, and the three loop-seam fallback rows as ADR-0003 authors them.
+- **Status**: **RESOLVED** — a SYS-04 rider.
 
 ### D-ORCH-09 — CR-AUD-04: the load-complete ownership
 
-- **Lane**: ADR-DRAFT. **Question**: correct TR-AUD-002 — the load-complete seam is SYS-05's, not SYS-03's (a one-line contract correction to frozen SYS-04, the commit names the decision ID).
-- **Blocking?** The first audio story.
-- **Status**: **OPEN** — batched.
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: approved — TR-AUD-002's load-complete seam is **SYS-05's**, not SYS-03's; the one-clause SYS-04 correction rides SYS-04's next doc touch and names this decision.
+- **Status**: **RESOLVED** — a SYS-04 rider.
 
-### D-ORCH-10 — OQ-AUD-9: the loop lengths against the seam ladder's ceilings
+### D-ORCH-10 — OQ-AUD-9: the loop lengths vs the seam ceilings
 
-- **Lane**: ADR-DRAFT → the audio-director. **Question**: any looped asset whose authored duration exceeds its rung's ceiling (beds ~78 s combined; the score pair ~28 s) — branch (i) re-author to the ceiling (the fail-safe default, the audio-director's to execute), or branch (ii) an explicit, scoped revision of the seamless-loop requirement (the user decides).
-- **Blocking?** The first audio story (branch (ii) only).
-- **Status**: **OPEN** — branch (i) is the default if the audio-director finds no exceeding asset.
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: **branch (i)** — re-author any exceeding asset to its rung's ceiling (~78 s beds / ~28 s score pair / 8.5 MB joint). The audio-director executes; branch (ii) (an explicit seamless-loop requirement revision) needs an explicit user call only if an asset cannot be re-authored.
+- **Status**: **RESOLVED** (default branch (i)).
 
-### D-ORCH-11 — the SYS-13 deflect's weight (the orb's relative share)
+### D-ORCH-11 — the SYS-13 deflect's weight
 
-- **Lane**: SYS-07-REWORK riders (recorded in the review log §9.3; CodeRabbit corrected the "one-shot" framing — the orb NEVER one-shotted; the deflect's SHARE rose from 13.3% to 16.7% of a T2's pool).
-- **Question**: accept the deflect as a positional tool (the shipped reading; recommended — executable inside the current contracts), or lower `ORB_DAMAGE` to 1 (inside the printed 1–2 range), or a deflect bonus (needs a SYS-08 TR-CMB-015 amendment — a contract revision).
-- **Blocking?** No — a tuning question; the shipped text says "the kill follows prior damage".
-- **Status**: **OPEN** — default: accept.
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: **accepted** — the deflect is a positional tool; the 16.7%-of-pool share stands; no value change, no SYS-08 amendment.
+- **Status**: **RESOLVED.**
 
-### D-ORCH-12 — the stagger knob's floor (500 vs 617)
+### D-ORCH-12 — the stagger knob's floor
 
-- **Lane**: SYS-07-REWORK riders (review log §9.7): the full ceiling chain needs 617 ms; the knob's legal range starts at 500, so the sub-617 result is now DEFINED (the counter alone: 6 at ATK 100, 8 at 132).
-- **Question**: raise the knob's floor to 617, or keep 500 with the defined sub-617 outcome?
-- **Blocking?** No — SYS-13's call at its next touch.
-- **Status**: **OPEN** — default: keep 500 (the outcome is defined; no forced change).
-- **Decision**: _pending._
+- **Decision (user, 2026-11-16)**: **keep 500 ms** — the sub-617 outcome stays defined (the counter alone: 6 at ATK 100, 8 at ATK 132); SYS-13 may revisit at its next touch, nothing forced.
+- **Status**: **RESOLVED.**
+
+### D-ORCH-15 — the hybrid-prototyping pivot + the prototype design rules (DECIDED by the user, 2026-11-16)
+
+- **The pivot**: the user wants **playable prototypes to judge, not more documents** ("everything that is written doesn't give a clear picture compared to actually playing/testing it"). The sandbox suite is the first deliverable (`prototypes/sandbox/`, PR #88 `fa628cf`; v2 building). The GDD machine **finishes the in-flight lanes, then pauses** until the playtest verdicts stabilize the design.
+- **The prototype design rules (user, from the v1 playtest)**: real sprites from the concept art + the downloaded packs; **ONE attack button** (attack/clash/counter on the same button, context by timing); **no fall damage and no death from falling** (falls = a soft reset to the last safe spot); **no room locks outside boss arenas** (no DMC-style fight locks); **every boss door looks special** (a consistent, taught door language); mini-bosses from the downloaded packs; the user must be able to test it themselves (cold-start launch, no build steps).
+- **Status**: **DECIDED** — active; the rules govern all prototypes.
+
+### D-ORCH-16 — SYS-05's feasibility brief (DECIDED by the user, 2026-11-16)
+
+- **Decision**: **approved as presented** (Option A). The four load-bearing recommendations (the Stinger grant beat at the first cache activation; Loading as the eighth context; the load-complete gate shape; the generalized spawn anchor) + OQ-DR-1 ratified verbatim. Executed: the SYS-05 GDD landed at PR #87 (gates closed).
+- **Status**: **DECIDED.**
+
+### D-ORCH-17 — SYS-24's feasibility brief (DECIDED by the user, 2026-11-16)
+
+- **Decision**: **approved as presented** (Option A). The eight design decisions (the caps law, the settings-persistence split, the chip geometry, the bible-list accept/decline set, the envelope join, the per-script label caps, the truth-temperature accent, `TEXT_SCALE`). Executed: the HUD GDD is at PR #86 (gates closed).
+- **Status**: **DECIDED.**
+
+### D-ORCH-18 — ONE attack button: the combat input revision direction (DECIDED by the user, 2026-11-16)
+
+- **The change**: attack, clash, AND counter move to a single button — context comes from timing (tap = strike; pressed into an incoming strike = clash; pressed on the telegraph-flash cue = counter). The separate light/heavy/counter buttons go away.
+- **Why it is a decision**: this revises the frozen SYS-01 input contract (the eight verbs, the audited layout table) and SYS-08's clash/counter wiring. Per the pivot, **the prototype validates it first**; the contract revision executes into SYS-01/SYS-08 when the GDD machine resumes, with the commits naming D-ORCH-18.
+- **Status**: **DECIDED — direction; execution deferred to the resume (prototype validates first).**
+
+### D-ORCH-19 — Arnetria, the Mirror Queen: the Denial fight redesign (DECIDED by the user, 2026-11-16)
+
+- **The change**: the Denial boss is **Arnetria, the mirror queen**. The damage she takes is **stored** (the bar does not move — the lie); she spawns **mirrors**; destroying a mirror in time deals her ALL the stored damage at once; failing the timer **clears** the stored damage. This **replaces** SYS-14's R1 crack route (the 3-sweep whiff counter).
+- **Why it is a decision**: SYS-14's GDD (PR #82, landed) authors the crack route; this is a contract revision to it. The prototype validates first; the SYS-14 revision executes at the resume (the commit names D-ORCH-19). The blindfold/mirror-visor concept render is the visual anchor.
+- **Status**: **DECIDED — direction; execution deferred to the resume.**
+
+### D-ORCH-20 — no fall damage, no death from falling (DECIDED by the user, 2026-11-16)
+
+- **The change**: falls deal no damage and never kill; a fall is a soft reset to the last safe standing spot. This revises the lethal-pit construction in frozen SYS-02/SYS-07 (`env_void_damage` 20, "the pit still lethal by construction").
+- **Status**: **DECIDED — direction; the contract revision executes at the resume.**
+
+### D-ORCH-21 — the production-scope direction + Twine (DECIDED by the user, 2026-11-16)
+
+- **Longer and richer**: the GDDs' detail supports **more parts and a longer game** — aim for a longer, richer experience than a single short MVP arc.
+- **Backtracking**: the player backtracks into familiar places that have **changed** (re-affirmed; SYS-10's world-mutation epochs are the machinery).
+- **Twine**: the story and decision tree are authored in **Twine** (installed on Windows); the narrative team owns the `.twine` sources as the canonical branching draft, feeding the dialogue/beat GDDs.
+- **Status**: **DECIDED — standing direction.**
+
+### D-ORCH-22 — the asset license authorization (DECIDED by the user, 2026-11-16)
+
+- **The authorization**: every downloaded pack may be used — **all assets came from itch.io or MIT-licensed GitHub repos; none is copyrighted or obtained illegally** (user verification, 2026-11-16). The license sweep records it: per-pack evidence rows + `assets/<pack>/LICENSE` + `assets/CREDITS.md`; per-pack promotion into `assets/` happens on use.
+- **The provenance recall + no-exception re-affirmation (2026-11-16, later the same day)**: the user recalls downloading the assets **from itch.io, from the creator Ansimuz**, and re-affirms **all assets at hand may be used, with no exception**. The seven previously `provenance pending` rows are attributed on that recall (Ansimuz via itch.io); their store-page/license-text capture stays open as the asset-audit gate, and any row whose attribution the capture contradicts is corrected at promotion time.
+- **Status**: **DECIDED — standing authorization (amended: provenance recalled, no exception).**
+
+### D-ORCH-23 — the TD-ADR verdict on ADR-0004 (DECIDED by the technical-director, 2026-11-16)
+
+- **Verdict**: **ACCEPT WITH CONDITIONS** — C1 (§4d: the producer's door `CombatBodyPort.apply_damage`, the 32-slot event ring as the batch, `EVENT_RING_FULL`, the pooled `HealthEvent` union — resolves the TR-CMB-031 conflict), C2 (§8b: `heal()` = admission 0/1, `heal_phase()` = the application; the applied amount on the `HealEdge`), C3 (§4/§4d + register item 6: the freeze-onset assert is the composition root's; `HealthPort` stays five-method). All three + the editorial batch applied in the receipt PR; **ADR-0004 flipped to Accepted in the same PR**.
+- **Rulings recorded in the log §10**: the nine judged items approved; **O-HD-7 ruled — no namespace, amend AC-HD-08** (SYS-07's next doc touch); **O-HD-9 — resolution (i) recommended (the body is session-only at MVP), batched to the user**; CR-HD-01/CR-HD-02 substance ratified; O-HD-11's split ratified; **six new story-gate obligations O-HD-12…17**; probes #6/#4/#5 run first; **ADR-0005 (the composition root / tick director) queued as the next ADR** — it gates the first SYS-07 integration story; S5: `tr-registry.yaml` is empty and blocks every story until `/architecture-review` populates it.
+- **Status**: **DECIDED (TD verdict executed).** Open sub-items for the user batch: the O-HD-9 recommendation (resolution (i)) and the CR-HD-01/02 nod.
 
 ### D-ORCH-13 — SYS-16: F-HD-10's module-build note (DECIDED autonomously)
 
