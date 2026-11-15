@@ -34,7 +34,6 @@ var on_ground := false
 
 var state := "idle"             # idle | strike | clash | counter | knockdown | dead
 var state_ms := 0.0
-var strike_id := 0
 var hit_done := false
 
 var invuln_ms := 0.0
@@ -157,7 +156,6 @@ func do_strike() -> void:
 		return
 	state = "strike"
 	state_ms = 0.0
-	strike_id += 1
 	hit_done = false
 	_flash_slash(K.C_CYAN, 1.0)
 

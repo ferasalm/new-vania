@@ -34,10 +34,8 @@ var flash_ms := 0.0
 var strike_key := "sweep"
 var strike: Dictionary = {}
 var hit_done := false
-var contact_published := false
 
 var cadence_t := 0.0
-var cycle := 0
 var mirror_cd := float(K.MIRROR_PERIOD_MS)
 var script_t := 0.0
 var script_stage := ""
@@ -166,7 +164,6 @@ func _begin_move(key: String) -> void:
 	state = "telegraph"
 	state_ms = 0.0
 	hit_done = false
-	contact_published = false
 	if key == "cast":
 		mirror_cd = float(K.MIRROR_PERIOD_MS)
 
@@ -332,7 +329,7 @@ func consume_strike() -> void:
 
 
 func on_contact() -> void:
-	contact_published = true
+	pass
 
 
 func stagger(ms: float) -> void:

@@ -101,6 +101,9 @@ func _ready() -> void:
 			sf.add_frame("run", f)
 	spr.sprite_frames = sf
 	spr.centered = false
+	# feet-anchored: the node sits on the floor, the art hangs above it
+	var f0: Texture2D = frames[0]
+	spr.offset = Vector2(-f0.get_width() * 0.5, -f0.get_height())
 	spr.scale = Vector2(scale_k, scale_k)
 	add_child(spr)
 	spr.play("idle")
