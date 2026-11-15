@@ -359,3 +359,73 @@ pass 3)**
   rules present.
 - **Verdict: NEEDS REVISION** (1 blocker — shared with the technical seat's
   #3) → repaired below.
+
+## 2026-11-15 — repairs (commit `1c700f8`)
+
+- **Applied (all valid)**:
+  1. Technical #1 — TR-NAR-004's `NarrativeBeat` gains `keyed_variant_id`
+     (present iff `selector_key ≠ none`; boot-validated to resolve in
+     `variants`); the variants placeholder renamed `<variant_id>`; the Test
+     line gains the unresolvable-id boot negative. F-NAR-01 now references
+     `beat.keyed_variant_id`.
+  2. Technical #2 — AC-NAR-03's orphan check scoped to FIELD/DEATH rows;
+     SESSION rows are the registered-but-absent exception (cross-referenced
+     to AC-NAR-12's shape).
+  3. Technical #3 / QA #1 — the playtest preamble's eligibility aligned to
+     the house top-up rule (the SYS-02 E1 rule; unevaluated until topped
+     up; never a pass by default).
+- **Recommendations applied (one-line, non-gating)**: the envelope
+  not-join printed in TR-NAR-001 (the SYS-02 precedent's wording);
+  `NAR_TELEMETRY_RATE_LIMIT_MS` 60000 named (the TR-SAV-017 record shape
+  consumed); the term-2 legality line added to TR-NAR-006 (L1's flag-keyed
+  alternate: the flag is the flip's public trigger; the alternate renders
+  only post-change; it never references a tell).
+- **Counts after repair**: unchanged — 13 TR-NAR / 3 F-NAR / 6 V-NAR /
+  15 ACs (13 smoke = 8 LINT + 5 GUT · 0 device · 2 MVP-lock · 0 VS); the
+  gate manifest's sums stand.
+
+## 2026-11-15 — mandatory qa-lead spot-check (the qa-spot-check brief;
+diff `7f3ebd1..1c700f8`; fallback pass 5)
+
+### Worklist
+
+- W1 TR-NAR-001 (the not-join + the telemetry constant) —
+  **APPLIED-CORRECTLY** — the parenthetical stays balanced; the TR-SAV-017
+  reference resolves (SYS-03's telemetry record set exists).
+- W2 TR-NAR-004 (`keyed_variant_id` + the boot negative) —
+  **APPLIED-CORRECTLY** — the field's presence condition and validation
+  are mechanical; the copy section's `post_threshold` usage now has a
+  binding home.
+- W3 F-NAR-01 (`beat.keyed_variant_id`) — **APPLIED-CORRECTLY** — the
+  formula and the Variables table agree ("the key's declared alternate").
+- W4 AC-NAR-03 (the orphan scoping) — **APPLIED-CORRECTLY** — no
+  contradiction with AC-NAR-12 remains; the exception is named.
+- W5 the playtest preamble (the top-up rule) — **APPLIED-CORRECTLY** — the
+  house rule cited; the unevaluated default preserved.
+- W6 TR-NAR-006 (the term-2 legality line) — **APPLIED-CORRECTLY** — the
+  rationale matches TR-DR-010's clause scope (tell-confirmation, not the
+  world's bookkeeping).
+
+### Collateral
+
+- No count-bearing text touched — 13/3/6/15 and the partition stand.
+- Every touched cross-reference resolves (AC-NAR-12, TR-SAV-017, TR-DR-010,
+  the SYS-02 E1 rule).
+- No new placeholder, no silent default, no arithmetic touched.
+
+**Verdict: PASS** (6/6 APPLIED-CORRECTLY; zero blockers).
+
+## 2026-11-15 — final micro-check (fresh-seat, diff-scoped, blockers only;
+fallback pass 6)
+
+- **Scope**: the six repaired regions + their immediate neighbors (the
+  TR-NAR-001..006 spans, the F-NAR-01 formula block, the AC-NAR-03/12
+  pair, the playtest preamble, the gate manifest).
+- **Result**: the binding is explicit and consistent in all three places
+  it appears (the schema, the formula, the copy block); the orphan lint
+  and the SESSION exception agree; the not-join and the telemetry constant
+  read cleanly against the Overview and V-NAR-01; the legality line is
+  accurate to TR-DR-010's wording; the preamble's thresholds and the two
+  playtest ACs agree; the gate manifest's counts reproduce. **Zero
+  blockers.**
+- **Verdict: PASS** — the document is closed; no further reopening.
