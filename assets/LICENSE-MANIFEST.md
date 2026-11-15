@@ -66,6 +66,10 @@ Per pack, at promotion time:
 - [ ] License text or store-page URL recorded in the `Evidence` column
 - [ ] Commercial-use and modification rights confirmed
 - [ ] Attribution requirements captured (see `assets/CREDITS.md`)
+- [ ] Redistribution clause checked: `Magic Pack 9` and the Metroidvania Kit both
+      forbid redistributing their raw files on their own, and `assets/` is a public
+      tree, so their raw files are not committed there — they stay in the build
+      output (or a private store) until the rights holder resolves the term
 - [ ] Only then copy the pack into `assets/`
 
 Two items hold for every row and are recorded once here instead of ticked 35 times:
