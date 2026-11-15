@@ -1,6 +1,6 @@
 # Combat
 
-> **Status**: **APPROVED (2026-11-12 — diff-scoped re-review PASS after an in-session 5-blocker repair)**. **Revised 2026-11-15 by D-ORCH-03 (the IP-17 low-stat baseline co-revision)** — the arc table's damage column (2/4/2/2) and its safe ranges, the counters (3/6), the deflect's raw, `DamageEvent.arc` **and the SYS-12 status (MVP — D-3; mana-free, M1) with Combat named as the ABILITY stamper**, plus **F-CMB-06's re-derived input band (1–6, outputs 1–9)**; the pending OQ#2/#3 amendments are untouched. The three-seat design review (technical 8, QA 8, creative PASS) was revised in-session; the diff-scoped re-review (changed sections + arithmetic/AC fixtures; qa-lead spot-check) then found 2 revision regressions + 3 arithmetic/range defects, all repaired in-session. The user-approved decisions 1–11 held; no design re-open.
+> **Status**: **APPROVED (2026-11-12 — diff-scoped re-review PASS after an in-session 5-blocker repair)**. **Revised 2026-11-15 by D-ORCH-03 (the IP-17 low-stat baseline co-revision)** — the arc table's damage column (2/4/2/2) and its safe ranges, the counters (3/6), the deflect's raw, `DamageEvent.arc` **and the SYS-12 status (MVP — D-3; mana-free, M1) with Combat named as the ABILITY stamper**, plus **F-CMB-06's re-derived input band (1–4, outputs 1–8)**; the pending OQ#2/#3 amendments are untouched. The three-seat design review (technical 8, QA 8, creative PASS) was revised in-session; the diff-scoped re-review (changed sections + arithmetic/AC fixtures; qa-lead spot-check) then found 2 revision regressions + 3 arithmetic/range defects, all repaired in-session. The user-approved decisions 1–11 held; no design re-open.
 > **Author**: user + game-designer (creative seat, GLM-5.3-Flash) + systems-designer/gameplay-programmer (technical seat, DeepSeek V4.1 Flash)
 > **Last Updated**: 2026-11-15 (the D-ORCH-03 baseline co-revision; previously 2026-11-12)
 > **Design Review**: NEEDS REVISION (2026-11-12) → revision applied → diff-scoped re-review PASS (2026-11-12); record at `design/gdd/reviews/combat-review-log.md`; **the D-ORCH-03 co-revision's record is `design/gdd/reviews/sys07-rework-review-log.md`**
@@ -73,7 +73,7 @@ Playtesters say: "I saw it coming"; "I knew when to hit it"; "I pressed a little
 
 #### 2 · The attack arcs
 
-- **TR-CMB-004 — The arc table.** Combat owns four arcs: **ATK1** (90/70/170 ms; damage 2; power 1), **ATK2** (100/80/250 ms; damage 4; power 2), **crouch attack** (80/60/150 ms; damage 2; power 1; low hitbox), **air attack** (80/70/120 ms; damage 2; power 1; landing cancels the remaining arc and applies `AIR_LANDING_LAG_MS = 100`). Phase ticks are derived by F-CMB-01; the active window is inclusive; the chain point is the first tick after ATK1's active window. **The damage values are rescaled by D-ORCH-03 (the SYS-07 low-stat baseline, 2026-11-15): the table is authored on the 20-HP baseline; the safe ranges are re-derived to 1–3 / 3–6 / 1–3 / 1–3.** *Test: the 60-tps fixtures (ATK1 6/5/11 = 22 ticks; ATK2 6/5/15 = 26; crouch 5/4/9 = 18; air 5/5/8 = 18); phase boundaries at the exact tick.*
+- **TR-CMB-004 — The arc table.** Combat owns four arcs: **ATK1** (90/70/170 ms; damage 2; power 1), **ATK2** (100/80/250 ms; damage 4; power 2), **crouch attack** (80/60/150 ms; damage 2; power 1; low hitbox), **air attack** (80/70/120 ms; damage 2; power 1; landing cancels the remaining arc and applies `AIR_LANDING_LAG_MS = 100`). Phase ticks are derived by F-CMB-01; the active window is inclusive; the chain point is the first tick after ATK1's active window. **The damage values are rescaled by D-ORCH-03 (the SYS-07 low-stat baseline, 2026-11-15): the table is authored on the 20-HP baseline; the safe ranges are re-derived to 1–2 / 3–4 / 1–2 / 1–2, with the joint constraint `ATK1_DAMAGE + ATK2_DAMAGE ≤ 6`** (the SYS-07 ladder requires row 0's chain to stay below row 1's 7 — the ranges are constrained by the ladder, not by ÷5). *Test: the 60-tps fixtures (ATK1 6/5/11 = 22 ticks; ATK2 6/5/15 = 26; crouch 5/4/9 = 18; air 5/5/8 = 18); phase boundaries at the exact tick.*
 - **TR-CMB-005 — Chain point and combo custody.** A pending attack at ATK1's chain point starts ATK2 on that tick and cancels the remaining ATK1 recovery; a press after the chain point does not chain (it opens a new window and starts a new ATK1 after recovery). The press may be up to `ATTACK_WINDOW_MS` early — the 200 ms override resolves the prototype's 160 > 140 lesson. ATK2 is the finisher; no ATK3 at MVP. Custody is TR-INP-075's: the pull consumes the slot, Combat holds the honored intent through the arc, input never re-offers. *Test: a press at ATK1's first startup tick chains; a press one tick after the chain point does not; one press = one resolution; the slot clears at the ack.*
 - **TR-CMB-006 — Crouch + attack.** The derived-move selection reads the **raw** `crouch` channel (`latch ∨ held_zone`) at the pull (the consumption frame); the stamp-tick snapshot rides as context. A release before the pull selects the stand attack (SYS-01 AC-56). The **hurtbox** reads Movement's `crouch_effective` and the posture-carry: an **attack** commitment pulled while the raw crouch is true carries the crouch posture for its duration, so the crouched hurtbox is present on the commitment's first tick and a crouch attack never shows a standing hurtbox. The locomotion commitments (dash, jump, hop) stand her up instead; posture-carry never applies to them. The crouch attack's hitbox is low; the high/low read is against SYS-13's strike height. *Test: SYS-01 AC-56's trace; AC-MOV-43's first-active-tick hurtbox; a release mid-window yields the stand attack while the snapshot still logs `crouching = true`.*
 - **TR-CMB-007 — Air attack.** Airborne + attack → the air arc; no air combo at MVP; no steering. The air attack is a whole arc, not a chain. Landing during the air attack cancels the remaining active/recovery and applies `AIR_LANDING_LAG_MS` as a Combat commitment. *Test: a landing mid-air-attack applies the 100 ms lag; the air attack never chains; the body is busy through the lag.*
@@ -257,7 +257,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 `counter_damage = floor(ATK.damage × COUNTER_CLASH_MULT)`
 
-**Variables:** `ATK.damage` 1–6 (the union of the four re-derived damage ranges: ATK1 1–3, ATK2 3–6, crouch 1–3, air 1–3); `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 3, ATK2 6 at defaults; the output range for the legal domain is **1 to 12** (`floor(1 × 1.2)` = 1; `floor(6 × 2.0)` = 12 — the multiplier's own 1.2–2.0 range included). **Example:** ATK2 4 × 1.5 = 6; the enemy's HP is SYS-07's.
+**Variables:** `ATK.damage` 1–4 (the union of the four re-derived damage ranges: ATK1 1–2, ATK2 3–4, crouch 1–2, air 1–2); `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 3, ATK2 6 at defaults; the output range for the legal domain is **1 to 8** (`floor(1 × 1.2)` = 1; `floor(4 × 2.0)` = 8 — the multiplier's own 1.2–2.0 range included). **Example:** ATK2 4 × 1.5 = 6; the enemy's HP is SYS-07's.
 
 #### F-CMB-07 · hitstop_ticks — the beat (TR-CMB-022)
 
@@ -410,22 +410,22 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 | `ATK1_STARTUP_MS` | 90 | 70–116 | <70: no lift; >116: the 8-tick startup outruns the 200 ms window's chain-from-first-tick guarantee (V-CMB-13) | `ATK1_ACTIVE_MS` | F-CMB-02 |
 | `ATK1_ACTIVE_MS` | 70 | 50–90 | <50: the hitbox blinks; >90: the swing lingers | `ATK1_RECOVERY_MS` | F-CMB-02 |
 | `ATK1_RECOVERY_MS` | 170 | 120–220 | <120: no cost; >220: the punish is too long | `ATK2_STARTUP_MS` | F-CMB-02 |
-| `ATK1_DAMAGE` | 2 | 1–3 | SYS-07 economy | `ATK2_DAMAGE` | F-CMB-06 |
+| `ATK1_DAMAGE` | 2 | 1–2 (**joint: `ATK1_DAMAGE + ATK2_DAMAGE ≤ 6`**) | SYS-07 economy (the ladder's row 0) | `ATK2_DAMAGE` | F-CMB-06 |
 | `ATK1_POWER` | 1 | 1–2 | The clash comparison | enemy power | F-CMB-05 |
 | `ATK2_STARTUP_MS` | 100 | 80–130 | The finisher's lift | `ATK1_RECOVERY_MS` | F-CMB-02 |
 | `ATK2_ACTIVE_MS` | 80 | 60–100 | The finisher's swing | `ATK2_RECOVERY_MS` | F-CMB-02 |
 | `ATK2_RECOVERY_MS` | 250 | 180–300 | The finisher's cost | `CHAIN` | F-CMB-02 |
-| `ATK2_DAMAGE` | 4 | 3–6 | SYS-07 economy | `ATK1_DAMAGE` | F-CMB-06 |
+| `ATK2_DAMAGE` | 4 | 3–4 (**joint: `ATK1_DAMAGE + ATK2_DAMAGE ≤ 6`**) | SYS-07 economy (the ladder's row 0) | `ATK1_DAMAGE` | F-CMB-06 |
 | `ATK2_POWER` | 2 | 2–3 | The finisher wins vs light | enemy power | F-CMB-05 |
 | `CROUCH_ATTACK_STARTUP_MS` | 80 | 60–110 | The low answer | `CROUCH_ATTACK_ACTIVE_MS` | F-CMB-02 |
 | `CROUCH_ATTACK_ACTIVE_MS` | 60 | 40–80 | The low swing | `CROUCH_ATTACK_RECOVERY_MS` | F-CMB-02 |
 | `CROUCH_ATTACK_RECOVERY_MS` | 150 | 100–200 | The low cost | `CROUCH_ATTACK_DAMAGE` | F-CMB-02 |
-| `CROUCH_ATTACK_DAMAGE` | 2 | 1–3 | SYS-07 economy | `CROUCH_ATTACK_POWER` | F-CMB-06 |
+| `CROUCH_ATTACK_DAMAGE` | 2 | 1–2 | SYS-07 economy | `CROUCH_ATTACK_POWER` | F-CMB-06 |
 | `CROUCH_ATTACK_POWER` | 1 | 1–2 | The low clash | enemy power | F-CMB-05 |
 | `AIR_ATTACK_STARTUP_MS` | 80 | 60–110 | The air lift | `AIR_ATTACK_ACTIVE_MS` | F-CMB-02 |
 | `AIR_ATTACK_ACTIVE_MS` | 70 | 50–90 | The air swing | `AIR_ATTACK_RECOVERY_MS` | F-CMB-02 |
 | `AIR_ATTACK_RECOVERY_MS` | 120 | 80–160 | The air cost | `AIR_LANDING_LAG_MS` | F-CMB-02 |
-| `AIR_ATTACK_DAMAGE` | 2 | 1–3 | SYS-07 economy | `AIR_ATTACK_POWER` | F-CMB-06 |
+| `AIR_ATTACK_DAMAGE` | 2 | 1–2 | SYS-07 economy | `AIR_ATTACK_POWER` | F-CMB-06 |
 | `AIR_ATTACK_POWER` | 1 | 1–2 | The air clash (VS) | enemy power | F-CMB-05 |
 | `ATK1_HITBOX` | 28 px reach; 20×16 px | 24–32; 16–24×12–20 | provisional; art/SYS-13 | `ATK1_ACTIVE_MS` | TR-CMB-004 |
 | `ATK2_HITBOX` | 32 px reach; 24×18 px | 28–36; 20–28×14–22 | provisional; art/SYS-13 | `ATK2_ACTIVE_MS` | TR-CMB-004 |

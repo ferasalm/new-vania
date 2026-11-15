@@ -151,7 +151,7 @@ OQ#20's (R11).
 | File | Commit | Content |
 |---|---|---|
 | `design/gdd/health-damage.md` | the SYS-07 revision commit | § 8's full clause inventory: the header (Status/Last Verified/Counts/Contracts), the Player Fantasy (term 4 + the three anchor moments + the success signature, **prose re-derived**), the Overview's six-stage pipeline, TR-HD-003/005/006/007/008/009/010/011/016/021/029/030/033/034/035/037/039, F-HD-01/02/03/06/07/08/09/10/11/13/14 (+ the ledger rows), V-HD-07/12/13/14, the edge cases, the 12 changed knob rows + `ATK_PER_POINT` reclassified + the new `DAMAGE_LADDER_MVP` row, the cross-system inputs, the Interactions cell, the Dependencies rows/bullets, 19 ACs, OQ#5/#6/#10/#13/#14, and the new OQ#20 |
-| `design/gdd/combat.md` | the SYS-08 co-revision commit | TR-CMB-004 (the damage column + the re-derived safe ranges), TR-CMB-010, TR-CMB-015, **TR-CMB-025 (`DamageEvent.arc` + the stamping rule)**, F-CMB-06 (the input band **1–6**, the outputs 3/6 with the range 1–9), F-CMB-10's example, the four damage knobs, AC-CMB-12, AC-CMB-17, AC-CMB-30, **the header's D-ORCH-03 declaration**, **the SYS-07 dependency row's status**, and **the SYS-12 status (MVP — D-3; mana-free) + the ABILITY stamper** (the applied-diff review's repairs, § 7) |
+| `design/gdd/combat.md` | the SYS-08 co-revision commit | TR-CMB-004 (the damage column + the re-derived safe ranges), TR-CMB-010, TR-CMB-015, **TR-CMB-025 (`DamageEvent.arc` + the stamping rule)**, F-CMB-06 (the input band **1–4**, the outputs 3/6 with the range 1–8), F-CMB-10's example, the four damage knobs, AC-CMB-12, AC-CMB-17, AC-CMB-30, **the header's D-ORCH-03 declaration**, **the SYS-07 dependency row's status**, and **the SYS-12 status (MVP — D-3; mana-free) + the ABILITY stamper** (the applied-diff review's repairs, § 7) |
 | `design/gdd/reviews/sys07-rework-review-log.md` | this commit | this section |
 
 **Not applied, with the reason recorded** (a deliberate, reported deviation from the
@@ -228,7 +228,7 @@ seat ran as a nested subagent with its model passed explicitly.
 **`combat.md`**: the header now declares the D-ORCH-03 co-revision (values, `arc`, the
 SYS-12 status, F-CMB-06's band) and points at this log; the SYS-07 dependency row reads
 *"APPROVED 2026-11-12 + the D-ORCH-03 baseline"* (it said *"GDD not written —
-PROVISIONAL"*); F-CMB-06's input band is **1–6** (the union of the four re-derived safe
+PROVISIONAL"*); F-CMB-06's input band is **1–4** (the union of the four re-derived safe
 ranges — at `ATK2_DAMAGE` 6 the counter is 9, outside the printed 1–4) with the output
 range 1–9; **the SYS-12 status is MVP (D-3), mana-free (M1)**, with Combat named as the
 ABILITY arc's publisher and SYS-12 the ability's `raw_damage` owner; AC-CMB-30 gains the
@@ -288,7 +288,7 @@ recorded disposition. **14 threads** on the first review (`f6ec1a0`):
 
 | Disposition | Count | Findings |
 |---|---|---|
-| **Already fixed** in `67a14ed` (the applied-diff repair commit that landed after CodeRabbit's snapshot) | 3 | the `DamageResolver`'s `damage_bonus` input; F-CMB-06's range (1–6); the SYS-12 MVP scope at all four Combat sites — two of these the bot auto-resolved |
+| **Already fixed** in `67a14ed` (the applied-diff repair commit that landed after CodeRabbit's snapshot) | 3 | the `DamageResolver`'s `damage_bonus` input; F-CMB-06's range (now 1–4 / 1–8 — the confirmed value, see § 7.5); the SYS-12 MVP scope at all four Combat sites — two of these the bot auto-resolved |
 | **Fixed** in `60a0c16` | 4 | the package's status header (now HISTORICAL — approved and applied); the review log's document-under-review header; 19 split Markdown table rows; F-HD-02's >132-with-a-module case (attack above the cap holds row 4) |
 | **Deferred** (the sync lane / the coordinated SYS-13 rider) | 5 | the registry's four damage values + `spitter_orb_damage`; SYS-13's counter fixture, strike table, roster and orb clause; SYS-15's cache point-spend rider |
 | **Rebutted** (recorded, not skipped) | 2 | the "formula template" request (not this corpus's template — all 15 formulas use the inline form, and converting four would break the document's consistency and exceed the approved scope); the player-profile cap ≥ 20 validation (TR-HD-012's fixture already gives the player the ∅ cap/immune defaults, so the pit cannot be clamped — a new invariant is out of scope) |
@@ -315,6 +315,47 @@ valid and all closed in `270b9ad`:
 landed (`67a14ed`), 8 fixed in the triage commits (`60a0c16`, `270b9ad`), 6 deferred to
 the sync / the SYS-13 rider, 2 rebutted with the reason. No thread was resolved without a
 recorded disposition.
+
+### 7.5 The post-update CodeRabbit cycle (after the `Main` merge)
+
+The branch update moved the head and CodeRabbit re-reviewed. It opened **2 threads, both
+Minor, both valid, both about text this revision introduced** — and the first exposed a
+genuine application error.
+
+**Thread 1 — `combat.md`: the ATK knob joint constraint.** The seat observed that the
+independent ranges permit `ATK1_DAMAGE + ATK2_DAMAGE` up to 9 while the SYS-07 ladder
+requires row 0's chain to stay below row 1's 7. **Valid — and worse than stated**: the
+applied text carried the *wider* ranges (`1–3 / 3–6 / 1–3 / 1–3`), which are the
+package's § 8 early row, while the **approved package's § 3** specifies the narrowed
+`1–2 / 3–4 / 1–2 / 1–2` — the technical seat had already found that the wide set breaks
+the ATK2 column (ATK2 5 → row 1's 4) as well as the chain. **Fixed** by restoring the
+approved ranges and stating the joint constraint in **both ATK rows and TR-CMB-004**:
+`ATK1_DAMAGE + ATK2_DAMAGE ≤ 6`. F-CMB-06's band follows to **1–4** with the output
+range **1–8** (superseding the 1–6 / 1–12 figures the earlier threads produced from the
+wide set). **Every permitted pair verified**: (1,3) → chain 4 · (1,4) → 5 · (2,3) → 5 ·
+(2,4) → 6 — all strictly below row 1's 7; ATK1 ≤ 2 < row 1's 3; ATK2 ≤ 4 = row 1's 4;
+crouch/air ≤ 2; row 4's chain 10 ≤ 10. Every legal configuration passes V-HD-12.
+
+**Thread 2 — `health-damage.md`: the DEFLECT enemy-attacker branch.** The enemy-target
+arm of the dealt percent law assumed the player was the attacker; TR-HD-019/AC-HD-21 also
+allow an enemy's deflected orb to hit another enemy, and no `attack` was defined for that
+case. **Valid. Fixed** with one clause: the percent law's `attack` is **the attacker's** —
+the player's 100–132 for a player-deflected orb, and **100 (the identity) for any
+non-player attacker** — so an enemy-vs-enemy deflect keeps the orb's raw and a player's
+orb keeps its raw at MVP (`attack` 100). The player-attacker behaviour is unchanged.
+
+Both threads are resolved with these dispositions; the counts are unchanged
+(39/15/50/68/20 · 33 knobs · 42+3+5+0; SYS-08 34/12/48 · 39+4+5+0).
+
+**The sync landed in the same window** (PR #76, `6dd4651`): the registry now mirrors the
+revision — the strike table, the four arc damages, the roster, the stagger note, the void
+note, the four new constants and the new `damage_event` entity — and `spitter_orb_damage`
+is correctly still **8** (the hold). The systems-index SYS-07 row, the design-order note
+and the SYS-16/17 unblocking clause are in. **One sync correction is owed** (the shared
+file is the sync lane's to write): the index's SYS-07 dependency bullet still prints
+*"the heal item (Suture 25 × 3 charges …)"* — the Suture is **5** — and the bullet's
+envelope/count sentence should be re-read against the row. Recorded here and in the lane
+report.
 
 ## 8. The residual risks the seats did not block (recorded for the user)
 
