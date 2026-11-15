@@ -187,7 +187,7 @@ On the TD-ADR verdict, both ADRs become **Accepted**, on this record:
 | ID | What | Owner | Blocks |
 |---|---|---|---|
 | SYS-03 engine half | the 34 fixtures in-engine; `TYPE_INT` after the normalization pass; F-SAV-01's three digests | the first SYS-03 story | that story |
-| CR-SAV-01 | **the abandonment regime's frozen-text reconciliation, in three clauses**: AC-SAV-23 clause 1 gains "commits within `SAVE_JOIN_TIMEOUT_MS`"; its clause (b) gains "…or the close-save did not commit within `SAVE_JOIN_TIMEOUT_MS`"; TR-SAV-014's "joined at shutdown" gains "…except on the abandonment path" (§5b) | the user (batched) | the abandonment path's AC/TR wording — not the mechanism |
+| CR-SAV-01 | **the close-save exit path's frozen-text reconciliation, in four clauses**: AC-SAV-23 clause 1 gains "the commit that completes — including after `SAVE_JOIN_TIMEOUT_MS` — restores the suspension snapshot; where it is abandoned before its rename, interrupted before step 5, or fails on the exit path, the fallback applies"; clause (b) gains the matching "only when"; TR-SAV-014's "joined at shutdown" gains "…except on the abandonment path"; clause (c)'s code-assertion is scoped to a process that survives to observe it | the user (batched) | the exit path's AC/TR wording — not the mechanism |
 | O-AUD-1 | `restored_epoch` on SYS-05's `load_complete` + its post-flip-load assertion | SYS-05's authoring | the post-flip-load bed |
 | CR-AUD-03 | the mono fold = a 30th file (counts 29→30, the §G.6 row, AC-AUD-32's scope) | the user (batched) | the first audio story's asset count (enforced by its story gate) |
 | CR-AUD-04 | TR-AUD-002's load-complete publisher (SYS-03 → SYS-05) | the user (batched) | nothing in the ADR; a reader's misdirection |
@@ -293,9 +293,29 @@ rather than read: regime 1 (delivered, attempted, abandoned) is a **fourth case*
 the frozen AC's "only when" excludes. Its *recovered state* is clause (c)'s
 (the previous good state), but **no code is observable** — the process is exiting.
 The ADR does not reinterpret the AC and does not invent a seventh `SAVE_FAILED_*`
-code (R7 freezes six): it files **CR-SAV-01**, three clauses — AC-SAV-23's clause 1
-and clause (b), plus TR-SAV-014's "joined at shutdown" (skipping that join on the
-abandonment path is the whole point: joining would be a second unbounded wait).
+code (R7 freezes six): it files **CR-SAV-01**, four clauses — AC-SAV-23's clause 1,
+clause (b), TR-SAV-014's "joined at shutdown" (skipping that join on the abandonment
+path is the whole point: joining would be a second unbounded wait), and clause (c)'s
+code-assertion, which is scoped to a process that survives to observe it.
+
+**Two refinements the confirm pass then forced, both recorded because they were my
+errors, not the reviewer's:**
+
+1. **Key the CR to the commit's outcome, not to the timeout.** The first draft said
+   the fallback applies when the close-save "did not commit within
+   `SAVE_JOIN_TIMEOUT_MS`" — which classifies the *late commit* §5b explicitly
+   permits (a rename already in flight that completes) as a fallback, when it
+   actually restores the **better** state. The clause now reads "the commit that
+   **completes** — including after the bound — restores the suspension snapshot;
+   where it is abandoned before its rename, interrupted before step 5, or fails on
+   the exit path, the fallback applies".
+2. **The exit path is commit-point-exact, not a range.** A failure at **steps 1–4**
+   leaves the slot **unchanged** (a step-4 rename is atomic, so `.sav` is untouched
+   — there is nothing to promote); a failure at **step 5** leaves `.sav` missing
+   with `.bak` present, so the sweep promotes it; a failure at **step 6** is
+   post-commit and its own rollback promotes the `.bak`. My first wording said
+   "steps 4–5 → promotion", which would have had an implementer assert a promotion
+   for a step-4 failure.
 
 ### 8.3 The three ADR-0003 threads as ONE design
 
@@ -364,7 +384,11 @@ than three patches. The design has four parts:
 | micro-check #3 (DS) | `deepseek-v4.1-flash` | **FAIL (1)** — the completion post was not job-specific (a stale/other-slot post satisfied the wait) |
 | micro-check #4 (DS) | `deepseek-v4.1-flash` | **PASS (0 blockers)** |
 | micro-check #5 (DS) | `deepseek-v4.1-flash` | **PASS (0 blockers)** — the six post-pass edits; 2 notes applied (the `completed_seq` seq-gap, and `Semaphore.wait`'s timeout marked unverified with the poll fallback) |
-| CodeRabbit confirm pass | — | **PASS** (§8.6) |
+| CodeRabbit confirm pass #1 | — | **4 new threads, all valid, all applied** (§8.6) |
+| technical (DS) on the wave-3 delta | `deepseek-v4.1-flash` | **NEEDS REVISION — 2 blockers**, both applied: register item 8 was a corrupted table splice, and the commit-outcome enumeration omitted the *failed* write on the exit path |
+| qa-lead spot-check (DS) on the wave-3 delta | `deepseek-v4.1-flash` | **PASS — 10/10 rows** |
+| micro-check on the wave-3 delta | `deepseek-v4.1-flash` | **FAIL (3)** — a step-4 failure is not a `.bak` promotion; clause 1's "steps 2–5" excluded step 6's rollback; clause (c) was left unamended → then **PASS (0 blockers)** |
+| CodeRabbit confirm pass #2 | — | **PASS**, no new threads |
 
 **The loop, recorded honestly.** Five micro-check passes for five threads: the
 first three each found a real residual *created by the repair itself* (an
@@ -373,9 +397,18 @@ the same pattern as the first batch — a repair's own new claims are the risk, 
 the text it touched — and it is why the loop is not optional for a Major-class
 batch.
 
-### 8.6 The confirm pass
+### 8.6 The confirm passes
 
-A **CodeRabbit confirm pass** ran on the repair commit, as the batched cadence
-requires for a Major-class batch: **PASS**, no new threads. `UNRESOLVED=0`; all five
-threads resolved by reply with their disposition. The commit hashes for the wave are
-in the lane report's §6.
+**Confirm pass #1** ran on the wave-2 commit and opened **4 more threads** — all
+valid, all applied in `12accc0`, all resolved:
+
+| # | Sev | Finding | Disposition |
+|---|---|---|---|
+| 6 | Major | CR-SAV-01 keyed the fallback to the *timeout*, but §5b permits a late commit that restores the better state | **APPLIED** — keyed to the commit's outcome (§8.2's refinement 1) |
+| 7 | Major | the seam threshold (the asset's loudest interior transient) would pass an audible click: an 0.8 interior transient licenses a 0.5 jump at a quiet loop point | **APPLIED** — `seam_pass()`: a boundary-local **step** bound and **slope** bound over the seam's own 50 ms windows (each excluding the seam's own pair/triple, so neither is vacuous), plus `SEAM_DELTA_MAX` as the scalar interior-peak **third conjunct**; contiguity is a precondition and the seam index comes from the authored `loop_end` |
+| 8 | Major | the ~42 s figure was presented as an independent native ceiling | **APPLIED** — it is rung-specific (beds on Ogg); the fold-declined + beds-failed branch gets `88.2·T_beds + 176.4·T_score ≤ 8,500 kB`, and 70 s + 42 s + one-shots is priced at ≈ 15.1 MB against the **10 MB disk** bar |
+| 9 | Minor | probe 2 did not name the mono fold as its own capture target | **APPLIED** — every looped file is its own capture (5 seams: 3 beds + the score pair), and a **fold-only failure is a pair failure**, never a fold-only swap |
+
+**Confirm pass #2** ran on `12accc0`: **PASS**, no new threads. `UNRESOLVED=0`; every
+thread in both waves was resolved by reply with its disposition. The wave's commit
+hashes are in the lane report §6.
