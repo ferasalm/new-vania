@@ -1,7 +1,7 @@
 # Orchestration State — the single live state/log
 
-> **Updated**: 2026-11-15 (orchestrator-launch chat)
-> **Main**: `4c0a05f` — launch record SYS-15/SYS-28 (PR #56)
+> **Updated**: 2026-11-15 (orchestrator handoff chat)
+> **Main**: `3fcedc6` — `docs(sys07): the IP-17 low-stat baseline rework, applied (D-ORCH-03) (#75)`
 > **Mode**: parallel GDD/pre-production lanes; nested topology; WIP-limited.
 > **Source of truth**: `manifest.yaml`. **Paste source**: `prompts/NEXT.md`.
 > **Operating manual**: `README.md`. **Tooling**: `TOOLING.md`.
@@ -40,8 +40,9 @@
 | ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | **MERGED `ee08e63` (PR #67)** — the bible + palette + style anchor landed; D-ORCH-01 executed, D-ORCH-02 pinned; asset-spec handoff open | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
 | SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
 | SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
-| SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **PR #59 open** — gates complete (CD APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS); CodeRabbit pending | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
-| SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **PR #58 open** — gates complete (CD APPROVED · creative APPROVED · seats 3+1 repaired · spot-check PASS · micro-check PASS); CodeRabbit confirm re-running | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
+| SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **MERGED** `24efd09` (PR #59); sync PR #63 (`1e9e524`) | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
+| SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **MERGED** `2ff3096` (PR #58); sync PR #69 (`a5a1f81`) | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
+| SYS-07-REWORK | `docs/sys07-baseline-rework` | `../new-vania-sys07-baseline-rework` | **MERGED** `3fcedc6` (PR #75) — D-ORCH-03 option A applied (SYS-07 + SYS-08); the riders PR + the mini sync in flight | systems-designer + lead-programmer | `prompts/lanes/SYS-07-REWORK.md` v1.0.0 |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
 lane runners write their reports to `production/session-state/lane-<ID>-report.md`
@@ -62,11 +63,11 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **held from 2026-11-15** for the
-**SYS-07-REWORK** sync (branch `chore/sync-sys07`, branched from `ac6c623`; the
-request is the "Sync request" section of
-`../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`).
-Released only after the sync PR merges (§15).
+`shared_file_lock: none` — **released 2026-11-15**: the SYS-07-REWORK sync
+landed (PR #76 merged at `6dd4651`; 4 CodeRabbit threads, all applied +
+resolved). The next writer is the **mini sync** (the `spitter_orb_damage`
+flip 8 → 2 + the index's Suture correction); it re-acquires the lock here
+before any edit.
 
 **Prior release 2026-11-15**: after the ART-BIBLE sync landed — PR #72 merged at
 `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes updated on
@@ -127,6 +128,8 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | SYS-07 baseline rework (D-ORCH-03 applied) | `3fcedc6` | #75 | verified this chat; SYS-07 + SYS-08 revised; 24 CR threads all resolved; riders PR in flight |
+| 2026-11-15 | SYS-07-REWORK sync | `6dd4651` | #76 | verified this chat; registry 81→88 (`damage_event` + the baseline constants); the orb HELD |
 | 2026-11-15 | ART-BIBLE — the Art Bible lands | `ee08e63` | #67 | verified this chat; gates + sync (PR #72, `bc8c6be`); nested seats verified |
 | 2026-11-15 | SYS-28 Narrative Presentation | `2ff3096` | #58 | verified this chat; GDD + sync (PR #69, `a5a1f81`); counts 13/3/6/15 |
 | 2026-11-15 | SYS-15 Cache Stations & Death-as-Story | `24efd09` | #59 | verified this chat; GDD + sync (PR #63, `1e9e524`); counts 20/4/7/26 |
@@ -144,48 +147,47 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **SYS-15 is at PR #59** — gates complete (CD APPROVED · three-seat 1+3+2
-   repaired · spot-check PASS · micro-check PASS; §3.6 in-session fallback
-   recorded). CodeRabbit posted (6m48s, 8 threads): the triage is in flight
-   (resumed runner session `ses_e2318d2a8ffe1Ie7DIw934S1eg`). When the triage
-   is clean AND the sync has landed: verify the head and squash-merge #59.
-2. **SYS-28 is at PR #58** — gates complete (CD APPROVED · creative APPROVED ·
-   technical 3 repaired · QA 1 repaired · spot-check PASS 6/6 · micro-check
-   PASS; §3.6 fallback recorded, DS re-pass is a batched decision). CodeRabbit:
-   6 threads (5 fixed + 1 rebutted); the confirm pass re-runs on the fix head —
-   wait for it green. When the sync has landed: verify the head and
-   squash-merge #58.
-3. **Launch the sync lane** — the active queue is SYS-28 (order 1), then
-   ART-BIBLE (order 2); one branch + PR per request, serial.
-4. **ART-BIBLE lane** — PR #67 open (gates complete, CodeRabbit clean); its
-   sync is queued (order 2); the orchestrator merges after it lands.
-5. **SYS-04 header** — the audio-director countersign; then flip the GDD header
-   `In Review` → `APPROVED` (or downgrade the index row). A user decision.
-6. **Keep SYS-16/SYS-17 BLOCKED** on SYS-07-REWORK (D-ORCH-03). Do not launch.
-7. **Batch the user decisions** — D-ORCH-03 round 2 (see `decisions.md`). Do
-   not interrupt for soft blockers.
-8. At any lane boundary: refresh `NEXT.md`
+1. **The D-ORCH-03 riders PR** (branch `chore/d-orch-03-riders`, worktree
+   `../new-vania-d-orch-03-riders`) — the coordinated SYS-13 touch + the
+   one-line riders (audio-core, juice-feedback, cache-stations-death,
+   room-world-structure). In flight (background runner session
+   `ses_e2281dfdeffe3m7w9OlFqE1aXi`, its last reuse — the session is bloated;
+   **all future units of work get fresh `lane-runner` spawns**). When it
+   reports: verify, merge head-pinned.
+2. **The mini sync** after the riders land: the `spitter_orb_damage` flip
+   8 → 2 + the index's Suture correction (25 → 5). One branch, one PR.
+3. **Launch SYS-16** (DS, `lane-runner` agent) after the riders PR **and the
+   mini sync** land — render `--lane SYS-16` first (`prompt_hash` pending);
+   the worktree `../new-vania-sys16-progression` (branch
+   `docs/sys16-progression`) is **already prepared — reuse it**; run
+   `npm run task:new -- docs/sys16-progression` only if it does not exist.
+   SYS-17 stays BLOCKED on SYS-16.
+4. **Next queued GDD lanes**: SYS-14 (GLM), SYS-05, SYS-24, SYS-12, SYS-20,
+   SYS-25 — within the WIP limits (3 runners).
+5. At any lane boundary: refresh `NEXT.md`
    (`node tools/orchestration/render-prompts.mjs --next`).
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: SYS-28 (PR #58, its sync queued order 1) + ART-BIBLE (PR #67, its
-sync queued order 2); SYS-15 is LANDED (PR #59 merged at `24efd09`).
-**Landed**: SYS-03 `66ae957` (PR #45), SYS-04 `ba07158` (PR #46).
-**Queued**: SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25, SYS-07-REWORK;
-SYS-16/SYS-17 blocked on SYS-07-REWORK.
+**Running**: the D-ORCH-03 riders run (branch `chore/d-orch-03-riders`,
+background; the last reuse of the bloated runner session — fresh spawns after).
+**Landed**: SYS-03 `66ae957` (#45), SYS-04 `ba07158` (#46), SYS-15 `24efd09`
+(#59), SYS-28 `2ff3096` (#58), ART-BIBLE `ee08e63` (#67), SYS-07-REWORK
+`3fcedc6` (#75) + its sync `6dd4651` (#76).
+**Queued**: SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25; SYS-16 unblocked
+(launches after the riders land); SYS-17 blocked on SYS-16.
 **Support**: ADR-DRAFT (standby, parallel), QA-PLAN (standby), SYNC-LANE
 (standby, single writer).
-**User must decide**: D-ORCH-03 round 2 (the revised SYS-07 rework package,
-when the lane re-presents it). The art-bible decisions (D-ORCH-01/02) are
-resolved and executed; D-ORCH-05 (the SYS-04 header) is executed (PR #66).
-**Next orchestrator chat**: paste `NEXT.md` (v2.0.6, `6106fa2cd614`); read this
-file + `manifest.yaml` + the lane reports; do not author; process the
-SYS-15/SYS-28 results (sync → merge → receipts), keep launching within the WIP
-limits; update this file at every lane boundary; batch decisions; stop only on a
-hard blocker or the 350k hard trigger.
+**User must decide**: nothing open — D-ORCH-01/02/03/05 are all resolved and
+executed. The next decision point is the SYS-13 rider's one-shot re-decision
+IF the package did not pre-decide it (the riders run reports it).
+**Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml` +
+the lane reports; do not author; merge the riders PR → mini sync → launch
+SYS-16 on a FRESH `lane-runner` session; keep launching within the WIP limits;
+update this file at every lane boundary; batch decisions; stop only on a hard
+blocker or the 350k hard trigger.
 
-## 11. Sync receipt — SYS-03 Save & Serialization (in flight)
+## 11. Sync receipt — SYS-03 Save & Serialization (landed 2026-11-14 — PR #47, `50a9a93`)
 
 - **Lane**: SYS-03 Save & Serialization. **Request**: `lane-SYS-03-report.md` §10
   (2 `entities.yaml` entries + the `systems-index.md` row/design-order/bullet +
@@ -213,7 +215,7 @@ hard blocker or the 350k hard trigger.
   convention — 10 of 10 approved rows; the exact-string `Approved` restyle is an
   adopt-migration item, not a single-row edit). All 6 checks green; 0 unresolved.
 
-## 12. Sync receipt — SYS-04 Audio Core (in flight)
+## 12. Sync receipt — SYS-04 Audio Core (landed 2026-11-14 — PR #48, `dd33658`)
 
 - **Lane**: SYS-04 Audio Core. **Request**: `lane-SYS-04-report.md` "Sync
   request" (4 `entities.yaml` entries + the `flip_trigger_contract` append + the
@@ -309,7 +311,7 @@ hard blocker or the 350k hard trigger.
 - **Prompts**: `NEXT.md` re-rendered at **v2.0.6** (`6106fa2cd614`); the
   manifest `next.version` bumped 2.0.1 → 2.0.6 through the review rounds.
 
-## 15. Sync receipt — SYS-07-REWORK (in flight)
+## 15. Sync receipt — SYS-07-REWORK (landed 2026-11-15 — PR #76, `6dd4651`)
 
 - **Lane**: SYS-07-REWORK (D-ORCH-03, the IP-17 low-stat baseline rework; baseline
   PR #75, head `270b9ad`). **Request**: the "Sync request" section of

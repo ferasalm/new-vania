@@ -60,22 +60,42 @@
   baseline numbers, the level 1–5 curve, the `TR-HD-006` "MVP has no gear" clause
   correction, the mana reconciliation input, and the ±10% parity situational-break
   OQ) as a contract revision to the frozen SYS-07 GDD.
-- **Why it is a decision**: SYS-07 is an APPROVED, frozen contract. The rework is
-  a revision, not a silent edit.
+- **Why it is a decision**: SYS-07 (and the SYS-08 co-revision) are APPROVED,
+  frozen contracts. The rework is a revision, not a silent edit.
 - **Blocking?** SYS-16 and SYS-17 are blocked until it lands.
-- **Status**: **OPEN — ROUND 2 REQUESTED (2026-11-15).** The user reviewed the
-  round-1 package and answered "Revise again": the package is NOT approved as
-  proposed. The lane prepares a **revised** package (round 2) — re-present the
-  baseline rework with any alternatives the lane can identify; no specific
-  objections were recorded, so the revision should tighten the presentation and
-  surface the decision points explicitly. SYS-16/SYS-17 stay blocked until
-  round 2 is approved and landed.
-- **Decision**: _pending (round 2)._
+- **Status**: **APPROVED — OPTION A (2026-11-15, round 2).** The user approved
+  the revised package as presented: the ÷5 low-stat rescale (20 HP · strikes
+  1/2/4 · the weapon table 2/4/2/2 + `DamageEvent.arc`), the SYS-08 co-revision,
+  the 5-step growth ladder, the three `TR-HD-006` gear riders, mana-free
+  Stinger, and the parity restatement. Named consequences accepted: DEF becomes
+  decorative for gear (a SYS-16 input) and the L5→L6 handoff moves to OQ#20
+  with a stated requirement. **Round-2 round trip** (round 1 was NOT approved —
+  the user answered "Revise again"; the round-2 package was reconstructed from
+  the frozen SYS-07 GDD, D-7/IP-17 and the five components, and its gate trail
+  is CD APPROVED + the technical seat's ten-pass NEEDS-REVISION cycle, all
+  repaired; record: `design/gdd/reviews/sys07-rework-review-log.md` on the
+  branch, package at `04b889b`).
+- **Execution**: **LANDED 2026-11-15.** The package → PR #75 (squash-merged at
+  `3fcedc6`): SYS-07 `health-damage.md` + the SYS-08 `combat.md` co-revision,
+  every commit naming D-ORCH-03. The applied-diff gates re-ran on the applied
+  text (CD APPROVED · technical 9 repaired + 2 rebutted · qa-lead spot-check
+  PASS 7/7 · micro-check PASS) and caught defects that existed only in the
+  applied text (the resolver's `damage_bonus` transport, a clamp printed as a
+  gate, the DEFLECT target routing). CodeRabbit: 24 threads across 4 passes,
+  all resolved. The sync landed first (PR #76, `6dd4651`: the registry values,
+  `damage_event` + the baseline constants, the index row/unblock, the 5th
+  Gate-2 probe; `spitter_orb_damage` HELD at 8). The riders PR
+  (`chore/d-orch-03-riders`) + the mini sync (the orb flip + the Suture
+  correction) complete the execution. SYS-16 is unblocked; SYS-17 stays
+  blocked on SYS-16.
+- **Decision**: _A — approve as revised (recorded 2026-11-15; executed and
+  landed the same day)._
 
 ## Resolved decisions (this era)
 
 | ID | Lane | Decision | Date | Record |
 |---|---|---|---|---|
+| D-ORCH-03 | SYS-07-REWORK | Option A — the IP-17 low-stat baseline rework approved (round 2) and applied to SYS-07 + SYS-08 | 2026-11-15 | PR #75 (`3fcedc6`) + sync PR #76 (`6dd4651`); the review log `design/gdd/reviews/sys07-rework-review-log.md` |
 | D-ORCH-04 | process | Lane runners spawn as the `lane-runner` agent (nested seats restored); §3.6 demoted to last resort; SYS-15/SYS-28 fallback records stand | 2026-11-15 | PR: `chore/lane-runner-subagent`; `TOOLING.md` §5.1 |
 | D-ORCH-05 | SYS-04 | The GDD header flips to APPROVED after the audio-director's countersign; the index row stays | 2026-11-15 | PR: `chore/sys04-countersign` |
 

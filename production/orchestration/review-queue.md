@@ -1,6 +1,6 @@
 # Review Queue — the WIP / review / sync ledger
 
-> **Updated**: 2026-11-14. **WIP limits**: 2 GDDs in three-seat review · 1
+> **Updated**: 2026-11-15. **WIP limits**: 2 GDDs in three-seat review · 1
 > CodeRabbit pass · 1 shared-file writer · 3 authored-queued. Pull continuously;
 > do not schedule by day.
 
@@ -20,9 +20,9 @@ queue).
 |---|---|---|---|---|
 | — | — | — | — | — |
 
-The authoring table is empty. **SYS-15** landed (its GDD merged — PR #59 at
-`24efd09`). **SYS-28** is at PR #58 (gates closed; its sync queued, order 1). 
-**ART-BIBLE** is at PR #67 (gates complete; its sync queued as order 2).
+The authoring table is empty. **SYS-15** (PR #59, `24efd09`), **SYS-28** (PR
+#58, `2ff3096`) and **ART-BIBLE** (PR #67, `ee08e63`) are all landed with their
+syncs; **SYS-07-REWORK** landed (PR #75, `3fcedc6` — D-ORCH-03 applied).
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
 
@@ -34,12 +34,12 @@ The authoring table is empty. **SYS-15** landed (its GDD merged — PR #59 at
 
 | Lane | PR | Pass | Threads | Dispositions | Status |
 |---|---|---|---|---|---|
-| SYS-15 | #59 | 1 (initial, 6m48s) | 8 | triage in flight (resumed runner) | fix head pending |
-| SYS-28 | #58 | 2 (initial + confirm re-run) | 6 | 5 applied (`3945b64`) + 1 rebutted (DS-seat routing; recorded) | confirm re-running |
+| — | — | — | — | — | idle |
 
-Note: the two lane passes ran concurrently — a serial-rule deviation by the
-autonomous runners, recorded here and in STATE §3. NEW passes (the sync PRs)
-queue behind these recorded dispositions.
+The SYS-15 (#59: 8 threads) and SYS-28 (#58: 6 threads) lane passes and the
+SYS-07-REWORK applied-diff cycles (PR #75: 24 threads across 4 passes) are all
+closed with recorded dispositions. The serial-rule deviation of 2026-11-15
+(two concurrent lane passes) stands recorded; it did not recur.
 
 Batched cadence: one pass per landed milestone; triage in one batch → one fix
 commit → resolve threads manually with recorded dispositions. A confirm pass only
@@ -49,15 +49,21 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-07-REWORK | 1 entity (`damage_event`) + 7 constants (`player_max_hp`, `hp_per_point`, `training_data_l2..l5`, `damage_ladder_mvp`) + 11 value/note updates (`spitter_orb_damage` **HELD**) | SYS-07 row + bullet, design order 22, the SYS-16/17 unblock, game-concept's 5th Gate-2 probe | 2026-11-15 | SYNC — PR #76 open |
+| — | — | — | — | — | idle |
 
-The active request is the "Sync request" section of
-`../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`
-(the lane's PR #75 is the baseline). **`spitter_orb_damage` is held at 8** until the
-coordinated SYS-13 rider lands in `enemy-ai-telegraphs.md`; the strike contract's
-payload already reads 2 and the two re-converge at the rider. The queue's §6 rows for
-SYS-16/SYS-17 lose their SYS-07-REWORK blocker when the orchestrator records the landing
-receipt + this sync; SYS-17 keeps its own SYS-16 dependency (it starts after SYS-16).
+**Landed 2026-11-15** (removed from the active queue): **SYS-07-REWORK** —
+PR #76, `6dd4651` (head `b188b2d`; 4 CodeRabbit threads across 3 passes, all
+applied + resolved). Registry 81 → 88 entries (`damage_event` +
+`player_max_hp` 20, `hp_per_point` 2, `training_data_l2..l5`,
+`damage_ladder_mvp`); 11 value/note updates; the index gained the SYS-07
+row/bullet, design order 22, the SYS-16/17 unblock and game-concept's 5th
+Gate-2 probe. `spitter_orb_damage` stayed HELD at 8. The full request was
+`../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`.
+
+**Queued next (order 1)**: the **mini sync** after the D-ORCH-03 riders PR
+lands — the `spitter_orb_damage` flip 8 → 2 + the index's Suture correction
+(the heal bullet still prints 25; the approved value is 5). One branch, one
+PR; the lane re-acquires the lock in `STATE.md` §4 first.
 
 **Landed 2026-11-15** (removed from the active queue): **ART-BIBLE** — PR #72,
 `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes on
@@ -97,8 +103,12 @@ the request in place for retry). Never force-push.
 
 | Lane | Blocker | Type | Owner | Decision | Since |
 |---|---|---|---|---|---|
-| SYS-16 | SYS-07-REWORK (IP-17) | hard dependency | systems-designer + lead-programmer | D-ORCH-03 | 2026-11-14 |
-| SYS-17 | SYS-07-REWORK + SYS-16 | hard dependency | systems-designer + lead-programmer | D-ORCH-03 | 2026-11-14 |
+| SYS-17 | SYS-16 | hard dependency | systems-designer + lead-programmer | — | 2026-11-15 |
+
+SYS-16 is **unblocked** (D-ORCH-03 landed — PR #75, `3fcedc6`; the sync PR #76
+removed the blocker and the index carries the unblock clause). It launches
+after the D-ORCH-03 riders PR lands (the rider re-derives SYS-13's numbers the
+progression consumes). SYS-17 keeps its own SYS-16 dependency.
 
 ## 7. Queue rules
 

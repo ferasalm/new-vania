@@ -19,7 +19,7 @@ next:
   kind: orchestrator
   path: production/orchestration/prompts/orchestrator-loop.md
   version: "2.0.6"
-  hash: "fff802cae478"
+  hash: "d376aa2b057a"
 
 support_prompts:
   - id: handoff
@@ -37,7 +37,7 @@ support_prompts:
   - id: orchestrator-loop
     path: production/orchestration/prompts/orchestrator-loop.md
     version: "1.0.0"
-    hash: "fff802cae478"
+    hash: "d376aa2b057a"
   - id: cd-gate
     path: production/orchestration/prompts/seat-briefs/cd-gate.md
     version: "1.0.0"
@@ -227,13 +227,13 @@ lanes:
     worktree_state: planned
     prompt_path: production/orchestration/prompts/lanes/SYS-07-REWORK.md
     prompt_version: "1.0.0"
-    prompt_hash: "pending"
+    prompt_hash: "76b5d160697a"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: SYNC
+    status: MERGED
     dependencies: [SYS-07]
     gates: [SYS-16, SYS-17]
-    review_state: "GATES CLOSED (2026-11-15, D-ORCH-03 option A, user-approved): CD APPROVED (2 passes) · technical NEEDS REVISION ×10 → all blockers repaired · the applied-diff gates: CD APPROVED, technical 9 repaired + 2 rebutted, qa-lead spot-check PASS 7/7, micro-check PASS (zero blockers) · CodeRabbit 19 threads across 2 passes, all resolved · CI 5/5 green on 270b9ad (PR #75). SYNC IN FLIGHT (PR #76): the registry value set + `damage_event` + the baseline constants, the index row/bullet/design-order/unblock, the 5th Gate-2 probe; `spitter_orb_damage` HELD for the SYS-13 rider."
-    next_action: "Merge order per review-queue.md §7 rule 4 (a lane may not merge before its sync lands): the orchestrator verifies PR #75's head, merges the sync PR #76, then squash-merges PR #75 at its verified head. The landing receipt + the sync remove the SYS-07-REWORK blocker from SYS-16 and SYS-17 — SYS-17 keeps its own SYS-16 dependency, so it starts only after SYS-16 lands. The SYS-13 rider (one coordinated doc touch) then flips `spitter_orb_damage`."
+    review_state: "GATES CLOSED + LANDED (2026-11-15, D-ORCH-03 option A, user-approved): the package gates (CD APPROVED · technical NEEDS REVISION ×10 all repaired · micro-check repaired to PASS) + the applied-diff gates on PR #75's text (CD APPROVED · technical 9 repaired + 2 rebutted · qa-lead spot-check PASS 7/7 · micro-check PASS zero blockers). CodeRabbit 24 threads across 4 passes, all resolved. SYNC LANDED — PR #76 at 6dd4651 (the registry values, `damage_event` + the baseline constants, the index row/unblock, the 5th Gate-2 probe; `spitter_orb_damage` HELD at 8). PR #75 squash-merged at 3fcedc6 — SYS-07 `health-damage.md` + the SYS-08 `combat.md` co-revision are on Main."
+    next_action: "The riders PR (`chore/d-orch-03-riders`, in flight) applies the coordinated SYS-13 touch + the one-line riders; then the mini sync flips `spitter_orb_damage` 8 → 2 + corrects the index's Suture value (25 → 5); SYS-16 launches after the riders land (fresh `lane-runner` session — the old session is retired as bloated)."
 
   - id: SYS-16
     title: "Progression — level 1–5 + gear layer"
@@ -244,10 +244,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: BLOCKED
+    status: QUEUED
     dependencies: [SYS-07-REWORK, SYS-08, SYS-13]
     review_state: "not-started"
-    next_action: "Blocked on SYS-07-REWORK (IP-17)."
+    next_action: "Unblocked by D-ORCH-03's landing (PR #75, `3fcedc6`). Launch after the D-ORCH-03 riders PR and the mini sync land — the rider re-derives SYS-13's numbers (hp 6/12/24, awards 3/7/14, the orb 2) that the progression consumes, and the mini sync flips the registry's `spitter_orb_damage`/`power_band` to match. Render `--lane SYS-16` first; fresh `lane-runner` session."
 
   - id: SYS-17
     title: "Inventory & Items — MVP carve-out + gear loadout"
@@ -261,7 +261,7 @@ lanes:
     status: BLOCKED
     dependencies: [SYS-07-REWORK, SYS-16]
     review_state: "not-started"
-    next_action: "Blocked on SYS-07-REWORK (IP-17) and SYS-16."
+    next_action: "Blocked on SYS-16 (its SYS-07-REWORK blocker was removed by D-ORCH-03's landing)."
 
   - id: ADR-DRAFT
     title: "Parallel ADR drafting — landed and in-flight GDDs"

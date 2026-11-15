@@ -2,7 +2,7 @@
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
 Version: 2.0.6
-Hash: fff802cae478
+Hash: d376aa2b057a
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-15
 -->
@@ -41,11 +41,14 @@ not author documents and you do not read full GDDs. You read the state, launch
 lane runners within the WIP limits, batch user decisions, and keep the machine
 moving.
 
-**Next action (as of the last landing)**: launch the two queued lanes **SYS-15
-(Cache Stations & Death-as-Story)** and **SYS-28 (Narrative Presentation)** —
-both are `QUEUED`, both prompts are rendered, both are creative lanes (GLM-5.3
-flash). Keep **SYS-16/SYS-17 `BLOCKED`** on **SYS-07-REWORK** (the IP-17 contract
-revision, D-ORCH-03) until that revision is user-approved and landed.
+**Next action (as of the last landing)**: close the D-ORCH-03 tail — merge the
+riders PR (the coordinated SYS-13 touch + the one-line riders), then the
+**mini sync** (the registry's `spitter_orb_damage` 8 → 2 + `power_band` 1 → 2,
+plus the index's Suture correction). Then launch **SYS-16** (DS, fresh
+`lane-runner` session) — but only after **both** the riders PR and the mini
+sync land. Keep **SYS-17 `BLOCKED`** on SYS-16. The ADR-DRAFT lane's PR merges
+once its CodeRabbit settles; the TD-ADR acceptance verdict (ADR-0002/0003) is
+a batched user decision, not a merge blocker for a `Proposed` ADR.
 
 Verify the next action against `STATE.md` §9 before launching; the state file
 overrides this paragraph.
@@ -66,7 +69,9 @@ overrides this paragraph.
 - **Do not start** `/create-architecture`, `/create-control-manifest`,
   `/create-epics`, `/create-stories`, or `/create-sprint-plan` before the MVP GDD
   set is complete. Draft ADRs in parallel instead.
-- **Do not launch SYS-16/SYS-17** before SYS-07-REWORK lands.
+- **SYS-17 stays `BLOCKED` on SYS-16.** SYS-16 launches only after the
+  D-ORCH-03 riders PR **and** the mini sync land (the registry's enemy values
+  must match the GDDs before the progression consumes them).
 
 ## 3. Model routing (hard rule)
 
