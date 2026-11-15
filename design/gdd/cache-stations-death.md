@@ -1,0 +1,437 @@
+# Cache Stations & Death-as-Story
+
+> **Status**: DRAFT (lane SYS-15 — the gate trail finalizes this line at the review record; counts below)
+> **Author**: game-designer + systems-designer (lane SYS-15, GLM-5.3-Flash) — via the lane-runner authoring loop
+> **Last Updated**: 2026-11-15
+> **Implements Pillar**: "Remade Every Death" — death is story: cache stations, body reconstruction, the incrementing designation counter. A death reduced to a plain "YOU DIED" screen is a redesign trigger, not a shippable state. · "SotN, Not Hollow Knight" — the save sanctuary is RPG texture, not a courtesy.
+> **System ID**: SYS-15 (Core layer, MVP)
+> **Counts**: 20 TR-CSD · 4 F-CSD · 7 V-CSD · 26 ACs (gate 21 smoke = 17 GUT + 4 LINT · 3 device · 2 lock · 0 VS) · 8 OQ rows
+> **Contracts**: SYS-07 `design/gdd/health-damage.md` (APPROVED 2026-11-12) — TR-HD-023 (no auto-respawn; the three-option System Offline contract), TR-HD-024 (the reconstruct reset), TR-HD-025 (the restore module), TR-HD-032 (the cache restore; the save stores no HP), TR-HD-015 (the `DeathRecord`), TR-HD-035 (the read contract), **OQ#8 — the System Offline screen, closed at this GDD's authoring**; SYS-03 `design/gdd/save-serialization.md` (APPROVED 2026-11-14) — TR-SAV-004 + **OQ-SAV-10 (the `cache` namespace's shape, resolved here)**, TR-SAV-011 (the slot model; **OQ-SAV-4's station trigger ratified here**), `save_completed(slot, tick)` = the print's input, the language law; SYS-02 `design/gdd/room-world-structure.md` (APPROVED 2026-11-13) — TR-RWS-019 (the terminal's placement; SYS-15 owns the surface), TR-RWS-011 (the reconstruct boundary — the counter is SYS-15's, never SYS-02's), TR-RWS-025 (the counter + the activation are SYS-15's save sources), **OQ-RWS-4 — the revive placement, ratified here**; SYS-29 `design/gdd/juice-feedback.md` (APPROVED 2026-11-13) — TR-JCE-027 (the death power-down/revive boot edges; the single duck −6 dB held `UNTIL_OFFLINE_EXIT`), the death-beat glitch component, the world-time law (the offline screen's presentation is context-time); SYS-04 `design/gdd/audio-core.md` (APPROVED 2026-11-14) — the no-duck law (exactly one duck family), the release backstop; SYS-01 `design/gdd/input-control-mapping.md` (APPROVED) — the Cache-terminal and Death/respawn gate-source rows (consumed verbatim), the Prompt Slot law, the a11y baseline; ADR-0001 (Accepted 2026-11-12) — the non-ack gate queue (the log/reading/cache row); SYS-05 (pre-shaped, consumed via the systems-index row and its recorded contract inputs) — the context machine, the refusal flow, `restore_complete` < `load_complete`; the benchmark audit's IP-6 (the adjacency doctrine + the fast-travel OQ).
+
+## Overview
+
+Cache Stations & Death-as-Story is the game's **memory machinery**: the terminal where the machine caches you, and the screen it shows you when the print fails. It owns the cache station's player-facing surface — the `CACHE` prompt's ack, the station save trigger, the terminal menu (the status line, the designation readout, the training-point allocation, the manual re-cache, the leave control), the **MEMORY CACHED** print and its honest failure twin — and the death loop's fiction: the **System Offline** screen (the monochrome glitch, the print voice, the quiet line, the cause row, the three options), the **designation counter** that stamps a new number on every remade body, the reconstruction beat that re-prints her at the last cache, the restore-module faucet, and the no-punishment law (what persists, what resets). It owns the `cache` persistence namespace (the counter + the activation record) inside SYS-03's envelope — the **v1→v2 schema bump is this system's named save obligation** — and the **cache-adjacency doctrine** that places terminals where the truth turns as the map scales.
+
+**What it does not own.** The death edge, the state machine, the revive application and the options contract are SYS-07's (SYS-15 presents, never resolves). The save mechanism, the envelope, the schema gate and the refusal codes are SYS-03's (SYS-15 owns the fiction words, never the bytes). The terminal's placement and the `CACHE` prompt are SYS-02's room data (SYS-15 owns the surface they open). The death beat's sounds are SYS-04's designs against SYS-29's edges; the glitch component is SYS-29's; the duck's dB is SYS-04's ratified mix. The Reading context the terminal shares with the logs is SYS-05's machine. SYS-15 never reads input, never applies damage, never writes a byte of the save, and never renders a pixel.
+
+→ *Implementation patterns (the terminal menu's node shape, the offline screen's layer, the counter's store access) are ADR raw material for the planned Cache/Death ADR; this GDD stays at the behavior level.*
+
+## Player Fantasy
+
+### The named fantasy — You Are a Copy, and the Copy Counts
+
+You are not the woman. You are what the machine prints from what it remembers of her — and the machine counts its prints. Every cache terminal is a moment of being *written down*: the world stops mattering for a breath, **MEMORY CACHED** prints in the terminal's flat voice, and for that breath nothing out there can take anything from you. And every death is a print that failed: the screen drains to monochrome, the glitch eats the edges, **SYSTEM OFFLINE** — and underneath, quiet, in lowercase, the truth the fiction has been promising: *you are destroyed*. The machine reports the fault by name (what killed you, with what, at what tick), then offers you what a machine offers a failed print: re-print from the last cache, draw the spare you carried for exactly this, or walk away. When you wake at the terminal, the stamp on your chassis has a new number. Nobody resets to a checkpoint. Nobody is punished. But nothing is free, either: the death happened, the count went up, and the machine never pretended otherwise.
+
+### Anchor moments
+
+1. **The Print.** You limp into the Sanctum, press Interact on the terminal. The world's noise ducks under a held −6 dB of terminal hush; the status line goes from CACHING to **MEMORY CACHED**. You are safe in the one way the game means it. *(SYS-03's `save_completed` record; SYS-29's print slot; SYS-04's duck is not here — the duck is the death beat's, not the station's. The station's print is silent-by-design loud: no fanfare, one row.)*
+2. **The Remake.** A power-3 heavy you misread empties the bar. SYSTEM OFFLINE. The fault row names the heavy, the strike, the tick. You choose RECONSTRUCT AT THE NEURAL TERMINAL; the load turns over; you wake standing at the terminal in RM-04, the bar full, the quick slot refilled, and the terminal's readout — which read DESIGNATION 003 — now reads **DESIGNATION 004**. The world is exactly as you left it. You are not.
+3. **The Second Life.** You are carrying the restore module the first cache gave you. Death #2. On the offline screen the second option is lit where it was greyed: DRAW THE RESTORE MODULE. You take it — the chassis reboots on the spot at half a bar, a second of hum, the module gone, the stamp at 005. The death happened. The count went up. You keep walking.
+4. **The Fault.** You die to the pit. There is no spot to reboot on — the floor is gone. The machine places you where you last stood on solid ground, not in the void, and the cause row reads the truth: the world killed you, not an enemy. *(OQ-RWS-4's ratified resolver — the pit and the module revive may co-ship only with this resolver implemented.)*
+
+### Language law
+
+**Use:** cache, cached, the terminal, the station, the print, the stamp, designation, reconstruct, reboot, the fault, the record.
+
+**Player-facing copy — banned:** *slot* (SYS-03's law: the slot is the file; the cache station is the fiction — SYS-15 never speaks of slots to the player), *checkpoint*, *save game*, *respawn*, *reload*, *YOU DIED*, *continue?*, any percentage ("50% restored" → the chassis reboots at half a bar). **The print voice** is the terminal's: all-caps machine rows, terse, diagnostic, no exclamation. *You are destroyed* is the one lowercase line — the quiet line under the loud headline (SYS-07's deliberate lowercase, ratified here: it stands). **GDD prose — permitted:** slot/namespace (SYS-03's nouns, engineering only), ms/ticks (the contract units). **Telemetry/field names — unconstrained.**
+
+### Success signature
+
+Playtesters say: "the terminal felt safe — like the game took a breath with me"; "when I died I knew exactly what got me, the screen told me"; "I reconstructed because I wanted to see what the number would say"; "I didn't lose anything when I died — but I felt the death"; nobody asks for a quicker respawn, and nobody describes the death screen as a *game over*. The demon lord, if he ever learns the number, learns it because the fiction earned it — never because a menu displayed it.
+
+## Detailed Design
+
+### Core Rules
+
+**Rule IDs (`TR-CSD-*`) are stable requirement proposals — each carries a falsifiable test and is ready for `tr-registry.yaml` ingestion.** PROVISIONAL marks indicate contracts whose other signer's GDD is not yet landed (SYS-05, SYS-24, SYS-28); ownership boundaries are intended final. **SYS-15 is the fiction layer over three landed machines: it presents, counts, and records — it never resolves a hit, never writes a save byte, and never decides a flow it does not own.**
+
+#### 1 · The station and its surfaces
+
+- **TR-CSD-001 — The terminal is SYS-02's placement; the surface is SYS-15's.** The MVP's one cache terminal lives in **RM-04 The Sanctum** as room data: the placement rect, the `CACHE` prompt (Class A, ≤ 6 chars — SYS-01's label law), and the **terminal anchor** (the world position the reconstruct respawns at). SYS-02 places and prompts; **SYS-15 owns everything the ack opens**: the terminal surface, the prints, the spending, the counter. SYS-02 writes no terminal logic (TR-RWS-019 consumed; the boundary audit stands: no MEMORY-CACHED writer and no counter writer in `src/world/`). The prompt's ack is SYS-01's Interact on the lit bubble (TR-INP-030): no walk-by activation is possible, ever. *Test: the ack-routing fixture (AC-CSD-01); the boundary audit (AC-CSD-06).*
+- **TR-CSD-002 — The station ack: the save trigger and the context request, in one ack.** The Interact ack on the lit `CACHE` bubble does exactly two things, in this order: **(a)** it raises SYS-03's save request for the `auto` slot with `cause = station ack` (TR-SAV-011's trigger — ratified here as-is); **(b)** it raises the Cache-terminal context request on the ADR's non-ack row (queued; applied at the next gate-entry phase — SYS-05's machine opens the context, SYS-15 owns its controls). The save request and the context request are independent records: the save may complete before, during, or after the context opens (the worker writes off-thread; the completion drains at a tick boundary). **The station trigger set is ratified as the closed set `{station ack, desktop quit, Android onStop, iOS application-paused}`** — no timer autosave exists (OQ-SAV-4's refinement consumed verbatim), and **the fifth-event candidate (an autosave at the flip-completion moment) is DECLINED at MVP**: the close/suspension events already preserve the post-flip state on every normal exit, a fifth event is a code change with a migration review (TR-SAV-011's law), and the terminal stays the only in-session diegetic save surface — the fiction's scarcity is the point. The candidate is recorded as a VS decision beside the station multiplication (OQ-CSD-3). *Test: the trigger-set static audit — exactly the four causes exist, no timer symbol (AC-CSD-19); the two-records fixture (AC-CSD-01).*
+- **TR-CSD-003 — The terminal surface: five rows, context-time, no chrome.** The Cache-terminal context (SYS-01's ratified row: buffers cleared at entry; leave control → Gameplay) presents SYS-15's terminal menu — a stack of diegetic print rows, focus-ordered top to bottom, each row's label its accessible name, each row a ≥ 48 dp target (the a11y baseline consumed):
+  1. **The status row** — driven by SYS-03's save-machine state publication: `CACHING` while a request is in flight, **`MEMORY CACHED`** on `save_completed(slot, tick)`, the fault row on `save_failed(code)` (TR-CSD-004). Exactly one rendering at a time.
+  2. **The designation row** — `DESIGNATION 003` (the zero-padded readout, `DESIGNATION_PRINT_DIGITS`). The print twin of the chassis stamp.
+  3. **The training rows** (conditional — rendered only when `training_points > 0`): `STRIKES +8` and `CHASSIS +8`, one row per banked point's destination; a committed spend consumes one point and applies one `StatRevision` (TR-CSD-006). Never rendered at 0 banked points — no dead rows.
+  4. **`RE-CACHE`** — the manual save action (TR-CSD-005): raises the `manual_1` request, `cause = player`.
+  5. **`LEAVE`** — the exit; the context closes and Gameplay resumes (SYS-01's row).
+  The surface runs on **context-time** (the offline screen's law below applies to the station too: presentation is not world time; a freeze holds the world, never the menu). *Test: the row-set fixture (AC-CSD-06); the device pass (AC-CSD-23).*
+- **TR-CSD-004 — The MEMORY CACHED print: the record's presentation, never the record's owner.** The print fires **only** on SYS-03's `save_completed(slot, tick)` record (the input is the record; the words are SYS-15's; SYS-24 renders the row in SYS-29's shared print slot — one slot, newest replaces). It fires **regardless of which context is open when the record drains** — a save that completes after the player left the terminal still prints its row in Gameplay. **A failed save never prints MEMORY CACHED.** On `save_failed(code)` the status row prints the honest twin — `CACHE WRITE FAULT` plus the human sentence of the code's class (never the raw `SAVE_FAILED_*` string — SYS-03's codes are a stable API, not display text), and the fact that the world is not cached. The session continues unsaved; the player may re-ack (a re-request is a new request with a new snapshot — TR-SAV-012's law consumed). *Test: the print/never-lie fixture (AC-CSD-02).*
+- **TR-CSD-005 — The manual re-cache.** `RE-CACHE` raises the `manual_1` request, `cause = player` — SYS-03's second slot's only trigger at MVP. Rapid re-acks coalesce under SYS-03's one-deep queue (latest wins, one telemetry record — consumed). At MVP with one station, `manual_1` and `auto` hold near-identical states: **the near-null decision texture is intentional** (SYS-03's recorded note consumed — safety redundancy, not a choice; the texture arrives when stations multiply at VS). *Test: the manual-action fixture (AC-CSD-03).*
+- **TR-CSD-006 — The training-point surface: the cache is the only allocation surface.** The banked training points (SYS-07's `training_points` in the `HealthRead`) are spendable **only here**. A committed row (`STRIKES +8` / `CHASSIS +8`) consumes exactly one point and applies exactly one `StatRevision` (+8 ATK or +8 max HP; a `CHASSIS +8` spend heals the added 8 immediately — SYS-07's law consumed). A spend outside a cache is refused and the point remains banked (SYS-07's AC-HD-07's clause — SYS-15's surface is what makes "outside a cache" a well-defined place). The rows re-render after each spend; at 0 banked points they vanish. The spend never interrupts combat (the terminal is not reachable mid-fight — the context requires the ack at the bubble). *Test: the spend fixture (AC-CSD-04).*
+- **TR-CSD-007 — The activation restore: what fires at the ack, at SYS-07's clock.** The cache restore is SYS-07's TR-HD-032, applied at the station: **HP → `hp_max`, the quick slot → `CACHE_REFILL` (3)**, and the **module faucet evaluation** (TR-CSD-017). SYS-15's contract names the timing: the restore applies on the ack's gate-entry phase (the same phase that opens the context) — before the menu is interactive — so the player never allocates points onto a stale pool. The save stores no HP (SYS-07's law consumed: a load reconstructs at the station with a full pool). *Test: the restore-timing fixture (AC-CSD-05).*
+
+#### 2 · Death-as-story
+
+- **TR-CSD-008 — The death loop's fiction: the print failed, and the machine tells you.** The loop: a lethal event lands (SYS-07's pipeline) → the death edge publishes exactly once with the `DeathRecord` → the non-ack gate request applies at the next gate-entry phase (SYS-07's TR-HD-026; buffers clear at death entry — SYS-01's row) → **the System Offline screen presents** (TR-CSD-009) → the player chooses one of the three options (SYS-07's contract, verbatim — SYS-15 presents, never re-words) → the choice resolves through the named path (TR-CSD-012/014/015) → the designation increments exactly once (TR-CSD-011) → Gameplay resumes. The fiction's guarantee — *the death is attributable, the beat is a beat, and the count went up* — is the pillar's mechanical form: SYS-07 owns the attributable record; SYS-15 owns the telling and the count. *Test: the loop fixture (AC-CSD-16); the playtest rubric (AC-CSD-25).*
+- **TR-CSD-009 — The System Offline screen: three rows, three options, one hold.** SYS-15 owns the screen; SYS-07 supplies the options contract and the record; SYS-24 renders; SYS-29's glitch component runs inside it; SYS-04's duck holds under it. The screen's composition, exactly:
+  - **Row 1**: **SYSTEM OFFLINE** — the print voice, the loud headline.
+  - **Row 2**: *you are destroyed* — lowercase, quiet (the lowercase ruling: **it stands** — the quiet line is the fiction's truth, not a typo to fix).
+  - **Row 3**: **the cause row** (TR-CSD-010) — the `DeathRecord`'s diagnostics line.
+  - **The options** (SYS-07's contract verbatim, diegetic print rows, focus-ordered, each a ≥ 48 dp target): **RECONSTRUCT AT THE NEURAL TERMINAL** · **DRAW THE RESTORE MODULE** · **QUIT**.
+  - **The availability laws**: the module option **greys, never hides**, when no module is carried (SYS-07's law consumed — a zero-module death greys it and it is unselectable); the module's carried count comes from the `HealthRead` — **a missing/unreadable module count is a fail-safe grey** (never a lie, never a crash). RECONSTRUCT is always offered (see the pre-cache fallback, TR-CSD-014). QUIT is always offered.
+  - **The hold**: the options unlock after **`OFFLINE_HOLD_MS`** (default 400 ms, wall-clock UI-feel per SYS-01's TR-INP-061 law — presentation is not gameplay intent). The hold protects the beat (a mashed option cannot skip the screen before it has said anything); **the DEATH state itself is never time-limited** — a death with no input stays DEAD indefinitely (SYS-07's TR-HD-023 consumed; no auto-timeout — SYS-01's gate rule 3).
+  - **The presentation clock**: context-time (SYS-29's world-time law consumed: the offline screen's presentation is context-time, never world time; a hit-stop freeze holds the world, not the screen). **No camera shake requests exist on the offline surface** — a request raised outside Gameplay is dropped silently with telemetry (SYS-29's TR-JCE-026 edge consumed).
+  - **The duck**: the offline **entry** publishes exactly one duck request (`{MUSIC, −6 dB, UNTIL_OFFLINE_EXIT}` — SYS-04's ratified mix); **every offline-screen exit releases it** — reconstruct, revive, **and quit** (the hold's registered value already covers the quit exit; the sync request records the registry-note rider). Exactly one duck per death, one family in the game (the no-duck law consumed).
+  *Test: the screen fixture (AC-CSD-07); the exits fixture (AC-CSD-16); the duck-release fixture (AC-CSD-15); the device pass (AC-CSD-22).*
+- **TR-CSD-010 — The cause row: the record's diagnostics line.** The row prints from the `DeathRecord {cause_source, cause_kind, contact_tick, raw_damage, overkill, hp_before, hp_max, level}` in diegetic android-diagnostics voice, at most one line: **`FAULT: <cause name> · <kind> · TICK <contact_tick>`** — the cause name is the producer's `display_name` (SYS-13's strike contract field; for `source = ENV` the name is `ENVIRONMENT` — the world's own word for the void); the kind is the five-value consumer enum's word; the tick is the raw `contact_tick` (the machine's clock, unapologetic). The overkill is **not printed** — it drives SYS-29's sting magnitude, not the player's copy (the fault readout names the fault; the glitch shows the magnitude). **The missing-input failure path:** a `DeathRecord` that is unreadable or incomplete (a producer bug) prints the generic fault row — `FAULT: UNKNOWN · the record is unreadable` — plus exactly one telemetry record naming the gap; **the options still function** (the screen never blocks on the record, never crashes, never silently skips the row). *Test: the cause-row fixture (AC-CSD-08).*
+- **TR-CSD-011 — The designation counter: the game's honest scar.** The counter counts **remade bodies**: it increments exactly once per resolved death — on the reconstruction path **and** on the module-revive path (SYS-07's TR-HD-023/025 increments, implemented here; a death resolved by QUIT increments **nothing** — the session ends with the death unsaved; see TR-CSD-014's quit path). **Laws:** never decrements; resets **only** on an explicit new game (the title/new-game action — SYS-05's); the pre-cache fallback is not an explicit new game (TR-CSD-014); it persists across quit/reload through the `cache` namespace at v2 (TR-CSD-016 — **the named gate: the death counter persists at MVP; the bump cannot be silently dropped**); it is monotonically non-decreasing within a run (V-CSD-01). **The print**: zero-padded to `DESIGNATION_PRINT_DIGITS` (3 → `003`) — the readout row at the terminal, the post-reconstruction print (TR-CSD-014), and the chassis stamp's print twin (the stamp itself is the art bible's asset work; SYS-24 renders the rows). **The fiction boundary:** the counter is a number the machine owns; whether any character ever *addresses* it is a story question, recorded as OQ-CSD-6 for SYS-28/SYS-05 — never resolved by a menu, never displayed as a statistic. *Test: the counter fixture (AC-CSD-09).*
+- **TR-CSD-012 — The increment timing: the restore must never erase the count.** Two paths, two named ticks:
+  - **The revive path** (no load involved): the increment applies **on the revive tick** — the same tick SYS-07 consumes the module, applies the 50 % pool and grants the i-frame window (F-CSD-01's branch b). The increment and the revive are one atomic application.
+  - **The reconstruct path** (a load is involved): the increment applies **on the first logic tick after SYS-05's `load_complete`**, strictly before player control returns (inside the Death/respawn context; the context exits after — SYS-01's row). The ordering is load-bearing: SYS-03's restore swaps the store's namespace to the **saved** counter value, which would erase an increment applied before it — so the increment lands after the restore, on the resumption edge (F-CSD-01's branch a).
+  In both branches the increment is SYS-15's write to **SYS-15's own namespace source** (SYS-03's runtime write ban is SYS-03's — it bans SYS-03 from writing sources; the writers are named per family, and TR-RWS-025 names SYS-15 as the counter's writer). The increment persists via the next event in the closed trigger set (the next station ack, or the close/suspension save); a crash between the increment and the next save reverts the count with the rest of the unsaved world — consistent, never a partial lie. *Test: the increment-timing fixture (AC-CSD-10).*
+- **TR-CSD-013 — The no-punishment law: what persists, what resets.** The ledger, one table, no exceptions:
+
+  | Axis | Survives death | Resets on death | Owner |
+  |---|---|---|---|
+  | **World truth** | `doors_opened`, `truth_flags`, `truth_epoch`, `memories_collected`, `cells_discovered` | — (never) | SYS-02/SYS-03 |
+  | **SYS-15's namespace** | `designations` (post-increment), `activated_caches` | — (never, within a run) | SYS-15 |
+  | **The body** | level, banked + spent points, carried module (except the revive's consumption) | HP → `hp_max`, the quick slot → 3, the idempotence ledger, the death latch (SYS-07's TR-HD-024) | SYS-07 |
+  | **Room-local transients** | — (nothing) | enemies respawn per the list, hazard states, room scripts (the cache room's reset applies at the reconstruct; every other room re-applies on next entry — TR-RWS-011) | SYS-02 |
+  | **The clock** | the session's tick count is irrelevant to state | no timers, no decay, no scarcity clock exists | — |
+
+  **The one cost of death is the walk back.** No currency loss, no XP loss, no item loss, no stat decay, no timer. The training data's kill awards re-accrue (the room respawn is the farm verb SYS-07's TR-HD-007 licenses); banked points survive every death (they are body state, not room state). **The quit exception:** quitting ends the session with no save beyond the last cache (SYS-07's edge consumed — no save-scum: the cache is the checkpoint of record); the designation's unsaved increments die with the unsaved world — consistent by construction, never partial. *Test: the ledger fixture (AC-CSD-11).*
+- **TR-CSD-014 — The reconstruction beat and the pre-cache fallback.** **The beat:** the reconstruct choice closes the offline screen → SYS-05's loading context runs the load → on `load_complete`: the body spawns **at the active cache's terminal anchor** (SYS-02's placement data; `active_cache` = `activated_caches`'s last entry — F-CSD-04's derivation; **no respawn i-frames at MVP** — SYS-07's TR-HD-024 law: the cache is a safe context; an out-of-cache respawn would need a grant, OQ#16 stays VS) → the designation increments (TR-CSD-012) → the terminal's designation row prints the new number (`DESIGNATION 004` — the machine acknowledges the new copy) → the Death/respawn context exits (respawn complete → Gameplay) → the boot's audio edge is SYS-29's revive-boot edge, the duck releases. **The pre-cache fallback:** if the player dies before ever activating a station, `activated_caches` is empty — there is no save to load, and SYS-03's `REFUSE_ABSENT` is the first-boot path, not an error (consumed). The reconstruct choice routes through SYS-05's new-game initialization: **the post-resume increment still applies** — the stamp reads **001** after each such reconstruct (the count becomes permanent from the first station activation — the first save — onward; the pre-cache window's resets are the initialization re-booting the raw machine, and the fiction holds: before the first cache there is nothing of her cached to print from). The offline screen does not present a fourth "no checkpoint" state; RECONSTRUCT stays offered and legal. *Test: the beat fixture (AC-CSD-12); the fallback fixture (AC-CSD-16's third arm).*
+- **TR-CSD-015 — The module revive's exit and the duck's release.** The module choice routes to SYS-07's TR-HD-025 revive (HP 50 %, one module consumed, `REVIVE_IFRAME_MS` 1000, the record archived, **on the spot** — with the void exception, TR-CSD-018) and returns to ALIVE; the offline screen exits in the same application (the Death/respawn context's respawn-complete exit), the duck releases, Gameplay resumes. The revive is a **player choice on the death screen, never an automatic trigger** (SYS-07's no-auto-use law consumed). The revive's placement is F-CSD-02's. *Test: the revive-exit fixture (AC-CSD-15); the placement fixture (AC-CSD-14).*
+
+#### 3 · The save contract
+
+- **TR-CSD-016 — The `cache` namespace: the shape, the bump, the gate.** SYS-15's persistence namespace inside SYS-03's envelope (OQ-SAV-10 **resolved here**):
+
+  ```json
+  "cache": {
+    "designations": 3,
+    "activated_caches": ["rm04_terminal"]
+  }
+  ```
+
+  - **`designations`** — int ≥ 0. The designation counter (TR-CSD-011). A **source**: not derivable from any world family; it is the record of every remade body.
+  - **`activated_caches`** — `[id…]`, append-only **ordered** list of stable cache ids (the room-data terminal ids; ≤ 128 at VS scale, 1 at MVP). A **source**: the activation record (which stations have ever been activated, in activation order). **`active_cache` (the respawn point) is a derived read** — the list's last entry — and is **never stored** (the store-sources/derive-targets law; V-SAV-03's spirit consumed). The ordered list is canonical-stable (SYS-03's TR-SAV-009 sorts keys and the three `world` set-arrays; other arrays keep insertion order — the activation order is data).
+  - **The registered shape, the absent default, the bump**: `cache` is registered-but-absent at v1 (SYS-03's mechanism consumed); **the v1→v2 bump (`M_1`) adds the key with the conservative default** — `{designations: 0, activated_caches: []}` (F-CSD-04) — which is exactly TR-SAV-019's "a migration may add a key only with its conservative default". The bump is a **shape change**, so it must be a bump and not a silent write (SYS-03's law consumed). **The named gate: the death counter persists at MVP — the bump cannot be silently dropped.** A v1 file carrying a `cache` key is `REFUSE_UNKNOWN_KEY` (the version-aware allowlist consumed); no floats anywhere in the namespace (SYS-03's no-float law consumed); a v2+ future key's absence reads as its conservative default (the absent-key-unset law consumed). The snapshot's copy cost grows by the namespace's size (≤ 130 elements at VS scale) inside TR-SAV-012's bounded-constant budget.
+  - **The new-game state**: both keys at their conservative defaults; `active_cache` derives to ∅ until the first activation. **The readers**: SYS-15 (both keys, every read), SYS-24 (the designation readout — soft), SYS-03 (the mechanism). *Test: the namespace round-trip (AC-CSD-17); the bump fixture (AC-CSD-18).*
+- **TR-CSD-017 — The module faucet: one per station's first activation.** The restore module's faucet (SYS-07's TR-HD-025 grant) is SYS-15's predicate, evaluated at each **activation** (TR-CSD-007's phase):
+
+  `grant(station_id) fires iff station_id ∉ activated_caches ∧ restore_modules < RESTORE_MODULE_CAP_MVP`
+
+  On fire: `restore_modules ← restore_modules + 1` (SYS-07's pool) — and the station joins `activated_caches`. **The station joins `activated_caches` on every activation regardless of the grant's branch** (the activation record is the source; the grant derives from it — F-CSD-03). At MVP's single station the faucet fires **exactly once, ever**: the first activation grants the module; every later activation (including every post-load re-waking) is a re-activation of a recorded station — no re-fire, no re-grant, the cap holds. SYS-07's "one per first cache activation, cap 1, no enemy drops" is consumed under this reading (stated because the VS reading matters: a *new* station's first activation re-arms the faucet if no module is carried — the module stays a meaningful second life as the map scales, and revisiting never farms one). **A module pickup at cap stays on the ground** (SYS-07's TR-HD-031 consumed — never wasted). *Test: the faucet fixture (AC-CSD-13).*
+- **TR-CSD-018 — The revive placement: the void has no spot (OQ-RWS-4 ratified).** SYS-02 publishes `last_grounded_safe_pos` (room-scoped; updated every grounded tick outside hazards; **re-initialized to the exit anchor on every room swap**) as the placement resolver. **Ratified here, both signers present (SYS-07's contract is consumed, not edited):**
+
+  `revive_placement = last_grounded_safe_pos` iff `cause_kind = ENVIRONMENT`; otherwise the death spot (TR-HD-025's "on the spot", unchanged).
+
+  **Why the split:** an attack death leaves a floor to reboot on — the spot is the fiction ("you stand back up where you fell"). A void death does not: the spot is inside the pit, the void bypasses the i-frame lock (SYS-07's TR-HD-018), and an on-the-spot pit revive would re-fall instantly — the 1000 ms grant cannot save a body standing in a hole. The resolver places the remade body where it **last stood on solid ground**, which is where the player's mistake actually began. **The release gate is satisfied by this GDD + the implementation story**: the pit and the module revive may co-ship in a build only when F-CSD-02's resolver is implemented and its fixture passes (SYS-02's OQ-RWS-4 wording consumed; the QA plan's S1 row references this TR). The re-initialization law (the exit anchor on swap) is the resolver's floor — a body that entered the room and never grounded still has a legal, non-void placement. *Test: the placement fixture (AC-CSD-14); the invariant (V-CSD-07).*
+
+#### 4 · The doctrine and the OQ
+
+- **TR-CSD-019 — The cache-adjacency doctrine: a terminal stands where the truth turns, and at the gate you cannot pass.** IP-6's rider, authored as doctrine. The placement law for every zone pass from here to Full Vision:
+  1. **Every epoch-shift threshold room carries a terminal.** The threshold is where the zone's truth turns; the terminal is where the player records themselves before the world turns under them. (The MVP instance is the doctrine's seed: RM-04 holds both the threshold log and the terminal — the placement was already the doctrine before the doctrine was written.)
+  2. **Every boss-gate staging threshold carries a terminal** as the map scales (VS: one per errand zone's threshold + each boss gate; Full Vision: ~10–14 stations across the 35–40-room world — the audit's scale).
+  3. **The walk-back is the only cost of death, and it must stay a lesson, not a chore**: a terminal is placed so the walk back from any plausible death crosses at most one threshold-scale traversal segment. Two terminals in adjacent rooms is a lie about scarcity; one terminal for a whole wing is cruelty wearing the fiction's clothes.
+  The doctrine is a **level-design checklist item** (every VS zone pass and the Full-Vision zone passes run it); it carries no MVP build item beyond the shipped RM-04 instance, and no AC beyond the instance audit (AC-CSD-20). *Test: the MVP-instance audit (AC-CSD-20).*
+- **TR-CSD-020 — Fast travel: the Full-Vision OQ, opened and not built.** IP-6's question, recorded verbatim: fast travel is **unowned** — no system owns it in the index; the hub's errand structure may make it moot. **The decision: not built at MVP.** No knob, no AC, no design surface, no symbol in `src/` (the lint enforces the absence — AC-CSD-21). The question for Full Vision: do terminals become a terminal-to-terminal warp network (the stations justify it), or does the hub's briefing→dive→report loop make inter-zone warping redundant? Owner: game-designer + level-designer at the first Full-Vision zone pass (OQ-CSD-4). *Test: the absence lint (AC-CSD-21).*
+
+### States and Transitions
+
+Two small machines. Neither is a gameplay mode; both are presentation states over SYS-05's contexts.
+
+**The offline screen's options machine** (inside SYS-01's Death/respawn context; entered by the death edge's gate request):
+
+| State | Entry | Behavior | Exit |
+|---|---|---|---|
+| **PRESENTING** | the gate request applies | rows 1–3 print (the cause row renders as soon as the record is readable); the options render but are **not selectable** until the hold elapses; the duck holds | the hold elapses → **SELECTING** · a quit-app event → SYS-05's session teardown |
+| **SELECTING** | the hold elapsed | the three options are live; focus moves; the module option greys iff no module is carried (fail-safe grey on an unreadable count) | a choice → **RESOLVED** |
+| **RESOLVED(reconstruct)** | the reconstruct choice | the context hands to SYS-05's loading context; the screen is gone; the beat's increment waits for `load_complete` | the loading context closes → the beat (TR-CSD-014) |
+| **RESOLVED(revive)** | the module choice | SYS-07's revive applies; the duck releases; the exit is the same tick's respawn-complete | → Gameplay |
+| **RESOLVED(quit)** | the quit choice | hands to SYS-05's session flow; the duck releases on the exit | the session ends |
+
+**Transition laws.**
+1. **No auto-advance.** PRESENTING never times out into anything; the DEATH state persists without input indefinitely (SYS-07's law; the hold gates only the options' selectability, never the state).
+2. **One resolution per death.** The machine resolves exactly once per death edge (the edge is latched — SYS-07's); a second presentation for the same edge is impossible.
+3. **The refusal override.** If the reconstruct's load is refused (`load_result = refused(code)`), SYS-05's refusal flow owns the session from there (OQ-SAV-7 consumed): the offline screen does not return from a refusal; the flow offers the SYS-03 surface's two actions (new game or quit). The death that prompted the reconstruct is not undone by the refusal — the world reverts to whatever the last good save holds, which is SYS-03's contract, not a new punishment.
+4. **The terminal-context death edge** (an edge case, stated here because it crosses both machines): if the death edge fires while the Cache-terminal context is open, SYS-05's one-context law closes the terminal context first (an in-flight save's snapshot predates the death — it completes and lands as the ack-time state), then the Death/respawn context opens. No nested contexts; the counter semantics are unchanged.
+
+**The terminal surface's states** (inside SYS-01's Cache-terminal context): `CLOSED → PRESENTING` (the ack's gate-entry phase) with the status row driven by SYS-03's save-machine publication (`CACHING` → `MEMORY CACHED` | fault row) → `LEAVE` → `CLOSED`. The training rows' spends do not change the machine's state; they re-render the rows.
+
+### Interactions with Other Systems
+
+| Boundary | Flow | Contract | Missing-input failure path |
+|---|---|---|---|
+| **SYS-07 Health & Damage** | resolver → presenter (hard at the death beat) | In: `DeathEdge` + `DeathRecord` (the cause row's input), the options contract (verbatim), the revive application, `HealthRead` (the module count, `training_points`, the pool) · Out: the screen, the cause row, the counter's increments, the cache restore's surface | A `DeathRecord` unreadable → the generic fault row + one telemetry record; the options still function. The `HealthRead`'s module count unreadable → the revive option greys (fail-safe). The pool read stale → the restore still applies `hp_max` (SYS-07's writer is the only HP writer). |
+| **SYS-03 Save & Serialization** | trigger → mechanism (hard at save/load time) | In: `save_completed(slot, tick)`, `save_failed(code)`, `load_result`, `restore_complete` · Out: the `auto` request at the station ack, the `manual_1` request, **the `cache` namespace's shape + the v1→v2 bump (the named gate)**, the MEMORY CACHED print's words | A `save_failed` → the fault row (never MEMORY CACHED); the session continues unsaved. `REFUSE_ABSENT` on the reconstruct → the pre-cache fallback (TR-CSD-014). A refused load → SYS-05's refusal flow (the screen yields). The namespace absent at v2 load → the conservative default (never a guess). |
+| **SYS-05 Game Flow** | coordination (pre-shaped, consumed at face value) | In: the context machine (the Cache-terminal and Death/respawn contexts are SYS-01's ratified rows), `load_complete`, the refusal flow, the quit flow · Out: the context requests (the terminal ack — non-ack queued; the death — non-ack), the terminal menu's controls, the offline screen's presentation, the pre-cache fallback's routing | `load_complete` absent/stalled → the loading context's contract is SYS-05's; the increment waits on it (never applies pre-load). A refused load → SYS-05's flow (named above). The death edge during the terminal context → the one-context law resolves the order (TR-CSD-014's edge row). |
+| **SYS-02 Room & World** | placement → surface (hard at placement) | In: the terminal's placement data + the `CACHE` prompt + the anchor (RM-04), `last_grounded_safe_pos` (the placement resolver), the ENVIRONMENT events' world (the pit) · Out: nothing to the world's truth (the counter and the activation are SYS-15's sources — SYS-02 writes neither) | The terminal anchor missing from room data → dev boot failure (the placement fixture). `last_grounded_safe_pos` unavailable (a boot-order defect) → the revive refuses to place and stays DEAD with the fault row + telemetry (never a void placement — V-CSD-07's absolute). |
+| **SYS-29 Juice & Feedback** | component → composer (soft) | In: the death-beat glitch component, the print slot, the revive-boot/power-down audio edges, the duck request contract · Out: the offline entry/exit timing that backs the duck's release | The component unavailable → the screen presents without the glitch (degraded, never blank — the rows are the fiction; the glitch is the dressing). |
+| **SYS-04 Audio Core** | edges → mix (soft) | In: the death power-down, the revive boot, the duck's ratified −6 dB · Out: the screen's lifetime (the release backstop) | The mix's values are SYS-04's; SYS-15 publishes no audio value of its own (the no-new-audio law: SYS-15 authors no sound, names no dB). |
+| **SYS-01 Input** | verb → surface (hard for the ack) | In: the Interact ack (TR-INP-030/075), the context rows (consumed verbatim), the a11y baseline · Out: the terminal menu's controls, the offline options' focus order | A stale ack after the bubble unlights dies at the stamp tick (SYS-01's F-10 consumed — no walk-by saves). The ack with no lit bubble never fires. |
+| **SYS-24 HUD / UI** | presentation (pre-shaped) | In: the row structures (the terminal menu, the offline screen), the print rows, the designation readout · Out: the screen/menu contracts above | SYS-24 not landed: the surface contracts are authored here at the requirements level (SYS-03's §UI pattern — what the surface must carry, not how it looks); SYS-24's authoring consumes them. |
+| **SYS-28 Narrative Presentation** | copy (co-owner, pre-shaped) | In: the print voice's rules (TR-CSD-004/009/010), the micro-copy budget's spirit (IP-8: ≤ 3 short lines per beat — the offline screen's three rows are the budget's boundary condition) · Out: the cause row's format, the options' verbatim words (SYS-07's), the lowercase ruling | SYS-28 not landed: the copy is authored at contract level here; the final copy pass is SYS-28's co-ownership (OQ-CSD-5). |
+
+**Explicit non-dependencies:** SYS-06 (the DISABLED state on the death edge is SYS-07's raise; SYS-15 touches no body state), SYS-08 (no exchange surface — the death is SYS-07's resolution of SYS-08's event), SYS-13 (the strike's `display_name` arrives inside the `DeathRecord`'s cause — no direct consumption), SYS-09/10/11 (the flip's drama is theirs; the terminal's fiction is epoch-agnostic — the station saves in both truths and the print's words never mention the epoch), SYS-12/14 (VS), SYS-16/17 (the training data's **values** and the module's **count** are consumed through SYS-07's `HealthRead`; their persistence namespaces are their own authoring obligations — OQ-SAV-11 consumed and pointed at, never implemented here), SYS-25 (the pause map reads SYS-02's `cells_discovered`, never the activation record).
+
+### Consumed-Contracts Ratification (SYS-15 side)
+
+| Contract | SYS-15's ratification | Test |
+|---|---|---|
+| TR-HD-023 (the options contract) | Consumed **verbatim** — the three options' words are SYS-07's; the screen, the rows, the hold and the exits are SYS-15's; OQ#8's clauses each land: the monochrome glitch (SYS-29's component), the print copy (TR-CSD-009), the neural terminal (the reconstruct's anchor), the cause row (TR-CSD-010), the counter on reconstruction **and** revive (TR-CSD-011/012), the counter's persistence across quit/reload (the v2 namespace — the named gate), the lowercase ruling (it stands) | AC-CSD-07/08/09/16 |
+| TR-HD-024/032 (the reset and the restore) | Consumed verbatim; SYS-15 names the ack-phase timing (TR-CSD-007) and the beat's placement (the terminal anchor) | AC-CSD-05 |
+| TR-HD-025 (the module) | Consumed; the faucet's predicate authored (TR-CSD-017); the revive's placement split authored (TR-CSD-018) | AC-CSD-13/14 |
+| **OQ-RWS-4** (the release gate) | **RATIFIED** — `last_grounded_safe_pos` is the void-death placement resolver; the pit and the module revive may co-ship once F-CSD-02's fixture passes; the QA plan's S1 row references TR-CSD-018 | AC-CSD-14 |
+| **OQ-SAV-4** (the station trigger) | **RATIFIED** — the closed four-event set; the fifth-event candidate declined at MVP and recorded as a VS decision | AC-CSD-19 |
+| **OQ-SAV-10** (the namespace's shape) | **RESOLVED** — the shape, the ordered-list source, the derived `active_cache`, the conservative default, the v1→v2 bump | AC-CSD-17/18 |
+| TR-SAV-011/012/017 (the slot model, the snapshot, the telemetry) | Consumed verbatim; SYS-15 adds no slot, no trigger, no timer, and prints from the records without re-reading any save value | AC-CSD-01/02/03 |
+| TR-JCE-027 (the audio edges + the duck) | Consumed; the release backstop named for **all three** exits (the quit-exit rider recorded for the registry note) | AC-CSD-15 |
+| SYS-01's context rows (Cache-terminal, Death/respawn) | Consumed verbatim — the controls ownership, the buffer clears, the exits | AC-CSD-06/07 |
+| IP-6 (the doctrine + fast travel) | Authored (TR-CSD-019) and opened-not-built (TR-CSD-020) | AC-CSD-20/21 |
+| SYS-05 (pre-shaped) | Ratified at authoring per the manifest's `dependency_note`: the context machine, the refusal flow, `restore_complete` < `load_complete`, the quit flow — consumed at face value with the two contract inputs this GDD publishes back (the terminal request's non-ack row is already SYS-02's ADR row; the death's gate request is already SYS-07's TR-HD-026 row) | AC-CSD-16 |
+
+## Formulas
+
+Three laws govern SYS-15's formulas: **the named-symbol law** (every literal lives in exactly one place — the Tuning Knobs table), **the source law** (every counter write is to SYS-15's own namespace, at a named tick, exactly once), and **the presentation clock law** (the screens' presentation is context-time; the state machines' semantics are state, never wall-clock — the one wall-clock knob is UI-feel and gates only selectability). SYS-15 converts no ms→ticks of its own: the hold is wall-clock UI-feel (SYS-01's TR-INP-061 law — the offline screen is context-time, not world time), and every world-side application rides the consumed systems' clocks.
+
+### Formula ledger — law vs knob
+
+| # | Formula | Class | Constants consumed |
+|---|---|---|---|
+| F-CSD-01 | designation_next | True law | — (integer increment; no knob) |
+| F-CSD-02 | revive_placement | True law | `last_grounded_safe_pos` (SYS-02's publication) |
+| F-CSD-03 | module_faucet | Threshold law | `RESTORE_MODULE_CAP_MVP` (SYS-07's) |
+| F-CSD-04 | cache_defaults | True law | the namespace schema (this GDD's) |
+
+#### F-CSD-01 · designation_next — the count of remade bodies (TR-CSD-011/012)
+
+`designations ← designations + 1`, applied **exactly once per resolved death**, at the branch's named tick:
+
+- **Branch a (reconstruct):** on the first logic tick `t` with `t ≥ t_load_complete`, before player control returns.
+- **Branch b (revive):** on the revive application tick (the same tick the module is consumed).
+- **No branch for quit:** the quit exit increments nothing (the session ends with the death unsaved).
+
+**Variables:**
+
+| Variable | Symbol | Type | Range | Description |
+|---|---|---|---|---|
+| the counter | `designations` | int | ≥ 0 | the `cache` namespace's source field; the saved value after a restore, the live value otherwise |
+| the load-complete tick | `t_load_complete` | int (tick) | ≥ 0 | SYS-05's gate publication tick (branch a only) |
+| the result | `designations_next` | int | ≥ 1 | the post-increment value; the print's input |
+
+**Output Range:** an integer ≥ 1 after any resolved death; unchanged otherwise. **Worked examples:** (1) first death, reconstruct, no save existed → the fallback initialization sets 0, the post-resume increment applies → **1** (`DESIGNATION 001`). (2) the saved counter is 3; death #4 resolves by revive → the live value 3 + 1 = **4** at the revive tick. (3) the saved counter is 3; death #4 resolves by reconstruct → the load restores 3, the post-`load_complete` increment applies → **4** before control returns (a pre-load increment would be erased by the restore — the ordering is the law). (4) death resolves by quit → **unchanged** (the increment's absence is the consistency law: the unsaved world reverts, and the count with it).
+
+#### F-CSD-02 · revive_placement — where the remade body stands (TR-CSD-018)
+
+`revive_placement(death) = last_grounded_safe_pos` if `death.cause_kind = ENVIRONMENT` · else `death_position`.
+
+**Variables:**
+
+| Variable | Symbol | Type | Range | Description |
+|---|---|---|---|---|
+| the death's cause kind | `cause_kind` | enum | `{NORMAL, COUNTER, DEFLECT, ENEMY_STRIKE, ENVIRONMENT}` | SYS-07's consumer enum, read from the `DeathRecord` |
+| the safe position | `last_grounded_safe_pos` | Vector2 | inside the death's room, outside every hazard rect and past no void bound | SYS-02's publication (room-scoped; updated every grounded tick outside hazards; re-initialized to the exit anchor on every swap) |
+| the death spot | `death_position` | Vector2 | the body's position at the edge tick | legal only when a floor exists there (every non-ENVIRONMENT cause implies it) |
+| the result | `revive_placement` | Vector2 | satisfies V-CSD-07 | the body's spawn position at the revive application |
+
+**Output Range:** a position that is never inside a hazard rect and never past a void bound (V-CSD-07 is absolute — a resolver output that violates it is a dev assert + the revive refuses and the player stays DEAD with the fault row; the next `last_grounded_safe_pos` update is the honest retry, but at MVP the publication is continuous and the refusal path is defensive only). **Worked examples:** (1) a pit death at (500, 400) with the last grounded safe position (480, 320) → the body reboots at **(480, 320)**. (2) an attack death at (300, 200), grounded → the body reboots at **(300, 200)** — the spot, unchanged from TR-HD-025. (3) a pit death in a room the body entered by a swap and never grounded in → the exit anchor (the re-initialization law's floor).
+
+#### F-CSD-03 · module_faucet — the second life's faucet (TR-CSD-017)
+
+`fired = (station_id ∉ activated_caches) ∧ (restore_modules < RESTORE_MODULE_CAP_MVP)`; on fire: `restore_modules ← restore_modules + 1`. `activated_caches ← activated_caches ∪ {station_id}` **unconditionally** (every activation is recorded; the grant's branch does not gate the record).
+
+**Variables:**
+
+| Variable | Symbol | Type | Range | Description |
+|---|---|---|---|---|
+| the station id | `station_id` | string | the room-data terminal ids | the activating terminal's stable id |
+| the activation record | `activated_caches` | ordered list of ids | ≤ 128 (VS scale), append-only | the `cache` namespace's source field |
+| the carried count | `restore_modules` | int | 0–1 (`RESTORE_MODULE_CAP_MVP`) | SYS-07's pool, read from the `HealthRead` |
+| the result | `fired` | bool | — | the grant's branch |
+
+**Output Range:** `fired` true at most once per station; the record's append is total. **Worked examples:** (1) the MVP's single station, first activation, 0 carried → fired (**+1 module**), `activated_caches = [rm04_terminal]`. (2) a later activation (any re-waking, any revisit) → not fired; the record unchanged. (3) a first activation with 1 module carried (a VS multi-station case) → not fired; the station still joins the record (a later activation of it never fires — the faucet is per-station, once). (4) a new station's first activation with 0 carried (VS) → fired (the faucet re-arms per station; the farm shutdown holds because revisiting never re-fires).
+
+#### F-CSD-04 · cache_defaults — the conservative default (TR-CSD-016)
+
+`default_cache = {designations: 0, activated_caches: []}` — applied identically in three places: **(a)** SYS-03's absent-namespace default at a v2 load (the mechanism's rule, the shape this GDD declares); **(b)** the new-game initialization; **(c)** the v1→v2 migration step `M_1` (the bump's added key takes exactly this default — TR-SAV-019's migration law consumed).
+
+**Variables:** none (a constant shape). **Output Range:** the namespace value. **Worked examples:** (1) a synthetic v1 file migrates → `cache` appears with `{designations: 0, activated_caches: []}`; the `world` families are untouched. (2) a new game → the readout prints `DESIGNATION 000` (three digits, zero state). (3) a v2 file with a missing `activated_caches` (a future shape's absent-key case) → `[]` at restore, after the hash (SYS-03's defaults-at-restore law consumed).
+
+## Edge Cases
+
+**Format: If [condition] → [exact outcome]. [rationale where non-obvious.]**
+
+### The station
+
+- **If the player walks past the terminal without Interact** → nothing: no prompt ack, no save, no context (TR-INP-030 consumed — no walk-by accidental saves; the print's rarity is the fiction's currency). [TR-CSD-001/002.]
+- **If the player acks while the body is busy** (a knockback arc, a hit-stop) → the ack's intent waits inside its window (TR-INP-029 consumed); the save request and the context request raise on the ack's resolution, not on the press. [TR-CSD-002.]
+- **If the save completes after the player left the terminal** → the MEMORY CACHED row still prints in Gameplay (the print fires on the record, not on the context). [TR-CSD-004.]
+- **If the save fails** → the fault row prints; the session continues unsaved; a re-ack is a new request with a new snapshot. [TR-CSD-004; TR-SAV-012.]
+- **If the player acks twice rapidly** (auto then RE-CACHE) → the two slots queue independently; two same-slot requests coalesce latest-wins inside SYS-03's queue (one telemetry record). [TR-CSD-005; TR-SAV-013.]
+- **If the player spends the last banked point** → the training rows vanish (no dead rows); the designation row and the status row remain. [TR-CSD-006.]
+- **If the player reaches L5** → no further training data accrues (SYS-07's MVP cap consumed); the rows vanish permanently at 0 banked points. [TR-CSD-006.]
+- **If the death edge fires while the Cache-terminal context is open** → the terminal context closes first (SYS-05's one-context law); an in-flight save completes as the ack-time state (the snapshot predates the death); then the Death/respawn context opens. [TR-CSD-014's edge row.]
+- **If the app suspends while the terminal context is open** → the suspension save event fires (SYS-03's closed set); the context's state is presentation-only — the restore on resume re-derives from the saved sources (a load reconstructs at the station with a full pool). [TR-CSD-002/007.]
+
+### The death
+
+- **If the player dies with no restore module** → the module option greys (never hides); RECONSTRUCT and QUIT remain. [TR-CSD-009; SYS-07's law.]
+- **If the `HealthRead`'s module count is unreadable** → the module option greys (the fail-safe grey — never a lie in either direction). [TR-CSD-009.]
+- **If the `DeathRecord` is unreadable** → the generic fault row + one telemetry record; the options still function. [TR-CSD-010.]
+- **If the player mashes the option input during the hold** → nothing resolves before the hold elapses; the input's buffers cleared at death entry (SYS-01's row) — a mashed press does not queue into the options. [TR-CSD-009.]
+- **If the player never chooses** → the screen stays; the state stays DEAD; no auto-respawn, no timeout, no attract-mode loop. [TR-CSD-009; TR-HD-023.]
+- **If the player dies to the pit while carrying the module** → the revive places the body at `last_grounded_safe_pos` (never in the void); the cause row names the world (`FAULT: ENVIRONMENT · …`). [TR-CSD-018.]
+- **If `last_grounded_safe_pos` is unavailable at a void revive** (a boot-order defect) → the revive refuses to place; the player stays DEAD with the fault row + telemetry; the never-in-the-void invariant is absolute. [TR-CSD-018; V-CSD-07.]
+- **If the reconstruct's load is refused** → SYS-05's refusal flow owns the session; the offline screen does not return; the flow's actions are SYS-03's surface contract (new game / quit; the other slot if it holds a good save). [TR-CSD-014's transition law 3.]
+- **If the player reconstructs before ever activating a station** → the pre-cache fallback: SYS-05's new-game initialization, then the post-resume increment — the stamp reads 001. [TR-CSD-014.]
+- **If the player quits from the offline screen** → SYS-05's flow ends the session; no save beyond the last cache; the designation's unsaved increments die with the unsaved world (consistent, never partial); the duck releases on the exit. [TR-CSD-013's quit exception; TR-CSD-015.]
+- **If a death resolves by revive and the player dies again in the i-frame window to a pit** → the void bypasses the lock (SYS-07's TR-HD-018 consumed) — the second death is real; the screen presents again with a new record; the counter increments again. [TR-CSD-011.]
+- **If two lethal events land in one tick** → SYS-07's same-tick law names the cause (the first lethal applied); the record's cause row is that event's; the second publishes no edge. [TR-CSD-010; SYS-07's TR-HD-020.]
+
+### The counter and the namespace
+
+- **If the counter would exceed the print's width** (999 + 1 at 3 digits) → the print widens to the value's natural width (the zero-pad is a minimum, never a modulo — the count never wraps). [TR-CSD-011.]
+- **If a v1 file migrates** → the bump adds the namespace at the conservative default; the world families are untouched; the counter continues from 0. [TR-CSD-016; F-CSD-04.]
+- **If a v1 file carries a `cache` key** → `REFUSE_UNKNOWN_KEY` (the writer claimed v1 and wrote a v2 shape — SYS-03's law). [TR-CSD-016.]
+- **If the explicit new game is chosen** → both namespace keys reset to the conservative defaults; the counter starts at 0 (the one reset the counter ever takes). [TR-CSD-011.]
+- **If the activation record holds a station id that no longer exists in room data** (a content change across builds) → the stale id is inert (it never matches a live station's faucet; it stays in the record — the file is evidence, never repaired); the derived `active_cache` skips nothing (the list's last entry is used as-is — a dead last entry is a dev lint, not a runtime repair). [TR-CSD-016.]
+
+### Degenerate strategies — named and shut down
+
+- **If the player tries to farm modules** → the faucet is per-station, once ever per station; revisiting never re-fires; enemies never drop; the cap is 1. [TR-CSD-017.]
+- **If the player tries to die to reset something** → nothing resets that isn't SYS-07's reset law; the count only goes up; the walk back is the cost. [TR-CSD-013.]
+- **If the player tries to skip the death screen** → the hold + the required choice; no auto-respawn exists. [TR-CSD-009.]
+- **If the player tries to save-scum the counter down** → the counter persists in the save; quitting loses the unsaved increments with the unsaved world (the death included) — the count and the world always agree at a save boundary. [TR-CSD-013.]
+- **If the player hides at the terminal forever** → the game does not care; the terminal is a sanctuary because the fiction says so, and the design's tension lives out there (SotN's texture, consumed). [TR-CSD-003.]
+
+## Validation Invariants
+
+**The knob validation law (V-CSD).** Every invariant is validated at boot and on every live edit; a violation is a dev boot failure (or a CI failure for the static ones); production keeps the last good config.
+
+| # | Invariant | Violation resolution | Why |
+|---|---|---|---|
+| V-CSD-01 | `designations` is monotonically non-decreasing within a run; it decrements only across an explicit new game | dev boot failure | the count is the game's scar; a shrinking count is a lie about the past |
+| V-CSD-02 | exactly one increment per resolved death — the reconstruct path or the revive path, never both, never neither (quit increments nothing) | dev assert | one death, one scar; a double increment or a missing one breaks the fiction's arithmetic |
+| V-CSD-03 | the offline screen presents at most once per death edge; no presentation without a death edge | dev assert | the beat is the death's, not a timer's; a screen without a death is a haunt |
+| V-CSD-04 | the module faucet fires at most once per station; `restore_modules ≤ RESTORE_MODULE_CAP_MVP` always; the grant never evaluates outside an activation | clamp + dev assert | the second life is a resource, not a stock |
+| V-CSD-05 | the `cache` namespace's values match the registered shape; no floats; an absent namespace/keys default to the conservative defaults; a v1 payload carrying `cache` refuses | boot failure / the load's refusal | the mechanism's laws, consumed and enforced at this shape's boundary |
+| V-CSD-06 | no auto-respawn exists anywhere in SYS-15: no timeout, no auto-advance, no attract loop on the offline screen | CI grep + dev assert | the beat is the design; a timed death screen is a punishment wearing a beat's clothes |
+| V-CSD-07 | `revive_placement` is never inside a hazard rect and never past a void bound, for every cause kind | dev assert + the placement fixture | the remade body stands somewhere real — the void takes, it does not keep |
+
+- **If `OFFLINE_HOLD_MS` ≤ 0** → clamp to 250; dev assert. [A zero hold is a skipped beat.]
+- **If `DESIGNATION_PRINT_DIGITS` < 3** → clamp to 3. [A two-digit stamp cheapens the count.]
+- **If the activation record's ids are not unique** → the append law prevents it; a violation is a dev boot failure. [A set with duplicates is a double-armed faucet.]
+- **If the counter's write happens outside SYS-15's named ticks** → the port spy asserts (the AC-CSD-10 pattern). [An increment at an unnamed tick is a phantom scar.]
+
+## Tuning Knobs
+
+Both knobs are designer-only at MVP. The feel is the fiction; there is nothing here a player should tune.
+
+| Knob | Default | Safe range | Extreme behavior (too low / too high) | Interactions | Rule |
+|---|---|---|---|---|---|
+| `OFFLINE_HOLD_MS` | 400 | 250–800 | <250: the beat is skippable by reflex — the screen says nothing before the mash lands · >800: the beat becomes a wait (a punishment wearing a beat's clothes) | SYS-01's TR-INP-061 (wall-clock UI-feel) | TR-CSD-009 |
+| `DESIGNATION_PRINT_DIGITS` | 3 | 3–4 | <3: clamped (V-CSD) · 4: `0003` — correct at VS scale if the count's fiction grows | the readout row, the post-reconstruction print, the chassis stamp's twin | TR-CSD-011 |
+
+**Not knobs** (documented so nobody adds them): the counter's increment rule (a law — one per resolved death, at the named ticks) · the faucet's predicate (a law — per-station, once) · the trigger set (a closed set — a fifth event is a code change with a migration review, SYS-03's law) · the revive placement's split (a law — the void has no spot) · the options' words (SYS-07's verbatim contract) · the offline screen's row structure (the copy's contract) · `RESTORE_MODULE_CAP_MVP`, `RESTORE_MODULE_HEAL_PCT`, `REVIVE_IFRAME_MS`, `CACHE_REFILL`, `HP_PER_POINT`, `ATK_PER_POINT` (SYS-07's knobs — consumed, never re-owned) · the save mechanism's every constant (SYS-03's).
+
+**Provisional lifetimes:** `OFFLINE_HOLD_MS` (playtest — the beat's breath) · `DESIGNATION_PRINT_DIGITS` (VS scale).
+
+## Visual/Audio Requirements
+
+*(SYS-15 owns the composition and the words; SYS-24 renders; SYS-29's components and SYS-04's mix fill it.)*
+
+- **The offline screen:** the world's last frame drains to monochrome; the glitch component eats the edges (SYS-29's death-beat component — the sting's magnitude scales with `overkill_ratio` as a **system-fault readout, never punishment punctuation**); **SYSTEM OFFLINE** prints in the terminal voice; *you are destroyed* sits underneath, quiet, lowercase; the cause row reports the fault. Then the three option rows. No screen flash, no red, no timer bar, no progress ring. The screen is still — the glitch is the only motion.
+- **The station print:** **MEMORY CACHED** — one row, the terminal's flat voice, no fanfare, no chime authored here (SYS-04 designs against SYS-29's edge list; the station's print is the shared print row — the memory chime's slot family, SYS-29's). The fault twin: **CACHE WRITE FAULT** + the code's human sentence.
+- **The designation readout:** `DESIGNATION 003` — the print twin of the chassis stamp (the stamp itself — where on the chassis, how it reads at 480×270 — is the art bible's asset work; the readout row is SYS-24's render of SYS-15's structure).
+- **The reconstruction boot:** the revive-boot audio edge (SYS-29's edge list); the body re-materializes at the terminal anchor; the designation row prints the new number; no i-frame bubble, no shield ring — the hum is the read (SYS-07's revive presentation consumed).
+- **The training spend:** no fanfare — the row's spend is one print-row update and the body's next hit shows the difference (SYS-07's damage numbers are the proof; the terminal's print is the record).
+- **Audio edges consumed (never re-authored):** the death power-down (at the offline entry), the revive boot (at both exits' remakes), the duck (−6 dB, held, released on the exit). SYS-15 authors **no new audio edge, no new dB, no new voice** — the closed lists are SYS-29's and SYS-04's.
+
+📌 **Asset Spec** — Visual/Audio requirements are defined. After the art bible is approved, run `/asset-spec system:cache-stations-death` for per-asset descriptions, dimensions and generation prompts (the terminal prop, the offline screen's frame, the chassis stamp).
+
+## UI Requirements
+
+**The surfaces are contracts, not screens.** SYS-15 publishes the row structures, the words, the focus order, and the state inputs; SYS-24 renders; SYS-28 co-owns the copy's final pass; SYS-05 owns the flows the surfaces hand to.
+
+- **The terminal menu (the Cache-terminal context):** the five-row structure (TR-CSD-003); the status row's three renderings; the training rows' conditional rendering; the focus order top→bottom; each row ≥ 48 dp; the screen reader announces each row's label; no submenu, no nested pane at MVP.
+- **The offline screen (the Death/respawn context):** the three-row + three-option structure (TR-CSD-009); the hold; the module option's grey law; the options' focus order (reconstruct, revive, quit — top to bottom, always in that order, greyed options are skipped by focus but announced); the screen reader announces the rows and the options; no color-only distinction (the grey is shape + label, the a11y baseline consumed).
+- **The cause row's legibility:** the diagnostics line renders at the locked 480×270 art scale without truncation at the reference width; the tick field's width is bounded by the print (the device pass asserts it).
+- **No stat sheet here.** The terminal shows the designation and the two spend rows — never the full sheet (SYS-07's UI law consumed: the pause screen's four-value readout is SYS-24/SYS-26's, not the terminal's).
+- **No map, no counter UI beyond the readout, no settings surface here** (SYS-25/SYS-24's).
+
+**UX flag:** `/ux-design` for the terminal menu + the offline screen + the print row's legibility **before the SYS-24/SYS-15 UI stories** (SYS-07's UX flag consumed and extended to this system's two surfaces).
+
+## Acceptance Criteria
+
+**Classification legend:** `[GUT]` automatable in Godot Unit Test · `[LINT]` static audit / CI grep · `[DEVICE]` on-device manual QA · `[PLAYTEST]` human feel observation with the SYS-01 AC-63 protocol.
+
+### The station
+
+- **AC-CSD-01** [GUT] *(TR-CSD-001/002)* — **GIVEN** the lit `CACHE` bubble and a body-free Interact ack, **WHEN** the ack routes, **THEN** exactly one `auto` save request fires with `cause = station ack` **and** exactly one Cache-terminal context request raises on the non-ack row (the context opens at the next gate-entry phase, after the save request); **AND** a walk-by with no ack fires neither; **AND** a stale ack after the bubble unlights dies at the stamp tick.
+- **AC-CSD-02** [GUT] *(TR-CSD-004)* — **GIVEN** a `save_completed(slot, tick)` record, **WHEN** it drains, **THEN** exactly one MEMORY CACHED row prints, and it prints identically whether the terminal context is open or the player is in Gameplay; **AND** given a `save_failed(code)`, **THEN** the fault row prints with the code's human sentence and **MEMORY CACHED never prints**; **AND** a re-ack after a failure raises a new request (a new snapshot — the once-per-request law holds).
+- **AC-CSD-03** [GUT] *(TR-CSD-005)* — **GIVEN** the terminal open, **WHEN** the RE-CACHE row commits, **THEN** exactly one `manual_1` request fires with `cause = player`; **AND** two rapid commits coalesce to one write (the latest snapshot) with one telemetry record.
+- **AC-CSD-04** [GUT] *(TR-CSD-006)* — **GIVEN** 1 banked point at the terminal, **WHEN** the STRIKES row commits, **THEN** exactly one `StatRevision` (+8 ATK) applies and the point is consumed (the rows re-render); **AND** given the CHASSIS row, **THEN** max HP +8 and current HP +8 in the same application; **AND** given 0 banked points, **THEN** the training rows do not render; **AND** a spend attempted outside the terminal context is refused with the point remaining banked.
+- **AC-CSD-05** [GUT] *(TR-CSD-007, TR-HD-032)* — **GIVEN** a station activation at 37/100 HP with 1 charge, **WHEN** the ack's gate-entry phase runs, **THEN** HP = 100, the quick slot = 3, and the module faucet evaluates — all **before** the menu is interactive; **AND** the save round-trip contains no HP field (SYS-07's AC-HD-34's clause, consumed and asserted at the surface).
+- **AC-CSD-06** [LINT] *(TR-CSD-001/003)* — **GIVEN** the codebase, **WHEN** the boundary and row-set audits run, **THEN** `src/world/` contains no MEMORY-CACHED writer, no spending logic and no counter writer (SYS-02's boundary, consumed); the terminal menu's row set is exactly {status, designation, conditional training rows, RE-CACHE, LEAVE}; the buffers clear at the context's entry (SYS-01's row, consumed); and `LEAVE` closes to Gameplay.
+
+### Death-as-story
+
+- **AC-CSD-07** [GUT] *(TR-CSD-009)* — **GIVEN** a death edge whose gate request applies, **WHEN** the offline screen presents, **THEN** the composition is exactly the three rows + the three options in SYS-07's verbatim words; **AND** with no input the state is still DEAD and the screen still presented after 10,000 logic ticks (no auto-advance, no timeout); **AND** the options are unselectable until the hold elapses and selectable after (the hold is wall-clock and never touches the DEATH state); **AND** a zero-module death greys the module option and it is unselectable.
+- **AC-CSD-08** [GUT] *(TR-CSD-010)* — **GIVEN** a `DeathRecord` with a strike cause (`display_name` "TALL OVERHEAD", kind ENEMY_STRIKE, contact_tick 4000), **WHEN** the cause row renders, **THEN** it reads `FAULT: TALL OVERHEAD · ENEMY_STRIKE · TICK 4000`; **AND** given `cause_kind = ENVIRONMENT`, **THEN** the row names ENVIRONMENT; **AND** given an unreadable record, **THEN** the generic fault row prints with exactly one telemetry record and **the options still function**.
+- **AC-CSD-09** [GUT] *(TR-CSD-011, F-CSD-01)* — **GIVEN** the counter at N, **WHEN** a death resolves by reconstruct, **THEN** the counter is N+1; **AND** by revive, N+1; **AND** by quit, unchanged; **AND** a new game resets to 0; **AND** no path ever decrements within a run; **AND** the print zero-pads to `DESIGNATION_PRINT_DIGITS` and widens naturally past it (999 → `1000`, never a wrap).
+- **AC-CSD-10** [GUT] *(TR-CSD-012, F-CSD-01)* — **GIVEN** the reconstruct path with a saved counter of 3, **WHEN** `load_complete` publishes, **THEN** the increment applies on the first logic tick after it and **before** control returns (a port spy asserts the ordering — a pre-load increment is never observed); **AND** given the revive path, **THEN** the increment lands on the revive application tick (the same tick as the module's consumption).
+- **AC-CSD-11** [GUT] *(TR-CSD-013, TR-RWS-011)* — **GIVEN** a reconstruct after a death in a mid-run room, **WHEN** the world resumes, **THEN** doors/flags/memories/epoch are unchanged (the SYS-02 mock observes), banked + spent points are unchanged, the carried module count is unchanged (absent a revive's consumption), the counter is the post-increment value, and the room-local transients (enemies, hazards, scripts) have reset per TR-RWS-011.
+- **AC-CSD-12** [GUT] *(TR-CSD-014)* — **GIVEN** the reconstruct choice, **WHEN** `load_complete` fires, **THEN** the body spawns at the active cache's terminal anchor, the designation row prints the new number, the duck releases, and the Death/respawn context exits (respawn complete → Gameplay) — all inside the context, with **zero camera shake requests** raised during the beat (SYS-29's outside-Gameplay law, consumed) and **no respawn i-frames granted** (SYS-07's TR-HD-024 law, consumed).
+- **AC-CSD-13** [GUT] *(TR-CSD-017, F-CSD-03)* — **GIVEN** the MVP's single station with 0 modules carried, **WHEN** the first activation runs, **THEN** the faucet fires (+1 module) and the station joins `activated_caches`; **AND** every later activation of the same station fires nothing (the record gates it); **AND** given a first activation with 1 carried (the VS fixture), **THEN** nothing fires and the station still joins the record; **AND** the grant never evaluates outside an activation (the port spy).
+- **AC-CSD-14** [GUT] *(TR-CSD-018, F-CSD-02)* — **GIVEN** a void death with the last grounded safe position (480, 320), **WHEN** the module revive places the body, **THEN** the position is (480, 320) — never inside the pit, never past a void bound (V-CSD-07's fixture); **AND** given an attack death at (300, 200) grounded, **THEN** the placement is (300, 200) (the spot); **AND** given `last_grounded_safe_pos` unavailable, **THEN** the revive refuses to place, the player stays DEAD with the fault row + telemetry.
+- **AC-CSD-15** [GUT] *(TR-CSD-015, TR-JCE-027)* — **GIVEN** the offline entry, **WHEN** the beat runs, **THEN** exactly one duck request publishes (−6 dB, held); **AND** on the reconstruct exit, on the revive exit, **and on the quit exit**, the duck's release fires — exactly one release per death, exactly one family in the game (the no-duck law's boundary, consumed).
+- **AC-CSD-16** [GUT] *(TR-CSD-008/014/015)* — **GIVEN** each of the three options, **WHEN** chosen, **THEN** reconstruct → the loading context (the beat per TR-CSD-014), revive → SYS-07's revive + the same-tick exit, quit → SYS-05's session flow; **AND** no fourth exit exists; **AND** the screen never presents twice for one death edge (V-CSD-03's fixture); **AND** the pre-cache reconstruct (no save present) routes through the fallback initialization and the post-resume increment applies (the stamp reads 001).
+
+### The save contract
+
+- **AC-CSD-17** [GUT] *(TR-CSD-016, F-CSD-04)* — **GIVEN** an activation and two resolved deaths, **WHEN** the save round-trips (write → close → reload through the SYS-03 mechanism mock), **THEN** `designations` and `activated_caches` restore exactly; **AND** the absent namespace at a v2 load defaults to `{designations: 0, activated_caches: []}`; **AND** no float ever serializes (the canonicalizer's law, consumed); **AND** the derived `active_cache` equals the list's last entry and is never a stored key.
+- **AC-CSD-18** [GUT] *(TR-CSD-016, F-CSD-04)* — **GIVEN** a synthetic v1 file, **WHEN** the v1→v2 migration runs, **THEN** the `cache` key appears with the conservative default and the `world` families are byte-identical; **AND** given a v1 payload carrying a `cache` key, **THEN** `REFUSE_UNKNOWN_KEY` refuses (SYS-03's version-aware allowlist, consumed); **AND** a v0 file is refused at the gate (never migrated).
+- **AC-CSD-19** [LINT] *(TR-CSD-002)* — **GIVEN** the codebase, **WHEN** the trigger-set static audit runs, **THEN** the save request's causes are exactly {station ack, desktop quit, Android onStop, iOS application-paused}; **AND** no timer, no periodic-autosave symbol and no fifth event exists anywhere in `src/` (OQ-SAV-4's ratified set + the declined candidate, enforced).
+
+### The doctrine and the OQ
+
+- **AC-CSD-20** [LINT] *(TR-CSD-019)* — **GIVEN** the room data, **WHEN** the instance audit runs, **THEN** the one MVP terminal sits in RM-04 The Sanctum (the threshold room — the doctrine's seed), with its anchor present and its id stable; **AND** the doctrine text exists as the level-design checklist item (the document audit).
+- **AC-CSD-21** [LINT] *(TR-CSD-020)* — **GIVEN** the codebase, **WHEN** the absence lint runs, **THEN** no fast-travel/warp/teleport surface exists in MVP scope (zero symbols in `src/`; the OQ records the question — the code records the absence).
+
+### Device
+
+- **AC-CSD-22** [DEVICE] *(TR-CSD-009/010)* — **GIVEN** the device matrix at the locked 480×270 art scale, **WHEN** the offline screen presents, **THEN** the three rows and the three options are legible; the options are reachable by touch in the focus order; each is a ≥ 48 dp target; the screen reader announces the rows and the options; the module option's grey is visible as shape + label (never color-only); the cause row never truncates at the reference width.
+- **AC-CSD-23** [DEVICE] *(TR-CSD-003/004/006)* — **GIVEN** the device matrix, **WHEN** the terminal session runs (ack → the context → a spend → RE-CACHE → LEAVE), **THEN** every row is reachable and legible; the spend commits on touch; the status row's three renderings are distinguishable; LEAVE returns to Gameplay; the MEMORY CACHED print renders in Gameplay after a late completion.
+- **AC-CSD-24** [DEVICE] *(TR-CSD-002/011/016)* — **GIVEN** a real device, **WHEN** the player activates the station, resolves a death by reconstruct, then suspends/kills the app (iOS background-kill / Android onStop / desktop quit), **THEN** the relaunch restores the counter and the activation record exactly (the v2 namespace round-trip on device); the suspension save's cause is the platform's event from the closed set.
+
+### Playtest (MVP-lock)
+
+- **AC-CSD-25** [PLAYTEST] *(TR-CSD-008/009; SYS-07's AC-HD-44's cohort)* — **GIVEN** ≥ 5 playtesters × ≥ 30 min (the SYS-01 AC-63 protocol; two facilitators coding per statement; agreement ≥ 90 %; Cohen's κ ≥ 0.7), **WHEN** the rubric codes the death-and-station beat, **THEN** **D-CSD-1 cache-as-sanctuary** reaches ≥ 3/5 and **D-CSD-2 death-as-print** reaches ≥ 3/5:
+
+  | Code | Inclusion set | Exclusion set |
+  |---|---|---|
+  | **D-CSD-1 cache-as-sanctuary** | safe, breathed, the terminal, the print, I chose to stop | annoying, far, chore, skip it |
+  | **D-CSD-2 death-as-print** | a copy, printed, the number, the next one, the fault told me, I chose | YOU DIED, reload, punished, unfair, out of nowhere |
+
+  The negation rule is SYS-01's AC-63 operationalization (a negated forbidden term within 3 tokens does not block; a negated inclusion term does).
+- **AC-CSD-26** [PLAYTEST] *(TR-CSD-006; SYS-07's AC-HD-48's cohort)* — **GIVEN** the same cohort and a session script that includes at least one cache point spend per tester, **WHEN** the rubric codes the spend surface, **THEN** ≥ 3/5 of the testers who spent ≥ 1 report the rows as understood without help and the spend as a deliberate choice (the denominator is the testers who spent ≥ 1 — SYS-07's AC-HD-48's pattern, consumed).
+
+### Gate manifest
+
+The four-gate partition, exactly one gate per AC. `[GUT]`/`[DEVICE]`/`[PLAYTEST]` describe where an AC runs, not which gate owns it.
+
+| Gate | Units | ACs | Execution |
+|---|---:|---|---|
+| **MVP smoke** | **21** | AC-CSD-01…21 (17 GUT + 4 LINT) | Headless GUT + the four LINTs on the CI build |
+| **MVP device** | **3** | AC-CSD-22, AC-CSD-23, AC-CSD-24 | Device matrix (QA plan §7.1) |
+| **MVP-lock** | **2** | AC-CSD-25, AC-CSD-26 | Playtest + coded rubric (SYS-01 AC-63 protocol) |
+| **VS** | **0** | — | The VS content (the station multiplication's texture, the module's cross-session persistence, the fast-travel question) is recorded in the Open Questions, not AC'd at MVP |
+| **Total** | **26** | | 21 + 3 + 2 + 0 = 26 |
+
+**Exactly-one proof.** Every AC-CSD-01…26 appears in exactly one gate; no AC is in two gates; the count is 26. The LINT ACs are smoke-gate units (the SYS-03 precedent: `[LINT]` runs on CI, counted in smoke). The playtest ACs are MVP-lock, not smoke.
+
+## Open Questions
+
+| # | Question | Status | Owner / when |
+|---|---|---|---|
+| **OQ-CSD-1** | The offline screen's final copy pass — the rows' exact phrasing beyond the contract words (the cause row's localization-ready framing, the fault sentences' human register) — rides SYS-28's authoring (the co-ownership SYS-07's OQ#8 names; the micro-copy budget IP-8 is SYS-28's ≤ 3-line law — this screen's three rows are its boundary condition). | CARRIED | SYS-28 + SYS-15, at SYS-28's authoring |
+| **OQ-CSD-2** | The offline screen's presentation spec (the monochrome's exact ramp, the glitch component's parameters, the row typography at 480×270) — SYS-24's render pass over this GDD's structure. | CARRIED | SYS-24, at its authoring |
+| **OQ-CSD-3** | The flip-completion autosave candidate — declined at MVP (TR-CSD-002's ruling); re-open **only** beside the station multiplication (VS), where a fifth event's migration review is already on the table. | CARRIED (declined at MVP) | game-designer + lead-programmer, at the VS station pass |
+| **OQ-CSD-4** | Fast travel at Full Vision — the terminals as a warp network vs the hub's errand loop making it moot; unowned today (IP-6 verbatim). | OPEN (Full Vision only; not built at MVP — TR-CSD-020) | game-designer + level-designer, at the first Full-Vision zone pass |
+| **OQ-CSD-5** | The demon lord and the number — does any character ever address the designation count as a story hook (the concept's own OQ: "does the demon lord ever address the player's death-counter number (e.g., '004') as a story hook?")? The counter's mechanics are closed here; the story question is narrative's. | OPEN (story) | writer + narrative-director, at SYS-28/SYS-05's authoring |
+| **OQ-CSD-6** | The module's cross-session persistence — at MVP the module count is session-only by construction (SYS-16/17's namespaces are their own OQ-SAV-11 obligations); a reload after a consumed module does not re-grant (the faucet gates on activations, not on loads). The VS fix is SYS-17's inventory namespace. | RECORDED (MVP posture consumed) | SYS-17, at its authoring |
+| **OQ-CSD-7** | The stale-id lint — `activated_caches` holding an id no room data declares (a content change across builds): the record is never repaired (the file is evidence); the derived `active_cache` uses the list as-is; the dev lint fires. The VS question: whether a retired station's id should ever fall out of the record. | OPEN (VS) | tools-programmer + game-designer, at the first content-migration pass |
+| **OQ-CSD-8** | The offline screen's quit-confirmation texture — QUIT hands to SYS-05's session flow; whether the flow double-confirms is SYS-05's (the death screen never re-asks what the flow will ask). | CARRIED | SYS-05, at its authoring |
