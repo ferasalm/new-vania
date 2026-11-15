@@ -5,10 +5,12 @@ Attribution for every third-party asset pack used by this project. Generated fro
 data an in-game credits screen can consume: one row per pack, with the exact string
 to render in `Credit line`.
 
-Nothing in this collection requires attribution: the Ansimuz packs are CC0 or
-credit-optional, and the luem pack is CC0. Credit is given anyway because it is the
-decent thing to do, and because `assets/CREDITS.md` is the place a publisher will
-look. Rows marked `provenance pending` have no author on record yet.
+Nothing in this collection requires attribution for the packs whose licenses are
+on record: the Ansimuz packs are CC0 or credit-optional, and the luem pack is CC0
+with credit optional. Credit is given anyway because it is the decent thing to do,
+and because `assets/CREDITS.md` is the place a publisher will look. The seven rows
+marked `provenance pending` have no author on record and an unknown attribution
+requirement until their license text is captured.
 
 | Pack | Author | Source | License | Credit required | Credit line |
 |---|---|---|---|---|---|
@@ -26,7 +28,7 @@ look. Rows marked `provenance pending` have no author on record yet.
 | Lilspook (art) | unknown (no record in repo) | unknown | Unrecorded in repo — per user verification 2026-11-16 | unknown | — (provenance pending) |
 | Magic Pack 9 (art) | Luis Zuno (Ansimuz) | itch.io — ansimuz.itch.io | Ansimuz art-pack license (personal + commercial use, no standalone redistribution); the same download also ships a CC0 public-license.pdf — per user verification 2026-11-16 | no (appreciated) | Magic Pack 9 — Luis Zuno (Ansimuz) |
 | Magic Cliffs Gamekit (art) | Luis Zuno (Ansimuz) | itch.io — ansimuz.itch.io | CC0 1.0 Universal (public domain) | no (appreciated) | Magic Cliffs Gamekit — Luis Zuno (Ansimuz) |
-| Dark Fantasy Metroidvania Kit (art) | luem (Luciano) | itch.io — luem.itch.io | CC0 1.0 Universal (public domain) | no (appreciated) | Dark Fantasy Metroidvania Kit — luem (Luciano) |
+| Dark Fantasy Metroidvania Kit (art) | luem (Luciano) | itch.io — luem.itch.io | CC0 1.0 as published by the author, with an added 'no standalone redistribution of the raw files' clause; the two terms contradict each other, so the pack is used inside the game only and its raw files are never redistributed — per user verification 2026-11-16 | no (appreciated) | Dark Fantasy Metroidvania Kit — luem (Luciano) |
 | Metroidvania Library Asset Pack (art) | unknown (no record in repo) | unknown | Unrecorded in repo — per user verification 2026-11-16 | unknown | — (provenance pending) |
 | Night Moth Reaper Idle (art) | unknown (no record in repo) | unknown | Unrecorded in repo — per user verification 2026-11-16 | unknown | — (provenance pending) |
 | Rocky Pass (art) | Luis Zuno (Ansimuz) | itch.io — ansimuz.itch.io | Custom permissive (Ansimuz): commercial use, modification and redistribution allowed; credit appreciated, not required | no (appreciated) | Rocky Pass — Luis Zuno (Ansimuz) |
@@ -53,7 +55,10 @@ look. Rows marked `provenance pending` have no author on record yet.
 - `Luis Zuno (Ansimuz)` publishes as `@ansimuz`; the packs credit him as
   `Luis Zuno (@ansimuz)` or `Luis Zuno aka Ansimuz` in their own license text.
 - `luem (Luciano)` asks for `Art by LUEM - https://luem.itch.io/` if you choose to
-  credit the Dark Fantasy Metroidvania Kit.
+  credit the Dark Fantasy Metroidvania Kit. That pack's license sheet states CC0 and
+  also forbids redistributing the raw files on their own; keeping the sprites inside
+  the game satisfies both readings, and no raw file is redistributed as a standalone
+  asset.
 - The seven `provenance pending` rows are authorized for use (user verification
   2026-11-16) but have no author to name. Either drop them from the credits screen
   until provenance is captured, or credit them as `External asset pack`.

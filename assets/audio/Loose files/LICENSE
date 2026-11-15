@@ -19,5 +19,5 @@ User verification, 2026-11-16: the user confirmed that every pack in this collec
 obtained from itch.io or from an MIT-licensed GitHub repository, and that no pack
 contains copyrighted material or was obtained illegally. That authorization is why this
 row is recorded as Verified in assets/LICENSE-MANIFEST.md. The provenance detail
-(author / store URL / license text) is still outstanding and should be captured from the
-original download page if the pack is ever re-fetched.
+(author / store URL / license text) is still outstanding. Capture it from the original
+download page and replace this note before the pack is copied into `assets/`.

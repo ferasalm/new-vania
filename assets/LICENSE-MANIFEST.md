@@ -37,7 +37,7 @@ author, URL or license text in this file was guessed.
 | Lilspook (art) | unknown — no record in repo | Unrecorded in repo — per user verification 2026-11-16 | 2026-11-16 | pending — author unknown; user authorization stands | Verified (provenance pending) |
 | Magic Pack 9 (art) | Luis Zuno (Ansimuz) — itch.io — ansimuz.itch.io | Ansimuz art-pack license (personal + commercial use, no standalone redistribution); the same download also ships a CC0 public-license.pdf — per user verification 2026-11-16 | 2026-11-16 | `inbox/downloads/organized/docs/Magic Pack 9 files/license.pdf` + `inbox/downloads/organized/docs/Magic Pack 9 files/public-license.pdf` | Verified |
 | Magic Cliffs Gamekit (art) | Luis Zuno (Ansimuz) — itch.io — ansimuz.itch.io | CC0 1.0 Universal (public domain) | 2026-11-16 | `inbox/downloads/organized/docs/Magic-Cliffs-Gamekit/public-license.pdf` | Verified |
-| Dark Fantasy Metroidvania Kit (art) | luem (Luciano) — itch.io — luem.itch.io | CC0 1.0 Universal (public domain) | 2026-11-16 | `inbox/downloads/organized/docs/Metroidvania Kit/LICENSE.txt` + `inbox/downloads/organized/docs/Metroidvania Kit/README.txt` | Verified |
+| Dark Fantasy Metroidvania Kit (art) | luem (Luciano) — itch.io — luem.itch.io | CC0 1.0 as published by the author, with an added 'no standalone redistribution of the raw files' clause; the two terms contradict each other, so the pack is used inside the game only and its raw files are never redistributed — per user verification 2026-11-16 | 2026-11-16 | `inbox/downloads/organized/docs/Metroidvania Kit/LICENSE.txt` + `inbox/downloads/organized/docs/Metroidvania Kit/README.txt` | Verified |
 | Metroidvania Library Asset Pack (art) | unknown — no record in repo | Unrecorded in repo — per user verification 2026-11-16 | 2026-11-16 | pending — author unknown; user authorization stands | Verified (provenance pending) |
 | Night Moth Reaper Idle (art) | unknown — no record in repo | Unrecorded in repo — per user verification 2026-11-16 | 2026-11-16 | pending — author unknown; user authorization stands | Verified (provenance pending) |
 | Rocky Pass (art) | Luis Zuno (Ansimuz) — itch.io — ansimuz.itch.io | Custom permissive (Ansimuz): commercial use, modification and redistribution allowed; credit appreciated, not required | 2026-11-16 | `inbox/downloads/organized/docs/Rocky Pass Files/public-license.txt` | Verified |
@@ -61,17 +61,22 @@ author, URL or license text in this file was guessed.
 
 ## Promotion rule
 
-- [x] License text or store-page URL recorded in the `Evidence` column
-- [x] Commercial-use and modification rights confirmed
-- [x] Attribution requirements captured (see `assets/CREDITS.md`)
-- [x] Verified by a human, with the date recorded (2026-11-16)
-- [x] License file staged at `assets/<category>/<pack>/LICENSE`
+Per pack, at promotion time:
+
+- [ ] License text or store-page URL recorded in the `Evidence` column
+- [ ] Commercial-use and modification rights confirmed
+- [ ] Attribution requirements captured (see `assets/CREDITS.md`)
 - [ ] Only then copy the pack into `assets/`
 
-Verification is complete for all listed packs; per-pack promotion (bulk copy into
-`assets/`) happens on use, at the asset-spec pass. For a row marked
-`provenance pending`, capture the download page and license text at that moment and
-replace the pending note before the pack is copied.
+Two items hold for every row and are recorded once here instead of ticked 35 times:
+a human verification with its date is on record (2026-11-16), and a license file or
+a provenance stub is staged at `assets/<category>/<pack>/LICENSE`.
+
+Verification is complete for all listed packs, on the basis of the user
+authorization above; the three gates stay open for the seven `provenance pending`
+rows until their download page and license text are captured. Per-pack promotion
+(bulk copy into `assets/`) happens on use, at the asset-spec pass — capture the
+evidence for a pending row at that moment and replace the stub note before copying.
 
 If a license changes or a pack is replaced, add a new row rather than overwriting the
 previous verification.
@@ -102,8 +107,12 @@ tooling already expects. On promotion the pack directory lands at
 - Packs with no `docs/` record and no embedded license are listed as
   `pending — author unknown`; they are not attributed to an author by inference from
   file names or art style.
-- Two licenses are not plain CC0 and are recorded as they read: `Magic Pack 9`
+- Three licenses are not plain CC0 and are recorded as they read: `Magic Pack 9`
   (purchased-pack terms, no standalone redistribution, plus a CC0 sheet in the same
-  download) and the six Ansimuz text licenses that grant commercial use, modification
-  and redistribution without requiring credit.
+  download), the six Ansimuz text licenses that grant commercial use, modification and
+  redistribution without requiring credit, and the luem Metroidvania Kit, whose CC0
+  sheet also carries a `no standalone redistribution` clause. Those two terms
+  contradict each other; the pack is used inside the game and its raw files are never
+  redistributed, which satisfies both readings. The contradiction is recorded rather
+  than resolved, because only the rights holder can resolve it.
 
