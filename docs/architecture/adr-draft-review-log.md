@@ -187,7 +187,7 @@ On the TD-ADR verdict, both ADRs become **Accepted**, on this record:
 | ID | What | Owner | Blocks |
 |---|---|---|---|
 | SYS-03 engine half | the 34 fixtures in-engine; `TYPE_INT` after the normalization pass; F-SAV-01's three digests | the first SYS-03 story | that story |
-| CR-SAV-01 | **the close-save exit path's frozen-text reconciliation, in four clauses**: AC-SAV-23 clause 1 gains "the commit that completes — including after `SAVE_JOIN_TIMEOUT_MS` — restores the suspension snapshot; where it is abandoned before its rename, interrupted before step 5, or fails on the exit path, the fallback applies"; clause (b) gains the matching "only when"; TR-SAV-014's "joined at shutdown" gains "…except on the abandonment path"; clause (c)'s code-assertion is scoped to a process that survives to observe it | the user (batched) | the exit path's AC/TR wording — not the mechanism |
+| CR-SAV-01 | **the close-save exit path's frozen-text reconciliation, in four clauses**: AC-SAV-23 clause 1 gains "the commit that completes — including after `SAVE_JOIN_TIMEOUT_MS` — restores the suspension snapshot; where it is abandoned before its rename, interrupted before step 5, or fails on the exit path, the fallback applies"; clause (b) gains the matching "only when"; TR-SAV-014's "joined at shutdown" gains "…except on the abandonment path"; clause (c)'s code-assertion is scoped to a process that survives to observe it | the user (batched) | **the first SYS-03 story that implements the close-save's exit path** — its AC-SAV-23 assertion cannot be written against the unrevised wording. **The gate is named here because nothing else gates on an open CR**: story-readiness, `/dev-story` and `/story-done` block on a `Proposed` ADR and on GDD/ADR *deviations*, not on unresolved change requests |
 | O-AUD-1 | `restored_epoch` on SYS-05's `load_complete` + its post-flip-load assertion | SYS-05's authoring | the post-flip-load bed |
 | CR-AUD-03 | the mono fold = a 30th file (counts 29→30, the §G.6 row, AC-AUD-32's scope) | the user (batched) | the first audio story's asset count (enforced by its story gate) |
 | CR-AUD-04 | TR-AUD-002's load-complete publisher (SYS-03 → SYS-05) | the user (batched) | nothing in the ADR; a reader's misdirection |
@@ -391,7 +391,7 @@ than three patches. The design has four parts:
 | CodeRabbit confirm pass #2 | — | **3 new threads, all valid, all applied** — all on the seam probe's mechanics (§8.6) |
 | technical (DS) on the wave-4 delta | `deepseek-v4.1-flash` | **NEEDS REVISION — 2 blockers**, both applied: the slope bound was one-sided *and* signed (a mirrored kink passed), and "capture starts at playback start" assumed δ = 0 when `play()` is mix-quantized and `clear_buffer()` is not |
 | micro-check on the wave-4 delta | `deepseek-v4.1-flash` | **PASS (0 blockers)** |
-| CodeRabbit confirm pass #3 | — | **PASS**, no new threads |
+| CodeRabbit confirm pass #3 | — | **no verdict issued** — the commit was already reviewed; the check reports `skipping`, not PASS. The 2 log-level threads it raised were applied + resolved (§8.6) |
 
 **The loop, recorded honestly.** Five micro-check passes for five threads: the
 first three each found a real residual *created by the repair itself* (an
@@ -425,6 +425,15 @@ always is. All valid, all applied in `08f6097`, all resolved:
 Gates on that delta: technical **NEEDS REVISION (2 → applied)** · micro-check
 **PASS (0 blockers)**.
 
-**Confirm pass #3** ran on `08f6097`: **PASS**, no new threads. `UNRESOLVED=0`; every
-thread in all three waves was resolved by reply with its disposition. The waves'
-commit hashes are in the lane report §6.
+**Confirm pass #3 — no verdict issued.** The request went out on `db15a62` and
+CodeRabbit answered that the commit had **already been reviewed**, reporting the
+check as **`skipping`** rather than running a fresh pass. **No PASS is claimed
+here**: a skipped check is not a verdict, and this record says so rather than
+inferring one. The two log-level threads that pass raised (the CR-SAV-01 gate and
+this very entry) were applied and resolved. **The required CodeRabbit check
+therefore stands at `skipping` on the head** — the orchestrator must either
+re-request a full review at merge time or accept the waves of findings already
+applied (25 threads on the PR, 0 unresolved).
+
+`UNRESOLVED=0`; every thread in all three waves was resolved by reply with its
+disposition. The waves' commit hashes are in the lane report §6.
