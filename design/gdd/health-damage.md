@@ -228,7 +228,7 @@ Health's formulas are **conversion laws** (raw → dealt/taken), **state laws** 
 2. `else if kind = NORMAL ∧ arc ∈ {ATK1, ATK2, CROUCH, AIR}` → `dealt = DAMAGE_LADDER_MVP[step(attack)][arc]`, then **the module stage** `dealt = max(1, dealt + attack_context.damage_bonus)` (branch 2 only; the field is `StatBlock.damage_bonus` upstream, copied into the resolver's `AttackContext` — TR-HD-037).
 3. `else if kind = COUNTER` → `dealt = max(1, ceil(raw_damage × attack ÷ 100))` (F-HD-11's body verbatim — Combat stamps `raw_damage = floor(ATK.damage × COUNTER_CLASH_MULT)`; SYS-07 must not re-apply the multiplier).
 4. `else if kind = NORMAL ∧ arc = ABILITY` → the same percent law on the event's raw (D-3's Stinger cell).
-5. `else if kind = DEFLECT` → the same percent law on the projectile's raw (TR-CMB-015).
+5. `else if kind = DEFLECT` → the projectile's raw through the **target's** stage: **`taken` when the target carries `defense`** (the player — TR-HD-018 names only `ENVIRONMENT` as bypassing mitigation), **else the dealt percent law** (an enemy target; the player is the attacker, `attack` 100 = identity) (TR-CMB-015).
 6. `else if kind = ENEMY_STRIKE` → **F-HD-03's `taken`** (never this formula's dealt law).
 7. `else if kind = ENVIRONMENT` → the TR-HD-018 bypass (`taken = raw_damage`, no DEF, no i-frame lock), then F-HD-04's cap/floor.
 8. `else` → reject with telemetry.
@@ -283,7 +283,7 @@ Health's formulas are **conversion laws** (raw → dealt/taken), **state laws** 
 
 `chain_damage = dealt(ATK1) + dealt(ATK2)` · `chain_cycle_ticks = ATK1.startup + ATK1.active + ATK2.startup + ATK2.active + ATK2.recovery` · `ttk_chains = ceil(hp_tier ÷ chain_damage)` · `ttk_seconds = ttk_chains × chain_cycle_ticks ÷ 60`.
 
-**Output at defaults (chain 6 / 37 ticks):** T1 1 chain (0.617 s), T2 2 (1.233 s), T3 4 (2.467 s), boss 10 (6.167 s). **Envelope (chain 4–10 — the knob floor to the ladder's row 4):** T1 1–2, T2 2–3, T3 3–6, boss 6–15. **Example:** at ATK 132 (chain 10) T3 needs ceil(24/10) = 3 chains (30).
+**Output at defaults (chain 6 / 37 ticks):** T1 1 chain (0.617 s), T2 2 (1.233 s), T3 4 (2.467 s), boss 10 (6.167 s). **Envelope (chain 4–10 — the knob floor to the ladder's row 4):** T1 1–2, T2 2–3, T3 3–6, boss 6–15. **The envelope is the no-gear build's** (the identity and points extremes, `damage_bonus = 0`); a module build (a non-zero `damage_bonus`) is measured against the parity bands (V-HD-14), not this envelope — a module's damage is a situational source, not a TTK-ruler input. **Example:** at ATK 132 (chain 10) T3 needs ceil(24/10) = 3 chains (30).
 
 #### F-HD-11 · counter_value — the reward (TR-HD-005; F-CMB-06)
 

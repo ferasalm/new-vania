@@ -257,7 +257,7 @@ Combat's formulas are **arc laws** (phase ms → ticks), **exchange laws** (over
 
 `counter_damage = floor(ATK.damage × COUNTER_CLASH_MULT)`
 
-**Variables:** `ATK.damage` 1–6 (the union of the four re-derived damage ranges: ATK1 1–3, ATK2 3–6, crouch 1–3, air 1–3); `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 3, ATK2 6 at defaults; the output range for the legal domain is `floor(1 × 1.5)` = 1 to `floor(6 × 1.5)` = 9. **Example:** ATK2 4 × 1.5 = 6; the enemy's HP is SYS-07's.
+**Variables:** `ATK.damage` 1–6 (the union of the four re-derived damage ranges: ATK1 1–3, ATK2 3–6, crouch 1–3, air 1–3); `COUNTER_CLASH_MULT` 1.5 (1.2–2.0). **Output:** ATK1 3, ATK2 6 at defaults; the output range for the legal domain is **1 to 12** (`floor(1 × 1.2)` = 1; `floor(6 × 2.0)` = 12 — the multiplier's own 1.2–2.0 range included). **Example:** ATK2 4 × 1.5 = 6; the enemy's HP is SYS-07's.
 
 #### F-CMB-07 · hitstop_ticks — the beat (TR-CMB-022)
 

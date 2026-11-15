@@ -196,9 +196,10 @@ four sites.
 
 **The header claim is therefore true**: `health-damage.md`'s *"re-verified 2026-11-15
 by the applied-diff check (D-ORCH-03)"* stands on the two checks above — and on nothing
-more. The **full** applied-diff review (the CD gate + the technical seat + the qa-lead
-spot-check on the whole revision) is still owed and is recorded as the next gate in the
-lane report.
+more. **The full applied-diff review is owed at this stage** — and was then run and
+closed: see **§ 7** (CD APPROVED · technical repaired · qa-lead PASS 7/7 · micro-check
+PASS). This paragraph records the status as it stood when the fixtures closed, not the
+current one.
 
 ### 6.4 The counts after application
 
