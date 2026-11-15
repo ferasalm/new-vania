@@ -49,7 +49,17 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-14 Grief-Boss | 5 published contracts + 1 contract + 1 constant (registry 113 → 119; the request's `boss_kill_award` folded onto `xp_boss`) | the SYS-14 APPROVED row + design order 14 + the dependency cell/bullet (the stale 300 HP → 60) + 6 neighbor notes + the A12 rider record | 2026-11-15 | **applied on `chore/sync-sys14` — PR open; the lock is held until it merges** |
+| 1 | SYS-05 Game Flow & Session | 4 contracts (`context_machine`, `load_complete_gate`, `cache_activation`, `flow_grant_trigger`) + 3 formulas (`gate_priority`, `load_complete_ready`, `session_anchor`) + 1 constant (`LOAD_STALL_ASSERT_MS` 5000 [1000, 15000]) (registry 122 → 130) | the SYS-05 APPROVED row + design order 17 + the dependency bullet + 13 neighbor row notes (SYS-01, SYS-02 ×2, SYS-03, SYS-04, SYS-07, SYS-12, SYS-15, SYS-16, SYS-24, SYS-25, SYS-28, SYS-30) + the ADR-0001 §6 rider record | 2026-11-15 | **applied on `chore/sync-sys05` — PR open; the lock is held until it merges** |
+
+**Landed 2026-11-16** (removed from the active queue): **SYS-24 HUD** — PR #89,
+`bdc8380` (2 CodeRabbit threads, both applied + resolved).
+Registry 119 → 122 entries (3 published contracts: `hud_caps_contract`,
+`settings_namespace`, `hud_registration_contract`; 8 `referenced_by` appends; the
+envelope `2.45/6.55 → 2.55/6.85`); the index gained the SYS-24 APPROVED row, the
+dependency bullet and the SYS-15/16/03/32 row notes (design order 18 unchanged).
+Its release edit never landed — the SYS-05 sync's lock transfer (`STATE.md` §4)
+records it. The full request was
+`../new-vania-sys24-hud/production/session-state/lane-SYS-24-report.md` §A–§B.
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-16 Progression** —
 PR #84 squash-merged as `fac409f` (`fa91299` the lock + `e71183a` the sync +
@@ -70,19 +80,34 @@ row/bullet, design order 22, the SYS-16/17 unblock and game-concept's 5th
 Gate-2 probe. `spitter_orb_damage` stayed HELD at 8. The full request was
 `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`.
 
-**In flight (order 1: the SYS-14 sync — applied on `chore/sync-sys14`, PR open;
-the lock held by transfer from the landed SYS-16 sync)**. Order 1 before it (the
-SYS-16 sync) **landed** as `fac409f` and is removed from the active table above;
-its release edit never landed, so the SYS-14 sync's `STATE.md` §4 edit releases
+**Landed 2026-11-15** (removed from the active queue): **SYS-14 Grief-Boss** —
+PR #85, `27aa989` (head `c40a8d1`; 4 CodeRabbit threads, 3 applied + 1 rebutted,
+all resolved). Registry 113 → 119 entries (5 published contracts +
+`staging_band_denial` + `boss_hp_pool` 60; the request's `boss_kill_award` folded
+onto `xp_boss`); the index gained the SYS-14 APPROVED row, design order 14, the
+dependency cell + bullet (the stale 300 HP → 60), the 6 neighbor notes and the A12
+rider record. Its release edit never landed — the SYS-24 sync's lock transfer
+(`STATE.md` §4) records it. The full request was
+`../new-vania-sys14-grief-boss-framework/production/session-state/lane-SYS-14-report.md`
+§A–§B.
+
+**In flight (order 1: the SYS-05 sync — applied on `chore/sync-sys05`, PR open;
+the lock held by transfer from the landed SYS-24 sync)**. Order 1 before it (the
+SYS-24 sync) **landed** as `bdc8380` and is removed from the active table above;
+its release edit never landed, so the SYS-05 sync's `STATE.md` §4 edit releases
 that hold and re-acquires in one edit. **The release to `shared_file_lock: none`
 is recorded with the orchestrator's receipt for this sync's merge** — together
-with the landing hash. **PR #82 (the SYS-14 GDD) does not gate the release**; it
+with the landing hash. **PR #87 (the SYS-05 GDD) does not gate the release**; it
 merges after this sync by review-queue §7 rule 4 and its landing is recorded
 separately.
-**SYS-14** — 5 published contracts + `staging_band_denial` + `boss_hp_pool` 60 +
-the `xp_boss` fold + 4 referenced_by/note updates; the index dependency cell +
-bullet (the stale 300-HP → 60) + design order + tracker row + 6 neighbor notes +
-the A12 rider. One writer at a time; each re-acquires the lock in `STATE.md` §4.
+**SYS-05** — 4 contracts (`context_machine`, `load_complete_gate`,
+`cache_activation`, `flow_grant_trigger`) + 3 formulas (`gate_priority`,
+`load_complete_ready`, `session_anchor`) + 1 constant (`LOAD_STALL_ASSERT_MS`
+5000 [1000, 15000]) = the registry's +8 (122 → 130; the report's 119 → 127 was
+written against the pre-SYS-24 baseline); the index's SYS-05 tracker row,
+design order 17, the dependency bullet, the 13 neighbor row notes and the
+ADR-0001 §6 rider record. One writer at a time; each re-acquires the lock in
+`STATE.md` §4.
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-07-REWORK riders
 mini sync** — PR #80, `fe38c4c` (0 CodeRabbit threads; merged after its

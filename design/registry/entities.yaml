@@ -38,7 +38,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-11-15"
+last_updated: "2026-11-16"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -151,9 +151,10 @@ entities:
     source: design/gdd/camera-framing.md
     referenced_by:
       - design/gdd/camera-framing.md
+      - design/gdd/hud.md
     kind: published_contract
     published_by: SYS-32 Camera & Framing
-    consumed_by: SYS-24 HUD (the thumb-coverage caps — live reads, never cached) · SYS-10/SYS-11 (the hold announcements + the per-tick `active_hold` staging)
+    consumed_by: SYS-24 HUD (the thumb-coverage caps — live reads, never cached; the caps' rendered-center consumption — `player_screen_px − shake_offset_px`; `authority` ignored per TR-CAM-015) · SYS-10/SYS-11 (the hold announcements + the per-tick `active_hold` staging)
     values: "The 9-field publication, every physics tick from activation: {mode (follow |
       hold_zone | reveal_hold), view_rect_px (Rect2i half-open), player_screen_px (int art px,
       view-relative, post-camera-clamp, pre-shake, unclamped to the view), on_screen (bool —
@@ -453,6 +454,7 @@ entities:
       - design/gdd/room-world-structure.md
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
+      - design/gdd/hud.md   # TR-SAV-022's render boundary; OQ-SAV-7 ratified at SYS-24's authoring
     kind: published_contract
     published_by: SYS-03 Save & Serialization
     consumed_by: SYS-02 (the five families serialized verbatim; the MetSys Dictionary as a written derived target) ·
@@ -469,7 +471,13 @@ entities:
       the epoch guard [0, max_epoch] upstream of SYS-10 · no pending-flip / tell / freeze field · no floats"
     notes: "Store sources, derive targets — the file is evidence. No encryption/anti-cheat at MVP (the security
       audit may reopen). The engine-path twin and the Save & Serialization ADR are the two story-gated obligations.
-      Counts: 26 TR / 4 F / 9 V / 26 AC."
+      Counts: 26 TR / 4 F / 9 V / 26 AC. **The SYS-24 rider (recorded 2026-11-15, the OQ-M1 pattern — rides
+      SYS-03's next doc touch):** `load_result.restored` gains `recovered_from_bak` (bool) — SYS-03's §UI already
+      obliges the recovery's statement and `bak_loaded` is telemetry, not a consumer field; the boolean is the
+      minimal channel. **The SYS-05 riders (recorded 2026-11-15, the OQ-M1 pattern — ride SYS-03's next doc
+      touch):** TR-SAV-014's close-save condition gains the `death_unresolved` skip clause (the anti-scum law —
+      no close-save while a death is unresolved), and `register_namespace` gains `carries_live_state: bool`
+      (the load-complete gate's ack set's source; `world` registers false). Both are recorded, never applied."
     added: 2026-11-14
     revised: ""
 
@@ -780,6 +788,7 @@ entities:
       - design/gdd/progression.md
       - design/gdd/health-damage.md
       - design/gdd/cache-stations-death.md
+      - design/gdd/hud.md
     kind: published_contract
     published_by: SYS-16 (TR-PRG-026) — the read-only publication; no writer field
     consumed_by: "SYS-24 (the three-value pause readout, the two loadout rows, the dormant Dash socket) · SYS-07 (the spend's ack: one `StatRevision` per spend and per equip) · SYS-15 (the preview's values on the frozen spend rows) · SYS-17 (the VS inventory's gear state)"
@@ -796,6 +805,7 @@ entities:
       - design/gdd/movement.md
       - design/gdd/input-control-mapping.md
       - design/gdd/juice-feedback.md
+      - design/gdd/hud.md   # the socket's render + the persisted-grant init
     kind: published_contract
     published_by: SYS-16 (TR-PRG-021/022, F-PRG-09) — the set, the strict order, the latch, the persistence
     consumed_by: "SYS-06 (the behaviour-level gates on Jump: Wall Jump, Double Jump — TR-INP-057) · SYS-01 (Dash's action-registry flip — TR-INP-003) · SYS-24 (the socket's active state) · SYS-29 (the grant cue — one chime-class edge + one print row, no haptic, no flash, TR-JCE-021)"
@@ -883,6 +893,7 @@ entities:
       - design/gdd/grief-boss-framework.md
       - design/gdd/health-damage.md
       - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/hud.md   # the crack cues' render — TR-HUD-014
     kind: published_contract
     attributes:
       floor_gate: "LIE_WHOLE: hp_floor 20 (the lie's armor — the death edge cannot fire while floor > 0, TR-HD-021/F-HD-05 verbatim); damage applies; the boss bar stalls at 1/3"
@@ -908,6 +919,137 @@ entities:
       award: "XP_BOSS 40 on the DefeatEvent (SYS-07's knob — registered as `xp_boss`)"
       persistence: "no boss-defeated save family at MVP — the denial repeats on re-entry (the VS family is a batched SYS-02/SYS-03 revision request, OQ-GBF-4)"
     added: 2026-11-15
+
+# 2026-11-15 (lane SYS-24, the HUD sync — report §A2): the HUD layer's published contracts.
+# The three entries are the caps' law, the presentation settings' persistence, and the
+# region-registration protocol. Source: design/gdd/hud.md (lands with PR #86, after this
+# sync by review-queue §7 rule 4 — the documented pending-path pattern).
+  - name: hud_caps_contract
+    status: active
+    source: design/gdd/hud.md
+    referenced_by:
+      - design/gdd/hud.md
+      - design/gdd/camera-framing.md
+    kind: published_contract
+    published_by: SYS-24 (TR-HUD-001..004, F-HUD-01/02/04) — the thumb-coverage caps' law
+    consumed_by: "SYS-32 (TR-CAM-012's authored floor inset references `THUMB_BAND_CEILING_ART_PX` 24 — the arena's playable floor insets above it; the reveal's floor cannot inset, the collapse is the designed acceptance)"
+    values: "The caps law: the caps derive only from the current tick's 9-field publication (never cached, never world position, never a retained read); the occlusion predicate `occluded(v) = on_screen ∧ intersect(v_screen_rect, rendered_center ± guard)` with `rendered_center = player_screen_px − shake_offset_px` (the camera composes the offset onto itself — the world shifts the opposite sign); the guard halves derive at boot from SYS-06's extent constants + `CAPS_GUARD_MARGIN_PX` 4 (a boot-time constant read, never a per-tick edge); `low_profile(v) = (hold_fixed ∧ bottom_anchored(v)) ∨ occluded(v)`; the collapse form = the ≤ 24-art-px affordance strip at `CAPS_COLLAPSE_ALPHA` 0.5 with the hit rect byte-identical (no re-registration); the hold anchor rule (per-tick during the ≤ 12 px/tick approach; one solve at the settle detection — eps 0.5 art px × 6 ticks; the 600-tick failsafe adopts the protective posture + the collapse); the protective posture on `on_screen = false` (legitimate or the camera's lost-body default); the `bounds_generation` adopt re-derives same tick; `authority` is never read."
+    notes: "SYS-32's sole-channel law honored (the position is per-tick from the publication; the guard's size is a boot-calibrated constant, not a state read). The hysteresis (`CAPS_HYST_PX` 4 × `CAPS_HYST_TICKS` 6) binds the occlusion trigger only; the hold trigger's exit is one-tick on release."
+    added: 2026-11-15
+    revised: ""
+
+  - name: settings_namespace
+    status: active
+    source: design/gdd/hud.md
+    referenced_by:
+      - design/gdd/hud.md
+      - design/gdd/save-serialization.md
+    kind: published_contract
+    published_by: SYS-24 (TR-HUD-013) — the presentation settings' persistence; the mechanism is SYS-03's (TR-SAV-004)
+    consumed_by: "SYS-03 (the next MVP bump's registration through its own change path — the OQ-CSD-9 rider pattern; `settings` takes the next unregistered bump by landing order) · SYS-29/SYS-07/SYS-04 (the values' owners: `reduced_flash`/`screen_shake`, the numbers off-switch, the volumes + `mono`) · SYS-24 (the writer — the namespace's only writer)"
+    values: "{reduced_flash: false, screen_shake: true, damage_numbers: true, master_volume_pct: 80, music_volume_pct: 80, sfx_volume_pct: 80, mono: false, text_scale_pct: 100} — int/bool only (no float serializes, TR-SAV-006: the `_pct` suffix is the named unit); the stored values are post-clamp (each owner's validation law clamps before the write); the absent namespace reads its conservative defaults whole"
+    notes: "The persistence split: SYS-01's Controls section persists to SYS-01's device-local `controls.cfg` (its frozen law — the HUD invokes, never writes the file); the Feedback/Audio/Text sections persist here (the single-boundary law; cross-device-critical on purpose — a photosensitive player's REDUCED_FLASH follows the save). **The bump-order law (OQ-HUD-3):** bump numbers are assigned at registration by landing order, never by plan — SYS-16's `progression` holds `MIGRATIONS[2]` (v2→v3, recorded); if it has landed, `settings` takes `MIGRATIONS[3]` (v3→v4) and SYS-17's planned v3→v4 inventory migration (OQ-PRG-5) renumbers +1; if it has not, the two compete and the loser renumbers — every renumber is a recorded rider naming its counterparty (SYS-16's owner; SYS-17's owner), never a silent renumber."
+    added: 2026-11-15
+    revised: ""
+
+  - name: hud_registration_contract
+    status: active
+    source: design/gdd/hud.md
+    referenced_by:
+      - design/gdd/hud.md
+      - design/gdd/input-control-mapping.md
+    kind: published_contract
+    published_by: SYS-24 (TR-HUD-017) — the region registration protocol + the z-order law
+    consumed_by: "SYS-01 (the dispatcher consumes the registrations — EX-9's 'SYS-24 owns registration z-order'; the audit's region data)"
+    values: "The region record {rect (dp, safe-rect-relative), action mapping, z_tier, visual binding}; the registration pre-validates (an out-of-`SCREEN_SAFE_RECT` rect is refused at registration + dev assert); the z-order law is EX-9's extended order: Attack > Jump > Dash socket > a11y Backdash > pause > bubble > chip > movement zone (buttons incl. the pause outrank the bubble; the bubble outranks the chip — EX-9's explicit pairing; the chip outranks only the zone — the reflex-first principle); no mid-touch z-flip (a re-registration during an active touch keeps the binding — SYS-01's law); re-registration on: a `TOUCH_HIT_SCALE` change, a safe-rect change, an a11y toggle's change — never on the collapse (visuals only)"
+    notes: "The chip's row (240, 44) dp + its R-9-analog reach exemption (244.0 dp from the cluster-side corner — 44 dp outside `REACH_DISC_DP` 200) and the extended z order ratify at the recorded chip-promotion audit re-run (SYS-07 OQ#1's rider; SYS-01's gate-manifest chip-clause flips VS → MVP ride it — OQ-HUD-1). The proposal is load-bearing until then."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-05, the game-flow sync — report §A): the flow layer's published contracts.
+# Source: design/gdd/game-flow-session.md (lands with PR #87, after this sync by review-queue §7
+# rule 4 — the documented pending-path pattern, the SYS-24 precedent).
+  - name: context_machine
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/input-control-mapping.md
+      - design/gdd/save-serialization.md
+      - design/gdd/cache-stations-death.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/narrative-presentation.md
+      - design/gdd/dual-reality-state.md
+      - design/gdd/world-mutation-epochs.md
+      - design/gdd/progression.md
+    kind: contract
+    attributes: >
+      The nine-context state machine (SYS-01's seven + Loading (machine-only-entry) + the TRANSITION
+      fallback (never at MVP)); the gate-source classes (P0 forced-blur / P1 death / P2
+      transition+cutscene / P3 ack-born / P4 reflex); one queued request applied per gate-entry
+      phase (F-GFS-01); the composition law (a P1 win over an open full gate composes
+      close-then-open atomically, no Gameplay logic tick between); the custody/void fates; the
+      single-writer law (only SYS-05 writes context state); the blur's per-context ruling
+      (TR-GFS-008(a)–(e)); the flip window refuses the pause and composes the blur; the pause is
+      not a freeze and the freeze is not a gate (the respawn increment's bookkeeping tick is the
+      death arc's own flow-owned logic tick).
+    added: 2026-11-15
+    revised: ""
+
+  - name: load_complete_gate
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/save-serialization.md
+      - design/gdd/cache-stations-death.md
+      - design/gdd/progression.md
+      - design/gdd/audio-core.md
+    kind: contract
+    attributes: >
+      SYS-05's load-complete gate (ADR-0003 §12 / O-AUD-1's owner): load_complete(slot, tick,
+      restored_epoch) publishes only when restore_complete_observed ∧ reconcile_settled ∧
+      (∀ o ∈ carry_owing_owners: carry_complete(o)) — the carry-owing set is SYS-03's registry's
+      carries_live_state set (cache, progression at MVP; world's verbatim restore owes no ack).
+      restore_complete is strictly before the gate (TR-SAV-024.3); SYS-10's reconcile request
+      publishes strictly before the gate (TR-WME-006); the payload's restored_epoch is the restored
+      store's truth_epoch at the swap (the identity assert, V-GFS-04). The Loading exit is a
+      function of the entry path: boot → Gameplay; reconstruct → Death/respawn's respawn phase
+      (spawn, increment on the first logic tick, print — then respawn-complete → Gameplay); the
+      pending-restore flag defers the boot's exit to Paused and never bypasses the beat.
+    added: 2026-11-15
+    revised: ""
+
+  - name: cache_activation
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+      - design/gdd/progression.md
+    kind: contract
+    attributes: >
+      SYS-15's activation-edge publication, cache_activation(station_id, first: bool) — first is
+      the activation record's append of a not-yet-recorded station (TR-CSD-016's ordering law).
+      The grant beat's trigger source (critical-path on SYS-15's implementation story; unlanded →
+      the build's grant-beat assertion fails). SYS-16 mints the GrantEvent from the flow's
+      flow_grant_trigger edge; SYS-16 stays the GrantEvent's sole publisher.
+    added: 2026-11-15
+    revised: ""
+
+  - name: flow_grant_trigger
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/progression.md
+    kind: contract
+    attributes: >
+      The flow's grant trigger edge, flow_grant_trigger{grant: STINGER, cause:
+      first_cache_activation, tick} — the D-3 story moment's contract (the first cache activation;
+      the GrantEvent publishes at the first Gameplay tick after the Cache-terminal context exits).
+      The once-latched law + the persisted-latch reconciliation (a composed record holding a
+      non-empty activated_caches while the grant set lacks STINGER re-fires the trigger at
+      load_complete — the beat is not missable). SYS-16's GrantEvent.source enum registers
+      first_cache_activation (the one-value rider).
+    added: 2026-11-15
+    revised: ""
 
 # Example (remove when first real entry is added):
 #
@@ -1176,6 +1318,54 @@ formulas:
     added: 2026-11-15
     revised: ""
 
+# 2026-11-15 (lane SYS-05, the game-flow sync — report §A): the flow's three named laws.
+# Source: design/gdd/game-flow-session.md (lands with PR #87, after this sync by review-queue §7
+# rule 4).
+  - name: gate_priority
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/game-flow-session.md
+    kind: formula
+    attributes: >
+      F-GFS-01: gate_priority(t) = first r ∈ Q(t) in priority order where eligible(r, active(t));
+      one application per gate-entry phase. Priority P0 forced > P1 death > P2 transition/cutscene
+      > P3 ack-born (arrival order) > P4 reflex; eligibility P1 always, P2/P3/P4 iff active =
+      GAMEPLAY, P0 per the blur's ruling; P1/P2 applications void the queue; P3 retains custody;
+      P4 voids when preempted; the forward-binding (a gate request raised earlier in a tick blocks
+      later ack commits in that tick).
+    added: 2026-11-15
+    revised: ""
+
+  - name: load_complete_ready
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/game-flow-session.md
+    kind: formula
+    attributes: >
+      F-GFS-02: load_complete_ready(t) = restore_complete_observed ∧ reconcile_settled ∧
+      (∀ o ∈ owners: carry_complete(o, t)); owners = the registry's carries_live_state set; the
+      stall clause (a missing input holds Loading; LOAD_STALL_ASSERT_MS dev assert; production
+      waits); exactly-once per load (SYS-03's RECONCILE consumes the edge).
+    added: 2026-11-15
+    revised: ""
+
+  - name: session_anchor
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/cache-stations-death.md
+    kind: formula
+    attributes: >
+      F-GFS-03: session_anchor(load) = terminal_anchor(active_cache(composed)) if
+      active_cache(composed) ≠ ∅ else SESSION_BOOT_ANCHOR — every load_complete's spawn (boot,
+      reconstruct, relaunch) consumes the same derivation (the save carries no position);
+      active_cache = activated_caches' last entry (SYS-15's TR-CSD-016 derived read consumed;
+      the composed record's activation wins over the loaded save's empty record).
+    added: 2026-11-15
+    revised: ""
+
 # Example:
 #
 # formulas:
@@ -1302,6 +1492,10 @@ constants:
     revised: ""
   # 2026-11-14 (camera-framing.md): 2.30 / 6.10 -> 2.45 / 6.55 — SYS-32 joined
   # with its own entry (0.15 / 0.45); the composition is now seven-system.
+  # 2026-11-15 (hud.md, lane SYS-24): 2.45 / 6.55 -> 2.55 / 6.85 — SYS-24 joined
+  # with its own entry (0.10 / 0.30, TR-HUD-000b: the caps pass); the composition
+  # is now eight-system. SYS-24's context-time surfaces do NOT join (the not-join
+  # is printed in TR-HUD-000b).
   - name: six_system_perf_envelope
     status: active
     source: design/gdd/enemy-ai-telegraphs.md
@@ -1315,18 +1509,20 @@ constants:
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
       - design/gdd/grief-boss-framework.md
-    value: "2.45 / 6.55"
+      - design/gdd/hud.md
+    value: "2.55 / 6.85"
     unit: "ms p99.9 / ms max"
-    notes: "The MVP gameplay-tick envelope's fourth record (the name is the
-      registry's historical handle; the composition is now SEVEN-system):
+    notes: "The MVP gameplay-tick envelope's fifth record (the name is the
+      registry's historical handle; the composition is now EIGHT-system):
       1.00 (SYS-01) + 0.30 (SYS-06) + 0.30 (SYS-08) + 0.25 (SYS-07) + 0.20
-      (SYS-29) + 0.25 (SYS-13, W14) + 0.15 (SYS-32, TR-CAM-017) = 2.45 p99.9;
-      max 2.0+1.0+1.0+0.75+0.60+0.75+0.45 = 6.55. Extends the six-system
-      2.30/6.10 (which extended OQ-J2's five-system 2.05/5.35, which extended
-      OQ#19's four-system 1.85/4.75). The sum is the budget allocation; the
-      combined soak's measurement is the proof (the QA-plan sync's gate:
-      owner qa-lead, the AC-JCE-33 methodology at seven co-running systems;
-      the Camera GDD's OQ-CAM-8 / AC-CAM-17). SYS-02 explicitly does NOT join
+      (SYS-29) + 0.25 (SYS-13, W14) + 0.15 (SYS-32, TR-CAM-017) + 0.10 (SYS-24,
+      TR-HUD-000b: the caps pass) = 2.55 p99.9; max
+      2.0+1.0+1.0+0.75+0.60+0.75+0.45+0.30 = 6.85. Extends the seven-system
+      2.45/6.55 (which extended the six-system 2.30/6.10, which extended OQ-J2's
+      five-system 2.05/5.35, which extended OQ#19's four-system 1.85/4.75). The
+      sum is the budget allocation; the combined soak's measurement is the proof
+      (the QA-plan sync's gate: owner qa-lead, the AC-JCE-33 methodology at eight
+      co-running systems; the Camera GDD's OQ-CAM-8 / AC-CAM-17). SYS-02 explicitly does NOT join
       (no dedicated per-tick loop; the not-join and the re-open condition are
       printed in its GDD's TR-RWS-027; recorded for the QA-plan sync, OQ-RWS-6).
       SYS-09 explicitly does NOT join either (the event-driven flip; the
@@ -1340,7 +1536,7 @@ constants:
       TR-GBF-024: a layer share > 0.05 ms of SYS-13's budget fires the
       eighth-allocation request to the QA-plan sync; recorded 2026-11-15)."
     added: 2026-11-13
-    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system); 2026-11-14 (SYS-10's not-join recorded — S1-002b); 2026-11-15 (SYS-14's not-join recorded — the boss layer runs inside SYS-13's allocation; the composition stays seven-system)"
+    revised: "2026-11-14 (SYS-09's not-join recorded — the envelope stays seven-system); 2026-11-14 (SYS-10's not-join recorded — S1-002b); 2026-11-15 (SYS-14's not-join recorded — the boss layer runs inside SYS-13's allocation; the composition stays seven-system); 2026-11-15 (SYS-24's join recorded — the caps entry 0.10/0.30; the composition is eight-system; SYS-24's context-time surfaces do NOT join — the not-join printed in TR-HUD-000b)"
 
   - name: intent_window_ms
     status: active
@@ -1863,6 +2059,7 @@ constants:
     referenced_by:
       - design/gdd/health-damage.md
       - design/gdd/cache-stations-death.md
+      - design/gdd/hud.md   # the bar's segment step — F-HUD-03
     value: 2
     unit: hp per training point
     notes: "F-HD-14's CHASSIS step (safe range 1–3): `hp_max = PLAYER_MAX_HP +
@@ -2241,12 +2438,35 @@ constants:
       - design/gdd/health-damage.md
       - design/gdd/grief-boss-framework.md
       - design/gdd/enemy-ai-telegraphs.md
+      - design/gdd/hud.md   # the sizing input; the profile's integer boss_hp_current/boss_hp_max via SYS-14's read binding — F-HUD-07
     kind: constant
     value: 60
     range: "40-80 (SYS-07's BOSS_HP knob; <40: the boss is a room, >80: a slog)"
     notes: "SYS-07 owns the range (TR-HD-011); SYS-14 ratifies 60 at its authored default (the
       OQ-HD-10 answer, 2026-11-15). The systems-index SYS-14 bullet's stale '300 HP' is corrected
-      to 60 by this sync (the pre-rework value)."
+      to 60 by this sync (the pre-rework value). **The SYS-24 rider (recorded 2026-11-15, the
+      OQ-M1 pattern — rides SYS-14's next doc touch):** SYS-14's TR-GBF-012 / F-GBF-03's `hp_ratio`
+      phrasing re-derives to the integer `boss_hp_current` / `boss_hp_max` pair — the float-ratio
+      path floors `20/60 × 6` to 1."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (lane SYS-05, the game-flow sync — report §A): the load-stall dev diagnostic.
+# Source: design/gdd/game-flow-session.md (lands with PR #87, after this sync by review-queue §7
+# rule 4).
+  - name: LOAD_STALL_ASSERT_MS
+    status: active
+    source: design/gdd/game-flow-session.md
+    referenced_by:
+      - design/gdd/game-flow-session.md
+    kind: constant
+    value: 5000
+    unit: ms
+    range: [1000, 15000]
+    attributes: >
+      Dev-only diagnostic constant — the load-stall dev assert + the LOAD_STALL record's bound;
+      wall-clock (it fires inside Loading, the one context that runs no ticks); never a player
+      surface; production waits (no timeout).
     added: 2026-11-15
     revised: ""
 
