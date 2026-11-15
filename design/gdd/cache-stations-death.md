@@ -1,6 +1,6 @@
 # Cache Stations & Death-as-Story
 
-> **Status**: DRAFT (lane SYS-15 — the gate trail finalizes this line at the review record; counts below)
+> **Status**: **APPROVED (2026-11-15 — lane SYS-15).** Gate trail: CD-GDD-ALIGN CONCERNS (1 blocker) → repaired → **APPROVED** (re-run, 0 blockers) · three-seat review **NEEDS REVISION** (creative 1 + technical 3 + QA 2) → all 6 blockers + 2 accepted recommendations repaired in-session → **qa-lead spot-check PASS** (11/11 rows, diff-scoped) → **final micro-check PASS** (zero blockers). Record: `design/gdd/reviews/sys15-cache-stations-death-review-log.md`. Counts: **20 TR-CSD / 4 F-CSD / 7 V-CSD / 26 ACs (21 smoke = 17 GUT + 4 LINT · 3 device · 2 lock · 0 VS) / 9 OQ rows**.
 > **Author**: game-designer + systems-designer (lane SYS-15, GLM-5.3-Flash) — via the lane-runner authoring loop
 > **Last Updated**: 2026-11-15
 > **Implements Pillar**: "Remade Every Death" — death is story: cache stations, body reconstruction, the incrementing designation counter. A death reduced to a plain "YOU DIED" screen is a redesign trigger, not a shippable state. · "SotN, Not Hollow Knight" — the save sanctuary is RPG texture, not a courtesy.

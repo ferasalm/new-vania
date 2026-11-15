@@ -117,3 +117,34 @@ Technical recommendations: (1) F-CSD-03's set-union notation on an ordered list 
 | Q2 | AC-CSD-25 has no denominator: a tester who never dies in 30 minutes cannot feed a "≥ 3/5" bar honestly | **APPLIED.** The AC gains the denominator: the testers who experienced ≥ 1 death **and** ≥ 1 station visit; a tester with neither is recorded, not counted. |
 
 QA recommendations: (1) the OQ table gains OQ-CSD-9 (the SYS-03 bump rider) — **APPLIED** (header count 8 → 9 OQ rows, everywhere reproduced); (2) AC-CSD-16's "third arm" phrasing — **kept** (it is the AC's named third GIVEN arm); (3) AC-CSD-24's v2 dependency — **kept and named** (the namespace ships with SYS-15's implementation stories; the AC runs at the device gate).
+
+**Repair commit**: `c0d967a` — `docs(sys15): repair the three-seat blockers (SYS-15, cache-stations-death)`. The repair diff (`24d9c33..c0d967a`) covers the CD-gate repairs (CD-1/2/3) and the panel repairs (C1, T1–T3, Q1, Q2 + the two applied recommendations).
+
+### 3.4 Mandatory qa-lead spot-check (on the repair diff)
+
+**Verdict: PASS (11/11 rows APPLIED-CORRECTLY; zero blockers).**
+
+| Row | Verdict | Note |
+|---|---|---|
+| CD-1 (the station duck) | APPLIED-CORRECTLY | the anchor's no-duck clause is explicit; the ambient-bed framing stays inside SYS-04's design space |
+| CD-2 (the attribution) | APPLIED-CORRECTLY | the figure is now the doctrine's own extrapolation |
+| CD-3 (the fallback's placement) | APPLIED-CORRECTLY | the boot anchor named; SYS-07's verbatim words preserved |
+| C1 (the revive-path print) | APPLIED-CORRECTLY | TR-CSD-015's exit print + AC-CSD-15's clause; the print-slot family named |
+| T1 (the ack's three-step order) | APPLIED-CORRECTLY | TR-CSD-002 + TR-CSD-007 + AC-CSD-01 + the body-busy edge row (the T1 ripple, in scope) all consistent; the snapshot can never precede the activation append |
+| T2 (V-CSD-02) | APPLIED-CORRECTLY | the invariant and its quit exception no longer contradict |
+| T3 (the not-join) | APPLIED-CORRECTLY | the intro's envelope clause; no tick-budget claim exists anywhere |
+| Q1 (the phantom PROVISIONAL) | APPLIED-CORRECTLY | the intro reworded; the pre-shaped status lives in Interactions |
+| Q2 (the denominator) | APPLIED-CORRECTLY | AC-CSD-25's denominator clause; the died-but-never-stationed tester codes D-CSD-2 only |
+| TR-a (F-CSD-03's notation) | APPLIED-CORRECTLY | append-if-absent wording |
+| TR-b + OQ-9 (the bump rider) | APPLIED-CORRECTLY | TR-CSD-016's rider + OQ-CSD-9 + the header count |
+
+**No collateral damage**: the diff touches only the intended regions; the counts reproduce (20 TR / 4 F / 7 V / 26 ACs / 9 OQs / gate 21+3+2+0); every touched cross-reference resolves; no new placeholder; the gate record matches the diff. **Arithmetic**: the header's 9 OQ rows = the table's 9 rows.
+
+### 3.5 Final micro-check (diff-scoped, blockers only)
+
+**Verdict: PASS — zero blockers.** A fresh pass over the last repair delta found no blocker-class defect in the changed regions. Two non-blocking advisories recorded (no change applied — the document is closed):
+
+1. TR-CSD-004's "The print fires only on SYS-03's `save_completed` record" is scoped by its own TR title (the MEMORY CACHED print); TR-CSD-015's designation print is a separate row in the same print-slot family — a strict reader may want the "only" scoped by name at SYS-24's authoring (advisory, non-gating).
+2. The sync request must carry two riders: the `duck_request_contract` note's quit-exit addition and the SYS-03 doc-touch note (OQ-CSD-9) — both are in the lane report.
+
+**The gate trail is complete: CD CONCERNS→repaired→APPROVED · creative NEEDS REVISION(1)→repaired · technical NEEDS REVISION(3)→repaired · QA NEEDS REVISION(2)→repaired · spot-check PASS · micro-check PASS.**
