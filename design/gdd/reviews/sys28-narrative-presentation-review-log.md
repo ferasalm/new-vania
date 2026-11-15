@@ -221,7 +221,7 @@ the grant to SYS-10's row.
 - Authored `design/gdd/narrative-presentation.md` in full: 13 TR-NAR / 3
   F-NAR / 6 V-NAR / 15 ACs (13 smoke: 8 LINT + 5 GUT · 0 device · 2
   MVP-lock · 0 VS) / 5 OQs. The MVP copy authored: L1 (two states), L2, the
-  17 refusal/save-failure/recovery display lines. Counts printed in the AC
+  18 refusal/save-failure/recovery display lines. Counts printed in the AC
   section's coverage line and the gate manifest.
 - Cross-checked against `design/registry/entities.yaml` (read-only): no
   existing entry collides; the sync request (the report §) adds
@@ -264,7 +264,7 @@ the grant to SYS-10's row.
   enforcement); the reading budget is a copy lint, never a player-facing
   timer (no speed pressure). Player fantasy — the attributable death prose,
   the house's dramatization, the irony bookends contracted; no drift. Scope
-  — MVP is honest: 2 logs, 17 display lines, 3 laws; the VS session copy is
+  — MVP is honest: 2 logs, 18 display lines, 3 laws; the VS session copy is
   registered-but-absent (the SYS-03 namespace precedent), the device gate
   honestly 0 with the legibility carried to SYS-24. Contract alignment —
   TR-WME-008 countersigned verbatim; OQ-DR-1 ratified (SYS-05 keeps the
@@ -429,3 +429,22 @@ fallback pass 6)
   playtest ACs agree; the gate manifest's counts reproduce. **Zero
   blockers.**
 - **Verdict: PASS** — the document is closed; no further reopening.
+
+## 2026-11-15 — CodeRabbit pass (PR #58; the CLI local review, one pass)
+
+**5 findings (2 Major, 3 Minor) — all five triaged VALID → applied in the
+one fix commit.** Dispositions:
+
+| # | Class | Location | Finding | Disposition |
+|---|---|---|---|---|
+| CR-1 | minor | F-NAR-02 + the knobs row | the `LINE_MAX_CHARS` safe range [40, 60] would accept a 52-char line while TR-NAR-003/AC-NAR-02 pin 46 | **Applied** — the safe range is the font re-pin path (OQ-NAR-3): at a non-default cap the whole budget re-derives and the examples re-pin with it; the AC fixtures pin the default 46 (the F-NAR-02 Output Range + the knobs row now say so). |
+| CR-2 | minor | AC-NAR-13 + the counts | the mapping holds **11** REFUSE rows but the criterion says 10 (SYS-03's closed vocabulary: 11 `REFUSE_*` + 6 `SAVE_FAILED_*`; 11 + 6 + 1 recovery = 18 rows) | **Applied** — the count corrected to 11/6/18 everywhere (the AC, the Overview, the review log, the lane report's sync request). The original error was the runner's miscount (10) — SYS-03's TR-SAV-020 table is authoritative. |
+| CR-3 | **Major** | AC-NAR-03 | the orphan check ("no placement") would reject the required refusal rows and DEATH rows — they are FIELD/DEATH beats with no world placement | **Applied** — the orphan lint re-scoped to the **consumer-binding rule**: a FIELD/DEATH row with no consumer (a room-data placement OR a named surface binding — the refusal rows bind to SYS-03's code mapping, the DEATH rows to SYS-15's screen) fails as an orphan. The placed→row boot-join direction is unchanged. |
+| CR-4 | **Major** | the playtest preamble + AC-NAR-15 | an undefined outcome when fewer than 5 testers read any beat (the pass and fail clauses both inapplicable) | **Applied** — the sample floor added: fewer than 5 beat-readers → unevaluated; the run is topped up before scoring; never a pass by default; AC-NAR-15's denominator is the beat-reader set (the pass clause now cites the floor). |
+| CR-5 | minor | TR-NAR-011 + AC-NAR-11 | "re-reads render the same bytes" lacked the unchanged-save qualifier (an L2 close legitimately changes L1's variant thereafter) | **Applied** — both statements scoped to re-reads of an unchanged save, with the cross-reference to TR-NAR-006's keying (the anti-farming argument unaffected — the change comes from a world flag, never from re-reading). |
+
+No confirm pass needed (no Major-class batch remaining after the fixes —
+both Majors are repaired in this same commit; the contract's confirm pass
+is for a Major-class fix batch, and this pass's Majors are the only
+Majors; the repair is mechanical and diff-scoped — recorded as the
+runner's judgment call under the one-pass rule).

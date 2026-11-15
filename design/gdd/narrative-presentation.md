@@ -48,7 +48,7 @@ this module. The narrative module renders rows and nothing else.
 
 MVP scope is exactly the index row's "Yes (2–3 logs)": **two logs** (L1, L2 —
 the third count is index headroom requiring a SYS-02 placement row), the
-Reading overlay's presentation contract, the 17 refusal/save-failure/recovery
+Reading overlay's presentation contract, the 18 refusal/save-failure/recovery
 display lines, and the three laws (print voice, micro-copy budget,
 no-spoiler) that bind the other text surfaces' owners. The session bookends
 (the court briefing, the report to the demon lord) are VS surfaces whose
@@ -229,8 +229,10 @@ assassin while the player reads the woman underneath.
 - **TR-NAR-011 — Degenerate strategies, named and shut down.** *Text
   skimming as chore*: the budget is the fix (≤ 3 lines); the playtest code
   (AC-NAR-15) is the check — if testers skim, the fix is shorter text,
-  never longer. *Spoiler-farming by re-reading*: re-reads render the same
-  bytes (the determinism law); zero edges (SYS-09's re-read fixture
+  never longer. *Spoiler-farming by re-reading*: re-reads of an unchanged
+  save render the same bytes (the determinism law — an L2 close that sets
+  `sanctum_log_read` may legitimately change L1's variant thereafter, per
+  TR-NAR-006's keying); zero edges (SYS-09's re-read fixture
   consumed); nothing to farm. *Completionism pressure*: no counter, chime,
   or reward keyed to reading any beat (the memory counter counts TAKEs, not
   reads — SYS-20's; reading L1 is optional and untracked). *Meta-gaming the
@@ -439,10 +441,13 @@ len(line) ≤ LINE_MAX_CHARS`
 
 **Output Range:** bool; `false` fails the CI lint naming the beat and the
 violating line — the merge is blocked (a review-side gate, not a boot
-gate: copy is content). **Examples:** L2 (29/43/45, FIELD) → true; the
+gate: copy is content). The printed examples pin the **default** cap 46;
+at a non-default configured cap (the re-pin path, OQ-NAR-3) every example
+re-derives from that cap — the budget is one law at whatever cap is
+configured. **Examples:** L2 (29/43/45, FIELD) → true; the
 refusal rows (one line each, ≤ 39) → true; a four-line memory draft →
 false naming the beat (the SYS-20 draft's lesson); a 52-char line → false
-naming the line.
+naming the line (at the default cap 46).
 
 #### F-NAR-03 · reading_estimate — the reading-time gate (TR-NAR-003's SESSION clamp)
 
@@ -607,7 +612,7 @@ knob turn.
 
 | Knob | Default | Safe range | Why the bounds | Rule |
 |---|---|---|---|---|
-| `LINE_MAX_CHARS` | 46 | [40, 60] | <40 wastes the Reading surface; >60 breaks the no-scroll fit at the mobile body size | F-NAR-02; OQ-NAR-3 re-pins at the font lock |
+| `LINE_MAX_CHARS` | 46 | [40, 60] | <40 wastes the Reading surface; >60 breaks the no-scroll fit at the mobile body size; **the safe range is the font re-pin path (OQ-NAR-3) — at a non-default value the whole budget re-derives from the configured cap and the printed examples re-pin with it; the AC fixtures pin the default 46** | F-NAR-02; OQ-NAR-3 re-pins at the font lock |
 | `FIELD_LINES` | 3 | fixed at MVP | the IP-8 rider's law (≤ 3 short lines per terminal/log/memory beat) | TR-NAR-003; a change is a contract revision |
 | `CPS_FLOOR` | 12 | [10, 15] | the conservative silent-reading floor — the never-stingy estimate | F-NAR-03 |
 | `READING_BUDGET_S` (FIELD) | 20 | [15, 30] | the one-sitting read; the close ≡ completion contract needs a beat that ends before patience does | F-NAR-03 |
@@ -735,9 +740,11 @@ rule).
   and the placements, **WHEN** the boundary audit runs, **THEN** the grep
   finds no narrative string literal in `src/`, the boot join resolves every
   placed `beat_id`, **and the negative fixtures hold**: a row-less placed
-  beat fails the boot naming the beat; a dangling FIELD/DEATH row (no
-  placement) fails the boot lint as an orphan — SESSION rows are the
-  registered-but-absent exception (AC-NAR-12's shape).
+  beat fails the boot naming the beat; a FIELD/DEATH row with **no
+  consumer** — neither a room-data placement nor a named surface binding
+  (the refusal rows bind to SYS-03's code mapping; the DEATH rows bind to
+  SYS-15's screen) — fails the boot lint as an orphan; SESSION rows are
+  the registered-but-absent exception (AC-NAR-12's shape).
 - **AC-NAR-04** [GUT] *(TR-NAR-005, F-NAR-01, V-NAR-06)* — **GIVEN** the
   selector fixtures over an injected beat store, **WHEN** each runs,
   **THEN**: L1 + flag unset → `default`; L1 + flag set → `post_threshold`;
@@ -799,7 +806,9 @@ rule).
   negatives, **WHEN** each runs, **THEN**: the reward audit finds no
   counter/chime/save code path reading beat rows beyond the render (the
   memory counter reads TAKES only); the re-read fixture shows zero edges
-  and byte-identical text; the refusal rows carry no save value, no hash,
+  and byte-identical text for re-reads of an unchanged save (an L2 close
+  that sets `sanctum_log_read` may change L1's variant thereafter —
+  TR-NAR-006's keying); the refusal rows carry no save value, no hash,
   no internal code string (the leak audit); the beat table contains no
   codex/bestiary row at MVP.
 - **AC-NAR-12** [LINT] *(TR-NAR-012)* — **GIVEN** the class table,
@@ -809,7 +818,7 @@ rule).
   present SESSION copy row without SYS-05's flow landing fails the boot
   lint (the class table and the flow agree).
 - **AC-NAR-13** [LINT] *(TR-NAR-013, TR-SAV-020/022)* — **GIVEN** the
-  refusal vocabulary, **WHEN** the mapping fixture runs, **THEN** all 10
+  refusal vocabulary, **WHEN** the mapping fixture runs, **THEN** all 11
   `REFUSE_*` codes + 6 `SAVE_FAILED_*` codes + the recovery state have a
   display row, an unmapped seeded code fails the lint naming the code,
   every row passes the budget, **and the one-way audit**: no display row
@@ -823,7 +832,11 @@ the session** (the threshold log is the flow's pull; a tester who skipped
 L2 is ineligible for AC-NAR-14 and counted only in AC-NAR-15's base if
 they read any beat); **if fewer than 3 are eligible, the run is topped up
 before scoring** (the SYS-02 E1 rule) — until then the code is
-unevaluated, never a pass by default. **The collection channels:** the
+unevaluated, never a pass by default. **The sample floor for AC-NAR-15
+(its base is beat-readers, not the eligible set): fewer than 5 testers
+who read any beat leaves the code unevaluated; the run is topped up
+before scoring, never a pass by default — AC-NAR-15's denominator is the
+beat-reader set.** **The collection channels:** the
 post-flip
 debrief only, sequenced **after** SYS-09's and SYS-02's protocols (the
 probes below never name a tell or a room feature first); the free-play log
@@ -846,7 +859,8 @@ is read for the anti-tokens.
   chore probe.** **GIVEN** all testers' debrief transcripts (reading any
   beat qualifies), **WHEN** the elicitor asks *"Was any text in the way —
   too long, or did you skim past it?"* and the free-play log is read,
-  **THEN** the code **passes** when **≤ 1 of ≥ 5 testers** codes an
+  **THEN** the code **passes** when **≤ 1 of the beat-reader set** (the
+  preamble's floor: ≥ 5 beat-readers, else unevaluated) codes an
   anti-token (*"too long", "skipped", "spam through", "didn't read"*) and
   **fails** when ≥ 2 testers code an anti-token (the budget failed its
   fantasy; the fix is shorter text — TR-NAR-011's rule — and the section
