@@ -275,6 +275,7 @@ entities:
       - design/gdd/dual-reality-state.md
       - design/gdd/world-mutation-epochs.md
       - design/gdd/seam-borders.md
+      - design/art/art-bible.md
     kind: published_contract
     published_by: SYS-09 Dual-Reality State & Rendering
     consumed_by: SYS-11 (the PROV_LIM_* ramp — the shared source for the wing + the seam materials) · SYS-29 (PROV_GLITCH_ACCENT consumed by name)
@@ -288,9 +289,18 @@ entities:
       content ship (the art-bible pass upgrades in place). No hex literals in SYS-09
       code (V-DR-05). OQ-DR-8's ruling (S1-002b): PROV_B_HAZARD/PROV_B_SEAL stay dormant
       at MVP — named table members no mechanic references; a B-side effect is a G7
-      contract revision, recorded not implemented."
+      contract revision, recorded not implemented. 2026-11-15 (D-ORCH-02, user-approved):
+      the four `PROV_LIM_*` L values (0.40/0.50/0.61/0.72, C 0.000 — `#484848`/`#636363`/
+      `#838383`/`#A4A4A4`) and the grief tint (L 0.66 · C 0.14 · h 345 — `#CD6CA6`; band
+      [330, 20]) are **PINNED** (source: the art bible §4 + `design/art/palette.json`);
+      quantized gaps 0.098/0.110/0.109 ≥ 0.09 — no fallback. The bible + `palette.json`
+      are the hex home; the A/B slots remain PLACEHOLDER pending the pack promotion +
+      normalization audit (the bible §4.5 carries the placeholder hexes). The canonical
+      value ramp (the ordered index metric TR-JCE-016 consumes) is pinned at the bible
+      §4.6. `RESERVED` is recorded as the bible's status extension for `PROV_SIGIL_RED`
+      (a SYS-09 schema rider)."
     added: 2026-11-14
-    revised: "2026-11-14 (OQ-DR-8's ruling recorded — S1-002b: B_HAZARD/B_SEAL dormant at MVP)"
+    revised: "2026-11-14 (OQ-DR-8's ruling recorded — S1-002b: B_HAZARD/B_SEAL dormant at MVP); 2026-11-15 (D-ORCH-02, user-approved: the four `PROV_LIM_*` L values + the grief tint PINNED at the art bible §4; the A/B slots stay PLACEHOLDER; art-bible.md joins referenced_by)"
 
 # 2026-11-14 (world-mutation-epochs.md authored — S1-002b): SYS-10's contracts registered.
   - name: mutation_registry_contract
@@ -406,6 +416,7 @@ entities:
     source: design/gdd/seam-borders.md
     referenced_by:
       - design/gdd/seam-borders.md
+      - design/art/art-bible.md
     kind: published_contract
     published_by: SYS-11 Seam Borders
     consumed_by: the art-bible pass (the purple's ratification) · SYS-09's owner (the key-level tint countersign)
@@ -420,9 +431,16 @@ entities:
       boot failure."
     notes: "The test runs CI-only (TR-SMB-010); a failed test -> tint null (grey default), not a boot
       failure. The ramp's L gaps must be >= 0.09 for a guaranteed P2 pass (OQ-4). The key-level vs
-      pixel-level reading of SYS-09's AC-DR-15 is OQ-2; the band's capture inclusion is OQ-3."
+      pixel-level reading of SYS-09's AC-DR-15 is OQ-2; the band's capture inclusion is OQ-3.
+      2026-11-15 (D-ORCH-01, user-approved): the purple bridge is **declined at MVP**; the
+      liminal-grey reservation stands; the tint machinery (schema + P1–P5+G + the boot guards) is
+      retained **dormant** as the re-open gate (`PURPLE_ENABLED` ∧ a valid CI admission record ∧ an
+      explicit user decision). The A/B hue-set extraction rule is pinned at the bible §4 (**C ≥
+      0.05**; both intervals recorded: [284, 304.8] at 0.02, [255, 304.8] at 0.05) — the countersign
+      is SYS-09's + SYS-11's owners, gate: before the first SYS-11 story (the OQ-2/OQ-3 pattern);
+      `hue_hash` re-admission is automatic on any recorded change."
     added: 2026-11-14
-    revised: ""
+    revised: "2026-11-15 (D-ORCH-01, user-approved: the purple bridge declined at MVP; the tint machinery dormant — the re-open gate; the A/B hue-set extraction rule pinned at the art bible §4; art-bible.md joins referenced_by)"
 
 # 2026-11-14 (save-serialization.md APPROVED — SYS-03): the persistence contracts registered.
   - name: save_contract

@@ -49,11 +49,15 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | queued |
+| — | — | — | — | — | idle |
 
-Full request (read from the lane worktree; `session-state` is gitignored but
-on disk):
-- ART-BIBLE: `../new-vania-art-bible/production/session-state/lane-ART-BIBLE-report.md` §3 (the exact diffs).
+**Landed 2026-11-15** (removed from the active queue): **ART-BIBLE** — PR #72,
+`bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes on
+`dual_reality_palette_tables` (the D-ORCH-02 pins) and `seam_admission_test`
+(D-ORCH-01); the index gained the SYS-11 qualification, the SYS-02 line-36 note
+(naming D-ORCH-01 + `5cc1377`), the OQ rider notes and the OQ-M1 rider list.
+The full request was
+`../new-vania-art-bible/production/session-state/lane-ART-BIBLE-report.md` §3.
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-28** — PR #69,
 `a5a1f81` (head `eb85da4`; 4 CodeRabbit threads, all applied + resolved);

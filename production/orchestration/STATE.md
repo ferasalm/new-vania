@@ -37,7 +37,7 @@
 
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
-| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | **PR #67 open** — gates complete (CD APPROVED · seats 3+6+8 all repaired · spot-check PASS 17/17 · micro-check PASS run 2); D-ORCH-01 executed (`5cc1377` names it), D-ORCH-02 pinned; CodeRabbit clean, threads resolved | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
+| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | **MERGED `ee08e63` (PR #67)** — the bible + palette + style anchor landed; D-ORCH-01 executed, D-ORCH-02 pinned; asset-spec handoff open | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
 | SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
 | SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
 | SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **PR #59 open** — gates complete (CD APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS); CodeRabbit pending | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
@@ -50,26 +50,31 @@ inside their own worktree.
 ## 3. Review queue (WIP ledger)
 
 - **Three-seat review**: 0 of 2 slots in use (both SYS lanes' gates are closed;
-- **Three-seat review**: 0 of 2 slots in use (both SYS lanes' gates are closed;
   ART-BIBLE is at PR #67, gates complete).
 - **CodeRabbit**: the lane passes are done — PR #59 triaged + merged (8+4
   threads dispositioned), PR #58's confirm resolved; PR #67's pass clean. NEW
   passes (the sync PRs) queue behind recorded dispositions.
-- **Shared-file writer**: **idle; the lock is free** — the SYS-28 sync landed
-  (PR #69, `a5a1f81`; 4 threads applied + resolved) and the lock released (§4).
-  The queue's next request: ART-BIBLE (order 2); the sync lane re-acquires the
-  lock for it. Prior: the SYS-15 sync landed (PR #63, `1e9e524`) and the lock
-  released.
+- **Shared-file writer**: **idle; the lock is free** — the ART-BIBLE sync
+  landed (PR #72, `bc8c6be`; 0 threads) and the lock released (§4). The sync
+  queue is empty. Prior: the SYS-28 sync landed (PR #69, `a5a1f81`) and the
+  lock released; the SYS-15 sync landed (PR #63, `1e9e524`).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **released 2026-11-15** after the SYS-28 sync
-landed: PR #69 merged at `a5a1f81` (head `eb85da4`; 4 CodeRabbit threads, all
-applied + resolved). Registry 77 → 80 entries (`narrative_beat_contract`,
-`beat_variant_selector`, `micro_copy_budget`); the index gained the SYS-28
-APPROVED row, design order 21 and the 10 request diffs. ART-BIBLE (order 2)
-re-acquires the lock when its sync run launches.
+`shared_file_lock: none` — **released 2026-11-15** after the ART-BIBLE sync
+landed: PR #72 merged at `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads).
+Registry notes updated on `dual_reality_palette_tables` (the D-ORCH-02 pins)
+and `seam_admission_test` (D-ORCH-01: the purple declined); the index gained
+the SYS-11 qualification, the SYS-02 line-36 note (naming D-ORCH-01 +
+`5cc1377`), the OQ rider notes and the OQ-M1 rider list. The shared files are
+free.
+
+**Prior release 2026-11-15 (SYS-28)**: PR #69 merged at `a5a1f81` (head
+`eb85da4`; 4 CodeRabbit threads, all applied + resolved). Registry 77 → 80
+entries (`narrative_beat_contract`, `beat_variant_selector`,
+`micro_copy_budget`); the index gained the SYS-28 APPROVED row, design order 21
+and the 10 request diffs.
 
 **Prior release 2026-11-15**: after the SYS-15 sync landed — PR #63 merged at
 `1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
@@ -117,6 +122,12 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | ART-BIBLE — the Art Bible lands | `ee08e63` | #67 | verified this chat; gates + sync (PR #72, `bc8c6be`); nested seats verified |
+| 2026-11-15 | SYS-28 Narrative Presentation | `2ff3096` | #58 | verified this chat; GDD + sync (PR #69, `a5a1f81`); counts 13/3/6/15 |
+| 2026-11-15 | SYS-15 Cache Stations & Death-as-Story | `24efd09` | #59 | verified this chat; GDD + sync (PR #63, `1e9e524`); counts 20/4/7/26 |
+| 2026-11-15 | ART-BIBLE gates closed (PR #67; sync queued) | `4629bb8` | #68 | verified this chat; D-ORCH-01 executed (`5cc1377`), D-ORCH-02 pinned |
+| 2026-11-15 | The decision batch (D-ORCH-01/02/05, D-ORCH-03 round 2) | `ce46fac` | #65 | verified this chat; D-ORCH-03 = revise again |
+| 2026-11-15 | SYS-04 header countersign + flip | `01a9442` | #66 | verified this chat; D-ORCH-05 executed |
 | 2026-11-15 | Launch record SYS-15/SYS-28 | `4c0a05f` | #56 | verified this chat; both lanes AUTHORING, runners on GLM |
 | 2026-11-15 | Operator card + retry/fallback policy | `83989de` | #54 | verified this chat; OPERATOR.md + prompts v2.0.6 |
 | 2026-11-15 | Tooling (modules, DCP, Superpowers, 350k policy) | `b99ed48` | #51 | verified this chat; guide + policy landed |
