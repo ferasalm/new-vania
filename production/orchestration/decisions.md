@@ -75,6 +75,12 @@
   Any other blocker is diagnosed, not bypassed.
 - **Checkpoint commits**: the user pre-authorizes small conventional checkpoint
   commits + pushes within a lane branch. No commits on `Main`; no force-push.
+- **Model-failure fallback** (user decision, 2026-11-15): after 4 failed spawn
+  attempts on server-side errors (routing errors, `AiError: Capacity temporarily
+  exceeded`, 5xx/rate limits), a technical (DS) lane may fall back to GLM
+  autonomously — recorded here. A creative (GLM) lane must never fall back to
+  DS without an explicit user decision: park it `PAUSED` and surface the
+  decision, or issue a launch package for a parallel chat on the same model.
 - **Batched cadence**: one CodeRabbit pass per landed milestone; triage in one
   batch; one fix commit; resolve threads manually; a confirm pass only for a
   Major-class fix batch.

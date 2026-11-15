@@ -1,8 +1,8 @@
 <!--
 Kind: orchestrator
 Path: production/orchestration/prompts/orchestrator-loop.md
-Version: 2.0.0
-Hash: 555c18812b03
+Version: 2.0.6
+Hash: 6106fa2cd614
 Source: production/orchestration/prompts/orchestrator-loop.md
 Generated: 2026-11-15
 -->
@@ -79,6 +79,14 @@ The lane runner's model is the manifest `model`; the seats' models are set per
 their briefs (creative/CD seats GLM; technical/QA/spot-check seats DS). A
 creative lane that ran on DS is rerun on GLM.
 
+**Fallback asymmetry (hard rule)**: after 4 failed spawn attempts on
+server-side errors (`ProviderModelNotFoundError`, `AiError: Capacity temporarily
+exceeded`, HTTP 5xx / rate limits), a **DS** lane may fall back to **GLM**
+autonomously — record it in `decisions.md`. A **GLM** lane must **never** fall
+back to DS on its own: park the lane `PAUSED` and surface the decision, or
+issue a launch package for a parallel chat on the same model. Only an explicit
+user decision can authorize a creative lane to run on DS.
+
 ## 4. WIP limits
 
 | Resource | Limit |
@@ -119,7 +127,31 @@ For each launch:
    - `production/orchestration/prompts/lane-runner.md` **inside that worktree**,
    - the instruction: work only in the worktree; write
      `production/session-state/lane-<ID>-report.md`; return the report.
-6. Update the manifest status to `AUTHORING`; update `STATE.md`.
+   - **Retry policy**: up to **4 spawn attempts** on server-side errors
+     (`ProviderModelNotFoundError`, `AiError: Capacity temporarily exceeded`,
+     HTTP 5xx / rate limits). After the 4th failure, apply the §3 fallback
+     asymmetry — DS→GLM autonomously; GLM→DS only on an explicit user decision
+     (otherwise park `PAUSED`). For a **DS→GLM fallback**: set the lane's
+     manifest `model` to the GLM model in the lane worktree, re-render +
+     validate (`--lane <ID>`, then `--check` — the lane prompt header embeds
+     the model), land the same `model` change in the authoritative
+     `manifest.yaml` on `origin/Main` (the step-6 path: a branch + PR, or the
+     sync lane), record the fallback in `decisions.md`, then spawn on GLM.
+   - **Relaunch after a pause**: `PAUSED` is a legal manifest status (a side
+     state in the README state machine). When `decisions.md` records the
+     user's authorization to run a GLM lane on DS: first set the lane's
+     manifest `model` to the DS model, re-render + validate (`--lane <ID>`,
+     then `--check`); then set the lane back to `QUEUED` **in the same
+     manifest edit**, and land `model` + `status` together on `origin/Main`
+     through the §6 path (a branch + PR, or the sync lane); commit or reset
+     the lane worktree's `manifest.yaml` and `lanes/<ID>.md` edits so the
+     step-3 merge runs on a clean worktree; then relaunch from step 1. When
+     the routing issue is resolved without a model change, land the `QUEUED`
+     status change the same way and relaunch from step 1.
+6. After a runner spawns successfully (including a DS→GLM fallback spawn),
+   update the manifest status to `AUTHORING`; update `STATE.md`. If every
+   attempt fails, keep the lane `PAUSED` — never set `AUTHORING` on a failed
+   launch.
 
 ## 6. At every lane boundary
 

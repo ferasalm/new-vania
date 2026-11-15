@@ -11,6 +11,9 @@
 > labour, the 10-minute walkthrough and three exercises.
 > **Context budget**: `CONTEXT-POLICY.md` — the 250k soft / 350k hard policy,
 > the handoff modes, and the measured harness thresholds.
+>
+> **For the human operator**: `OPERATOR.md` — the one-page TL;DR card (the
+> loop, the decision pre-answer format, the unattended-run block).
 
 ## 1. What this is
 
@@ -221,6 +224,7 @@ constraints, model routing, WIP limits, paste-check, and the re-read clause).
 | Path | Purpose |
 |---|---|
 | `README.md` | this manual |
+| `OPERATOR.md` | the one-page TL;DR card for the human operator |
 | `TOOLING.md` | modules, plugins, commands, OCGS↔Superpowers, walkthrough |
 | `CONTEXT-POLICY.md` | the 250k/350k budget, handoff modes, harness thresholds |
 | `STATE.md` | the single live state/log |
