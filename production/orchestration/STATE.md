@@ -74,7 +74,8 @@ SYS-04 at `dd33658` (PR #48).
 ## 5. Blockers
 
 None hard. Soft: SYS-15 landed (PR #59 merged at `24efd09`); SYS-28 is at PR
-#58 (its sync in flight); ART-BIBLE is at PR #67 (its sync queued, order 2).
+#58 (its sync queued, order 1); ART-BIBLE is at PR #67 (its sync queued, order
+2).
 
 ## 6. Decisions (batched — see `decisions.md`)
 
@@ -130,8 +131,8 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
    6 threads (5 fixed + 1 rebutted); the confirm pass re-runs on the fix head —
    wait for it green. When the sync has landed: verify the head and
    squash-merge #58.
-3. **Launch the sync lane** — both requests are queued in `review-queue.md` §5
-   (SYS-15 order 1, SYS-28 order 2); one branch + PR per request, serial.
+3. **Launch the sync lane** — the active queue is SYS-28 (order 1), then
+   ART-BIBLE (order 2); one branch + PR per request, serial.
 4. **ART-BIBLE lane** — PR #67 open (gates complete, CodeRabbit clean); its
    sync is queued (order 2); the orchestrator merges after it lands.
 5. **SYS-04 header** — the audio-director countersign; then flip the GDD header
@@ -144,8 +145,8 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: SYS-28 (PR #58, its sync in flight) + ART-BIBLE (PR #67, its sync
-queued order 2); SYS-15 is LANDED (PR #59 merged at `24efd09`).
+**Running**: SYS-28 (PR #58, its sync queued order 1) + ART-BIBLE (PR #67, its
+sync queued order 2); SYS-15 is LANDED (PR #59 merged at `24efd09`).
 **Landed**: SYS-03 `66ae957` (PR #45), SYS-04 `ba07158` (PR #46).
 **Queued**: SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25, SYS-07-REWORK;
 SYS-16/SYS-17 blocked on SYS-07-REWORK.

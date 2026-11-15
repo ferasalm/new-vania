@@ -21,7 +21,7 @@ queue).
 | — | — | — | — | — |
 
 The authoring table is empty. **SYS-15** landed (its GDD merged — PR #59 at
-`24efd09`). **SYS-28** is at PR #58 (gates closed; its sync in flight). 
+`24efd09`). **SYS-28** is at PR #58 (gates closed; its sync queued, order 1). 
 **ART-BIBLE** is at PR #67 (gates complete; its sync queued as order 2).
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
