@@ -17,8 +17,9 @@ Each animation ships as:
 - `<name>.aseprite` — the editable source: one named layer, all frames as cels,
   the asset's own palette set (union of frame colors, luminance-sorted).
 - `<name>_strip.png` — horizontal spritesheet (preview + atlas-slice source; **not a
-  direct texture on mobile** — the three 48-frame Pandora strips are 11520×135,
-  over the ~4096 px mobile GPU texture limit; see Godot notes).
+  direct texture on mobile** — the three 48-frame Pandora strips are 11520×135
+  (idle/dash, landscape frames) and 6480×240 (jump, portrait frames), all over the
+  ~4096 px mobile GPU texture limit; see Godot notes).
 - `<name>_strip.json` — Aseprite spritesheet metadata: per-frame rects **and
   durations** (the art bible §8 frame-count+fps record).
 - `frames_<action>/<name>_fNN.png` — per-frame PNG exports (1-based, zero-padded).
@@ -123,13 +124,16 @@ Nearest-member mapping (weighted RGB distance) of the assets' dominant colors:
 | Arnetria steel `#465260` (Δ **4.0**) | `PROV_A_FLOOR #46525C` | near-exact |
 | Arnetria silver `#AEC1CA/#C5DDE7` | `PROV_A_FRAME #9DAEB9` family | the light half |
 | Mirror shards `#BFE8F2` + facets `#EAF9FE/#9ED2E4/#6FA6BE`, outline `#2E4A5E` | nearest: `PROV_A_HAZARD`/`PROV_A_FRAME` (Δ 25–110) | **derived ice-blue shade family** in the A glow/hazard neighborhood — not table members |
-| Arnetria specular whites `#FFFFFF` (highlights, clock numerals) | beyond `PROV_A_HAZARD` (L 0.893) | kept; flag below |
+| Arnetria specular whites `#FFFFFF` (highlights, clock numerals) | beyond `PROV_A_HAZARD` (L 0.893) | **removed** by the white-key sweep (any min ≥ 246 pixel goes, enclosed or not); flag below |
 
 **Palette-discipline flags for art-director** (art bible §8: a new need is a
 bible amendment, never a silent hex): (a) the mirror-shard ice-blue family
 should be ratified as recorded derived shades of the A_GLOW/HAZARD family;
-(b) the Arnetria specular whites may want clamping to `PROV_A_HAZARD` at the
-asset-spec pass. No palette JSON was modified in this pass.
+(b) the Arnetria specular whites are **removed** by the white-key sweep (the
+pass verified 0.00 % near-white residue) — if the art-director wants those
+highlights back, re-author them below the 246 key threshold or clamp them to
+`PROV_A_HAZARD` at the asset-spec pass. No palette JSON was modified in this
+pass.
 
 ## Could not recover / known limitations
 
@@ -158,9 +162,9 @@ asset-spec pass. No palette JSON was modified in this pass.
   `default_texture_filter = Nearest` per art bible §8), mipmaps off.
 - **Per-frame PNGs are the platform-safe import path** (240×135 and smaller — every
   target). The horizontal strips are preview/atlas-slice artifacts; any strip wider
-  than ~4096 px (the three 48-frame Pandora strips at 11520×135) must NOT be
-  imported as a direct texture on mobile targets — Godot documents the typical
-  mobile GPU limit at 4096×4096. Slice them via the JSON, or use the frames.
+  than ~4096 px (idle/dash at 11520×135; the jump at 6480×240 — portrait frames)
+  must NOT be imported as a direct texture on mobile targets — Godot documents the
+  typical mobile GPU limit at 4096×4096. Slice them via the JSON, or use the frames.
 - `*_strip.json` is Aseprite spritesheet format (frame rects + durations) —
   directly consumable by atlas-slicing importers.
 - The `.aseprite` files are the edit-here sources of truth; regenerate strips
