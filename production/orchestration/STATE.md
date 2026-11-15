@@ -63,15 +63,15 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **re-acquired 2026-11-15** for the
-**D-ORCH-03 riders mini sync** (branch `chore/sync-sys07-riders`, branched from
-`50ccd95`): three value flips — `spitter_orb_damage` 8 → 2,
-`enemy_strike_contract`'s payload `power_band` 1 → 2, and the index's SYS-07
-Suture 25 → 5. Held until this sync PR merges; the lock returns to `none` only
-after the merge succeeds, and the orchestrator's next receipt confirms it.
-**Merge order**: the two registry values mirror `enemy-ai-telegraphs.md` as
-authored in **PR #78** (the riders, open at this branch point) — this sync PR
-merges *after* #78, or Main's registry leads its source.
+`shared_file_lock: none` — **released 2026-11-15**: the D-ORCH-03 riders mini
+sync landed (PR #80 merged at `fe38c4c`, after its source PR #78 at
+`b4ec55b`; 0 CodeRabbit threads). The next writer is the **SYS-16 sync**
+(the lane report's §4a–4e), which re-acquires the lock on its own branch;
+the **SYS-14 sync** follows serially (writer limit 1).
+
+**Prior release 2026-11-15 (the riders mini sync)**: PR #80 at `fe38c4c` —
+`spitter_orb_damage` 8 → 2, `enemy_strike_contract`'s payload `power_band`
+1 → 2, the index's SYS-07 Suture 25 → 5.
 
 **Prior release 2026-11-15 (SYS-07-REWORK sync)**: landed — PR #76 merged at
 `6dd4651`; 4 CodeRabbit threads, all applied + resolved.
@@ -135,6 +135,9 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-15 | ADR-0002 + ADR-0003 (the ADR-DRAFT lane) | `b991714` | #79 | verified this chat; both `Proposed`; 29 CR threads resolved; the TD-ADR verdict batched (D-ORCH-06) |
+| 2026-11-15 | The D-ORCH-03 riders mini sync | `fe38c4c` | #80 | verified this chat; the orb 8→2, `power_band` 1→2, the Suture 5; 0 threads |
+| 2026-11-15 | The D-ORCH-03 riders (SYS-13 + four mechanical) | `b4ec55b` | #78 | verified this chat; the deflect-weight + stagger-floor questions recorded (D-ORCH-11/12) |
 | 2026-11-15 | SYS-07 baseline rework (D-ORCH-03 applied) | `3fcedc6` | #75 | verified this chat; SYS-07 + SYS-08 revised; 24 CR threads all resolved; riders PR in flight |
 | 2026-11-15 | SYS-07-REWORK sync | `6dd4651` | #76 | verified this chat; registry 81→88 (`damage_event` + the baseline constants); the orb HELD |
 | 2026-11-15 | ART-BIBLE — the Art Bible lands | `ee08e63` | #67 | verified this chat; gates + sync (PR #72, `bc8c6be`); nested seats verified |
@@ -154,45 +157,49 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **The D-ORCH-03 riders PR** (branch `chore/d-orch-03-riders`, worktree
-   `../new-vania-d-orch-03-riders`) — the coordinated SYS-13 touch + the
-   one-line riders (audio-core, juice-feedback, cache-stations-death,
-   room-world-structure). In flight (background runner session
-   `ses_e2281dfdeffe3m7w9OlFqE1aXi`, its last reuse — the session is bloated;
-   **all future units of work get fresh `lane-runner` spawns**). When it
-   reports: verify, merge head-pinned.
-2. **The mini sync** after the riders land: the `spitter_orb_damage` flip
-   8 → 2 + the index's Suture correction (25 → 5). One branch, one PR.
-3. **Launch SYS-16** (DS, `lane-runner` agent) after the riders PR **and the
-   mini sync** land — render `--lane SYS-16` first (`prompt_hash` pending);
-   the worktree `../new-vania-sys16-progression` (branch
-   `docs/sys16-progression`) is **already prepared — reuse it**; run
-   `npm run task:new -- docs/sys16-progression` only if it does not exist.
-   SYS-17 stays BLOCKED on SYS-16.
-4. **Next queued GDD lanes**: SYS-14 (GLM), SYS-05, SYS-24, SYS-12, SYS-20,
-   SYS-25 — within the WIP limits (3 runners).
+1. **The SYS-16 sync** (order 1) — the lane report's §4a–4e (7 pending SYS-07
+   constants + 11 new SYS-16 constants + 4 published contracts +
+   `progression_namespace` + 2 formulas + the `damage_ladder_mvp` note; the
+   index row/design-order 23/dependency bullet + the 8 corrections; riders
+   (a)–(f) recorded, (d) decided). Fresh subagent on DS, branch
+   `chore/sync-sys16` from a fresh `origin/Main`, lock re-acquired in §4.
+   Then merge **PR #81** head-pinned → **SYS-17 unblocks**.
+2. **The SYS-14 sync** (order 2, serial) — 6 new registry entries +
+   `boss_kill_award` + 4 referenced_by/note updates; the index dependency
+   cell + bullet (the stale 300-HP → 60) + design order + tracker row + 6
+   neighbor notes. Then merge **PR #82** head-pinned.
+3. **The user decision batch on return**: D-ORCH-06 (the TD-ADR verdict),
+   D-ORCH-07/08/09 (CR-SAV-01, CR-AUD-03, CR-AUD-04), D-ORCH-10 (OQ-AUD-9,
+   the audio-director default branch (i)), D-ORCH-11/12 (the SYS-13 deflect
+   weight — default accept; the stagger floor — default keep 500).
+   D-ORCH-13/14 were decided autonomously under the away-directive.
+4. **Next GDD launches** (WIP permitting, after the syncs drain): SYS-05
+   (GLM — the highest-value unblock: SYS-03's `load_complete` ordering, the
+   `restored_epoch` payload, ADR-0002/0003's named seams), then SYS-24,
+   SYS-12, SYS-20, SYS-25. Fresh `lane-runner` sessions only.
 5. At any lane boundary: refresh `NEXT.md`
    (`node tools/orchestration/render-prompts.mjs --next`).
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: the D-ORCH-03 riders run (branch `chore/d-orch-03-riders`,
-background; the last reuse of the bloated runner session — fresh spawns after).
+**Running**: none — **SYS-16 (PR #81, CLEAN `18d8e75`) and SYS-14 (PR #82,
+CLEAN `9b172a8`) are at their PRs**, each awaiting its sync.
 **Landed**: SYS-03 `66ae957` (#45), SYS-04 `ba07158` (#46), SYS-15 `24efd09`
 (#59), SYS-28 `2ff3096` (#58), ART-BIBLE `ee08e63` (#67), SYS-07-REWORK
-`3fcedc6` (#75) + its sync `6dd4651` (#76).
-**Queued**: SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25; SYS-16 unblocked
-(launches after the riders land); SYS-17 blocked on SYS-16.
-**Support**: ADR-DRAFT (standby, parallel), QA-PLAN (standby), SYNC-LANE
-(standby, single writer).
-**User must decide**: nothing open — D-ORCH-01/02/03/05 are all resolved and
-executed. The next decision point is the SYS-13 rider's one-shot re-decision
-IF the package did not pre-decide it (the riders run reports it).
-**Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml` +
-the lane reports; do not author; merge the riders PR → mini sync → launch
-SYS-16 on a FRESH `lane-runner` session; keep launching within the WIP limits;
-update this file at every lane boundary; batch decisions; stop only on a hard
-blocker or the 350k hard trigger.
+`3fcedc6` (#75) + sync `6dd4651` (#76) + receipt `50ccd95` (#77) + riders
+`b4ec55b` (#78) + mini sync `fe38c4c` (#80), ADR-0002/0003 `b991714` (#79).
+**Queued**: the SYS-16 sync (order 1) → merge #81 (SYS-17 unblocks); the
+SYS-14 sync (order 2) → merge #82; then SYS-05, SYS-24, SYS-12, SYS-20,
+SYS-25.
+**Support**: ADR-DRAFT landed (the next pass: SYS-07's ADR); QA-PLAN standby;
+SYNC-LANE per-request.
+**User must decide (on return)**: D-ORCH-06–12 (the TD-ADR verdict, the three
+CR contract revisions, OQ-AUD-9, the SYS-13 deflect weight + stagger floor).
+D-ORCH-13/14 were decided autonomously under the away-directive.
+**Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml`
++ the lane reports; do not author; run the two syncs serially → merge #81 →
+#82; keep launching within the WIP limits; batch decisions; stop only on a
+hard blocker or the 350k hard trigger.
 
 ## 11. Sync receipt — SYS-03 Save & Serialization (landed 2026-11-14 — PR #47, `50a9a93`)
 

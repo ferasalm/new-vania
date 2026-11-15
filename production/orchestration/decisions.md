@@ -91,6 +91,73 @@
 - **Decision**: _A — approve as revised (recorded 2026-11-15; executed and
   landed the same day)._
 
+### D-ORCH-06 — the TD-ADR acceptance verdict (ADR-0002/0003)
+
+- **Lane**: ADR-DRAFT (landed — PR #79, `b991714`).
+- **Question**: does the technical-director accept ADR-0002 (Save & Serialization) and ADR-0003 (Audio Core)? On acceptance, the two `Status:` lines + the two `technical-preferences.md` rows flip (the acceptance record is already written in the review log §5).
+- **Why it is a decision**: an advisory `/architecture-review` verdict does not admit `Accepted`; the framework's TD-ADR gate does. `Accepted` lets story-readiness start stories against these decisions.
+- **Blocking?** Not the merge (they landed as `Proposed`); it gates the first save/audio STORY.
+- **Status**: **OPEN** — the user's return.
+- **Decision**: _pending._
+
+### D-ORCH-07 — CR-SAV-01: the close-save exit path (four clauses)
+
+- **Lane**: ADR-DRAFT (filed by the repair pass; ADR-0002's two-regime exit policy needs SYS-03's contract to agree).
+- **Question**: approve the four close-save exit clauses (AC-SAV-23 clause 1 restores the suspension snapshot even for a commit completing after the bound; the fallback only where the write is abandoned before its rename / interrupted before step 5 / fails on the exit path; TR-SAV-014's join; clause (c)'s code-assertion scoped to a surviving process).
+- **Blocking?** The first save story.
+- **Status**: **OPEN** — batched.
+- **Decision**: _pending._
+
+### D-ORCH-08 — CR-AUD-03: the mono fold is a 30th file
+
+- **Lane**: ADR-DRAFT (ADR-0003's MonoStage fold + the three loop-seam fallback rows need SYS-04's counts/audit to agree).
+- **Question**: approve the SYS-04 contract riders (the counts line 29→30, the §G.6 Score row, AC-AUD-32's scope, the three loop-seam fallback rows).
+- **Blocking?** The first audio story.
+- **Status**: **OPEN** — batched.
+- **Decision**: _pending._
+
+### D-ORCH-09 — CR-AUD-04: the load-complete ownership
+
+- **Lane**: ADR-DRAFT. **Question**: correct TR-AUD-002 — the load-complete seam is SYS-05's, not SYS-03's (a one-line contract correction to frozen SYS-04, the commit names the decision ID).
+- **Blocking?** The first audio story.
+- **Status**: **OPEN** — batched.
+- **Decision**: _pending._
+
+### D-ORCH-10 — OQ-AUD-9: the loop lengths against the seam ladder's ceilings
+
+- **Lane**: ADR-DRAFT → the audio-director. **Question**: any looped asset whose authored duration exceeds its rung's ceiling (beds ~78 s combined; the score pair ~28 s) — branch (i) re-author to the ceiling (the fail-safe default, the audio-director's to execute), or branch (ii) an explicit, scoped revision of the seamless-loop requirement (the user decides).
+- **Blocking?** The first audio story (branch (ii) only).
+- **Status**: **OPEN** — branch (i) is the default if the audio-director finds no exceeding asset.
+- **Decision**: _pending._
+
+### D-ORCH-11 — the SYS-13 deflect's weight (the orb's relative share)
+
+- **Lane**: SYS-07-REWORK riders (recorded in the review log §9.3; CodeRabbit corrected the "one-shot" framing — the orb NEVER one-shotted; the deflect's SHARE rose from 13.3% to 16.7% of a T2's pool).
+- **Question**: accept the deflect as a positional tool (the shipped reading; recommended — executable inside the current contracts), or lower `ORB_DAMAGE` to 1 (inside the printed 1–2 range), or a deflect bonus (needs a SYS-08 TR-CMB-015 amendment — a contract revision).
+- **Blocking?** No — a tuning question; the shipped text says "the kill follows prior damage".
+- **Status**: **OPEN** — default: accept.
+- **Decision**: _pending._
+
+### D-ORCH-12 — the stagger knob's floor (500 vs 617)
+
+- **Lane**: SYS-07-REWORK riders (review log §9.7): the full ceiling chain needs 617 ms; the knob's legal range starts at 500, so the sub-617 result is now DEFINED (the counter alone: 6 at ATK 100, 8 at 132).
+- **Question**: raise the knob's floor to 617, or keep 500 with the defined sub-617 outcome?
+- **Blocking?** No — SYS-13's call at its next touch.
+- **Status**: **OPEN** — default: keep 500 (the outcome is defined; no forced change).
+- **Decision**: _pending._
+
+### D-ORCH-13 — SYS-16: F-HD-10's module-build note (DECIDED autonomously)
+
+- **Question**: is SYS-07's F-HD-10 module-build note a measurement ruler or a hard ±10% ceiling on gear?
+- **Decision**: **(i) — the reading stands (a ruler); the gear layer ships as authored; rider (d) lands at SYS-07's next doc touch; the pool-only fallback does not execute** (`WINDOW_EXCEPTION_ENABLED` stays true; the drive payload ships; the fallback criteria stay dormant in TR-PRG-013). **Autonomous 2026-11-15 under the user's away-directive** ("keep working autonomously until I come back") — the runner's recommendation, no frozen-contract edit taken either way; revisit on return before the first gear story if desired.
+- **Status**: **DECIDED (autonomous)**.
+
+### D-ORCH-14 — SYS-14: the feasibility brief + the four design calls (DECIDED autonomously)
+
+- **Question**: approve SYS-14's brief (R1 "the lie holds": the phase-1 hp_floor 20 + the 3-sweep crack beat; R4 the ring roster; R11 the scripted death + NO boss-defeated save family at MVP; R6 `soul_class` HUMAN) to begin authoring?
+- **Decision**: **A — approved as proposed** (Option C's save-family alternative stays a VS-gated batched request — never an edit to frozen SYS-02/SYS-03). **Autonomous 2026-11-15 under the away-directive**; revisit on return.
+- **Status**: **DECIDED (autonomous)**.
+
 ## Resolved decisions (this era)
 
 | ID | Lane | Decision | Date | Record |
