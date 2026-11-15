@@ -69,10 +69,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "fe36c9a4acd2"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: SYNC
+    status: MERGED
     dependencies: []
-    review_state: "art-director + creative-director + user approval; asset-spec handoff"
-    next_action: "SYNC (order 1): the sync request is queued (review-queue.md §5); the sync lane applies it; then the orchestrator squash-merges PR #67 at the verified head. The ART-BIBLE manifest row's worktree_state is corrected in the same change."
+    review_state: "LANDED (PR #67, ee08e63): CD APPROVED · three-seat 3+6+8 repaired · spot-check PASS (17/17) · micro-check PASS run 2 · CodeRabbit 2 threads applied + resolved; all seats ran as REAL nested subagents (the D-ORCH-04 stack). D-ORCH-01 executed (5cc1377); D-ORCH-02 pinned. SYNC LANDED (PR #72, bc8c6be)."
+    next_action: "MERGED — done. The asset-spec handoff (§10) is the bible's next consumer; the SYS-11 bullet's superseded purple-proposed sentence is a rider at SYS-11's next doc touch."
 
   - id: SYS-03
     title: "Save & Serialization — the persistence bottleneck"
