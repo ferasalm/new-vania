@@ -192,10 +192,10 @@ no second duck family; no reading the truth state; no per-press chatter.
               │ FlipStateMachine · BedDirector · VoicePool · DuckStage      │
               │ Gate · Failsafe · VariationRng · OrderTrace · EdgeTrace     │
               │ TelemetryRing(256) · Tuning                                  │
-              └───┬───────────┬────────────┬───────────┬───────────┬────────┘
-                  │ ClockPort │ BusPort    │ PlayerPort│ Telemetry │ MetaPort │ SeedPort
-                  ▼           ▼            ▼           ▼           ▼
-              physics_tick  AudioServer  18 players   ring     {event_id,tick}
+              └───┬───────────┬────────────┬───────────┬───────────┬─────────┬──────┘
+                  │ ClockPort │ BusPort    │ PlayerPort│ Telemetry │ MetaPort│ SeedPort
+                  ▼           ▼            ▼           ▼           ▼         ▼
+              physics_tick  AudioServer  18 players   ring   {event_id,tick}  adapter (boot)
 ```
 
 **The seam is one-way.** The adapter subscribes to the **five publishers** (SYS-09,
@@ -944,7 +944,7 @@ the device measurements close at the first implementation story.
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-035 — masking and headroom | One limiter; the beds ≥ 6 dB under the one-shots; the device measurement (§3) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-036 — the death duck, ratified | −6 dB, 120/240 ms on the wall clock, the hold, both named exits (+ the quit exit, TR-CSD-015 — the GDD's TR-AUD-036 predates it and the `UNTIL_OFFLINE_EXIT` value already covers it) (§8) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-037 — the accessibility surface | The MONO stage + the three sliders' group map + the metadata port (§4, §11) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-038 — the variation law | The deterministic seeded draw: the **seed is injected** (`VariationRng` takes the run's seed from the adapter at arm time, one seed per run; a replay reuses the recorded seed), no immediate repeat, ±1 st within a band, zero drift on the **six signatures** and the clash pair (§5) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-038 — the variation law | The deterministic seeded draw: the **seed is injected** (`VariationRng` takes one 32-bit value per run from `SeedPort`, held by the adapter for the session and **never persisted**; a fixture supplies a fixed seed), no immediate repeat, ±1 st within a band, zero drift on the **six signatures** and the clash pair (§5) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-039 — the bed-contrast bar | **Partial by design**: the bar (≥4/5 nameability, audible on the Pixel 6a speaker, the arena distinct) is AC-AUD-31's; the *realisation* is the sound-bible pass's, and no engine mechanism decides it. The ADR's part is the import pins that make the comparison fair (§10) |
 | `design/gdd/dual-reality-state.md` | SYS-09 | TR-DR-004 / E1–E7 + G1–G7 | The five subscriptions; the arm, the bracket, the tear, the release, the resume (§2, §6, §7, §9) |
 | `design/gdd/world-mutation-epochs.md` | SYS-10 | E3b `ambient_shift` + the abort + the latched resume | The order record; zero orders on the abort; the resume hash (§6, §12) |
