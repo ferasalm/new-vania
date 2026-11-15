@@ -150,7 +150,14 @@ Recorded in §3's two rebuttal lists (three for ADR-0002, none for ADR-0003).
 
 ## 5 · Final verdict
 
-**Both ADRs: `Accepted` (2026-11-15).** The gate trail is complete:
+**Both ADRs: `Proposed` — gates complete, acceptance pending the technical-director's
+TD-ADR verdict.** The `/architecture-review` returned `CONCERNS` with **zero
+blockers**; an advisory review verdict does not replace the TD-ADR gate, and a
+`Status: Accepted` would let story-readiness start stories against these decisions
+early. The acceptance text is prepared below; flipping the two status lines is the
+TD's step (or the orchestrator's, on the TD's word).
+
+### The gate trail
 
 | Gate | ADR-0002 | ADR-0003 |
 |---|---|---|
@@ -161,14 +168,17 @@ Recorded in §3's two rebuttal lists (three for ADR-0002, none for ADR-0003).
 | qa-lead spot-check | #1 **FAIL** (5 of 13 rows misapplied) → repaired → **#2 PASS** (8/8) | same batch |
 | final micro-check | #1 FAIL (3) · #2 FAIL (1) · #3 FAIL (2) · **#4 PASS (0 blockers)** | same batch |
 | `/architecture-review` | **CONCERNS, 0 blockers**, 10 recommendations → all applied; confirm pass verified 8 APPLIED + 2 MISAPPLIED → both closed | same gate, pair-scoped |
+| CodeRabbit | 10 threads, all 10 valid, all applied + resolved | same pass |
 
-**Acceptance record.** The architecture review returned **CONCERNS with zero
-blockers**, and every recommendation it made was applied and confirmed. Both ADRs
-therefore carry `Status: Accepted` on that record, with the **technical-director's
-countersign named as the one open item** — the state SYS-04's own GDD header
-carried ("APPROVED, countersign pending"). The acceptance is recorded, not
-assumed: the gate record exists (this log), and the probe registers are
-implementation gates, not status gates.
+### The prepared acceptance record (unsigned)
+
+On the TD-ADR verdict, both ADRs become **Accepted**, on this record:
+
+- the architecture review's `CONCERNS` with **zero blockers**, every recommendation
+  applied and confirmed;
+- the complete lane gate trail above (42 review blockers + 10 CodeRabbit findings,
+  all applied; 3 written rebuttals, none silent);
+- the **carried obligations** named below — implementation gates, not status gates.
 
 **Carried obligations (named, not silently accepted).**
 
@@ -176,11 +186,11 @@ implementation gates, not status gates.
 |---|---|---|---|
 | SYS-03 engine half | the 34 fixtures in-engine; `TYPE_INT` after the normalization pass; F-SAV-01's three digests | the first SYS-03 story | that story |
 | O-AUD-1 | `restored_epoch` on SYS-05's `load_complete` + its post-flip-load assertion | SYS-05's authoring | the post-flip-load bed |
-| CR-AUD-03 | the mono fold = a 30th file (counts 29→30, the §G.6 row, AC-AUD-32's scope) | the user (batched) | nothing in the ADR; the first audio story's asset count |
+| CR-AUD-03 | the mono fold = a 30th file (counts 29→30, the §G.6 row, AC-AUD-32's scope) | the user (batched) | the first audio story's asset count (enforced by its story gate) |
 | CR-AUD-04 | TR-AUD-002's load-complete publisher (SYS-03 → SYS-05) | the user (batched) | nothing in the ADR; a reader's misdirection |
 | Probe registers | 9 `PROBE-PENDING` (save) / 7 (audio) with Methods and Owners | the named owners | the first story per ADR |
 
-**Counts at acceptance.** ADR-0002: 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs
+**Counts at this record.** ADR-0002: 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs
 consumed, 0 added; 10 probe items; 3 rebuttals. ADR-0003: 39 TR-AUD / 7 F-AUD /
 7 V-AUD / 32 ACs consumed, 0 added; 8 probe items; 0 rebuttals; 2 CRs filed.
 

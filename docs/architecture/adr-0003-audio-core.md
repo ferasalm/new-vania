@@ -2,15 +2,16 @@
 
 ## Status
 
-**Accepted** — 2026-11-15, on the `/architecture-review` gate's verdict
-(**`CONCERNS`, zero blockers**, all ten recommendations applied; the confirm
-pass's two misapplied rows closed in the micro-check batches) and the lane's
-complete gate trail (`docs/architecture/adr-draft-review-log.md` §5). The
-**technical-director's countersign is the one recorded open item** — the same
-state SYS-04's own GDD header carried ("APPROVED, countersign pending"); if it is
-withheld this reverts to `Proposed` with one line. The engine-probe register in
-§14 is an **implementation gate**, not an ADR-status gate. Carried obligations
-(not status gates): O-AUD-1, CR-AUD-03, CR-AUD-04. If a later architecture review
+**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support). **Acceptance
+awaits the technical-director's TD-ADR verdict**: the `/architecture-review` gate
+returned `CONCERNS` with **zero blockers** and all ten recommendations were applied
+and confirmed (the gate trail is `docs/architecture/adr-draft-review-log.md` §5),
+but an advisory architecture-review verdict does not replace the TD-ADR gate, and
+`Status: Accepted` would let story-readiness start stories against this decision
+early. The acceptance text is prepared and recorded in the log; the status flips to
+`Accepted` on the TD's verdict. The engine-probe register in §14 is an
+**implementation gate**, not an ADR-status gate. Carried obligations (not status
+gates): O-AUD-1, CR-AUD-03, CR-AUD-04. If a later architecture review
 finds a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed`
 and is superseded explicitly.
 
@@ -61,7 +62,7 @@ poisoned-sentinel run possible at all.
 | **Knowledge Risk** | **MEDIUM** — the audio API is stable across 4.4–4.7 per the repo's snapshot ("No major breaking changes to the audio API in 4.4–4.6"), but two *mechanisms* this ADR needs are undocumented or unverified: the stereo→mono collapse and the Ogg loop seam. Both are probe-gated (§14) |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `modules/audio.md`; `breaking-changes.md` (4.7 `AudioStreamPlayer.area_mask` default; 4.7 `AudioEffectSpectrumAnalyzer.tap_back_pos` removed); `deprecated-apis.md`; `docs/framework/technical-preferences.md` |
 | **Post-Cutoff APIs Used** | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` (**documented in `modules/audio.md`**); `AudioServer.set_bus_effect` + the effect slot model **[unverified for 4.7.2's limiter class name: `AudioEffectLimiter` vs `AudioEffectHardLimiter`]**; `AudioStreamPlayer.play(from_position)` **[unverified parameter name]**; `AudioStreamOggVorbis.loop` / `loop_offset` **[unverified for gapless behaviour]**; `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end`; `AudioEffectCapture` (the loop-seam probe); `AudioStreamPlayer.area_mask` default `0` (4.7 — irrelevant here: no `Area` audio overrides in the audio graph, and none may be added) |
-| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. This ADR is **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. On the TD-ADR verdict this ADR becomes **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (MEDIUM).** Two traps are specific to this decision.
 > (1) The `AudioStreamPlayer.area_mask` default changed to `0` in 4.7: an
@@ -282,11 +283,13 @@ func restore(player: AudioStreamPlayer, at: int) -> int
   per-voice gain motion, the same mechanism the bed recede uses — **never a
   `duck_request`** (V-AUD-01's one-duck audit would fail, and a settings toggle is
   not a mix beat).
-- **The deferral rule.** If the toggle is requested **inside [E1, E7]**, the swap is
-  deferred to the first `IDLE` tick after the window: the pause screen is reachable
-  during the bracket (AC-AUD-29 #12), and a 2-tick gain ramp there would be a
-  second audible motion inside the stillness bracket. The toggle's *setting* is
-  recorded immediately; only the *swap* waits.
+- **The deferral rule.** If the toggle is requested **inside [E1, E7]** — or if its
+  2-tick ramp or the swap itself would land inside the window (a toggle one tick
+  before E1) — **the whole sequence** defers to the first `IDLE` tick after the
+  window: the pause screen is reachable during the bracket (AC-AUD-29 #12), and a
+  2-tick gain ramp there would be a second audible motion inside the stillness
+  bracket. The toggle's *setting* is recorded immediately; only the *ramp and swap*
+  wait.
 - **The fold's loudness is matched to the stereo encode** (a pipeline RMS/LUFS
   assert), so the toggle reads as a stereo collapse, not a volume step.
 - **The pipeline rule**: no stereo asset may ship without a fold (or the native
@@ -308,7 +311,10 @@ than reinterpreting a frozen count**, and carries it as an obligation — the AD
 *decision* (the `MonoStage` interface + the fold) is sound either way; only the
 count and the audit's scope need the user's nod. If CR-AUD-03 is declined, the
 fallback is the native summing effect behind the same interface (Alternative 6),
-which restores 29 files at the cost of a GDExtension build.
+which restores 29 files at the cost of a GDExtension build — and **that fallback
+requires its own ADR**, because §10's one-effect law admits no production effect
+other than the limiter without one. The fallback is therefore not a silent
+alternative: it is a second decision.
 
 **Why not an engine sum.** A summing `AudioEffect` would need a GDExtension build
 (a native toolchain and export-binary verification the MVP pipeline does not
@@ -507,6 +513,14 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   6.85 MB). The fallback also makes the beds **resident rather than streamed**:
   its runtime cost is priced against the 16 MB bar (~+6.85 MB resident at 78 s), not only the
   disk bar. It changes no law; only the file format and the residency.
+  **The score's fallback (probe 2 blocks it too).** The score cannot reuse the beds'
+  WAV path unchanged: stereo 44.1 kHz 16-bit is 176.4 kB/s, so inside the remaining
+  6.85 MB a **stereo** WAV loop is ≤ ~38 s, or a **mono** WAV loop (88.2 kB/s) is
+  ≤ ~77 s at the cost of the stereo field. The decision: **a stereo WAV score loop
+  ≤ 38 s**. If the sound-bible pass needs a longer loop, the score stays Ogg and the
+  probe's failure is **accepted for the score alone** — its loop point is authored
+  at a musical bar boundary, where the material is continuous — with the measured
+  seam delta recorded in the gate evidence rather than assumed.
 - **No `AudioEffect` other than the limiter** may be added to the **production**
   graph without a new ADR: the "one effect" property is what makes the mix
   auditable. (Probe scenes and the dev-only probe layout are exempt and never
@@ -607,7 +621,7 @@ the AC it unblocks — not an AC that already tests something else.
 | 5 | Five buses + one Master effect is inside the mobile mix budget | **PROBE-PENDING** | measured as an **extra instrument** during AC-AUD-21's device run (mixer CPU share, no new AC); the bar is "the audio thread's share stays under 25% of the frame" | performance-analyst | The graph's viability on the reference SKU |
 | 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`'s "Audio Buses" block) | — | — | — |
 | 7 | `AudioEffectCapture` can record a bus for the loop-seam probe | **PROBE-PENDING** | the probe scene captures 10 s of a known loop and the capture's length matches within one buffer | godot-specialist | Probe 2's method |
-| 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **PROBE-PENDING** | a WAV bed loops 100× with zero seam delta; `loop_end − loop_begin` equals the authored sample count | sound-designer | The fallback's viability (only if probe 2 fails) |
+| 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **PROBE-PENDING** | a WAV bed loops 100× with no seam delta above **`SEAM_DELTA_MAX`** — the same tolerance probe 2 uses, because a continuous waveform's last and first samples legitimately differ; `loop_end − loop_begin` equals the authored sample count | sound-designer | The fallback's viability (only if probe 2 fails) |
 
 `PROBE-PENDING` is an open verdict: items 1–5 and 7–8 block their named gates, and
 item 2 blocks the beds' and score's import. No story may consume one as settled
@@ -868,12 +882,13 @@ superseding ADR would replace the graph, not the laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** The **ADR acceptance** list (16 criteria) must hold when
-this ADR is Accepted, because every one is decided here. The **story gate**
-(2 criteria) cannot hold at acceptance by construction — the probe register and
-the device measurements close at the first implementation story.
+**Two gates, two lists.** The **decision-conformance** list (16 criteria) states
+what this decision must be able to prove. Several are verified by fixtures and
+device runs that land with the implementation (`src/audio/` and the assets do not
+exist yet), so they are the criteria the *decision* fixes — not checks runnable at
+sign-off. The **story gate** (3 criteria) closes at the first implementation story.
 
-**ADR acceptance.**
+**Decision conformance (what the decision must be able to prove).**
 
 - [ ] The bus table matches §G.1 exactly; the SFX pool is 12 + 1 reserved; a duck
       naming a non-Music bus is rejected with a record (AC-AUD-26).
@@ -915,6 +930,11 @@ the device measurements close at the first implementation story.
 
 **Story gate (the first SYS-04 implementation story).**
 
+- [ ] **The asset count is settled before any audio asset ships**: either
+      **CR-AUD-03 has landed** (the counts line 29→30, the §G.6 mono-encode row,
+      AC-AUD-32's scope) **or** the story ships the native `MonoStage` fallback
+      (29 files, and its own ADR). A story may not ship the fold against an
+      unchanged 29-file count.
 - [ ] Disk ≤ 10 MB, runtime ≤ 16 MB, voices ≤ 20, the core's tick within its
       (provisional) bar, and the mixer's share within item 5's bar on the Pixel 6a
       (AC-AUD-21 + register item 5's extra instrument).

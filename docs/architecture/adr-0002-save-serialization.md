@@ -2,15 +2,16 @@
 
 ## Status
 
-**Accepted** — 2026-11-15, on the `/architecture-review` gate's verdict
-(**`CONCERNS`, zero blockers**, all ten recommendations applied; the confirm
-pass's two misapplied rows closed in the micro-check batches) and the lane's
-complete gate trail (`docs/architecture/adr-draft-review-log.md` §5). The
-**technical-director's countersign is the one recorded open item** — the same
-state SYS-04's own header carried ("APPROVED, countersign pending"); if it is
-withheld this reverts to `Proposed` with one line. The engine-probe register in
-§13 is an **implementation gate**, not an ADR-status gate. Carried obligations
-(not status gates): the story-gated engine half of the twin. If a later
+**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support). **Acceptance
+awaits the technical-director's TD-ADR verdict**: the `/architecture-review` gate
+returned `CONCERNS` with **zero blockers** and all ten recommendations were applied
+and confirmed (the gate trail is `docs/architecture/adr-draft-review-log.md` §5),
+but an advisory architecture-review verdict does not replace the TD-ADR gate, and
+`Status: Accepted` would let story-readiness start stories against this decision
+early. The acceptance text is prepared and recorded in the log; the status flips to
+`Accepted` on the TD's verdict. The engine-probe register in §13 is an
+**implementation gate**, not an ADR-status gate. Carried obligations (not status
+gates): the story-gated engine half of the twin. If a later
 architecture review finds a contradiction with a newer Accepted ADR, this ADR
 reverts to `Proposed` and is superseded explicitly.
 
@@ -66,7 +67,7 @@ writer anywhere.
 | **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4); the JSON number model is undocumented in the repo's snapshots and is probe item 1 |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `docs/framework/technical-preferences.md`; **ADR-0001 §16** (the notification-family probe this ADR's item 8 shares) |
 | **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256) — **`FileAccess.get_sha256()` is rejected**: it would hash the file, and the hash input is the canonical projection, not the file bytes; `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `DirAccess.get_space_left()` **[unverified name for 4.7.2 — register item 10]**; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` (**not** `NOTIFICATION_APPLICATION_FOCUS_OUT`, which is not an exit and must never trigger a save) |
-| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). This ADR is **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). On the TD-ADR verdict this ADR becomes **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (HIGH).** Two failure modes are specific to this
 > version band and are load-bearing here: (1) `JSON` parses *every* number as a
@@ -274,18 +275,24 @@ therefore hashes identically with a different timestamp — the twin's
 
 **One canonicalizer, two artifacts — stated precisely.** `canon(payload)` returns
 the payload's canonical bytes (the **fragment**). The hash is computed over the
-**projection** `{"schema_version":v,"payload":<fragment>}`; the file is the
-five-key envelope with **that same fragment spliced in unchanged**. The law is
-therefore:
+**projection** — the two-element object `{schema_version, payload}` run through the
+*same* `canon` — and the file is the five-key envelope with **that same fragment
+spliced in unchanged**. The law is therefore:
 
 > the hashed fragment is a **byte-identical substring** of the file.
 
-The twin proves the shape: `envelope()` wraps `canon(payload)` and the hash covers
-the projection only (`tests/save-twin/save_twin.mjs`). There is no second
-canonicalizer and no second payload serializer; the envelope's five keys are
-string-assembled *around* the fragment, and `state_hash` is the only value in the
-file that is not part of the hashed input. A debug pretty-printer, if one is ever
-wanted, is a *different file* and never a save.
+**The projection's byte order is the canonicalizer's, not this brace notation's.**
+`canon` sorts object keys by byte order, so the projection's bytes are
+`{"payload":…,"schema_version":1}` — `payload` first. The `{schema_version,
+payload}` above is a **set**, never a byte order; an implementer who writes the
+braces in that order hashes a different byte stream and the twin's three digests
+will not reproduce. The twin proves the shape: `envelope()` wraps
+`canon(payload)` and the hash covers `canon({payload, schema_version})`
+(`tests/save-twin/save_twin.mjs`). There is no second canonicalizer and no second
+payload serializer; the envelope's five keys are string-assembled *around* the
+fragment, and `state_hash` is the only value in the file that is not part of the
+hashed input. A debug pretty-printer, if one is ever wanted, is a *different file*
+and never a save.
 
 ### 4 · The hash
 
@@ -358,7 +365,14 @@ phase. This is what AC-SAV-12's frame probe asserts.
 
 **The close-save (the one legal block).** On the close request the save is
 written **synchronously** on the game thread — there is no frame to miss, the
-file is ≤ 2 KB, and the dev assert bound is `SAVE_JOIN_TIMEOUT_MS` 250 ms. Three
+file is ≤ 2 KB, and `SAVE_JOIN_TIMEOUT_MS` 250 ms is the **dev-assert measurement
+bound**, not a preemption guarantee: no mechanism can interrupt a blocked syscall
+or a stalled `wait_to_finish()`. The exit policy is therefore explicit rather than
+aspirational: if the close-save has not completed within the bound, the app
+**proceeds to exit and the write is abandoned**; the last station autosave is the
+state the player returns to, and the platform's kill is the backstop. A stalled
+close-save can never leave a torn file — the six-step write's commit point is the
+rename — and can never make the session worse than the last station save. Three
 guards, all from the GDD: (a) if a write is in flight, it completes first;
 (b) **if `flip_sources_active` is non-empty, the close-save is skipped** and the
 last station autosave is the fallback — a synchronous snapshot there would
@@ -873,12 +887,13 @@ superseding ADR would replace the writer, not the laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** The **ADR acceptance** list (14 criteria) must hold when
-this ADR is Accepted, because every one is decided here. The **story gate**
-(2 criteria) cannot hold at acceptance by construction — the engine half and the
-probe register close at the first implementation story.
+**Two gates, two lists.** The **decision-conformance** list (14 criteria) states
+what this decision must be able to prove. Several are verified by fixtures that land
+with the implementation (`src/save/` does not exist yet), so they are the criteria
+the *decision* fixes — not checks runnable at sign-off. The **story gate**
+(2 criteria) closes at the first implementation story.
 
-**ADR acceptance.**
+**Decision conformance (what the decision must be able to prove).**
 
 - [ ] One canonicalizer: `canon(payload)` produces the fragment, the hash covers
       the projection `canon({schema_version, payload})`, and the fragment appears
