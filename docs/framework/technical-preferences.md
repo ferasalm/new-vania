@@ -59,6 +59,8 @@
 
 <!-- Quick reference linking to full ADRs in docs/architecture/ -->
 - **ADR-0001 — Input Architecture: Capture, Tick Pipeline, Gates, and the D1 Render Model** — Accepted 2026-11-12; `docs/architecture/adr-0001-input-architecture.md`; ratifies the five SYS-01 laws, owns the D1 wiring/flip-attribution/mirror-reach/pipeline order, carries O1; 13 engine-probe items remain pre-story gates (AC-74).
+- **ADR-0002 — Save & Serialization: The Persistence Boundary, the Canonical Record, and the Writer's Thread** — Accepted 2026-11-15 (TD countersign pending); `docs/architecture/adr-0002-save-serialization.md`; decides the four obligations SYS-03's GDD delegates (writer thread shape, byte layout + canonicalization, migration registry API, platform path helper) plus the JSON-float normalization pass and the `store_*` boolean discipline; 9 engine-probe items remain pre-story gates.
+- **ADR-0003 — Audio Core: Bus Graph, Voice Pool, and the Flip's Sound Mechanism** — Accepted 2026-11-15 (TD countersign pending); `docs/architecture/adr-0003-audio-core.md`; decides the five-bus graph + one Master limiter, the `MonoStage` (a mono fold — CR-AUD-03), the 18-player pool with the reserved tear slot, per-tick wall-clock gain envelopes (never a `Tween`), the duck's single application site, and the import pins + the two probes; 7 engine-probe items remain pre-story gates; carries O-AUD-1 and CR-AUD-04.
 
 ## Engine Specialists
 

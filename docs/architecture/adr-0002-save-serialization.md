@@ -2,12 +2,17 @@
 
 ## Status
 
-**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support). It becomes
-`Accepted` only on a PASS from the `/architecture-review` gate; the lane's gate
-trail (CD · three-seat panel · qa-lead spot-check · micro-check) is recorded in
-`docs/architecture/adr-draft-review-log.md`. If a later architecture review finds
-a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed` and is
-superseded explicitly.
+**Accepted** — 2026-11-15, on the `/architecture-review` gate's verdict
+(**`CONCERNS`, zero blockers**, all ten recommendations applied; the confirm
+pass's two misapplied rows closed in the micro-check batches) and the lane's
+complete gate trail (`docs/architecture/adr-draft-review-log.md` §5). The
+**technical-director's countersign is the one recorded open item** — the same
+state SYS-04's own header carried ("APPROVED, countersign pending"); if it is
+withheld this reverts to `Proposed` with one line. The engine-probe register in
+§13 is an **implementation gate**, not an ADR-status gate. Carried obligations
+(not status gates): the story-gated engine half of the twin. If a later
+architecture review finds a contradiction with a newer Accepted ADR, this ADR
+reverts to `Proposed` and is superseded explicitly.
 
 ## Date
 
@@ -61,7 +66,7 @@ writer anywhere.
 | **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4); the JSON number model is undocumented in the repo's snapshots and is probe item 1 |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `docs/framework/technical-preferences.md`; **ADR-0001 §16** (the notification-family probe this ADR's item 8 shares) |
 | **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256) — **`FileAccess.get_sha256()` is rejected**: it would hash the file, and the hash input is the canonical projection, not the file bytes; `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `DirAccess.get_space_left()` **[unverified name for 4.7.2 — register item 10]**; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` (**not** `NOTIFICATION_APPLICATION_FOCUS_OUT`, which is not an exit and must never trigger a save) |
-| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). **On acceptance this ADR becomes Accepted as architecture**; until then it is `Proposed`, and no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). This ADR is **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (HIGH).** Two failure modes are specific to this
 > version band and are load-bearing here: (1) `JSON` parses *every* number as a

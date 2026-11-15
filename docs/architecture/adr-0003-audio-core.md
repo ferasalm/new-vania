@@ -2,12 +2,17 @@
 
 ## Status
 
-**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support). It becomes
-`Accepted` only on a PASS from the `/architecture-review` gate; the lane's gate
-trail (CD · three-seat panel · qa-lead spot-check · micro-check) is recorded in
-`docs/architecture/adr-draft-review-log.md`. If a later architecture review finds
-a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed` and is
-superseded explicitly.
+**Accepted** — 2026-11-15, on the `/architecture-review` gate's verdict
+(**`CONCERNS`, zero blockers**, all ten recommendations applied; the confirm
+pass's two misapplied rows closed in the micro-check batches) and the lane's
+complete gate trail (`docs/architecture/adr-draft-review-log.md` §5). The
+**technical-director's countersign is the one recorded open item** — the same
+state SYS-04's own GDD header carried ("APPROVED, countersign pending"); if it is
+withheld this reverts to `Proposed` with one line. The engine-probe register in
+§14 is an **implementation gate**, not an ADR-status gate. Carried obligations
+(not status gates): O-AUD-1, CR-AUD-03, CR-AUD-04. If a later architecture review
+finds a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed`
+and is superseded explicitly.
 
 ## Date
 
@@ -56,7 +61,7 @@ poisoned-sentinel run possible at all.
 | **Knowledge Risk** | **MEDIUM** — the audio API is stable across 4.4–4.7 per the repo's snapshot ("No major breaking changes to the audio API in 4.4–4.6"), but two *mechanisms* this ADR needs are undocumented or unverified: the stereo→mono collapse and the Ogg loop seam. Both are probe-gated (§14) |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `modules/audio.md`; `breaking-changes.md` (4.7 `AudioStreamPlayer.area_mask` default; 4.7 `AudioEffectSpectrumAnalyzer.tap_back_pos` removed); `deprecated-apis.md`; `docs/framework/technical-preferences.md` |
 | **Post-Cutoff APIs Used** | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` (**documented in `modules/audio.md`**); `AudioServer.set_bus_effect` + the effect slot model **[unverified for 4.7.2's limiter class name: `AudioEffectLimiter` vs `AudioEffectHardLimiter`]**; `AudioStreamPlayer.play(from_position)` **[unverified parameter name]**; `AudioStreamOggVorbis.loop` / `loop_offset` **[unverified for gapless behaviour]**; `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end`; `AudioEffectCapture` (the loop-seam probe); `AudioStreamPlayer.area_mask` default `0` (4.7 — irrelevant here: no `Area` audio overrides in the audio graph, and none may be added) |
-| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. **On acceptance this ADR becomes Accepted as architecture**; until then it is `Proposed`, and no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 8-item register in §14, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate (item 2 blocks the beds' and score's import); **1 is `DOCUMENTED`** by the repo's snapshot. This ADR is **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (MEDIUM).** Two traps are specific to this decision.
 > (1) The `AudioStreamPlayer.area_mask` default changed to `0` in 4.7: an

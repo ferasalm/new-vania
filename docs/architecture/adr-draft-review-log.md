@@ -150,8 +150,81 @@ Recorded in §3's two rebuttal lists (three for ADR-0002, none for ADR-0003).
 
 ## 5 · Final verdict
 
-_pending_
+**Both ADRs: `Accepted` (2026-11-15).** The gate trail is complete:
+
+| Gate | ADR-0002 | ADR-0003 |
+|---|---|---|
+| CD (GLM) | APPROVED, 0 blockers | CONCERNS, 2 blockers → both repaired (CR-AUD-03/04 filed; §4's MonoStage redefined) |
+| creative (GLM) | APPROVED, 0 blockers | APPROVED, 0 blockers (3 in-lane recommendations applied) |
+| technical (DS) | NEEDS REVISION, 7 blockers → all applied | NEEDS REVISION, 7 blockers → all applied |
+| QA (DS) | NEEDS REVISION, 7 blockers → all applied | NEEDS REVISION, 6 blockers → all applied |
+| qa-lead spot-check | #1 **FAIL** (5 of 13 rows misapplied) → repaired → **#2 PASS** (8/8) | same batch |
+| final micro-check | #1 FAIL (3) · #2 FAIL (1) · #3 FAIL (2) · **#4 PASS (0 blockers)** | same batch |
+| `/architecture-review` | **CONCERNS, 0 blockers**, 10 recommendations → all applied; confirm pass verified 8 APPLIED + 2 MISAPPLIED → both closed | same gate, pair-scoped |
+
+**Acceptance record.** The architecture review returned **CONCERNS with zero
+blockers**, and every recommendation it made was applied and confirmed. Both ADRs
+therefore carry `Status: Accepted` on that record, with the **technical-director's
+countersign named as the one open item** — the state SYS-04's own GDD header
+carried ("APPROVED, countersign pending"). The acceptance is recorded, not
+assumed: the gate record exists (this log), and the probe registers are
+implementation gates, not status gates.
+
+**Carried obligations (named, not silently accepted).**
+
+| ID | What | Owner | Blocks |
+|---|---|---|---|
+| SYS-03 engine half | the 34 fixtures in-engine; `TYPE_INT` after the normalization pass; F-SAV-01's three digests | the first SYS-03 story | that story |
+| O-AUD-1 | `restored_epoch` on SYS-05's `load_complete` + its post-flip-load assertion | SYS-05's authoring | the post-flip-load bed |
+| CR-AUD-03 | the mono fold = a 30th file (counts 29→30, the §G.6 row, AC-AUD-32's scope) | the user (batched) | nothing in the ADR; the first audio story's asset count |
+| CR-AUD-04 | TR-AUD-002's load-complete publisher (SYS-03 → SYS-05) | the user (batched) | nothing in the ADR; a reader's misdirection |
+| Probe registers | 9 `PROBE-PENDING` (save) / 7 (audio) with Methods and Owners | the named owners | the first story per ADR |
+
+**Counts at acceptance.** ADR-0002: 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs
+consumed, 0 added; 10 probe items; 3 rebuttals. ADR-0003: 39 TR-AUD / 7 F-AUD /
+7 V-AUD / 32 ACs consumed, 0 added; 8 probe items; 0 rebuttals; 2 CRs filed.
 
 ## 6 · Sync notes (for the orchestrator; not edited here)
 
-_pending_
+Nothing here touches `design/registry/entities.yaml` or `design/gdd/systems-index.md`,
+and this lane produced **no** registry entry and **no** index row — ADRs are not
+registry entities. The notes below are corrections the owning lanes should apply:
+
+1. **`save_roundtrip_twin` says 32/32; the twin runs 34/34.** `node
+   tests/save-twin/save_twin.mjs` prints 34 `PASS` lines; the GDD's header and gate
+   manifest both say 34/34. The registry's `values` line should read **34/34**.
+2. **SYS-04's §K.3 dependency table is stale on two rows**: SYS-03 is listed
+   "Not Started" (it landed 2026-11-14, PR #45) and SYS-15 is listed "Not Started"
+   (it is authored — `design/gdd/cache-stations-death.md`, TR-CSD-015/AC-CSD-15).
+   Neither affects a decision; both mislead a reader.
+3. **`docs/architecture/tr-registry.yaml` is still empty** (`requirements: []`).
+   ADR-0001 governed 26+ SYS-01 TRs and did not populate it; these two ADRs govern
+   26 + 39 more. The TR population is `/architecture-review`'s write, not this
+   lane's — flagged so the architecture-review run does not assume it was done.
+4. **`docs/framework/technical-preferences.md`'s "Architecture Decisions Log"**
+   gained ADR-0002 and ADR-0003 rows (the established index convention; ADR-0001
+   is listed there). That is a docs index, not a shared design file — recorded here
+   because it is outside `docs/architecture/`.
+5. **`SAVE_MIN_FREE_BYTES`** is an ADR-local constant with no GDD knob entry (it is
+   in neither the knob table nor the "not knobs" list). If it ever becomes
+   player-tunable it needs a GDD knob entry; otherwise it stays a constant.
+6. **SYS-07's Health/Damage ADR is the next candidate** (see §0's scope table) —
+   not drafted in this pass.
+
+## 7 · Notes on the review definition used
+
+- The lane prompt's review definition (CD · creative · technical · QA ·
+  spot-check · micro-check) was applied **per ADR**, with the CD gate and the
+  three-seat panel dispatched in one batch against the same draft commit and each
+  seat returning **two verdicts** (one per document). The `/architecture-review`
+  obligation was run **pair-scoped** (its real scope is cross-ADR), twice: a first
+  pass and a confirm.
+- **Models**: CD + creative on `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`;
+  technical, QA, spot-check, micro-check and architecture-review on
+  `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017`. Every seat was
+  a **nested subagent** with its model passed explicitly; no seat was run
+  in-session.
+- **Cost note, recorded honestly**: the spot-check/micro-check loop took four
+  micro-check passes. Each found a real residual (a contradiction between a repair
+  and its duplicate elsewhere in the document). The loop is the reason the final
+  state has zero blockers; it is also the main cost of this lane.
