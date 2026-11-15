@@ -1,6 +1,6 @@
 # Audio Core
 
-> **Status**: In Review
+> **Status**: APPROVED (2026-11-15 — the audio-director's countersign; PR #46's recorded condition closed)
 > **Author**: sound-designer (lane SYS-04; audio-director countersign pending)
 > **Last Updated**: 2026-11-14
 > **Last Verified**: 2026-11-14 (contracts read at `origin/Main` `e8b194d`)
