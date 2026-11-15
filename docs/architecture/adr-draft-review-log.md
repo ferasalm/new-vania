@@ -392,6 +392,9 @@ than three patches. The design has four parts:
 | technical (DS) on the wave-4 delta | `deepseek-v4.1-flash` | **NEEDS REVISION — 2 blockers**, both applied: the slope bound was one-sided *and* signed (a mirrored kink passed), and "capture starts at playback start" assumed δ = 0 when `play()` is mix-quantized and `clear_buffer()` is not |
 | micro-check on the wave-4 delta | `deepseek-v4.1-flash` | **PASS (0 blockers)** |
 | CodeRabbit confirm pass #3 | — | **no verdict issued** — the commit was already reviewed; the check reports `skipping`, not PASS. The 2 log-level threads it raised were applied + resolved (§8.6) |
+| CodeRabbit **full review** | — | **check: pass**; **4 new threads** (1 Major, 3 Minor), all valid, all applied + resolved (§8.6) |
+| technical (DS) on the wave-5 delta | `deepseek-v4.1-flash` | **NEEDS REVISION — 2 blockers**, both applied: five sites still put the whole normalization pass below the hash, and the verdict paragraph inverted F-SAV-04's shape/types rows |
+| micro-check on the wave-5 delta | `deepseek-v4.1-flash` | **FAIL (2) → PASS (0 blockers)** |
 
 **The loop, recorded honestly.** Five micro-check passes for five threads: the
 first three each found a real residual *created by the repair itself* (an
@@ -435,5 +438,23 @@ therefore stands at `skipping` on the head** — the orchestrator must either
 re-request a full review at merge time or accept the waves of findings already
 applied (25 threads on the PR, 0 unresolved).
 
-`UNRESOLVED=0`; every thread in all three waves was resolved by reply with its
-disposition. The waves' commit hashes are in the lane report §6.
+**The full review** (`@coderabbitai full review` on `455c798`, because the incremental
+passes had settled into `skipping` and left the required check without a verdict)
+returned **the check as pass** and opened **4 more threads** — 1 Major, 3 Minor. All
+valid, all applied in `8d4340f`, all resolved:
+
+| # | Sev | Finding | Disposition |
+|---|---|---|---|
+| 13 | Major | a schema-ahead file with a valid hash and an integral value at a key v1 declares `String` produced `REFUSE_TYPE` during normalization, *before* the gate — and the loader could then retry the `.bak`, bypassing `REFUSE_SCHEMA_AHEAD`'s no-fallback rule | **APPLIED** — the pass **spans the hash**: mechanical half below it, schema-typed half after the gate; the row-2/row-6 reading is **cited** (row 2 = integer-domain, row 6 = type-vs-key) with TR-SAV-018 step 7 and TR-SAV-026 named; no current-version outcome changes |
+| 14 | Minor | ten iterations of capture end exactly at the tenth seam, so the window *after* it is missing | **APPLIED** — ten iterations **plus ≥ 50 ms beyond the tenth seam** |
+| 15 | Minor | `seam_pass()` is defined over one sequence `x`; a stereo downmix can cancel opposite-sign jumps and pass a click in both channels | **APPLIED** — **per loop point, per asset and per channel**, never summed; every channel must pass all three conjuncts; the scalar bound is *that channel's* interior peak |
+| 16 | Minor | the MONO swap probe checked playhead + ramp timing only; a swap can pass both and still click | **APPLIED** — a ±10 ms capture around the swap must pass **all three** `seam_pass()` conjuncts, in the register item and the validation criterion; the half-width keeps the ramp's intended writes (one tick either side) outside the capture |
+
+Gates on that delta: technical **NEEDS REVISION (2 → applied)** · micro-check
+**FAIL (2) → PASS (0 blockers)** — both blockers were **opened by the fix itself**
+(five sites still placed the whole pass below the hash; the verdict paragraph inverted
+F-SAV-04's shape/types rows), which is the third time in this lane that a repair's own
+new claims were the risk.
+
+`UNRESOLVED=0`; every thread in every wave was resolved by reply with its disposition.
+The waves' commit hashes are in the lane report §6.
