@@ -55,9 +55,11 @@ inside their own worktree.
   the autonomous runners — recorded): PR #59 triage in flight (8 threads,
   resumed runner) and PR #58 confirm re-running on the fix head (5 fixed + 1
   rebutted). NEW passes (the sync PRs) queue behind recorded dispositions.
-- **Shared-file writer**: idle; the lock is free. TWO sync requests are queued
-  (§5 of `review-queue.md`): SYS-15 (order 1) and SYS-28 (order 2); the sync
-  lane launches next and applies serially.
+- **Shared-file writer**: **SYS-15 sync in flight** — the lock is held (§4); the
+  sync PR is open on `chore/sync-sys15` (base `Main`, from `4419a3b`) and the
+  orchestrator merges after verifying the head. TWO requests were queued (§5 of
+  `review-queue.md`): SYS-15 (order 1, in flight) and SYS-28 (order 2, waits
+  serially — it starts only after the SYS-15 sync merges and the lock releases).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
