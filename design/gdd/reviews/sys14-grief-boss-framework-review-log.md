@@ -124,3 +124,15 @@ Recommendations applied: R1 the boss codes' contact named (a dedicated boss sess
 **New counts: 24 TR-GBF · 6 F-GBF · 11 V-GBF · 30 ACs (smoke 24 = 22 GUT + 2 LINT · device 2 · lock 4 · VS 0) · 9 OQs.** The partition reproduces: 24 + 2 + 4 + 0 = 30.
 
 ### 3.3 Repairs → the qa-lead spot-check (on the repair diff)
+
+**Spot-check #1 (DS, on `9f00a81..29e8b62`): FAIL — 5 blockers (stale residues in neighbouring text), 5 advisories. All 5 + all 5 applied:**
+1. AC-GBF-07's containment fixture still used the retired 1800 ms / ≤ 448 → replaced with the coverage bound (240 ≥ 224) + the despawn-at-boundary fixture.
+2. V-GBF-09's third conjunct still said "travel ≤ 448" → replaced with the coverage `≥ 224` (the per-tick containment is F-GBF-05's despawn law).
+3. The ring's expiry edge case said "1800 ms" → 1200 ms.
+4. TR-GBF-024's soak shape still said "one scripted whiff pair" → three scripted whiffs.
+5. AC-GBF-11 re-asserted a direct floor write → the request phrasing (SYS-07's write executes).
+Advisories: TR-GBF-014's prose retyped on the published event · TR-GBF-023's HealthPort reworded to the request · the provisional-lifetimes line's "the aggro" dropped · TR-GBF-017 names the fresh-FOLLOW ticks (`script_end`'s tick; RM-06 until the swap, RM-05 after) · F-GBF-04's band re-derived to the components' honest sum [46, 139] (the example's 47/137 → 46/139).
+
+**Spot-check #2 (DS, on the delta): see 3.3a.**
+
+### 3.4 Final micro-check (diff-scoped, fresh seat, blockers only)
