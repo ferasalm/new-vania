@@ -95,6 +95,12 @@
 | CR-9 | the lane prompt's merge instructions look circular (the merge requires the sync; the sync's validation requires this GDD's path) | **REBUTTED** — the order is feasible without an edit: review-queue §7 rule 4's recorded mechanism (the SYS-03/SYS-14 precedent) has the sync lane apply on a fresh Main with the GDD's path **excepted-as-pending and recorded**, then this PR merges; the lane prompt's step 10 already states exactly this order. The prompt is the orchestrator's generated artifact — editing it requires the master-source regeneration + the hash re-pin (the orchestrator's §6 path), outside this lane's write scope. The disposition rides the lane report for the orchestrator. |
 | CR-10 | the review log's line 13 records `player_screen_px + shake_offset_px` as "binding" | **REBUTTED** — that line is §B.2's verbatim record of the technical seat's blocker **as raised** (the pre-repair state); §C's T-4 records the applied correction (the minus). The log is the finding-then-fix trail; editing the finding's text would falsify the record. |
 
+**The third wave (CodeRabbit's pass on `5d834b8`, 2026-11-16):** 1 finding — applied:
+
+| # | Finding (the site) | Disposition |
+|---|---|---|
+| CR-11 | F-HUD-03's Output Range `[4, 32]` and the `hp_max` row "12–32" omit the point term (base 32 + HPP 1 × 4 points → 36 segments; base 32 + HPP 3 × 4 → hp_max 44) | **APPLIED** — the Output Range is `[4, 36]` (the segments max is the HPP-1 corner: ceil((32 + 4 × 1) ÷ 1)); the `hp_max` row is 12–44 (the curve's own range: min 12 + 1 × 0, max 32 + 3 × 4); AC-06's sweep names the 36-segment maximum (32/1/4). CodeRabbit's two suggested numbers are each right for their own quantity — the segments max and the hp_max max come from different legal corners, and both are now stated. |
+
 *(The CR threads resolve on GitHub after the fix commit — the dispositions above are the recorded resolutions.)*
 
 **The confirm pass (CodeRabbit's second review on the Major-class batch, 2026-11-15):** 5 findings — 4 applied, 1 already-fixed:
