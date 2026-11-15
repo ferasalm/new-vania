@@ -149,7 +149,7 @@ QA recommendations: (1) the OQ table gains OQ-CSD-9 (the SYS-03 bump rider) — 
 
 **The gate trail is complete: CD CONCERNS→repaired→APPROVED · creative NEEDS REVISION(1)→repaired · technical NEEDS REVISION(3)→repaired · QA NEEDS REVISION(2)→repaired · spot-check PASS · micro-check PASS.**
 
-## 4. CodeRabbit pass — PR #59 (1 pass, 8 threads; all applied; fix commit = the commit carrying this §4)
+## 4. CodeRabbit pass — PR #59 (1 pass, 8 threads; all applied; fix commit `e5cea0d`)
 
 The pass ran on the PR head `0798862` (6m48s; check PASS). 8 inline threads, **3 Major + 5 Minor. Triage: 8 applied, 0 rebutted** — every finding verified against the current document before the fix; none required reopening a closed design decision (two superseded this lane's own authoring-time rulings — R6's pre-cache stamp behavior and the ledger's unscoped baseline — both toward stricter internal consistency; recorded here, the rulings' original text stands as history in §1).
 
