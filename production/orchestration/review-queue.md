@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| — | — | — | — | — | idle |
+| 1 | SYS-16 Progression | 18 constants + 5 contracts + 2 formulas (registry 88 → 113) | the SYS-16 APPROVED row + design order 23 + the dependency bullet + 9 row corrections + the rider record | 2026-11-15 | **applied on `chore/sync-sys16` — PR open; the lock is held until it merges** |
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-07-REWORK** —
 PR #76, `6dd4651` (head `b188b2d`; 4 CodeRabbit threads across 3 passes, all
@@ -60,7 +60,8 @@ row/bullet, design order 22, the SYS-16/17 unblock and game-concept's 5th
 Gate-2 probe. `spitter_orb_damage` stayed HELD at 8. The full request was
 `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`.
 
-**Queued next (order 1: the SYS-16 sync; order 2, serial: the SYS-14 sync)**:
+**In flight (order 1: the SYS-16 sync — applied, PR open; the lock held) and queued
+next (order 2, serial: the SYS-14 sync)**:
 **SYS-16** — the lane report's §4a–4e (7 pending SYS-07 constants + 11 new
 SYS-16 constants + 4 published contracts + `progression_namespace` + 2
 formulas + the `damage_ladder_mvp` note; the index row/design-order 23/
