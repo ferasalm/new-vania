@@ -132,7 +132,80 @@ Every value the package prints, with its derivation from the frozen GDD's own nu
 | parity band | 584 ± 10% | **[526, 642]** |
 | one chain step | 1 ÷ 6 | **+16.7%** (one ATK1 step: +50%) |
 
-## 6. The residual risks the seats did not block (recorded for the user)
+## 6. The user approval and the applied-diff verification (2026-11-15)
+
+### 6.1 The decision
+
+**D-ORCH-03 — APPROVED (option A), recorded 2026-11-15** by the user (the ledger entry
+lands on the orchestrator side; this lane names the ID in every commit). The approval
+covers the full revised package exactly as presented — the ÷5 rescale (20 HP · strikes
+1/2/4 · the weapon table 2/4/2/2 + `DamageEvent.arc`), the SYS-08 co-revision, the
+5-step growth ladder, the three `TR-HD-006` gear riders, the mana-free Stinger (M1),
+and the parity restatement. **No component swaps.** Both named consequences were
+accepted: DEF is decorative for gear (a SYS-16 input, R10) and the L5→L6 handoff is
+OQ#20's (R11).
+
+### 6.2 What was applied
+
+| File | Commit | Content |
+|---|---|---|
+| `design/gdd/health-damage.md` | the SYS-07 revision commit | § 8's full clause inventory: the header (Status/Last Verified/Counts/Contracts), the Player Fantasy (term 4 + the three anchor moments + the success signature, **prose re-derived**), the Overview's six-stage pipeline, TR-HD-003/005/006/007/008/009/010/011/016/021/029/030/033/034/035/037/039, F-HD-01/02/03/06/07/08/09/10/11/13/14 (+ the ledger rows), V-HD-07/12/13/14, the edge cases, the 12 changed knob rows + `ATK_PER_POINT` reclassified + the new `DAMAGE_LADDER_MVP` row, the cross-system inputs, the Interactions cell, the Dependencies rows/bullets, 19 ACs, OQ#5/#6/#10/#13/#14, and the new OQ#20 |
+| `design/gdd/combat.md` | the SYS-08 co-revision commit | TR-CMB-004 (the damage column + the re-derived safe ranges), TR-CMB-010, TR-CMB-015, **TR-CMB-025 (`DamageEvent.arc` + the stamping rule)**, F-CMB-06 (the input band 1–4, the outputs 3/6), F-CMB-10's example, the four damage knobs, AC-CMB-12, AC-CMB-17, AC-CMB-30 |
+| `design/gdd/reviews/sys07-rework-review-log.md` | this commit | this section |
+
+**Not applied, with the reason recorded** (a deliberate, reported deviation from the
+package's § 13.2): the **SYS-13 orb value (8 → 2)**. The orb is entangled across five
+sites in `enemy-ai-telegraphs.md` — TR-ENM-011's own clause (the value *and* the
+"8 sits between P1 6 and P2 12" relation *and* the "band 1 says light" justification),
+F-ENM-07's example ("it kills the Spitter for 8"), the "farms orb-deflects" edge
+bullet, AC-ENM-18 (the deflected-orb kill), and TR-ENM-005's hp/award roster. A
+value-only edit would leave "damage: 2" beside "8 damage sits between P1 6 and P2 12"
+in the same sentence — worse than none. **SYS-13's rider must land as one coordinated
+doc touch** (§ 9's row): hp 6/12/24, awards 3/7/14, the orb 2, the flash band, the
+ceiling 12/18, V-HD-06's `6 < 12 < 24`, and the one-shot claim re-decided. Until it
+lands, the registry sync must **not** flip `spitter_orb_damage` (recorded in the lane
+report's sync request).
+
+### 6.3 The applied-diff verification (the two flagged fixtures)
+
+The package's final two repairs were applied after the last micro-check and were
+**explicitly unverified**; the lane re-ran them on the *applied* text, as the user
+required.
+
+**Fixture 2 — AC-HD-13's fixture set vs the applied formulas: PASS.** Re-derived
+independently: the ladder's 5×4 table matches the AC column for column; `step()` maps
+100/108/116/124/132 → 0–4; the counters reproduce (ATK1 3/4/4/4/4, ATK2 6/7/7/8/8 under
+`max(1, ceil(floor(ATK.damage × 1.5) × attack ÷ 100))`); the ABILITY fixture (raw 3 →
+ceil(3.96) = **4** at 132) and the DEFLECT fixture (raw 2 → ceil(2.64) = **3** at 132)
+hold; the six-stage order string is identical in the AC, TR-HD-005's body and the
+Overview; the module stage is identity at 0 modules; the gate partition is
+42+3+5+0 = 50 and the counts are 39/15/50/68/**20**.
+
+**Fixture 1 — the live-edit case split: FAIL → repaired → PASS.** The first run found
+three real defects in the applied text: (i) F-HD-14's validation sentence stated the
+four checks but **not** the load-vs-live split; (ii) the generic **Knob validation law
+(V-HD)** — printed twice — still resolved *every* live edit by "clamp + telemetry",
+contradicting V-HD-12's reject cases; (iii) AC-HD-13's ATK2 clause omitted the clamp's
+direction/magnitude and the residual-violation outcome. All three were repaired: the
+split now appears identically in F-HD-14, the V-HD-12 row and AC-HD-13, and both
+generic-law copies defer explicitly (*"Except where a specific invariant names a
+different resolution: V-HD-12's ladder cases reject … the generic law's 'clamp' is the
+default, not a universal"*). The re-run returned **PASS** with zero blockers across all
+four sites.
+
+**The header claim is therefore true**: `health-damage.md`'s *"re-verified 2026-11-15
+by the applied-diff check (D-ORCH-03)"* stands on the two checks above — and on nothing
+more. The **full** applied-diff review (the CD gate + the technical seat + the qa-lead
+spot-check on the whole revision) is still owed and is recorded as the next gate in the
+lane report.
+
+### 6.4 The counts after application
+
+39 TR-HD · 15 formulas · 50 ACs · 68 edge bullets · **20 OQ rows** · 15 V-HD ·
+**33 knob rows** · gate manifest 42 + 3 + 5 + 0 = 50. The added OQ is #20; the added
+knob row is `DAMAGE_LADDER_MVP`; no TR and no AC was added or removed.
+
+## 7. The residual risks the seats did not block (recorded for the user)
 
 - **R10 — the DEF axis collapses** at the low baseline (any `defense ≥ 1` ≡ DEF 25). The
   package turns this into a **D-1 input** rather than hiding it: a Chassis Module must not
