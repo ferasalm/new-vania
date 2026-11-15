@@ -62,12 +62,15 @@ inside their own worktree.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: none` — **both queued syncs landed on 2026-11-14**: SYS-03 at
-`50a9a93` (PR #47) and SYS-04 at `dd33658` (PR #48). The lock was released after
-the SYS-04 merge; the two shared files (`design/registry/entities.yaml`,
-`design/gdd/systems-index.md`) are free. The next lane to reach `SYNC` queues its
-request in `review-queue.md` §5 and the sync lane re-acquires the lock here
-before any edit.
+`shared_file_lock: SYNC-LANE` — **acquired 2026-11-15** for the serial queue's
+order 1 (**SYS-15 Cache Stations & Death-as-Story**). Branch `chore/sync-sys15`,
+cut from `origin/Main` at `4419a3b`. The lock is held until the SYS-15 sync PR
+merges (order 2, SYS-28, follows serially); a separate release PR clears it
+after the merge (the #49 pattern). **Prior release 2026-11-14**: both queued
+syncs landed — SYS-03 at `50a9a93` (PR #47) and SYS-04 at `dd33658` (PR #48); the
+two shared files (`design/registry/entities.yaml`,
+`design/gdd/systems-index.md`) were free from that release until this
+acquisition.
 
 ## 5. Blockers
 
