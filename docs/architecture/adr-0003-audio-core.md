@@ -193,7 +193,7 @@ no second duck family; no reading the truth state; no per-press chatter.
               │ Gate · Failsafe · VariationRng · OrderTrace · EdgeTrace     │
               │ TelemetryRing(256) · Tuning                                  │
               └───┬───────────┬────────────┬───────────┬───────────┬────────┘
-                  │ ClockPort │ BusPort    │ PlayerPort│ Telemetry │ MetaPort
+                  │ ClockPort │ BusPort    │ PlayerPort│ Telemetry │ MetaPort │ SeedPort
                   ▼           ▼            ▼           ▼           ▼
               physics_tick  AudioServer  18 players   ring     {event_id,tick}
 ```
@@ -357,12 +357,14 @@ player. The mapping is explicit and auditable:
   bound, and a fifth concurrent bed is a design error, not a config.
 - **The draw is seeded and injected.** `VariationRng` takes the run's **seed** from
   a declared `SeedPort` at arm time: one 32-bit value per run, drawn **once by the
-  adapter at boot** (never per draw, never from wall time), recorded in the run
-  record. A replay reuses the recorded seed, so the draw sequence is identical
-  (AC-AUD-30); a fresh run gets a fresh seed, so the sequence is not memorisable
-  across sessions. **The draw** reads neither a clock nor a global RNG — the
-  injected seed is its only entropy; the core's `ClockPort` remains the envelopes'
-  tick source (§6, §8).
+  adapter at boot** (never per draw, never from wall time). The adapter holds it for
+  the session; the core sees only the value. A fixture supplies a fixed seed, so the
+  draw sequence is reproducible (AC-AUD-30's 40 draws); a fresh session gets a fresh
+  seed, so the sequence is not memorisable across sessions. **The draw** reads
+  neither a clock nor a global RNG — the injected seed is its only entropy; the
+  core's `ClockPort` remains the envelopes' tick source (§6, §8). The seed is
+  **never persisted**: SYS-03's schema is closed (TR-SAV-004) and a seed key would be
+  `REFUSE_UNKNOWN_KEY`; determinism is a fixture property, not a save property.
 - **The gate is a boolean on the core, not a bus mute.** `set_bus_mute` on SFX
   would silence already-sounding voices (a cut is a click and reads as a bug —
   §D.3's ring-out law). The gate refuses **new** starts and leaves the ringing
@@ -515,7 +517,7 @@ seed**, and publishes **none**:
 | E1 / E4 / E7 | SYS-09 | adapter signal | `AUD_MISSING_E1/_E7` (E4 has no obligation) |
 | E2 / E5 / E6 | SYS-29 | adapter signal | `AUD_MISSING_E2/_E5/_E6` + the named behaviour (§G.8) |
 | E3b `ambient_shift` | SYS-10 | adapter signal | `AUD_MISSING_E3B`; **the bed stays put; no self-shift** |
-| Room activation | SYS-02 | adapter signal | **no record** — the only inbound whose absence has no distinct behaviour: the bed stays as it is and the next real room entry re-applies the room's bed. Named here as the one exception to R9, so "every missing input has a record" is not silently false |
+| Room activation | SYS-02 | adapter signal | **no record** — the only **edge** input whose absence has no distinct behaviour: the bed stays as it is and the next real room entry re-applies the room's bed. Named here as the one edge-input exception to R9, so "every missing input has a record" is not silently false |
 | Load-complete (`restored_epoch`) | SYS-05 (§12, O-AUD-1) | adapter signal | `AUD_LOAD_MISSING`; the derived state stands |
 | The tick | ADR-0001 | `ClockPort` | a boot-order defect; the dev assert |
 | The variation seed | the adapter (boot) | `SeedPort` | a boot failure: no seed, no deterministic draw (§5) |

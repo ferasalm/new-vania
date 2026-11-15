@@ -325,7 +325,7 @@ explicit**, never inferred from the message:
 | Condition (in this order) | Code |
 |---|---|
 | the path is not writable / the directory cannot be created (`ERR_UNAUTHORIZED`, `ERR_FILE_NO_PERMISSION`) | `SAVE_FAILED_PERMISSION` |
-| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (**a constant, not a knob** — 4× the largest expected file; the GDD's §Tuning Knobs "not a knob" doctrine; registered at GDD sync) | `SAVE_FAILED_DISK_FULL` |
+| a pre-flight free-space check on the slot's volume is below `SAVE_MIN_FREE_BYTES` (**a constant, not a knob** — 4× the largest expected file; an ADR-local constant, in neither the GDD's knob table nor its "not knobs" list; if it ever becomes player-tunable it needs a GDD knob entry) | `SAVE_FAILED_DISK_FULL` |
 | a `store_*` returns `false` **and** the pre-flight passed | `SAVE_FAILED_DISK_FULL` if the volume's free space dropped during the write, else `SAVE_FAILED_UNKNOWN` |
 | `rename_absolute` returns non-`OK` at step 4/5 | `SAVE_FAILED_RENAME` |
 | a read-back hash mismatch at step 3 / step 6 | `SAVE_FAILED_VERIFY` |
@@ -341,8 +341,9 @@ sweep. It invents no state. The distinction is stated once in the GDD and is a
 law here: **promoting a `.bak` restores bytes; it is not a repair write.**
 
 **The completion drain.** The worker's result record is drained at the **next tick
-boundary** on the game thread — `physics_tick`, this ADR's `ClockPort` (§12), the
-clock that runs during a freeze and in a non-Gameplay context. It is **not** the
+boundary** on the game thread — `physics_tick`, this ADR's `ClockPort` (§12; the
+binding itself is Migration step 4), the clock that runs during a freeze and in a
+non-Gameplay context. It is **not** the
 `logic_tick`, which advances only in Gameplay and only unfrozen: a drain pinned to
 it would defer a completed write through a flip freeze and could never run on the
 quit-from-menu path. ADR-0001 §5 defines the *input* pipeline's phases 0–6 and has
@@ -530,8 +531,10 @@ States: `EMPTY` · `OK` · `BAK_ONLY` · `REFUSED_READ_ONLY`. Edges are total
 failure; `BAK_ONLY → OK` on the sweep or the next successful write;
 `OK|BAK_ONLY → REFUSED_READ_ONLY` when **both** files fail the load — **or
 immediately on `REFUSE_SCHEMA_AHEAD`**, where the `.bak` is never attempted
-(§6b), so the "both files fail" condition is unreachable by design and the
-carve-out is stated rather than implied).
+(§6b). TR-SAV-020's footnote 1 authorises the carve-out explicitly
+("`REFUSE_SCHEMA_AHEAD` is read-only unconditionally"), while the GDD's edge
+sentence (line 362) enumerates the edge as firing "only when both files fail" —
+the footnote is the authority and the carve-out is stated rather than implied.
 
 The **boot sweep** runs per slot, in this order, before any load: (1) if
 `<slot>.tmp` exists, delete it (`tmp_swept`); (2) if `<slot>.sav` is missing and
