@@ -54,19 +54,21 @@ inside their own worktree.
 - **CodeRabbit**: the lane passes are done — PR #59 triaged + merged (8+4
   threads dispositioned), PR #58's confirm resolved; PR #67's pass clean. NEW
   passes (the sync PRs) queue behind recorded dispositions.
-- **Shared-file writer**: **active — ART-BIBLE (order 1)**: the lock is held
-  (§4); branch `chore/sync-artbible` (from `origin/Main` `ffaa1af`), the two
-  shared files applied + validated, **PR #72** open on `Main` awaiting merge.
-  Prior: the SYS-28 sync landed (PR #69, `a5a1f81`) and the lock released; the
-  SYS-15 sync landed (PR #63, `1e9e524`).
+- **Shared-file writer**: **idle; the lock is free** — the ART-BIBLE sync
+  landed (PR #72, `bc8c6be`; 0 threads) and the lock released (§4). The sync
+  queue is empty. Prior: the SYS-28 sync landed (PR #69, `a5a1f81`) and the
+  lock released; the SYS-15 sync landed (PR #63, `1e9e524`).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **acquired 2026-11-15** for the ART-BIBLE sync
-(the queue's order 1). Branch `chore/sync-artbible`, branched from `origin/Main`
-`ffaa1af`; the sync PR opens on `Main`. The lock is released only after the sync
-PR merges (the #49 pattern); no other writer runs meanwhile.
+`shared_file_lock: none` — **released 2026-11-15** after the ART-BIBLE sync
+landed: PR #72 merged at `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads).
+Registry notes updated on `dual_reality_palette_tables` (the D-ORCH-02 pins)
+and `seam_admission_test` (D-ORCH-01: the purple declined); the index gained
+the SYS-11 qualification, the SYS-02 line-36 note (naming D-ORCH-01 +
+`5cc1377`), the OQ rider notes and the OQ-M1 rider list. The shared files are
+free.
 
 **Prior release 2026-11-15 (SYS-28)**: PR #69 merged at `a5a1f81` (head
 `eb85da4`; 4 CodeRabbit threads, all applied + resolved). Registry 77 → 80
