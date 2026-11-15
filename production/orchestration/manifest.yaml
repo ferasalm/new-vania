@@ -19,7 +19,7 @@ next:
   kind: orchestrator
   path: production/orchestration/prompts/orchestrator-loop.md
   version: "2.0.6"
-  hash: "fff802cae478"
+  hash: "d376aa2b057a"
 
 support_prompts:
   - id: handoff
@@ -37,7 +37,7 @@ support_prompts:
   - id: orchestrator-loop
     path: production/orchestration/prompts/orchestrator-loop.md
     version: "1.0.0"
-    hash: "fff802cae478"
+    hash: "d376aa2b057a"
   - id: cd-gate
     path: production/orchestration/prompts/seat-briefs/cd-gate.md
     version: "1.0.0"
@@ -247,7 +247,7 @@ lanes:
     status: QUEUED
     dependencies: [SYS-07-REWORK, SYS-08, SYS-13]
     review_state: "not-started"
-    next_action: "Unblocked by D-ORCH-03's landing (PR #75, `3fcedc6`). Launch after the D-ORCH-03 riders PR lands — the rider re-derives SYS-13's numbers (hp 6/12/24, awards 3/7/14, the orb 2) that the progression consumes. Render `--lane SYS-16` first; fresh `lane-runner` session."
+    next_action: "Unblocked by D-ORCH-03's landing (PR #75, `3fcedc6`). Launch after the D-ORCH-03 riders PR and the mini sync land — the rider re-derives SYS-13's numbers (hp 6/12/24, awards 3/7/14, the orb 2) that the progression consumes, and the mini sync flips the registry's `spitter_orb_damage`/`power_band` to match. Render `--lane SYS-16` first; fresh `lane-runner` session."
 
   - id: SYS-17
     title: "Inventory & Items — MVP carve-out + gear loadout"
