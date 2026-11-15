@@ -18,11 +18,11 @@ queue).
 
 | Lane | Document | Phase | Owner | Prompt |
 |---|---|---|---|---|
-| ART-BIBLE | `design/art/art-bible.md` | AUTHORING (parked; D-ORCH-01/02) | art-director + creative-director | v1.0.0 |
+| — | — | — | — | — |
 
-SYS-15 left this queue: its GDD is authored, its gates are complete (CD
-APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS), and its
-PR (#59) is open with CodeRabbit pending (§4).
+The authoring table is empty. **SYS-15** landed (its GDD merged — PR #59 at
+`24efd09`). **SYS-28** is at PR #58 (gates closed; its sync in flight). 
+**ART-BIBLE** is at PR #67 (gates complete; its sync queued as order 2).
 
 ## 3. Authored-queued (max 3; waiting for a review slot)
 
@@ -80,7 +80,6 @@ updates the manifest, releases the lock. Never force-push.
 |---|---|---|---|---|---|
 | SYS-16 | SYS-07-REWORK (IP-17) | hard dependency | systems-designer + lead-programmer | D-ORCH-03 | 2026-11-14 |
 | SYS-17 | SYS-07-REWORK + SYS-16 | hard dependency | systems-designer + lead-programmer | D-ORCH-03 | 2026-11-14 |
-| ART-BIBLE | SYS-11 OQ-1 direction | user decision | art-director + lead-programmer | D-ORCH-01 | 2026-11-14 |
 
 ## 7. Queue rules
 
