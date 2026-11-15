@@ -106,33 +106,33 @@ lanes:
     title: "Cache Stations & Death-as-Story"
     branch: docs/sys15-cache-stations-death
     worktree: ../new-vania-sys15-cache-stations-death
-    worktree_state: planned
+    worktree_state: created
     prompt_path: production/orchestration/prompts/lanes/SYS-15.md
     prompt_version: "1.0.0"
     prompt_hash: "85701ea84621"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: QUEUED
+    status: AUTHORING
     dependencies: [SYS-03, SYS-05, SYS-07]
     dependencies_waived: [SYS-03, SYS-05]
     dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring (the review-doctrine pending-obligation ledger)."
-    review_state: "not-started"
-    next_action: "Starts when a three-seat review slot frees; consume SYS-03/SYS-05 as pre-shaped and ratify at authoring."
+    review_state: "authoring; CD gate pending"
+    next_action: "AUTHORING (runner in flight on GLM, base 9e20653). Author the GDD, ratify SYS-03/SYS-05 pre-shaped at authoring; CD gate -> three-seat -> spot-check -> micro-check; prepare the sync request; the orchestrator merges."
 
   - id: SYS-28
     title: "Narrative Presentation — logs, briefings, telegraph text"
     branch: docs/sys28-narrative-presentation
     worktree: ../new-vania-sys28-narrative-presentation
-    worktree_state: planned
+    worktree_state: created
     prompt_path: production/orchestration/prompts/lanes/SYS-28.md
     prompt_version: "1.0.0"
     prompt_hash: "e2e9a0f20532"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: QUEUED
+    status: AUTHORING
     dependencies: [SYS-05, SYS-10, SYS-09]
     dependencies_waived: [SYS-05]
     dependency_note: "SYS-05 is a pre-shaped contract; ratify at authoring."
-    review_state: "not-started"
-    next_action: "Starts when a three-seat review slot frees; consume SYS-05 as pre-shaped and ratify at authoring."
+    review_state: "authoring; CD gate pending"
+    next_action: "AUTHORING (runner in flight on GLM, base 9e20653). Author the GDD, ratify SYS-05 pre-shaped at authoring; CD gate -> three-seat -> spot-check -> micro-check; prepare the sync request; the orchestrator merges."
 
   - id: SYS-14
     title: "Grief-Boss Framework — Denial state"
