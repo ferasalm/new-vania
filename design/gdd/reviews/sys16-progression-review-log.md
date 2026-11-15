@@ -237,7 +237,7 @@ exchange, and the two load-path gaps a catalogue change opens under an existing 
 12 threads, **0 unresolved**. **The merge is not taken by this lane** — the contract
 merges only after the sync lands, and merge authority is the orchestrator's.
 
-## H. The one item for the orchestrator / user
+## H. The one item for the orchestrator / user — **DECIDED: (i)**
 
 **F-HD-10's module-build note — a reading, a rider request, and a pre-authorised
 fallback** (technical seat blocker 2; TR-PRG-013; rider (d)).
@@ -256,6 +256,17 @@ fallback** (technical seat blocker 2; TR-PRG-013; rider (d)).
   **pre-authorised the pool-only fallback** as a data switch (no redesign): if the
   ceiling reading is upheld, `WINDOW_EXCEPTION_ENABLED` → false and the drive payload
   is withdrawn.
-- **What is needed**: the orchestrator batches either (i) rider (d) at SYS-07's next
-  doc touch (the reading stands; the gear layer ships as authored), or (ii) the ceiling
-  reading upheld (the fallback executes). **No edit to SYS-07 is taken either way.**
+- **THE DECISION — (i), DECIDED 2026-11-15 (autonomous, under the user's standing
+  away-directive; recorded as D-ORCH-13 in `production/orchestration/decisions.md`,
+  revisit-on-return noted).** **The reading stands**: F-HD-10's note is a measurement
+  ruler, not a hard ±10% ceiling on gear. **The gear layer ships as authored** — three
+  named modules, the two-axis exchange, the one enumerated exception;
+  **`WINDOW_EXCEPTION_ENABLED` stays true** and the drive payload ships. **The
+  pool-only fallback does NOT execute** (its criteria remain recorded in TR-PRG-013 as
+  the dormant branch, so a future re-decision is still a switch, not a redesign).
+  **Rider (d) is carried** to SYS-07's next doc touch. **No SYS-07 edit is taken.**
+  The GDD required no change for the decision: the fallback was authored as a
+  *conditional* branch throughout (TR-PRG-013's "if the ceiling reading is upheld",
+  F-PRG-07's "with `WINDOW_EXCEPTION_ENABLED = false`", AC-PRG-17's closure arm), so
+  the document already reads as the (i) configuration and carries no
+  fallback-execution language.
