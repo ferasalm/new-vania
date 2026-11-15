@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | queued |
+| 1 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | PR #72 open (`chore/sync-artbible`, base `Main`), awaiting merge |
 
 Full request (read from the lane worktree; `session-state` is gitignored but
 on disk):
