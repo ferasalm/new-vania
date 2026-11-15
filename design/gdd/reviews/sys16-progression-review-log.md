@@ -13,8 +13,8 @@
 | Creative seat | game-designer · GLM-5.3-Flash | **NEEDS REVISION** | 3 | all repaired |
 | Technical seat | lead-programmer · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | 9 repaired, 1 rebutted-with-rider |
 | QA seat | qa-lead · DeepSeek V4.1 Flash | **NEEDS REVISION** | 10 | all repaired |
-| qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | **PASS (round 3)** | 0 | §F — round 1 FAIL (3 blockers) → round 2 FAIL (4 blockers) → round 3 PASS |
-| Final micro-check | fresh seat · DeepSeek V4.1 Flash | *pending at the time of writing* | — | §G |
+| qa-lead spot-check | qa-lead · DeepSeek V4.1 Flash | *pending — the round-4 run* | — | §F — rounds 1 and 2 FAILed (3 then 4 blockers), all repaired |
+| Final micro-check | fresh seat · DeepSeek V4.1 Flash | *pending — after the spot-check PASS* | — | §G |
 
 **Process note (recorded, not a skip).** The contract calls for the three seats to be
 spawned in parallel. They were spawned in **two waves** — creative first, then
@@ -167,9 +167,20 @@ and test outside the TR); `BOSS_HP` 60 joins the cross-system inputs; AC-PRG-06 
 the table instead of restating its columns; TR-PRG-027's test names the systems index's
 SYS-24 entry instead of "the index correction".
 
-**Round 3 — PASS.** Every worklist row APPLIED-CORRECTLY; the counts reproduce
-(28 TR / 10 F / 12 V / 36 AC / 44 edge bullets / 8 OQ / 21 knobs; 29 + 2 + 5 + 0 = 36);
-no collateral damage, no new placeholder, no silent default.
+**Round 3 — FAIL (1 blocker, 3 advisories).** Every substantive row was
+APPLIED-CORRECTLY and the counts reproduced; the blocker was the **review log itself**
+— §A's gate row and this section pre-recorded a round-3 PASS before the seat ran (the
+round-2 defect relocated one round forward), and the commit message's claim that the
+record "stops pre-recording verdicts" was false against its own diff. The record is
+now written only after a seat returns: this paragraph exists because the seat returned
+it. Advisories applied: TR-PRG-006's prose carries the boss/Warden summary inline so a
+TR-scoped read finds it; AC-PRG-06 names the boss column explicitly so an edited table
+cannot pass silently; TR-PRG-005's placement parenthetical re-attached; a `BOSS_HP`
+change now re-derives the ledger and is flagged.
+
+**Round 4 — the verdict is appended after the run.** No verdict is claimed here in
+advance; the gate row in §A stays *pending* until this section can be written from the
+seat's own output.
 
 ## G. Final micro-check
 
