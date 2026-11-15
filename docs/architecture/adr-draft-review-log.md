@@ -169,6 +169,8 @@ TD's step (or the orchestrator's, on the TD's word).
 | final micro-check | #1 FAIL (3) · #2 FAIL (1) · #3 FAIL (2) · **#4 PASS (0 blockers)** | same batch |
 | `/architecture-review` | **CONCERNS, 0 blockers**, 10 recommendations → all applied; confirm pass verified 8 APPLIED + 2 MISAPPLIED → both closed | same gate, pair-scoped |
 | CodeRabbit | 10 threads, all 10 valid, all applied + resolved | same pass |
+| CodeRabbit wave 2 (repair pass) | **5 threads, all 5 valid, all applied + resolved** (§8) | same pass |
+| Repair-pass gates | technical (DS) **NEEDS REVISION (6) → all applied** · spot-check (DS) **PASS 11/11** · micro-check **#1 FAIL (1) → #2 FAIL (2) → #3 FAIL (1) → #4 PASS → #5 PASS (0)** | same batch |
 
 ### The prepared acceptance record (unsigned)
 
@@ -185,14 +187,17 @@ On the TD-ADR verdict, both ADRs become **Accepted**, on this record:
 | ID | What | Owner | Blocks |
 |---|---|---|---|
 | SYS-03 engine half | the 34 fixtures in-engine; `TYPE_INT` after the normalization pass; F-SAV-01's three digests | the first SYS-03 story | that story |
+| CR-SAV-01 | **the abandonment regime's frozen-text reconciliation, in three clauses**: AC-SAV-23 clause 1 gains "commits within `SAVE_JOIN_TIMEOUT_MS`"; its clause (b) gains "…or the close-save did not commit within `SAVE_JOIN_TIMEOUT_MS`"; TR-SAV-014's "joined at shutdown" gains "…except on the abandonment path" (§5b) | the user (batched) | the abandonment path's AC/TR wording — not the mechanism |
 | O-AUD-1 | `restored_epoch` on SYS-05's `load_complete` + its post-flip-load assertion | SYS-05's authoring | the post-flip-load bed |
 | CR-AUD-03 | the mono fold = a 30th file (counts 29→30, the §G.6 row, AC-AUD-32's scope) | the user (batched) | the first audio story's asset count (enforced by its story gate) |
 | CR-AUD-04 | TR-AUD-002's load-complete publisher (SYS-03 → SYS-05) | the user (batched) | nothing in the ADR; a reader's misdirection |
+| OQ-AUD-9 | **any looped asset whose authored duration exceeds its rung's ceiling** (beds ~78 s combined; the score pair ~28 s) — re-author to the ceiling, or an explicit scoped revision of the seamless-loop requirement | the audio-director | the first audio asset whose loop exceeds its rung; the ladder's ceilings are priced either way |
 | Probe registers | 9 `PROBE-PENDING` (save) / 7 (audio) with Methods and Owners | the named owners | the first story per ADR |
 
 **Counts at this record.** ADR-0002: 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs
-consumed, 0 added; 10 probe items; 3 rebuttals. ADR-0003: 39 TR-AUD / 7 F-AUD /
-7 V-AUD / 32 ACs consumed, 0 added; 8 probe items; 0 rebuttals; 2 CRs filed.
+consumed, 0 added; 10 probe items; 3 rebuttals; **1 CR filed** (CR-SAV-01).
+ADR-0003: 39 TR-AUD / 7 F-AUD / 7 V-AUD / 32 ACs consumed, 0 added; 8 probe items;
+0 rebuttals; 2 CRs filed; **1 open question filed** (OQ-AUD-9).
 
 ## 6 · Sync notes (for the orchestrator; not edited here)
 
@@ -238,3 +243,139 @@ registry entities. The notes below are corrections the owning lanes should apply
   micro-check passes. Each found a real residual (a contradiction between a repair
   and its duplicate elsewhere in the document). The loop is the reason the final
   state has zero blockers; it is also the main cost of this lane.
+
+## 8 · Repair pass — the second CodeRabbit wave
+
+**What arrived.** After the confirm pass, CodeRabbit's re-review opened **5 new
+threads** (16 total on PR #79; the first batch resolved 11). Severity: **3 Major**,
+all three on ADR-0003's loop-seam fallback, and **2 Minor**, both on ADR-0002. All
+five were **valid**: none was a duplicate of the first batch, none was a false
+positive, and two of the three Majors were arithmetic/logic gaps that the first
+batch's own repair had left open.
+
+### 8.1 The five dispositions
+
+| # | Thread | Sev | Where | Finding | Disposition |
+|---|---|---|---|---|---|
+| 1 | `PRRT_…oW22` | Minor | adr-0002 §3 | the hash-coverage sentence said only `state_hash` was outside the hash, contradicting §3's own "informational, outside the hash" line for `game_version`/`saved_at_utc` | **APPLIED** — §3 now names **all three** excluded values (`game_version`, `saved_at_utc`, `state_hash`) and says `schema_version` + the whole payload are inside; a new validation criterion asserts the count of three |
+| 2 | `PRRT_…oYv-` | Minor | adr-0002 §5 | an abandoned close-save can still commit (the step-5 rename survives the timeout), contradicting R4 + the exit policy ("the last station autosave is returned") | **APPLIED** — **one behaviour, two regimes**, with a **step-3b fence** (§8.2) |
+| 3 | `PRRT_…oW23` | Major | adr-0003 §10 | if the mono fold fails the seam probe the fallback replaces the stereo score with WAV but leaves `MUS_HOUSE_LOOP_MONO` on Ogg — MONO keeps playing the rejected loop | **APPLIED** — the fold gets its own specified **and budgeted** fallback row; **the pair moves together, always** (§8.3) |
+| 4 | `PRRT_…oW26` | Major | adr-0003 §10 | the WAV score fallback fails SYS-04 §G.6's import audit (the score row pins Ogg) | **APPLIED** — the **audit rule is defined in the ADR** (two-row table + a manifest declaration + gate evidence), **conditional on CR-AUD-03's widened scope**; the GDD is **not** edited; the rider is recorded (§8.4) |
+| 5 | `PRRT_…oW29` | Major | adr-0003 §10 | a score longer than 38 s kept Ogg even with a seam delta above `SEAM_DELTA_MAX`, and a *recorded* delta is not a seamless loop | **APPLIED** — the pass condition is now **absolute and per asset**; the ladder is fully budgeted; the un-priceable case is **OQ-AUD-9** for the audio-director, with a fail-safe default (§8.3) |
+
+### 8.2 Thread 2 — the choice, and why it is neither of the two offered
+
+The thread offered two behaviours: (i) a cancellation check before step 5 + the
+fence in the step table, or (ii) amend R4/the exit policy to allow a late commit.
+**Neither is implementable alone**, and that is what the repair states:
+
+- **(i) alone is a promise the platform cannot keep.** A fence cannot *un-issue* a
+  `rename_absolute` the kernel is already executing — and a blocked rename is
+  precisely the syscall the 250 ms bound fires on. "The write never lands" would be
+  the same class of aspirational claim the exit policy already exists to avoid.
+- **(ii) alone leaves the common case silently rewriting the slot.** The typical
+  timeout blocks at step 2 (the `store_*`), not at a rename; without a fence that
+  write resumes later and commits, which the old exit policy's wording forbade
+  while the mechanism allowed it — the contradiction the thread found.
+
+**The behaviour adopted**: abandonment is decided at **one fence (step 3b)** placed
+immediately before the first destructive operation, so **an abandoned write never
+*starts* a commit** and the slot keeps the last station autosave; and **a commit
+already in flight ends in one of two bounded states** — the suspension snapshot (it
+completes) or the previous generation (the platform's kill lands between steps 4
+and 5, so step 5's row promotes the `.bak`). Never torn; never older than the last
+station save. R4 and the exit policy are restated to match, and the step table
+carries the fence as **row 3b, explicitly not a seventh step** (TR-SAV-010's shape
+is unchanged).
+
+**Why this keeps AC-SAV-23 coherent** — and the one thing the repair had to *file*
+rather than read: regime 1 (delivered, attempted, abandoned) is a **fourth case**
+the frozen AC's "only when" excludes. Its *recovered state* is clause (c)'s
+(the previous good state), but **no code is observable** — the process is exiting.
+The ADR does not reinterpret the AC and does not invent a seventh `SAVE_FAILED_*`
+code (R7 freezes six): it files **CR-SAV-01**, three clauses — AC-SAV-23's clause 1
+and clause (b), plus TR-SAV-014's "joined at shutdown" (skipping that join on the
+abandonment path is the whole point: joining would be a second unbounded wait).
+
+### 8.3 The three ADR-0003 threads as ONE design
+
+The three threads interlock, so they were repaired as one fallback design rather
+than three patches. The design has four parts:
+
+1. **The pass condition is absolute and per asset.** A seam delta above
+   `SEAM_DELTA_MAX` **never ships on any rung**; a recorded delta is evidence of a
+   failure, never a waiver (this deletes the old "accepted for the score alone").
+   `SEAM_DELTA_MAX` is calibrated **on the asset's own material** — the old
+   definition ("the bed's own interior") would have failed a legitimate score
+   forever, because the new absolute gate judges the score too.
+2. **The fold always follows the score.** The score's stereo + mono encodings are
+   one **pair**: an Ogg fold beside a WAV score keeps the rejected loop playable on
+   the one path the MONO toggle exists to reveal. So the pair moves together, and
+   its WAV cost is the **pair's** — which is exactly what makes the old ~38 s
+   ceiling wrong.
+3. **One budgeted ladder**, with a ceiling in seconds per rung (10 MB bar, one-shots
+   1.5 MB fixed, WAV 88.2 kB/s mono / 176.4 stereo):
+
+   | Rung | Ceiling |
+   |---|---|
+   | beds WAV only (score pair Ogg) | **T_beds ≤ ~78 s** combined |
+   | score pair WAV (beds Ogg) | **T_score ≤ ~28 s** (7.4 MB ÷ 264.6 kB/s) |
+   | all WAV | **88.2·T_beds + 264.6·T_score ≤ 8,500 kB** (~96 s of beds if the score takes none) |
+
+   Two arithmetic corrections, both the same kind: the score's ceiling was priced at
+   176.4 kB/s with the fold left on Ogg (**~38 s → ~28 s**), and the shared pool
+   released only the score's 1.1 MB (**7.95 → 8.5 MB**). The ladder's **first** rung
+   is not a format change at all — it is the authoring fix, because a WAV switch
+   cannot repair an authoring seam (register item 8 uses the same tolerance).
+4. **The un-priceable case is filed, not decided.** The score's loop length is the
+   sound bible's and is not yet authored; the beds' `~1.1 MB` Ogg pin implies
+   ~110–140 s, longer than the beds-fail rung allows. **Any looped asset over its
+   rung's ceiling** therefore has no rung that meets both the seamless requirement
+   and the bar → **OQ-AUD-9** for the audio-director (re-author to the ceiling, or
+   an explicit scoped revision of the seamless requirement), with **re-author as the
+   fail-safe default**. Branch (ii) is named honestly: it ships a seam that fails
+   the *current* threshold and is legal only once the requirement is revised — it is
+   not a waiver and this ADR never takes it.
+
+### 8.4 Riders filed (nothing frozen was edited)
+
+1. **CR-AUD-03's scope is widened** to carry, besides the mono fold's count and
+   §G.6 row, **the three fallback rows** (beds; the score pair's stereo + mono) and
+   AC-AUD-32's THEN clause ("match §G.6's row **or**, where the import manifest
+   declares `fallback_probe2`, that class's fallback row"). Until it lands the audit
+   runs §G.6 literally — a passing state, because no asset sits on a fallback row
+   until probe 2 fails and the rung is chosen.
+2. **The declaration lives in `assets/audio/import-pins.yaml`**, a project-owned
+   committed manifest, **not** in an `.import` `[params]` block — the importer
+   regenerates those on every reimport, so a custom key there is not durable.
+3. **`OQ-AUD-9`** is filed in the ADR's namespace (the GDD's table runs OQ-AUD-1…8)
+   and rides the next SYS-04 touch, exactly as CR-AUD-03/04 do.
+4. **`CR-SAV-01`** is filed for SYS-03's next touch (three clauses, §8.2).
+
+### 8.5 The repair batch's gates
+
+| Gate | Seat model | Verdict |
+|---|---|---|
+| technical (DS) on the repair diff | `deepseek-v4.1-flash` | **NEEDS REVISION — 6 blockers**, all applied: the AC-SAV-23 clause-1 scope (→ CR-SAV-01), "a commit always finishes" (→ the two bounded outcomes), the audit rule reinterpreting a frozen AC (→ conditional on CR-AUD-03), `SEAM_DELTA_MAX` borrowed across asset classes (→ per asset), the beds' ceiling with no fail-safe (→ OQ-AUD-9 widened), and `fallback_probe2` in a regenerated `.params` (→ the manifest) |
+| repairs applied | — | 6 blockers + 5 of 8 recommendations |
+| qa-lead spot-check (DS) on the repair diff | `deepseek-v4.1-flash` | **PASS — 11/11 rows** (5 threads + 6 blockers), 0 regressions |
+| micro-check #1 (DS) | `deepseek-v4.1-flash` | **FAIL (1)** — CR-SAV-01 under-scoped (clause 1 too, not just clause (b)) |
+| micro-check #2 (DS) | `deepseek-v4.1-flash` | **FAIL (2)** — the "timed wait on §5's Semaphore" had no completion signal to wait on; "joined at shutdown" vs "the join is skipped" stated as two laws |
+| micro-check #3 (DS) | `deepseek-v4.1-flash` | **FAIL (1)** — the completion post was not job-specific (a stale/other-slot post satisfied the wait) |
+| micro-check #4 (DS) | `deepseek-v4.1-flash` | **PASS (0 blockers)** |
+| micro-check #5 (DS) | `deepseek-v4.1-flash` | **PASS (0 blockers)** — the six post-pass edits; 2 notes applied (the `completed_seq` seq-gap, and `Semaphore.wait`'s timeout marked unverified with the poll fallback) |
+| CodeRabbit confirm pass | — | **PASS** (§8.6) |
+
+**The loop, recorded honestly.** Five micro-check passes for five threads: the
+first three each found a real residual *created by the repair itself* (an
+under-scoped CR, a wait with no signal, a post that was not job-specific). That is
+the same pattern as the first batch — a repair's own new claims are the risk, not
+the text it touched — and it is why the loop is not optional for a Major-class
+batch.
+
+### 8.6 The confirm pass
+
+A **CodeRabbit confirm pass** ran on the repair commit, as the batched cadence
+requires for a Major-class batch: **PASS**, no new threads. `UNRESOLVED=0`; all five
+threads resolved by reply with their disposition. The commit hashes for the wave are
+in the lane report's §6.

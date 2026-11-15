@@ -11,7 +11,8 @@ but an advisory architecture-review verdict does not replace the TD-ADR gate, an
 early. The acceptance text is prepared and recorded in the log; the status flips to
 `Accepted` on the TD's verdict. The engine-probe register in §13 is an
 **implementation gate**, not an ADR-status gate. Carried obligations (not status
-gates): the story-gated engine half of the twin. If a later
+gates): the story-gated engine half of the twin, and **CR-SAV-01** — the abandonment
+regime's three-clause reconciliation of AC-SAV-23 and TR-SAV-014 (§5b). If a later
 architecture review finds a contradiction with a newer Accepted ADR, this ADR
 reverts to `Proposed` and is superseded explicitly.
 
@@ -161,8 +162,16 @@ trust without thinking (the Player Fantasy's honesty clause).
   flight per slot; one-deep queue; the completion drains at a tick boundary.
   Exactly one legal blocking path (the close-save), with `SAVE_JOIN_TIMEOUT_MS` as
   its **dev-assert measurement bound** — not a preemption guarantee. The exit
-  policy is §5's: the write is abandoned, the last station autosave is the state
-  the player returns to, and the commit point guarantees no torn file.
+  policy is §5's, and it is stated as **two regimes, not one promise**: the write
+  is **abandoned at a single fence** placed before the commit sequence, so an
+  abandoned write never *starts* a rename and the slot keeps the last station
+  autosave; and if a rename is **already in flight** when the bound expires it may
+  still complete — landing the suspension snapshot AC-SAV-23 asks for — or be cut
+  off by the platform's kill between steps 4 and 5, in which case step 5's row
+  applies and the boot sweep promotes the `.bak` to the last station autosave. No
+  regime leaves a torn file, and none leaves a state older than the last station
+  save. Regime 1's AC wording is a **filed revision (CR-SAV-01)**, not an
+  interpretation (§5b).
 - **R5 — The snapshot is taken at an eligible tick, once per request.** The E4
   queue's predicate is read from SYS-29's `FreezeState`; a mid-choreography
   snapshot is unreachable by construction.
@@ -220,7 +229,7 @@ touches only the adapter.
                                 │ Snapshot (dict, bounded)    │ load_result / codes
                                 ▼                             ▼
                     ┌──── SaveWriter (Node) ────┐   ┌──── LoadReader (Node) ────┐
-                    │ Thread + Mutex + Semaphore│   │ synchronous (≤ 2 KB)      │
+                    │ Thread + Mutex + 2×Sem      │   │ synchronous (≤ 2 KB)      │
                     │ one-deep job queue        │   │ staging dict → swap       │
                     └──────────┬────────────────┘   └──────────┬────────────────┘
                                │ FileSystemPort                      │
@@ -292,9 +301,12 @@ will not reproduce. The twin proves the shape: `envelope()` wraps
 `canon(payload)` and the hash covers `canon({payload, schema_version})`
 (`tests/save-twin/save_twin.mjs`). There is no second canonicalizer and no second
 payload serializer; the envelope's five keys are string-assembled *around* the
-fragment, and `state_hash` is the only value in the file that is not part of the
-hashed input. A debug pretty-printer, if one is ever wanted, is a *different file*
-and never a save.
+fragment. **Exactly three values in the file are outside the hashed input** —
+`game_version` and `saved_at_utc` (informational, TR-SAV-008) and `state_hash`
+itself (the digest) — and **everything else is inside it**: `schema_version` and
+the whole payload. An implementer who excludes a fourth value, or who includes one
+of these three, hashes a different byte stream. A debug pretty-printer, if one is
+ever wanted, is a *different file* and never a save.
 
 ### 4 · The hash
 
@@ -311,22 +323,42 @@ record, not metadata about it.**
 
 ### 5 · The write path on the worker thread
 
-`SaveWriter` owns **one** `Thread`, one `Mutex`, one `Semaphore`, and a
-**one-deep job queue per slot** (TR-SAV-014): **one write in flight, at most one
-pending per slot**. It is created at boot and joined at shutdown. The game thread
+`SaveWriter` owns **one** `Thread`, one `Mutex`, **two** `Semaphore`s — one for the
+job wakeup and one for the **completion signal** — and a **one-deep job queue per
+slot** (TR-SAV-014): **one write in flight, at most one pending per slot**. It is
+created at boot and joined at shutdown — **except on the close-save's abandonment
+path, where the join is skipped and the platform's kill is the final bound (§5b;
+the departure from TR-SAV-014's "joined at shutdown" is filed as CR-SAV-01, never
+read into the text)**. The game thread
 hands over an immutable job — **the deep-copied snapshot dict** (the copy is
 synchronous, TR-SAV-012), the slot id and the cause — and never touches the
 filesystem. **The bytes are produced off-thread**, exactly as TR-SAV-010/012
-require; the copy is what is synchronous, not the serialization.
+require; the copy is what is synchronous, not the serialization. **The two
+semaphores are distinct and that is load-bearing**: the job semaphore wakes the
+worker, the completion semaphore is posted once per finished job and is what the
+close-save's timed wait blocks on (§5b) — the tick-boundary drain below still
+reads the result record, so the completion signal is an *addition* to the drain,
+not a replacement for it. **The post alone is not the answer, because it is not
+job-specific**: the writer increments a `completed_seq` counter under the `Mutex`
+when a job finishes and *then* posts; a waiter records its own job's seq at
+dispatch and, once the wait returns, re-reads `completed_seq` under the same
+`Mutex` — only `completed_seq ≥ its own seq` counts as completed. A stale post
+from an earlier autosave, or a post from the other slot's job, therefore cannot
+satisfy the wait. **A superseded or fence-cancelled job advances `completed_seq`
+when it is dropped**, so no seq gap can exist and a completed close-save is never
+misread as abandoned.
 
 Six steps, all on the worker (TR-SAV-010), with the boolean-return discipline
-from `breaking-changes.md`:
+from `breaking-changes.md`. **Row 3b is not a seventh step**: it is the
+abandonment fence (§5b), inserted at the one place where no rename has begun yet,
+so TR-SAV-010's six-step shape is unchanged.
 
 | # | Step | Failure → |
 |---|---|---|
 | 1 | `canon()` the job's snapshot dict to bytes; compute `state_hash` | a canon failure is a **dev assert**, not a save failure (the snapshot is schema-typed by construction) |
 | 2 | write bytes to `<slot>.tmp`; **check every `store_*` return**; `flush()`; `close()` | `SAVE_FAILED_DISK_FULL` / `SAVE_FAILED_PERMISSION` (§5a) |
 | 3 | re-read `<slot>.tmp`, verify its hash (cheap at ≤ 2 KB) | `SAVE_FAILED_VERIFY` (pre-commit) |
+| **3b** | **the abandonment fence** — read the job's `cancelled` flag; if set, stop here and emit nothing (the `.tmp` is deleted by the boot sweep, §11, or overwritten by the next write) | **no code**: the slot is unchanged, and an abandoned exit is not a save failure (§5b) |
 | 4 | if `<slot>.sav` exists, `rename_absolute` it to `<slot>.bak` (replacing an older `.bak`) | `SAVE_FAILED_RENAME` |
 | 5 | `rename_absolute` `<slot>.tmp` → `<slot>.sav` — **the commit point** | `SAVE_FAILED_RENAME` (`.sav` missing, `.bak` present → boot sweep recovers) |
 | 6 | re-read `<slot>.sav`, verify its hash, emit `save_completed` (or `save_failed`) | `SAVE_FAILED_VERIFY` (post-commit → **roll back**: promote `.bak` back to `.sav`; no `.bak` → delete the unverified `.sav`, slot `EMPTY`) |
@@ -366,25 +398,104 @@ same tick boundary, so `save_completed` lands on a tick without borrowing an inp
 phase. This is what AC-SAV-12's frame probe asserts.
 
 **The close-save (the one legal block).** On the close request the save is
-written **synchronously** on the game thread — there is no frame to miss, the
-file is ≤ 2 KB, and `SAVE_JOIN_TIMEOUT_MS` 250 ms is the **dev-assert measurement
+**dispatched to the writer and waited on** from the game thread — the bytes are
+still produced on the worker (TR-SAV-010/012, §5); the game thread only blocks in
+the wait. There is no frame to miss, the file is ≤ 2 KB, and
+`SAVE_JOIN_TIMEOUT_MS` 250 ms is the **dev-assert measurement
 bound**, not a preemption guarantee: no mechanism can interrupt a blocked syscall
-or a stalled `wait_to_finish()`. The exit policy is therefore explicit rather than
-aspirational: if the close-save has not completed within the bound, the app
-**proceeds to exit and the write is abandoned**; the last station autosave is the
-state the player returns to, and the platform's kill is the backstop. A stalled
-close-save can never leave a torn file — the six-step write's commit point is the
-rename — and can never make the session worse than the last station save. Three
-guards, all from the GDD: (a) if a write is in flight, it completes first;
+or a stalled `wait_to_finish()`. **The wait is a timed wait on §5's *completion*
+`Semaphore`** — `Semaphore.wait(SAVE_JOIN_TIMEOUT_MS)` **[unverified for 4.7.2 —
+register item 5]**, the signal the worker posts
+once per finished job, distinct from the job-wakeup semaphore — and that is what
+makes expiry observable at all: without a timed wait, §5b's fence could never be
+set. **If `Semaphore.wait` has no timeout argument in 4.7.2**, the same design runs
+as a `Mutex`-guarded poll of `completed_seq` against a deadline — the mechanism is
+the counter, not the primitive, so the probe's verdict changes no law here. **The wait is job-specific**, so it cannot be satisfied by a stale or
+another-slot post: on return it re-reads §5's `completed_seq` under the `Mutex` and
+counts the close-save as completed only if `completed_seq ≥` its own job's seq. The
+counter is sound because the worker **dequeues one job at a time in seq order**
+(one write in flight, TR-SAV-014), so a job that has not started cannot have
+incremented the counter. **Three guards** — (a) and (b) are AC-SAV-23's two guard
+clauses; (c) is AC-SAV-11's latest-wins coalescing applied at the writer: (a) if a write is
+in flight, it completes first;
 (b) **if `flip_sources_active` is non-empty, the close-save is skipped** and the
-last station autosave is the fallback — a synchronous snapshot there would
+last station autosave is the fallback — a close-save snapshot taken there would
 capture the mid-choreography state that V-SAV-05 and E4 forbid; **(c) a pending
 (not yet started) job for the same slot is superseded and its result drained
-before the synchronous write begins** — otherwise the queued job would run after
+before the close-save is dispatched** — otherwise the queued job would run after
 the close-save, write the same `<slot>.tmp`, and rotate the newer file over it,
 which is exactly the race AC-SAV-23's "the restored state equals the state at the
 suspension" forbids. Guard (c) is why the one-deep queue is per slot and
 cancellable rather than a bare ring.
+
+**§5b · The abandonment fence — what "abandoned" means.** The exit policy is
+explicit rather than aspirational, and it has **two regimes**, stated once here and
+once in R4:
+
+1. **The common regime — abandoned before the commit sequence.** If the close-save
+   has not completed within the bound, the game thread sets the job's `cancelled`
+   flag and **proceeds to exit**. The worker reads that flag at the **fence, step
+   3b**, which sits immediately before the first destructive operation: a cancelled
+   write stops there, performs **no rename**, emits **no** result (an abandoned
+   exit is not a save failure, so no seventh `SAVE_FAILED_*` code exists), and
+   leaves `<slot>.sav` untouched. The slot therefore still holds the **last station
+   autosave**, which is the state the player returns to. The `.tmp` it may have
+   written is deleted by the boot sweep (§11 step 1) or overwritten by the next
+   write. **The abandoned path does not join the worker** — joining is what would
+   re-block the game thread past the bound — so the shutdown join is skipped on
+   this path and the platform's kill is the final bound. The `Thread` object is
+   deliberately **not freed** here either, because freeing it can implicitly join;
+   the process exit reclaims it.
+2. **The residual regime — a commit already in flight.** A fence cannot un-issue a
+   `rename_absolute` that the kernel is already executing, and the blocked syscall
+   that *caused* the timeout may be exactly that rename. Two outcomes, both
+   bounded: if the commit sequence **completes**, the slot holds the **close-save
+   snapshot** — the suspension state AC-SAV-23 asks for, **newer** than the last
+   station autosave, and guard (c) above has already drained any older pending job
+   for the slot, so no ordering exists in which a late commit puts an *older* state
+   over a newer one; if the **platform's kill** lands between steps 4 and 5, step
+   5's failure row is the operative one — `.sav` missing, `.bak` present → the boot
+   sweep promotes the `.bak`, i.e. the **previous generation**, which is the last
+   station autosave. Neither outcome is torn and neither is older than the last
+   station save; the platform's kill is the backstop, exactly as it is for a crash.
+
+Neither regime can leave a torn file — the six-step write's commit point is the
+rename — and neither can make the session worse than the last station save. What
+the policy does **not** claim is that the write "never lands", or that a commit in
+flight "always finishes": a blocked rename is precisely the case the timeout fires
+on, and a kill between steps 4 and 5 is precisely the case step 5's row prices.
+The fence is what makes the promise checkable: **an abandoned write never *starts*
+a commit; a commit already started ends in one of the two states above — the
+suspension snapshot, or the previous generation via step 5's row — and never in a
+torn file.**
+
+**AC-SAV-23's enumeration, and CR-SAV-01.** The frozen AC states **three outcome
+cases** (plus AC-SAV-23's two guard clauses, both carried in §5): the event is delivered and
+the close-save lands (restored = the suspension state); the event is **not
+delivered** or the close-save is **skipped** (the last station autosave is the
+fallback, "only when" one of those holds); and the event is delivered but the write
+**fails** (a `SAVE_FAILED_*` code is asserted and the previous good state is
+recovered). **Regime 1 is a fourth case**: delivered, attempted, abandoned. Its
+*recovered state* is clause (c)'s — the previous good state, which is the last
+station autosave — but **no code is observable**, because the process is exiting
+and there is nothing left to report to. This ADR does **not** reinterpret the
+frozen text (R7 freezes the six codes): it files **CR-SAV-01**, the abandonment
+regime's reconciliation, in **three** clauses —
+
+1. **AC-SAV-23 clause 1** gains "…**commits within `SAVE_JOIN_TIMEOUT_MS`**; where
+   it does not, the fallback clause applies". Without this the AC would assert both
+   "it lands and the restored state is the suspension" and "the fallback holds when
+   it did not commit" — a self-contradictory AC that a QA run would fail the build
+   for.
+2. **AC-SAV-23 clause (b)**'s "only when" gains "…or the close-save did not commit
+   within `SAVE_JOIN_TIMEOUT_MS`", so the fallback is named rather than inferred.
+3. **TR-SAV-014**'s "joined at shutdown" is qualified: "…**except on the close-save's
+   abandonment path**, where the join is skipped and the platform's kill is the
+   final bound" — joining there would be a second unbounded wait, i.e. the very
+   thing the exit policy exists to prevent.
+
+It is carried as an obligation (report §5, review log §5). The mechanism (the fence
+and the two regimes) is this ADR's; the frozen wording is the GDD's.
 
 ### 6 · The read path and the number-normalization pass
 
@@ -596,10 +707,10 @@ narrated.
 | 2 | `FileAccess.store_*` returns `bool` (4.4+) and `false` is detectable | **DOCUMENTED** (`breaking-changes.md`, 4.3→4.4 row) | — | — | — |
 | 3 | `HashingContext` SHA-256 over the canonical bytes equals the Node twin's digest for the same input | **PROBE-PENDING** | the three fixture payloads hash to `bf18d435…`, `e3f7a6a0…`, `05b1e48e…` — the **full digests from F-SAV-01's worked-example table** (`design/gdd/save-serialization.md`), which the twin reproduces; the engine run must match all three | lead-programmer | The first story; AC-SAV-24's engine half |
 | 4 | `DirAccess.rename_absolute` is atomic-enough on iOS/Android for the commit point | **PROBE-PENDING** | kill the process during step 5, 20 trials: 20/20 boots load either the old `.sav` or the promoted `.bak`; zero torn reads | devops-engineer | The first story; AC-SAV-14/23 |
-| 5 | `Thread.start(Callable)` + `Semaphore` + `Mutex` gives one in flight + one pending per slot with no lost wakeup | **PROBE-PENDING** | 1,000 alternating requests per slot: every request yields exactly one result, no result is duplicated, no job is dropped | lead-programmer | The first story |
+| 5 | `Thread.start(Callable)` + two `Semaphore`s (job wakeup; completion) + `Mutex` gives one in flight + one pending per slot with no lost wakeup, and a **timed, job-specific** completion wait | **PROBE-PENDING** | 1,000 alternating requests per slot: every **non-cancelled** request yields exactly one result, no result is duplicated, no job is dropped; a wait with an expired timeout returns without a result (the abandonment path); and a **stale post** (a completed earlier job, or the other slot's job) does **not** satisfy a subsequent timed wait (`completed_seq`'s check) | lead-programmer | The first story; §5b's fence |
 | 6 | `flush()` before `close()` makes a short write detectable by the step-3 re-read | **PROBE-PENDING** | inject a truncated buffer: step 3 fails 20/20 with `SAVE_FAILED_VERIFY`, and the previous `.sav` is byte-identical afterwards | lead-programmer | The first story; AC-SAV-09 |
 | 7 | `user://` resolves to the app's data dir on both platforms and survives a relaunch | **PROBE-PENDING** | write, kill, relaunch, load: the file is under the app data dir and the state restores | qa-lead | AC-SAV-14 |
-| 8 | The suspension notification is delivered **before** the platform kills the app (iOS background-kill; Android `onStop`) | **PROBE-PENDING** | background the app from gameplay on real hardware 10× per platform: the close-save lands 10/10 and the restored state equals the suspension state | qa-lead | AC-SAV-23 — **the same notification family as ADR-0001 §16 item 14** (held-state semantics, still open there); this ADR scopes the probe to the save's use |
+| 8 | The suspension notification is delivered **before** the platform kills the app (iOS background-kill; Android `onStop`) | **PROBE-PENDING** | background the app from gameplay on real hardware 10× per platform: the close-save lands **within `SAVE_JOIN_TIMEOUT_MS` 10/10** and the restored state equals the suspension state. An abandonment is a **probe failure**, not a pass — §5b defines what the player gets if the fence ever fires, it does not license the fence to fire | qa-lead | AC-SAV-23 — **the same notification family as ADR-0001 §16 item 14** (held-state semantics, still open there); this ADR scopes the probe to the save's use |
 | 9 | The `Error`→code classification separates a full volume from a read-only one (§5a) | **PROBE-PENDING** | an injected full-volume fake and an injected read-only fake yield `SAVE_FAILED_DISK_FULL` and `SAVE_FAILED_PERMISSION` respectively; the same pair on a device (a full volume via a disk-fill harness) agrees | devops-engineer | AC-SAV-09 |
 | 10 | `DirAccess.get_space_left()` (or the platform equivalent) exists in 4.7.2 and reports the slot's volume | **PROBE-PENDING** | the call returns a plausible byte count for `user://saves/` and falls back to the store-only path if absent | godot-specialist | §5a's pre-flight |
 
@@ -625,9 +736,11 @@ SNAPSHOTTED  (deep copy, ≤150 elements, ≤0.5 ms — SYNCHRONOUS)
   ▼
 job → one-deep queue ────────────────────────▶ 1 canon() + hash
                                                2 tmp write + store_* checks
-                                               3 verify ─ 4 rotate .bak
+                                               3 verify
+                                             3b FENCE (cancelled → stop, no rename)
+                                               4 rotate .bak
                                                5 RENAME (commit) ─ 6 re-read verify
-                                               ─▶ result record
+                                               ─▶ result record + completion post
   ┌──────────────────────────────────────────────────────────┘
   ▼
 [tick boundary] drain → save_completed(slot, tick, bytes, hash)
@@ -812,7 +925,8 @@ func remove(path: String) -> Error
 ### Negative
 
 - A dedicated thread is a lifecycle the project now owns (create at boot, join at
-  shutdown, one lost-wakeup class of bug).
+  shutdown — except on the close-save's abandonment path, §5b — one lost-wakeup
+  class of bug).
 - The canonical form costs a sort on every write and every load; at ≤ 150
   elements this is microseconds, but it is not free.
 - The normalization pass is a second walk of the payload on every load.
@@ -837,7 +951,7 @@ func remove(path: String) -> Error
 | Unchecked `store_*` → silent short write | Medium | High | The boolean discipline in §5; the step-3 re-read; AC-SAV-09's six-step fault injection |
 | Rename not atomic on a mobile filesystem | Low | High | Register item 4; the `.bak` promotion path; AC-SAV-14/23 |
 | Lost wakeup / lost job in the one-deep queue | Low | High | Register item 5; one job per slot; the completion drained on a tick |
-| Close-save blocks past the suspension window | Low | Medium | The exit policy: the write is abandoned and the last station autosave stands (§5); the freeze-skip guard; ≤ 2 KB by construction |
+| Close-save blocks past the suspension window | Low | Medium | The two-regime exit policy (§5, §5b) and **CR-SAV-01**: the step-3b fence abandons the write with no rename and the last station autosave stands; a commit already in flight lands the suspension snapshot, or — killed between steps 4 and 5 — step 5's row promotes the `.bak`. Never older, never torn. Plus the freeze-skip guard; ≤ 2 KB by construction |
 | Absent-key defaults materialized before the hash | Medium | High | TR-SAV-026 step 4 + TR-SAV-023; the twin's `ABS-defaults` |
 | Migration chain hole ships | Low | High | V-SAV-02's contiguity boot check; the synthetic `CURRENT = 3` harness |
 | A second write path appears (an ad-hoc `FileAccess` call) | Medium | High | V-SAV-04's CI grep; AC-SAV-26; the port is the only door |
@@ -889,7 +1003,7 @@ superseding ADR would replace the writer, not the laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** The **decision-conformance** list (14 criteria) states
+**Two gates, two lists.** The **decision-conformance** list (15 criteria) states
 what this decision must be able to prove. Several are verified by fixtures that land
 with the implementation (`src/save/` does not exist yet), so they are the criteria
 the *decision* fixes — not checks runnable at sign-off. The **story gate**
@@ -909,7 +1023,15 @@ the *decision* fixes — not checks runnable at sign-off. The **story gate**
 - [ ] The step-6 rollback restores the previous generation, or leaves the slot
       `EMPTY` on a first write (AC-SAV-09/23).
 - [ ] The close-save supersedes a pending same-slot job before it writes; no
-      queued job can overwrite the close-save (AC-SAV-23).
+      queued job can overwrite the close-save (AC-SAV-23). The abandonment fence
+      (step 3b) is asserted twice: a cancelled job performs **no rename** and
+      leaves the slot's bytes unchanged (the last station autosave stands), and a
+      job whose commit sequence has begun completes with the suspension snapshot
+      — the two regimes of §5b, each with its own injected-IO fixture.
+- [ ] The hash input excludes exactly three values — `game_version`,
+      `saved_at_utc`, `state_hash` — and includes `schema_version` and the whole
+      payload; the twin's three digests do not reproduce if a fourth is excluded
+      (§3, §4).
 - [ ] The snapshot is taken once per request, at an eligible tick, and never
       mid-choreography (AC-SAV-10/11, V-SAV-05); its **gating** bound is
       ≤ ~150 elements, with the 0.5 ms wall-clock figure kept as AC-SAV-10's
@@ -997,3 +1119,9 @@ AC-SAV-05/07; V-SAV-06 by AC-SAV-20's no-clamp refusal; V-SAV-09 by AC-SAV-25 an
   O-AUD-1.
 - **Registry**: `save_contract`, `save_roundtrip_twin`, `epoch_mutation_reconciliation`
   (all `status: active`).
+- **Carried**: **CR-SAV-01** — the abandonment regime's frozen-text reconciliation,
+  in three clauses: AC-SAV-23's clause 1 gains "commits within
+  `SAVE_JOIN_TIMEOUT_MS`", its clause (b) gains "…or the close-save did not commit
+  within `SAVE_JOIN_TIMEOUT_MS`", and TR-SAV-014's "joined at shutdown" gains
+  "…except on the abandonment path" (§5b). Filed here and batched for the user with
+  CR-AUD-03/04; it changes no mechanism in this ADR.

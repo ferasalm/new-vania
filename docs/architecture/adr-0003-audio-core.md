@@ -11,7 +11,7 @@ but an advisory architecture-review verdict does not replace the TD-ADR gate, an
 early. The acceptance text is prepared and recorded in the log; the status flips to
 `Accepted` on the TD's verdict. The engine-probe register in §14 is an
 **implementation gate**, not an ADR-status gate. Carried obligations (not status
-gates): O-AUD-1, CR-AUD-03, CR-AUD-04. If a later architecture review
+gates): O-AUD-1, CR-AUD-03, CR-AUD-04, **OQ-AUD-9**. If a later architecture review
 finds a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed`
 and is superseded explicitly.
 
@@ -51,7 +51,9 @@ click test), the preallocated 18-player voice pool with the reserved flip slot
 outside the steal table, **per-tick wall-clock gain writes** for every envelope
 (a `Tween` is linear in dB and would violate F-AUD-02's linear-in-gain ramp), and
 the epoch-blind `AudioCore` `RefCounted` over injected ports that makes V-AUD-04's
-poisoned-sentinel run possible at all.
+poisoned-sentinel run possible at all — plus the **import ladder** that answers a
+failed loop-seam probe per asset class, moves the mono fold with the score, and
+**never ships a failing seam** (§10).
 
 ## Engine Compatibility
 
@@ -275,8 +277,13 @@ func restore(player: AudioStreamPlayer, at: int) -> int
 
 - The score ships as `MUS_HOUSE_LOOP` (stereo, the only stereo asset) **and** its
   mono fold `MUS_HOUSE_LOOP_MONO`. The fold is a **30th file** (see the contract
-  note below) with its own §G.6 import row: Ogg Vorbis q0.6–0.7, **mono**,
+  note below) with its own §G.6 import row: Ogg Vorbis q0.6–0.7 **by default** (the
+  score's fallback row if probe 2 takes it — §10), **mono**,
   44.1 kHz, loop on, +~0.55 MB. Disk: 3.7 → ~4.25 MB against the 10 MB bar.
+  **The fold's format always follows the score's** (§10): if probe 2 sends the
+  score to WAV, the fold goes with it, because an Ogg fold beside a WAV score would
+  keep the rejected loop playable — and the MONO toggle is the one path that plays
+  it.
 - **The swap preserves the playhead** (`play(from_position)`) and is preceded by a
   **2-tick per-voice gain ramp** (1 tick down to the swap floor, the swap, 1 tick
   back up — 33 ms total), so the stream change cannot click. The ramp is a
@@ -306,7 +313,10 @@ func restore(player: AudioStreamPlayer, at: int) -> int
 files** and its §G.6 table has one stereo Score row, while AC-AUD-32's `[LINT]`
 asserts "every asset … match §G.6". Shipping a 30th file therefore **requires** a
 one-line contract revision: the counts line 29 → 30, the §G.6 Score row gaining the
-mono-encode row, and AC-AUD-32's scope naming it. **This ADR files CR-AUD-03 rather
+mono-encode row, and AC-AUD-32's scope naming it — **plus, because the same AC is
+the import audit, the fallback rows §10 defines** (the beds' and the score pair's
+stereo + mono rows; a WAV score pair matches no
+§G.6 row). **This ADR files CR-AUD-03 rather
 than reinterpreting a frozen count**, and carries it as an obligation — the ADR's
 *decision* (the `MonoStage` interface + the fold) is sound either way; only the
 count and the audit's scope need the user's nod. If CR-AUD-03 is declined, the
@@ -485,16 +495,47 @@ func apply_duck(request: DuckRequest) -> void:
 
 The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
 
-| Asset class | Format | Channels | Rate | Loop | Engine side |
-|---|---|---|---|---|---|
-| Beds | Ogg Vorbis q0.5–0.6 | mono | 44.1 kHz | on, seamless | `AudioStreamOggVorbis.loop = true`; the loop seam is **probe item 2** |
-| Score (stereo) | Ogg Vorbis q0.6–0.7 | stereo | 44.1 kHz | on, seamless | as above; **CR-AUD-03** adds the row below |
-| Score (mono fold) | Ogg Vorbis q0.6–0.7 | **mono** | 44.1 kHz | on, seamless | `MUS_HOUSE_LOOP_MONO` (§4); the same loop pin; a **30th file**, pending CR-AUD-03 |
-| One-shots | WAV 16-bit PCM | mono | 44.1 kHz | off | trimmed, −3 dBFS peak, no silence padding; no loop flags |
+| Asset class | Format | Channels | Rate | Loop | Engine side | Fallback row — **only** if probe 2 fails |
+|---|---|---|---|---|---|---|
+| Beds | Ogg Vorbis q0.5–0.6 | mono | 44.1 kHz | on, seamless | `AudioStreamOggVorbis.loop = true`; the loop seam is **probe item 2** | `AudioStreamWAV` 16-bit PCM, mono, 44.1 kHz, `loop_mode = LOOP_FORWARD` + sample-exact `loop_begin`/`loop_end` (register item 8) |
+| Score (stereo) | Ogg Vorbis q0.6–0.7 | stereo | 44.1 kHz | on, seamless | as above; **CR-AUD-03** adds the row below | `AudioStreamWAV` 16-bit PCM, **stereo**, 44.1 kHz, `LOOP_FORWARD` + sample-exact bounds |
+| Score (mono fold) | Ogg Vorbis q0.6–0.7 | **mono** | 44.1 kHz | on, seamless | `MUS_HOUSE_LOOP_MONO` (§4); the same loop pin; a **30th file**, pending CR-AUD-03 | `AudioStreamWAV` 16-bit PCM, mono, 44.1 kHz, `LOOP_FORWARD` — **always the same format as the score row: the pair moves together** |
+| One-shots | WAV 16-bit PCM | mono | 44.1 kHz | off | trimmed, −3 dBFS peak, no silence padding; no loop flags | — (already WAV; probe 2 does not apply) |
 
 - **The import flags are committed** (`*.ogg.import` / `*.wav.import`) and an
   **import audit** reads every `.import` and asserts the table (AC-AUD-32, LINT).
   A re-import that flips a channel count is a CI failure, not a mix surprise.
+  **The audit's rule for the fallback is defined here** — this ADR owns the
+  import-pipeline decision, and the GDD's §G.6 table is frozen and is **not**
+  edited. An asset passes when its `.import` matches **either §G.6's row or the
+  fallback row of its own class**; the fallback row changes exactly two things — the
+  format and the loop mechanism — and keeps the channel count, the rate and the peak
+  **identical** to §G.6's row, so the audit stays a LINT over a fixed two-row table
+  and cannot be satisfied by an arbitrary WAV.
+
+  **The fallback row is conditional on CR-AUD-03, exactly as the fold is.**
+  AC-AUD-32's THEN clause is "match §G.6", and a WAV fallback matches no §G.6 row,
+  so until the AC's scope names the fallback rows this rule is the ADR's *decision*
+  and not yet the *audit's* law. This ADR does not reinterpret a frozen AC — §4's
+  contract note states the method once: file the CR, never read the text.
+  **CR-AUD-03's scope is therefore widened to carry both**: the mono-fold row **and**
+  the three fallback rows (beds; the score pair's stereo + mono), with AC-AUD-32's
+  THEN clause reading
+  "match §G.6's row or, where the import manifest declares `fallback_probe2`, that
+  class's fallback row". Until it lands the audit runs §G.6 literally — which is a
+  passing state, because no asset sits on a fallback row until probe 2 fails and the
+  rung is chosen. (The rider is recorded in the review log; nothing here edits the
+  GDD.)
+
+  **The declaration lives in a project-owned manifest, not in `.import`.** A
+  `.import` file's `[params]` block is regenerated by the importer on every
+  reimport, so a custom key there is not durable — and the same paragraph above
+  relies on `.import` being toolchain-owned. `fallback_probe2` is therefore declared
+  per asset in **`assets/audio/import-pins.yaml`**, a committed file this ADR's
+  pipeline owns and the LINT reads beside the `.import` flags. The legality test is
+  then two-sided and durable: the manifest declares the asset on a fallback row
+  **and** the gate evidence names probe 2 as failed for its class. A stray WAV
+  matches neither.
 - **Probe 1 — the limiter class** (register item 1): which of
   `AudioEffectHardLimiter` / `AudioEffectLimiter` 4.7.2 exposes, and its
   gain-reduction readback for AC-AUD-20's ≤ 3 dB high-water.
@@ -504,27 +545,85 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   shipping layout only (the exemption is named here so the probe cannot be read as
   a second production effect). Method: record ten loop iterations on the probe
   bus; **pass** = no sample-to-sample delta above `SEAM_DELTA_MAX` (the loudest
-  legal transient in the bed's own material, measured once on the bed's interior)
-  at any of the ten loop points; **fail** = any seam delta above it.
-  **Fallback, pre-priced**: beds as `AudioStreamWAV` with
-  `loop_mode = LOOP_FORWARD` and sample-exact `loop_begin`/`loop_end` — mono
-  44.1 kHz 16-bit is 88.2 kB/s, so the beds fit the 10 MB bar at a combined
-  duration ≤ **~78 s** (10 − 1.1 score − **0.55 mono fold** − 1.5 one-shots =
-  6.85 MB). The fallback also makes the beds **resident rather than streamed**:
-  its runtime cost is priced against the 16 MB bar (~+6.85 MB resident at 78 s), not only the
-  disk bar. It changes no law; only the file format and the residency.
-  **The score's fallback (probe 2 blocks it too).** The score cannot reuse the beds'
-  WAV path unchanged: stereo 44.1 kHz 16-bit is 176.4 kB/s, so inside the remaining
-  6.85 MB a **stereo** WAV loop is ≤ ~38 s, or a **mono** WAV loop (88.2 kB/s) is
-  ≤ ~77 s at the cost of the stereo field. The decision: **a stereo WAV score loop
-  ≤ 38 s**. If the sound-bible pass needs a longer loop, the score stays Ogg and the
-  probe's failure is **accepted for the score alone** — its loop point is authored
-  at a musical bar boundary, where the material is continuous — with the measured
-  seam delta recorded in the gate evidence rather than assumed.
-  **The two fallbacks are ceilings, not a joint budget**: if probe 2 fails for
-  *both* the beds and the score, the score's 1.1 MB reserve is released to the pool
-  (6.85 → **7.95 MB shared**), which buys ≤ ~90 s of bed WAV **only if the score
-  takes none of it** — the sound-bible pass splits the pool between the two assets.
+  legal transient in **that asset's** own material, measured once on its interior —
+  the tolerance is per asset, never borrowed across classes) at any of the ten loop
+  points; **fail** = any seam delta above it.
+
+  **The pass condition is absolute, and its tolerance is per asset.** An asset
+  whose seam delta exceeds `SEAM_DELTA_MAX` **never ships on any rung of this
+  ladder**. A measured delta
+  recorded in the gate evidence is *evidence of a failure*, never a waiver: "the
+  loop point is authored at a musical bar boundary" is the hypothesis the probe
+  exists to test, not a substitute for testing it. (This replaces an earlier
+  draft's "accepted for the score alone", which recorded the delta and shipped the
+  loop anyway.) `SEAM_DELTA_MAX` is calibrated **on the asset's own material** —
+  the loudest legal transient in *that asset's* interior, measured once — and never
+  borrowed across classes: a score's bar-boundary transient and a bed's steady hum
+  are not the same tolerance, and a threshold taken from a bed would fail a
+  legitimate score forever.
+
+  **The fallback is one ladder, and the fold always follows the score.** Probe 2
+  fails per asset class, but the score's two encodings are one **pair**: a stereo
+  WAV score beside an Ogg fold would leave `MUS_HOUSE_LOOP_MONO` playing exactly the
+  loop the probe rejected — the one stream the MONO toggle exists to reveal — so
+  the pair moves together, always, and its WAV cost is the **pair's** (stereo +
+  mono), not the stereo file's alone. The ladder's **first** rung is not a format
+  change at all: **the authoring fix** — move the loop point to a sample-continuous
+  position and re-encode at the same quality — because a format switch cannot repair
+  an authoring seam (register item 8's WAV tolerance is the *same*
+  `SEAM_DELTA_MAX`). Its last rung for any looped asset is sample-exact WAV, whose
+  cost is linear in duration; every rung therefore has a **ceiling in seconds**, and
+  the ceilings share the 10 MB bar.
+
+  | Rung set | What ships | Fixed cost | Rate for the variable material | Ceiling |
+  |---|---|---|---|---|
+  | probe 2 passes | 3 beds + score + fold, all Ogg | 1.1 beds + 1.1 score + 0.55 fold + 1.5 one-shots ≈ **4.25 MB** | — | — |
+  | beds fail only | beds WAV; score + fold Ogg | 1.1 + 0.55 + 1.5 = 3.15 MB | 88.2 kB/s (mono WAV) | **T_beds ≤ 77.7 s (~78 s combined)** |
+  | score fails (fold follows) | score + fold WAV; beds Ogg | 1.1 + 1.5 = 2.6 MB | 176.4 + 88.2 = **264.6 kB/s** | **T_score ≤ 27.9 s (~28 s)** |
+  | both fail | all WAV | 1.5 one-shots only → **8.5 MB shared** | 88.2·T_beds + 264.6·T_score | **88.2·T_beds + 264.6·T_score ≤ 8,500 kB** — the sound-bible pass splits the pool (96 s of bed WAV if the score takes none of it) |
+
+  Two corrections to the earlier arithmetic, both of the same kind: the score's WAV
+  ceiling was priced at 176.4 kB/s with the fold left on Ogg, and the shared pool
+  released only the score's 1.1 MB. With the fold priced as part of the pair, the
+  score's ceiling is **~28 s, not ~38 s**, and the shared pool is **8.5 MB, not
+  7.95 MB**. The fallback also makes the beds **resident rather than streamed**: the
+  beds-fail rung's runtime cost is **+6.85 MB** and the both-fail rung's is **+8.5 MB**
+  (~10 MB with the one-shots) — no rung breaches the 16 MB bar, and the worst case is
+  stated rather than the best. It changes no law; only the file format, the
+  residency, and — for the score pair — the loop's maximum length.
+
+  **Two conditionals the ceilings depend on.** The ceilings assume **CR-AUD-03
+  lands**: the fold's 0.55 MB and its 88.2 kB/s are part of the pair's rate. If the
+  mono fold is declined (the native `MonoStage` instead, 29 files), the pair is the
+  stereo file alone at 176.4 kB/s and every score/pair ceiling relaxes to **~42 s**.
+  A decline must therefore **narrow** the CR rather than drop it: the fallback rows
+  keep their audit home, or a WAV score has none. And the
+  joint inequality does not license short beds: the split must keep each bed at the
+  length its room was authored for (three loops, the sound bible's), so the
+  inequality bounds the *total*, not the *minimum*.
+
+  **A loop longer than its rung's ceiling is not decided here.** The score's loop
+  length belongs to the sound bible and is not yet authored (the palette is
+  `PROV_AUD_*` placeholders; OQ-AUD-1), and the beds' `~1.1 MB` Ogg pin implies
+  roughly 110–140 s of bed material — longer than the 78 s the beds-fail rung allows.
+  So the gap is not the score's alone: **any looped asset whose authored duration
+  exceeds its rung's ceiling** has no rung that satisfies both the seamless
+  requirement and the 10 MB bar (Ogg cannot guarantee the seam once the probe fails;
+  WAV cannot fit the duration). That case is filed as **OQ-AUD-9** — filed by this
+  ADR, and the GDD's OQ table gains it at its next touch, exactly as CR-AUD-03/04 are
+  filed rather than written into frozen text — for the **audio-director**, naming the
+  beds' ~78 s combined and the score pair's ~28 s explicitly, with two branches:
+  **(i)** re-author the material to the ceiling, a palette cost (the loops are
+  authored at musical bar boundaries either way); or **(ii)** an **explicit, scoped
+  revision** of the seamless-loop requirement for that asset alone — §G.6's `Loop`
+  column, probe 2's scope, TR-AUD-030's "beds loop seamlessly" where the asset is a
+  bed, and AC-AUD-32's row (which the asset still has to match) — with the measured
+  delta as the revision's evidence.
+  **The default until OQ-AUD-9 is answered is branch (i)**: a shorter seamless loop
+  beats a longer clicking one, and branch (ii)'s failure mode is audible on every
+  loop. Branch (ii) is honest about what it is: it ships a seam that **fails the
+  current threshold**, and it is legal only once the requirement itself is revised —
+  it is not a waiver, and it is never taken by this ADR.
 - **No `AudioEffect` other than the limiter** may be added to the **production**
   graph without a new ADR: the "one effect" property is what makes the mix
   auditable. (Probe scenes and the dev-only probe layout are exempt and never
@@ -619,13 +718,13 @@ the AC it unblocks — not an AC that already tests something else.
 | # | Item | Verdict | Method (pass = ) | Owner | Blocks |
 |---|---|---|---|---|---|
 | 1 | The Master limiter class in 4.7.2 (`AudioEffectHardLimiter` vs `AudioEffectLimiter`) and its gain-reduction readback | **PROBE-PENDING** | instantiate both candidates; the surviving class is instantiated on Master and its reduction is readable during AC-AUD-20's loudest fixture | godot-specialist | The first story; AC-AUD-20's ≤ 3 dB high-water |
-| 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (beds, score) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene: zero seam deltas above `SEAM_DELTA_MAX` at ten consecutive loop points | sound-designer + godot-specialist | **The beds' and score's import**; the WAV fallback decision |
+| 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (beds, score) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene: zero seam deltas above `SEAM_DELTA_MAX` (per asset — that asset's own interior transient) at ten consecutive loop points | sound-designer + godot-specialist | **The beds' and score's import**; the fallback rows and their ceilings (§10); **OQ-AUD-9** if any looped asset exceeds its rung's ceiling |
 | 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | the swap at tick T: the post-swap `playback_position` is within 1 tick of the pre-swap value, and the gain ramp's two ticks are exact | lead-programmer | The MONO stage; AC-AUD-22's collapse assertion becomes meaningful |
 | 4 | Per-tick `set_bus_volume_db` at 60 tps is inside the core's tick bar and does not zipper | **PROBE-PENDING** | a 15-tick ramp at 240 ms: the core's tick stays within p99.9 ≤ 0.10 / max ≤ 0.30 ms **and** a capture of the ramp shows no step above `ZIPPER_DELTA_MAX`; a staircase reading fails the probe and moves the envelope to a per-tick interpolation inside one audio-thread callback | performance-analyst | AC-AUD-21 (the tick bar) — the probe gates the measurement; AC-AUD-02 is a GUT over the fake `BusPort` and cannot zipper, so it is **not** a gate here |
 | 5 | Five buses + one Master effect is inside the mobile mix budget | **PROBE-PENDING** | measured as an **extra instrument** during AC-AUD-21's device run (mixer CPU share, no new AC); the bar is "the audio thread's share stays under 25% of the frame" | performance-analyst | The graph's viability on the reference SKU |
 | 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`'s "Audio Buses" block) | — | — | — |
 | 7 | `AudioEffectCapture` can record a bus for the loop-seam probe | **PROBE-PENDING** | the probe scene captures 10 s of a known loop and the capture's length matches within one buffer | godot-specialist | Probe 2's method |
-| 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **PROBE-PENDING** | a WAV bed loops 100× with no seam delta above **`SEAM_DELTA_MAX`** — the same tolerance probe 2 uses, because a continuous waveform's last and first samples legitimately differ; `loop_end − loop_begin` equals the authored sample count | sound-designer | The fallback's viability (only if probe 2 fails) |
+| 8 | `AudioStreamWAV.loop_mode` / `loop_begin` / `loop_end` give sample-exact loops (the fallback) | **PROBE-PENDING** | a WAV **looped asset** (a bed, or the score pair on its fallback row) loops 100× with no seam delta above **`SEAM_DELTA_MAX`** — the same tolerance probe 2 uses, because a continuous waveform's last and first samples legitimately differ; `loop_end − loop_begin` equals the authored sample count | sound-designer | The fallback's viability (only if probe 2 fails) |
 
 `PROBE-PENDING` is an open verdict: items 1–5 and 7–8 block their named gates, and
 item 2 blocks the beds' and score's import. No story may consume one as settled
@@ -760,10 +859,11 @@ enum VoiceClass { P0_RESERVED, P1_SIGNATURE, P2_COMBAT, P3_FEEDBACK }
 - **Description**: skip the Ogg loop question entirely.
 - **Pros**: sample-exact loops; no encoder padding; no probe.
 - **Cons**: ~10× the disk per second; the 10 MB bar then bounds the beds' total
-  duration to ~84 s.
+  duration to ~78 s (with the score and its fold on Ogg — the ladder in §10 prices
+  every rung, including the all-WAV one).
 - **Estimated Effort**: 1.0×.
 - **Rejection Reason**: kept as the **pre-priced fallback** (register item 2) —
-  chosen only if the Ogg seam fails the probe.
+  chosen only if the Ogg seam fails the probe, and applied per asset class (§10).
 
 ### Alternative 8: Read `truth_epoch` in the core (simplest bed resolution)
 
@@ -805,7 +905,7 @@ enum VoiceClass { P0_RESERVED, P1_SIGNATURE, P2_COMBAT, P3_FEEDBACK }
   which is the whole basis of the 22 GUT ACs.
 - The MONO decision removes an engine unknown (no summing effect exists) and
   replaces it with a priced asset variant.
-- The bed-format fallback is pre-priced, so probe 2 cannot become a schedule
+- The format ladder is pre-priced, so probe 2 cannot become a schedule
   surprise.
 
 ### Negative
@@ -836,7 +936,7 @@ enum VoiceClass { P0_RESERVED, P1_SIGNATURE, P2_COMBAT, P3_FEEDBACK }
 |---|---|---|---|
 | A `Tween` creeps into an envelope | Medium | High | R2; AC-AUD-02's tick fixture; the review guideline |
 | The reserved tear slot is stolen under a flood | Low | High | The slot is outside the candidate array; AC-AUD-07's flood fixture |
-| Ogg loop seams click on the beds | Medium | High | Probe 2; the pre-priced WAV fallback |
+| Ogg loop seams click on the beds or on the score pair | Medium | High | Probe 2's **absolute**, per-asset pass condition; the priced ladder (§10: 78 s beds / 28 s score pair / 8.5 MB joint); OQ-AUD-9 if any looped asset exceeds its rung's ceiling |
 | The MONO swap clicks | Medium | Medium | The 2-tick per-voice ramp; AC-AUD-22; probe 3 |
 | A per-tick bus write zippers or costs too much | Low | High | Probe 4; the core's tick bar (p0.10/max 0.30 ms) |
 | An `Area` bus override is added later | Low | High | R1 + the boot assert on the five buses; the 4.7 `area_mask` note |
@@ -844,7 +944,7 @@ enum VoiceClass { P0_RESERVED, P1_SIGNATURE, P2_COMBAT, P3_FEEDBACK }
 | The duck's release edge is lost | Medium | Medium | The offline screen's tree-exit backstop + `AUD_DUCK_RELEASE_BACKSTOP` |
 | Epoch-blindness erodes (a convenience read) | Medium | High | V-AUD-04's grep + the poisoned-sentinel run; `MVP_FLIP_TO_EPOCH` is a constant |
 | `restored_epoch` never lands on SYS-05 | Medium | Medium | O-AUD-1 carried to SYS-05's authoring; the bounded fallback is playable |
-| CR-AUD-03 (the mono fold's count/audit row) is declined | Medium | Low | The decision stands; the fallback is the native summing effect behind the same `MonoStage` (29 files, a GDExtension build) |
+| CR-AUD-03 (the mono fold's count/audit row) is declined | Medium | Low | The decision stands; the fallback is the native summing effect behind the same `MonoStage` (29 files, a GDExtension build) — **and the CR must still be narrowed to the fallback rows**, or a WAV score has no audit home (§10) |
 | CR-AUD-04 (TR-AUD-002's publisher row) is declined | Low | Medium | The adapter still subscribes to SYS-05's `load_complete` (the only event that exists); the frozen text stays wrong and a reader can be misled — the ADR's §12 note is the mitigation until the correction lands |
 
 ## Performance Implications
@@ -886,7 +986,7 @@ superseding ADR would replace the graph, not the laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** The **decision-conformance** list (16 criteria) states
+**Two gates, two lists.** The **decision-conformance** list (17 criteria) states
 what this decision must be able to prove. Several are verified by fixtures and
 device runs that land with the implementation (`src/audio/` and the assets do not
 exist yet), so they are the criteria the *decision* fixes — not checks runnable at
@@ -931,7 +1031,16 @@ sign-off. The **story gate** (3 criteria) closes at the first implementation sto
 - [ ] The snapshot hash is unchanged and the score untouched across [E1, E7]
       (AC-AUD-16).
 - [ ] The import audit matches §G.6 on every asset, including the mono fold's own
-      row (AC-AUD-32, scoped by CR-AUD-03).
+      row (AC-AUD-32, scoped by CR-AUD-03) — **and**, once CR-AUD-03's widened scope
+      lands, an asset declared on a fallback row in `assets/audio/import-pins.yaml`
+      matches that class's fallback row instead, with the channel count, rate and
+      peak unchanged from §G.6 and the gate evidence naming probe 2 as failed (§10).
+      An asset may never match *neither* row; until the CR lands the audit is §G.6
+      literal and no asset may sit on a fallback row.
+- [ ] Probe 2's verdict is applied **per asset class and to the score pair as one
+      unit**: a failed score never ships beside an Ogg fold, and no rung ships an
+      asset whose measured seam delta exceeds `SEAM_DELTA_MAX` — calibrated on that
+      asset's own material (§10).
 
 **Story gate (the first SYS-04 implementation story).**
 
@@ -968,7 +1077,7 @@ sign-off. The **story gate** (3 criteria) closes at the first implementation sto
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-027 — one snapshot, zero changes | `SNAP_GAMEPLAY` only; nothing to change inside the bracket (§3) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-028/029 — the pools and the cap; the steal rule | 18 of 20; the pure `admit()`; the reserved slot outside the candidates (§5) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-030 — the loop law | The arrival as a first start from the floor; no restart flag; the playhead assertion (§6, §10) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-031 — the import pins | The committed `.import` flags + the import audit; the Ogg/WAV decision (§10) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-031 — the import pins | The committed `.import` flags + the import audit; the Ogg/WAV ladder and its audit rule (§10) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-032 — the budget | Disk/runtime/voices/tick, measured on the Pixel 6a; the provisional marker (§10, §14) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-033 — the duck schema, telemetry, allowlist, failure paths | The one-site rule; the 256-record ring; the two-port allowlist; the failsafe (§8, §9, §11) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-035 — masking and headroom | One limiter; the beds ≥ 6 dB under the one-shots; the device measurement (§3) |
@@ -989,7 +1098,9 @@ sign-off. The **story gate** (3 criteria) closes at the first implementation sto
 rows · **29 audio assets (30 files with the mono fold — CR-AUD-03)** · 2
 contract-revision requests inherited from the GDD (CR-AUD-01, CR-AUD-02) + **2
 filed here** (CR-AUD-03 the mono fold's count/audit row; CR-AUD-04 TR-AUD-002's
-load-complete publisher). This ADR adds **no** TR, **no** formula and **no** AC.
+load-complete publisher) + **1 open question filed here** (OQ-AUD-9, any looped
+asset's duration against its rung's ceiling). This ADR adds **no** TR, **no**
+formula and **no** AC.
 
 **V-invariant coverage** (all seven carried): V-AUD-01 by AC-AUD-10/17 (the one
 application site); V-AUD-02 by AC-AUD-15/18 (the registration scan); V-AUD-03 by
@@ -1015,5 +1126,8 @@ and the reserved slot) (§5, §9).
 - **Registry**: `audio_bus_contract`, `ambient_bed_contract`, `audio_edge_list`,
   `duck_request_contract` (all `status: active`).
 - **Carried**: O-AUD-1 (`restored_epoch` on SYS-05's `load_complete`); CR-AUD-03
-  (the mono fold's counts/§G.6/AC-AUD-32 row); CR-AUD-04 (TR-AUD-002's
-  load-complete publisher). None changes a decision in this ADR.
+  (the mono fold's counts/§G.6/AC-AUD-32 row **+ the fallback rows**); CR-AUD-04
+  (TR-AUD-002's load-complete publisher); OQ-AUD-9 (any looped asset's authored
+  duration against its rung's ceiling — the beds' ~78 s and the score pair's ~28 s —
+  the audio-director's). None changes a decision in this ADR: OQ-AUD-9 is a *content*
+  bound the ladder already prices, with a stated fail-safe default.
