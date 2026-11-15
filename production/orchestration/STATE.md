@@ -334,7 +334,11 @@ hard blocker or the 350k hard trigger.
   reproduce the request · design-order numbers 1–25 unique · `git diff --stat` shows
   only the intended 6 files (+185/−47).
 - **Landing hash**: pending (the orchestrator merges after verifying the head).
-- **Head**: `036ae9c` (3 commits: the sync, the two CodeRabbit batches). **CI**: 5/5 green.
+- **Head at verification**: `036ae9c` (3 commits: the sync, the two CodeRabbit
+  batches) — **5/5 CI green at that revision**. The receipt commit that carries this
+  line moves the head, so this is a snapshot, not a claim about the current head: the
+  orchestrator re-verifies the head and its checks immediately before merging and binds
+  the merge with `--match-head-commit`.
 - **CodeRabbit**: 3 threads across 2 passes, **all resolved** — 3 applied
   (`d6eab95`: the `arc = ABILITY` dispatch stated in `damage_event` +
   `damage_ladder_mvp`, and the merge order corrected to sync-first per
