@@ -1,6 +1,6 @@
 # Grief-Boss Framework
 
-> **Status**: In Review (the lane's gate chain runs in this session; the header flips to APPROVED at the gates' close)
+> **Status**: APPROVED (2026-11-15 — the gate chain closed in this session: CD CONCERNS (3 blockers) → repaired → APPROVED; three-seat NEEDS REVISION (2 + 5 + 6) → all 13 repaired; qa-lead spot-checks #1–3 FAIL → all residues repaired → #4 PASS; final micro-check PASS)
 > **Author**: game-designer (lane SYS-14)
 > **Created**: 2026-11-15
 > **Last Updated**: 2026-11-15

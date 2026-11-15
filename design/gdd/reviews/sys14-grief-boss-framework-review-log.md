@@ -136,3 +136,18 @@ Advisories: TR-GBF-014's prose retyped on the published event · TR-GBF-023's He
 **Spot-check #2 (DS, on `29e8b62..5791705`): FAIL — 1 blocker, 5 advisories. All applied:** the envelope equation printed the route as its range (`6.8 + 7…10 + 2 + 30…120 = 45.8…138.8` — the top end takes the route's 10 s end; the band [46, 139] re-derives) · the examples name their route ends (46 at 7 s; 139 at 10 s) · TR-GBF-023's test renamed to the floor-request-only assertion · F-GBF-03's "named write" → the request phrasing · the Interactions row's phrasing aligned · (the cosmetic 200 px/s × 1.2 s form noted). **Spot-check #3 (DS, on `5791705..3809b71`): FAIL — 2 blockers, all applied:** TR-GBF-023's test's own name fixed to the floor-request-only assertion (TR-GBF-024's copy now a cross-reference) · TR-GBF-001's body's last direct-write residue fixed (the request phrasing; the "named write" shorthand at the Ratification row and the Dependencies row aligned to "the named request"). **Spot-check #4 (DS, on the delta): see below.**
 
 ### 3.4 Final micro-check (diff-scoped, fresh seat, blockers only)
+
+**Micro-check (DS, fresh seat, on `3809b71..f1f4cba`): PASS — zero blockers.** The delta is prose-only (six lines; no count, ID, fixture or threshold touched); `FloorReleaseRequest`'s definition matches the new phrasings; the floor-request-only name agrees across TR-GBF-023/024 and AC-GBF-21. Two residual notes recorded (pre-existing, non-blocking): AC-GBF-21's "no HP writer beyond the floor-release request" is a vacuous-but-true carve-out under the request framing; TR-GBF-023's "six forbidden symbols" enumerates five plus the no-writer item. **The document is closed — not reopened.**
+
+## 4. Gate record (the summary)
+
+| Gate | Verdict | Trail |
+|---|---|---|
+| CD gate (GLM) | **APPROVED** | Round 1 CONCERNS (3 blockers) → all repaired → round 2 APPROVED (0 blockers; 5 one-liners applied) |
+| Creative seat (GLM) | **repaired → closed** | NEEDS REVISION (2 blockers) → both repaired (verified by the spot-check trail) |
+| Technical seat (DS) | **repaired → closed** | NEEDS REVISION (5 blockers) → all repaired |
+| QA seat (DS) | **repaired → closed** | NEEDS REVISION (6 blockers) → all repaired |
+| qa-lead spot-check (DS) | **PASS** | #1 FAIL (5 residues) → repaired → #2 FAIL (1) → repaired → #3 FAIL (2) → repaired → **#4 PASS** |
+| Final micro-check (DS) | **PASS** | Zero blockers; the document closed |
+
+**Final counts: 24 TR-GBF · 6 F-GBF · 11 V-GBF · 30 ACs (smoke 24 = 22 GUT + 2 LINT · device 2 · lock 4 · VS 0) · 4 playtest codes · 9 OQs.** The partition reproduces: 24 + 2 + 4 + 0 = 30.
