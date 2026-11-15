@@ -34,7 +34,7 @@
 
 ### B.5 Final micro-check
 
-- **PENDING**
+- **PASS — 0 blockers** (2026-11-15; the fresh seat, diff-scoped to `c06cb68..HEAD` — the spot-check fix chain; 26 touched lines; the counts reproduce after every touch: 25 TR / 7 F / 8 V / 37 ACs, the manifest 30 + 5 + 2 + 0 = 37; the map-tab gate's four sites resolve; `BossHealthRead` and `recovered_from_bak` coherent across all sites; no placeholder, no collateral). Two cosmetic notes recorded, neither blocking (the TR-HUD-011 six-row census reads as the full set with AC-14 disambiguating; the log's "worklist rows" label nuance). **The document is closed — not reopened.**
 
 ## C · Worklist (the repairs ledger)
 
@@ -82,4 +82,4 @@
 
 ## E · Sync request
 
-Prepared in `production/session-state/lane-SYS-24-report.md` (the registry entries + the index corrections + the diff summary). `entities.yaml` and `systems-index.md` were never edited by this lane.
+Prepared in `production/session-state/lane-SYS-24-report.md` §"Sync request" (the registry entries + the index corrections + the diff summary). `entities.yaml` and `systems-index.md` were never edited by this lane. The exact registry names confirmed by grep: `camera_publication_contract`, `progression_read`, `grant_event`, `hp_per_point`, `boss_hp_pool`, `boss_crack_route`, `save_contract`, `six_system_perf_envelope`.
