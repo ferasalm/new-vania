@@ -13,7 +13,7 @@
 
 Progression is the layer that answers *what the body becomes*. It sits above SYS-07's resolver: SYS-07 owns the number a hit costs, the printed damage ladder and the points-only level 1–5 data; **SYS-16 owns the growth law the ladder sits in** — the seam from the points model into the full sheet (levels 6–20), the pacing budget that makes the four points land where the slice needs them, the **gear layer** that turns two equipment slots into a build, and the **ability ladder** whose grants flow into SYS-06's gates. It never resolves damage, never decides a hit, and never writes a stat that another system owns: it publishes a `GearAggregate` and a `GrantEvent`, and the owners apply them.
 
-The MVP's progression is deliberately small and deliberately honest. Four points, spent at one terminal, each worth exactly one step of a printed ladder. Three named modules, two typed slots, one guaranteed drop behind the truth's flip. Three locked abilities whose absence is the slice's shape. The whole layer is bounded by one finding that governs every number in it:
+The MVP's progression is deliberately small and deliberately honest. Four points, spent at one terminal, each worth exactly one step of a printed ladder. Three named modules, two typed slots, one guaranteed part behind the truth's flip. Three locked abilities whose absence is the slice's shape. The whole layer is bounded by one finding that governs every number in it:
 
 **The Quantisation Law.** At the 20-HP baseline every lever's smallest integer step is larger than the ±10% band the game promises. One chain point on a chain of six is +16.7%. One point of `defense` is the entire 25-point cap, because at raw 1–4 any `defense ≥ 1` returns the same 1/1/3. So no lever can move unconditionally without breaking a promise — and the design's answer is not to hide the step but to make it **paid** (the gear exchange), **absent** (DEF retired), or **enumerated and closable** (the one Warden drop). That single law is why this GDD's gear section is mostly about what gear may *not* do.
 
@@ -23,7 +23,7 @@ The MVP's progression is deliberately small and deliberately honest. Four points
 
 ### The named fantasy — The Machine Keeps What It Learned
 
-You are a copy that gets better at being a copy. Every kill teaches the chassis something, every level is a point you carry to the terminal and *choose* to spend, and every module you bolt on is a part of some other dead thing that now works through you. Nothing about your growth is a curve that happens to you: the four points are four decisions, the two slots are two arguments, and the modules say what they cost on their face. When the world flips and you find the Warden standing over the thing it was guarding, the reward is not a bigger number — it is a part that makes your swing mean something the swing did not mean before.
+You are a copy that gets better at being a copy. Every kill teaches the chassis something, every level is a point you carry to the terminal and *choose* to spend, and every module you bolt on is a part of some other dead thing that now works through you. Nothing about your growth is a curve that happens to you: the four points are four decisions, the two slots are two arguments, and the modules say what they cost on their face. And when the world flips and the corridor it opens holds a part of the machine's own dead, the reward is not a bigger number — it is a part that makes your swing mean something the swing did not mean before.
 
 The counter-fantasy, refused: no spreadsheet, no nine-column sheet, no "+7.3% crit". The machine's growth is legible in the machine's own units — a point that moves ATK1 from 2 to 3 and the chain from 6 to 7, a module that takes a third of your chassis and gives a third more of your swing. You can hold the whole progression in your head at once, which is the only way a choice stays a choice.
 
@@ -40,7 +40,7 @@ The Sanctum terminal. Two rows: `STRIKES +8` and `CHASSIS +2`. You have one poin
 
 ### Anchor moment — The Part That Costs
 
-The Warden's governor is on the floor behind the flipped corridor, and the terminal says what it is: `damage +1`, and the frame slot is empty so nothing pays for it. You have the Coupler in the other slot — the one that costs eight points of chassis. You put the governor in and the Coupler comes out, and your pool goes back to 20 while your chain stays at 8. You are not stronger than the Coupler made you; you are stronger *and* whole, and the difference is a thing you found, not a thing you were given.
+The Warden's governor lies on the floor of the flipped corridor, past the partition the truth opened. The pause says what it is: `damage +1`, and the frame slot is empty so nothing pays for it. You have the Coupler in the drive slot — the one that costs eight points of chassis. You put the governor in and the Coupler comes out, and your chassis goes back to 20 while your chain stays at 8. You are not stronger than the Coupler made you; you are stronger *and* whole, and the difference is a thing you found, not a thing you were given.
 
 ### Anchor moment — The Socket That Says Not Yet
 
@@ -74,9 +74,9 @@ Playtesters say: "I knew what the last point bought"; "the module told me what i
 
 #### 2 · Level 1–5: the curve, the pacing, the point
 
-- **TR-PRG-004 — The curve is consumed verbatim.** Levels 1–5; cumulative thresholds **L2 20 · L3 50 · L4 90 · L5 140**; a level-up banks exactly one point; four points exist by L5; **no training data accrues past L5** (`LEVEL_CAP_MVP`; the VS cap is 20). The award key is the defeated enemy's tier (SYS-13: Husk T1 → 3, Spitter T2 → 7, Warden T3 → 14; SYS-14's boss → 40). *Test: the threshold fixture; the award fixture per tier; a kill at L5 accrues nothing and publishes no level edge; the boss award is consumed from SYS-14's registration, not a literal.*
+- **TR-PRG-004 — The curve is consumed verbatim.** Levels 1–5; cumulative thresholds **L2 20 · L3 50 · L4 90 · L5 140**; a level-up banks exactly one point; four points exist by L5; **no training data accrues past L5** (`LEVEL_CAP_MVP`; the VS cap is 20). The award key is the defeated enemy's tier (SYS-13: Husk T1 → 3, Spitter T2 → 7, Warden T3 → 14); the boss awards 40 from **SYS-07's `XP_BOSS`** — SYS-14 authors the boss's profile and phases, never its award. *Test: the threshold fixture; the award fixture per tier; a kill at L5 accrues nothing and publishes no level edge; the boss award is read from SYS-07's registered constant, never from SYS-14 and never from a literal (an MVP boot must not require an unwritten system).*
 
-- **TR-PRG-005 — The pacing budget is a derived target, not a source.** The six-room slice must yield **≥ 100 training data before the arena** so the boss's 40 lands the fourth level, and the spawn list must place the level landmarks where the slice needs them. The budget is `T1 × 10 + T2 × 6 + T3 × 2 = 30 + 42 + 28 = 100`; with `XP_BOSS` 40 the run totals **140 = L5 exactly**. **The placement is SYS-02's room data** (the priority-ordered spawn list); this table is the budget the placement must satisfy, not an edit to it. A change to either the population or an award re-derives the table (F-PRG-04) — the landmark table is never hand-maintained. *Test: the ledger fixture reproduces 6/19/32/42/76/100/140 and the four landmarks; a slice whose first-pass total is < 100 is flagged at build time with the shortfall; the table is regenerated from the inputs, never typed.*
+- **TR-PRG-005 — The pacing ledger is derived from the spawn list and the respawn law.** SYS-02's frozen layout pins **five spawns** (RM-01 0 · RM-02 2 · RM-03 2 · RM-04 0 · RM-05 1 · RM-06 0, max two per room) and **re-arms the list on every room entry** (TR-RWS-011); SYS-13 assigns the tier per archetype, and RM-03 is pinned **1 Spitter + 1 Husk**. So the slice's training data is a **rate, not a static total**: one **pass** (one traversal of the mandatory rooms) yields `PACING_PASS_YIELD` = 2×3 (RM-02's Husks) + 1×3 + 1×7 (RM-03) + 1×14 (RM-05's Warden) = **30**. The landmarks are `passes_to(level) = ceil(TRAINING_DATA[level] ÷ pass_yield)`: **L2 at 1 pass · L3 at 2 · L4 at 3 · L5 at the fourth pass's boss** (120 + 40 = 160; the 20 excess is discarded at the cap). The authored bar: **L4 by the third pass** (`PACING_PASSES_L4_MAX` 3) and **L5 by the fourth pass's boss** (`PACING_PASSES_L5_MAX` 4); a slice whose derived yield misses the bar is flagged at build time naming the pass count. **The tier assignment for RM-02 and RM-05 is SYS-13's** — this table is the budget that assignment must satisfy, not an edit to the room data or the archetype registry. *Test: the ledger fixture reproduces 30 per pass and the four landmarks; the derived-rate audit (a spawn-list or tier change re-derives the table — nothing is hand-typed); a slice missing the bar is flagged; the boss's award is SYS-07's `XP_BOSS` (SYS-14 authors the boss's profile and phases, never its award).*
 
 - **TR-PRG-006 — The point is the only MVP growth, and it is spent at the terminal.** `+8 attack` (the ladder's index step) or `+2 max HP` per point; **spent only at a cache station**, through SYS-15's frozen surface (`STRIKES +8` / `CHASSIS +2`, TR-CSD-006 — the rows and the per-move preview are SYS-15's; SYS-16 supplies the preview's *values*, never the surface). A spend outside the terminal context is refused and the point stays banked. A `CHASSIS` spend raises the pool **and heals the added amount** (SYS-07's law); a banked point is legal and prints no row (the rows vanish at zero). *Test: the spend fixture (one point, one `StatRevision`, the rows re-render); a spend outside the terminal is refused with the point intact; a banked point survives a reconstruct; the `CHASSIS` heal is exactly +2.*
 
@@ -90,7 +90,7 @@ Playtesters say: "I knew what the last point bought"; "the module told me what i
 
 - **TR-PRG-010 — The dealt seam continues the ladder; no percent curve takes over.** For `attack ≤ 132` the printed ladder governs (`step(attack) = clamp(floor((attack − 100) ÷ 8), 0, 4)` — SYS-07's law, unchanged). For `attack > 132` the ladder **extends by its top row**: `dealt(arc) = max(LADDER[4][arc], floor(LADDER[4][arc] × attack ÷ 132))`. The seam is flat by construction (at 132 and at 138 both give 4/6/3/4, chain 10), so the dealt value is monotone non-decreasing across L5→L6 for **every** point split. The ladder's four columns remain ATK1/ATK2/crouch/air; `arc = ABILITY` never reads it (SYS-07's branch 4). *Test: the seam fixture at 132/138 (identical rows); the L10 (162) and L20 (222) fixtures (chain 11 / chain 16); the monotone sweep over every (L, a); the split-independence fixture (a=0, 2, 4).*
 
-- **TR-PRG-011 — The no-full-sheet law.** At MVP the progression is read as **three values and two rows**: the pause readout shows **level, HP and ATK**; the loadout shows the two equipped modules by name and by their one-line effect. **`DEF` is omitted from the MVP readout** — it has no source at MVP (TR-PRG-016) and a dead value on a readout is a lie about a choice the player does not have. There is **no nine-stat sheet, no numeric spreadsheet, no comparison tooltip, no respec** at MVP (the anti-pillar D-2's amended wording: lean but accessible — the sheet itself is SYS-26's, VS). *Test: the readout fixture (exactly three values); a static audit finds no nine-stat surface in the MVP build; the loadout rows print the module's effect in the game's units (`damage +1`, not `+33%`); no DEF row renders while `defense = 0`.*
+- **TR-PRG-011 — The no-full-sheet law.** At MVP the progression is read as **three values and two rows**: the pause readout shows **level, HP and ATK**; the loadout shows the two equipped modules by name and by their one-line effect. **ATK prints as the ladder row's pair** (`ATK 2/4`), never the raw 100–132 resolver scale — the internal number is the designer's ruler, not player copy. **`DEF` is omitted from the MVP readout** — it has no source at MVP (TR-PRG-016) and a dead value on a readout is a lie about a choice the player does not have. There is **no nine-stat sheet, no numeric spreadsheet, no comparison tooltip, no respec** at MVP (the anti-pillar D-2's amended wording: lean but accessible — the sheet itself is SYS-26's, VS). **The loadout rows speak the terminal's word:** a module's effect prints in the game's units and in the chassis vocabulary (`damage +1`, `chassis +2`, `damage +1 · chassis −8`) — never a percentage, and never "pool", because SYS-15's frozen row is `CHASSIS +2` and one axis must have one player-facing name. *Test: the readout fixture (exactly three values; ATK as the pair, not 100–132); a static audit finds no nine-stat surface in the MVP build; the loadout rows print the game's units and the chassis vocabulary; no DEF row renders while `defense = 0`.*
 
 #### 4 · The gear layer: the quantisation law, the lever set
 
@@ -104,7 +104,7 @@ Playtesters say: "I knew what the last point bought"; "the module told me what i
 
 - **TR-PRG-016 — DEF is retired from the gear layer (D-ORCH-03's named consequence, resolved).** **No MVP module carries a `defense` payload.** The axis stays implemented and unit-tested at DEF 0/5/25 (AC-HD-14 is untouched); at MVP every loadout's `defense` is **0**. The defensive build is served by the frame axis (`hp_max`), which is granular at the baseline (one step = 10% of the pool) and already a legal gear lever under TR-HD-006. **The take-side alternative is declined**: a flat post-`taken` reduction would need a new stage in SYS-07's total, deterministic damage order (TR-HD-005 names the module stage as "the player's weapon-arc branch only") — a frozen-contract revision for a lever the frame axis already provides. **The revisit gate is named:** DEF returns to gear when SYS-13's strike table's reference heavy (power 3) reaches `raw ≥ 12`, where a 5-point DEF step changes the integer (`floor(12 × 0.95) = 11` vs `floor(12 × 0.85) = 10`); until then the axis is enforced but unobservable (F-HD-03/R10), and a module claiming "+N DEF" would be a number that lies. *Test: the catalogue audit finds zero defense payloads; every loadout's `defense` is 0; AC-HD-14's three fixtures still pass unchanged; the revisit gate is printed with its owner.*
 
-- **TR-PRG-017 — The one exception: the guaranteed Warden drop.** Exactly one module — **the Warden's governor** — exceeds the guardrail: a free `damage_bonus +1` (two chain points: **+33.3%** at row 0, **+20%** at row 4 — the exceedance decays as the ladder climbs and is bounded at two points). It is **(a) placed** behind the post-flip partition (the Cold Corridor wing, the reveal's reward — SYS-02's room data), **(b) guaranteed** (a fixed pickup, never a roll: "the guaranteed Warden-tier drop"), **(c) bounded** (`chain_points ≤ 2`, no pool gain of its own), and **(d) closable** — the Gate-2 parity-promise probe (the concept's fifth expansion probe, SYS-16 + qa-lead) decides whether the exception stands: a "broken promise" reading closes it and the module drops to the paid payload (`damage_bonus +1, hp_max −6`) with no other change. The switch is `WINDOW_EXCEPTION_ENABLED`; closing it is a data change, not a redesign. *Test: the drop fixture (the pickup is present, fixed, post-flip, and the same on every run); the bound fixture (chain_points = 2); the closure fixture (`WINDOW_EXCEPTION_ENABLED = false` re-runs the budget table and the module becomes paid); the probe's instrument is AC-PRG-34.*
+- **TR-PRG-017 — The one exception: the guaranteed Warden-tier part.** Exactly one module — **Governor-000**, the Warden's own regulator — exceeds the guardrail: a free `damage_bonus +1` (two chain points: **+33.3%** at row 0, **+20%** at row 4 — the exceedance decays as the ladder climbs and is bounded at two points). It is **(a) placed** behind the post-flip partition — a fixed `TAKE` in the Cold Corridor wing beside memory M4 (the wing is RM-03's zone, sealed at epoch 0 and open at epoch ≥ 1: the reveal *is* the partition) — **(b) guaranteed** (always there, never a roll), **(c) bounded** (`chain_points ≤ 2`, no pool gain of its own), and **(d) closable** — the Gate-2 parity-promise probe (the concept's fifth expansion probe, SYS-16 + qa-lead) decides whether the exception stands: a "broken promise" reading closes it and the module drops to the paid payload (`damage_bonus +1, hp_max −MODULE_DAMAGE_HP_COST`) with no other change. The switch is `WINDOW_EXCEPTION_ENABLED`; closing it is a data change, not a redesign. **Why a placed part and not an enemy drop:** SYS-02's frozen layout pins five spawns with a two-per-room maximum and the wing carries none, so a second Warden in the wing would be a contract revision this lane will not take; and a drop *table* would break the anti-junk determinism D-1 asks for. The audit's "Warden-tier drop" is therefore realised as **the Warden's own part, guaranteed, behind the partition** — the tier is the part's, the guarantee is the placement's, and the lore carries the kill that put it there. *Test: the drop fixture (a placed `TAKE` in the wing beside M4, present on every run, unreachable at epoch 0 because the zone gate is SEALED); the bound fixture (`chain_points` = 2); the closure fixture (`WINDOW_EXCEPTION_ENABLED = false` re-runs the budget table and the module becomes paid); the no-spawn audit (the wing's spawn list stays empty — SYS-02's five-spawn fixture is untouched); the probe's instrument is AC-PRG-32.*
 
 #### 5 · The catalogue, the loadout, the pickup
 
@@ -114,7 +114,7 @@ Playtesters say: "I knew what the last point bought"; "the module told me what i
   |---|---|---|---|
   | **Coupler-034** | drive | `damage_bonus +1`, `hp_max −8` | a fixed pre-flip pickup |
   | **Governor-207** | frame | `hp_max +2` | a fixed pre-flip pickup |
-  | **Governor-000** (the Warden's) | drive | `damage_bonus +1` — the exception | the post-flip wing, behind the Warden |
+  | **Governor-000** (the Warden's) | drive | `damage_bonus +1` — the exception | the Cold Corridor wing, beside M4 (post-flip, guaranteed) |
 
   *Test: the catalogue fixture (three entries, unique ids, the slot declared, two lore lines each, the payload inside the closed set); the source-room audit (each is a fixed placement, no table); the lore audit (two lines, no percentage, no banned term).*
 
@@ -251,28 +251,38 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 
 **Worked examples:** attack **132** (L5/a4) → row 4 → 4/6/3/4, chain **10**; attack **138** (L6/a4) → `max(4, floor(4×138÷132)=4)` → **4/6/3/4, chain 10** (the seam is flat by construction); attack **162** (L10/a4) → 4/7/3/4, chain **11**; attack **222** (L20/a4) → 6/10/5/6, chain **16**. **The split-independence fixture:** attack 130 (L6/a3) → `step` 3 → row 3 → 4/5/3/3, chain 9 — identical to L5/a3 (attack 124), so no split loses damage at the seam. **Monotone:** the else-branch's floor of an increasing function, `max`-ed with a constant.
 
-#### F-PRG-04 · level_landmark — the pacing ledger (TR-PRG-005)
+#### F-PRG-04 · level_landmark — the pacing rate (TR-PRG-005)
 
-`level(xp) = 1 + |{t ∈ {L2, L3, L4, L5} : TRAINING_DATA[t] ≤ xp}|`, capped at `LEVEL_CAP_MVP`. `cum_room(r) = Σ_{k ≤ r} (T1_k × XP_T1 + T2_k × XP_T2 + T3_k × XP_T3)`; the boss adds `XP_BOSS` once.
+`pass_yield = Σ_{rooms} Σ_{entries} XP_T[tier(archetype)]` over the mandatory rooms' spawn lists (the list re-arms every entry — TR-RWS-011).
+`passes_to(level) = ceil(TRAINING_DATA[level] ÷ pass_yield)`; `level(xp) = 1 + |{t : TRAINING_DATA[t] ≤ xp}|`, capped at `LEVEL_CAP_MVP`.
 
-**Variables:** `xp` int ≥ 0 · the thresholds 20/50/90/140 · the awards 3/7/14 · `XP_BOSS` 40 · the pacing counts `PACING_T1_COUNT` 10, `PACING_T2_COUNT` 6, `PACING_T3_COUNT` 2. **Output:** the landmark table.
+**Variables:** `pass_yield` int > 0 (derived; `PACING_PASS_YIELD_MIN` 30 is its floor) · the thresholds 20/50/90/140 · the awards 3/7/14 · `XP_BOSS` 40 · the spawn lists (SYS-02's: 0/2/2/0/1/0) · the tier assignment (SYS-13's; RM-03 pinned 1 Spitter + 1 Husk). **Output:** the per-pass yield, the passes-to-landmark table, the level from an XP total.
 
-**The authored distribution (the budget SYS-02's spawn list must satisfy):**
+**The derived yield (the authored assignment the budget requires):**
 
-| Room | T1 | T2 | T3 | room yield | cumulative | level on exit | points |
-|---|---:|---:|---:|---:|---:|---|---:|
-| RM-01 | 2 | 0 | 0 | 6 | 6 | 1 | 0 |
-| RM-02 | 2 | 1 | 0 | 13 | 19 | 1 | 0 |
-| RM-03 | 2 | 1 | 0 | 13 | 32 | **2** | **1** |
-| RM-04 (cache) | 1 | 1 | 0 | 10 | 42 | 2 | 1 |
-| RM-05 | 2 | 2 | 1 | 34 | 76 | **3** | **2** |
-| RM-06 (arena room, pre-boss) | 1 | 1 | 1 | 24 | **100** | **4** | **3** |
-| the Denial boss | — | — | — | 40 | **140** | **5** | **4** |
-| **total** | **10** | **6** | **2** | **100** | **+40 = 140** | | |
+| Room | spawns | assignment | yield per pass |
+|---|---:|---|---:|
+| RM-01 | 0 | — | 0 |
+| RM-02 | 2 | 2 × Husk (T1) | 6 |
+| RM-03 | 2 | 1 × Husk + 1 × Spitter (**SYS-02's pinned pair**) | 10 |
+| RM-04 (cache) | 0 | — | 0 |
+| RM-05 | 1 | 1 × Warden (T3) | 14 |
+| RM-06 (arena) | 0 | the boss (SYS-14; the award is SYS-07's) | — |
+| **per pass** | **5** | | **30** |
 
-**Worked examples:** xp 19 → L1; xp 20 → **L2**; xp 49 → L2; xp 50 → **L3**; xp 89 → L3; xp 90 → **L4**; xp 139 → L4; xp 140 → **L5**; xp 400 → L5 (capped, nothing accrues). **The design claim:** the first point arrives in RM-03 and is spent at RM-04's terminal (one room of anticipation); the second and third arrive before the arena so the pre-boss walk back to the cache is a real decision; the fourth is the boss's death — **the boss is the fourth point**, and at MVP the slice ends there (its spend is OQ-PRG-6).
+**The landmarks:**
 
-**The placement is SYS-02's.** This table is the *budget* the spawn list must satisfy, not an edit to the room data. If RM-06's arena band cannot host the pre-boss three, the 24 moves into RM-05 and the landmark row re-derives (F-PRG-04) — the ledger is never hand-maintained, and the *claim* the design needs is "the third point lands before the arena", not "a Warden stands in RM-06".
+| after | cumulative | level | points | note |
+|---|---:|---|---:|---|
+| 1 pass | 30 | **L2** | 1 | the first point in the first traversal |
+| 2 passes | 60 | **L3** | 2 | |
+| 3 passes | 90 | **L4** | 3 | the design target for entering the arena |
+| 3 passes + the boss | 130 | L4 | 3 | a boss attempted early does not finish the curve |
+| 4 passes + the boss | **160** | **L5** | **4** | the 20 excess is discarded at the cap |
+
+**Worked examples:** xp 19 → L1; xp 20 → **L2**; xp 50 → **L3**; xp 90 → **L4** (exactly — the never-stingy boundary); xp 140 → **L5**; xp 400 → L5. **`passes_to(L4) = ceil(90 ÷ 30) = 3`** ✓ the bar; **`passes_to(L5) = ceil(140 ÷ 30) = 5`** — the bar is met only *with* the boss (120 + 40), which is why the L5 row is "4 passes **+ the boss**". **The design claim:** the slice is a **farm loop by construction** (the respawn is the verb SYS-07 licenses and SYS-15's ledger states), so the ledger is a *rate*; the authored bar is that the growth is felt within three traversals and completed by the fourth. **A pass is not a chore requirement:** the player may fight the boss at L3 or L4; the curve simply says the fourth point needs the fourth pass.
+
+**The placement is SYS-02's and the tiers are SYS-13's.** This table is the *budget* those owners must satisfy, not an edit to the room data or the archetype registry. A spawn-list change, a tier change or an award change re-derives the table (nothing is hand-typed); if the derived yield falls under `PACING_PASS_YIELD_MIN`, the build flags the pass count it would take.
 
 #### F-PRG-05 · gear_aggregate — the loadout becomes a stat (TR-PRG-015/026)
 
@@ -355,7 +365,7 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 - **If a `CHASSIS` point is spent at full HP** → the pool rises by 2 and the current HP rises by 2 (not clamped, not overhealed). [The point is felt immediately.]
 - **If a banked point survives a death** → it survives the reconstruct (the namespace is carried) and survives a fresh load (it is in the save). [Banked points are growth, and growth survives the print.]
 - **If a level-up arrives during a gate or a death beat** → the edge queues at the next gameplay tick; the point banks then. [No allocation in a context that cannot show it.]
-- **If the pacing ledger's first pass yields < 100** → the build flags the shortfall and names the room; the slice ships only after the placement is fixed. [The budget is a gate, not a note.]
+- **If the derived pass yield falls under `PACING_PASS_YIELD_MIN`** → the build flags the pass count it would take and names the spawn list or the tier assignment to fix; the slice ships only after the bar is met. [The bar is a gate on data, not a note.]
 
 ### The seam
 
@@ -415,7 +425,7 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 | V-PRG-03 | the point budget: `a + h + banked = min(L−1, POINT_BUDGET_CAP)`; each term ≥ 0 | reject + telemetry | one growth source at a time |
 | V-PRG-04 | `level ≤ LEVEL_CAP_MVP` at MVP; no training data accrues past it | clamp (the award is discarded) | the MVP arc is bounded |
 | V-PRG-05 | the loadout: ≤ 1 drive + ≤ 1 frame; no duplicates; every module declares a slot | refuse the equip + telemetry | the typing is the law |
-| V-PRG-06 | the guardrail: every authored loadout satisfies F-PRG-06's four terms; the exception set is enumerated | dev boot failure (authoring) | the promise is a gate on data |
+| V-PRG-06 | the guardrail: every authored loadout satisfies F-PRG-06's four terms; the exception set is enumerated; **`MODULE_DAMAGE_HP_COST` is derived** (`MODULE_HP_PER_CHAIN_POINT × 2 × MODULE_DAMAGE_BONUS` = 6) so the closure payload can never drift off the exchange floor | dev boot failure (authoring) | the promise is a gate on data |
 | V-PRG-07 | the exception's bound: `chain_points ≤ WINDOW_EXCEPTION_CHAIN_POINTS` | dev boot failure | the exception stays bounded |
 | V-PRG-08 | the DEF retirement: no `defense` payload at MVP; `defense = 0` at every loadout | dev boot failure | a retired axis cannot leak back |
 | V-PRG-09 | the max-law: `damage_bonus = max(drives)`, never the sum | dev boot failure | no silent stacking |
@@ -445,12 +455,12 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 | Downstream | **SYS-17 Inventory** | MVP carve-out + gear | In: the catalogue, the loadout law · Out: the item entities, the `TAKE`, the VS namespace | **Blocked on SYS-16** |
 | Downstream | **SYS-29 Juice** | Soft | In: the grant cue, the pickup chime · Out: none | **APPROVED** |
 | Downstream | **SYS-03 Save** | **Hard at save time** | In: the namespace's shape + the v2→v3 bump · Out: serialization, the writer thread (ADR-0002) | **APPROVED** |
-| Coordination | **SYS-05 Game Flow** | Soft | In: the Stinger's grant moment, the new-game reset · Out: the grant flag, the reset's namespace default | **Pre-shaped** |
+| Coordination | **SYS-05 Game Flow** | Soft | In: the Stinger's grant moment, the new-game reset · Out: the story trigger for the Stinger's grant (SYS-16 stays the sole writer of the grant set — TR-PRG-002), the reset's namespace default | **Pre-shaped** |
 | Coordination | **SYS-14 Grief-Boss** | Soft | In: the boss award · Out: none | **Not written** |
 
 **Bidirectional-consistency corrections to apply to the systems index at completion:** (1) SYS-16's row → APPROVED with the counts and the gear-layer contract; (2) SYS-17's row gains the catalogue/namespace split and its VS migration; (3) SYS-24's row gains the three-value readout, the two loadout rows and the socket; (4) SYS-15's row gains the preview's values and the `progression` namespace's carry participation; (5) SYS-03's row gains the v2→v3 bump; (6) SYS-07's row gains **OQ#5 and OQ#20 closed** and the F-HD-14 rider; (7) SYS-13's row gains the DEF revisit gate.
 
-**Rider requests (recorded, never edited here):** (a) **SYS-07's F-HD-14 VS attack clause** — the `100 + 6×(L−1)` candidate is superseded by F-PRG-01; a one-line rider at SYS-07's next doc touch (the OQ-M1 pattern). (b) **SYS-15's TR-CSD-013 body row** — "the body (store-absent: SYS-16/17's session-only namespaces)" becomes store-carried for `progression` at v3, live-carried by the same read-gated window write; a one-line rider at SYS-15's next doc touch.
+**Rider requests (recorded, never edited here):** (a) **SYS-07's F-HD-14 VS clauses** — the `attack` candidate `100 + 6×(L−1)` is superseded by F-PRG-01 (it gives 130 at L6, below the 132 cap), and the `hp_max` clause `20 + 2×(L−1)` is under-specified rather than wrong (it is exactly the **all-HP** build, reproduced by F-PRG-02 at L20); a two-line rider at SYS-07's next doc touch (the OQ-M1 pattern). (b) **SYS-15's TR-CSD-013 body row** — "the body (store-absent: SYS-16/17's session-only namespaces)" becomes store-carried for `progression` at v3, live-carried by the same read-gated window write; a one-line rider at SYS-15's next doc touch. (c) **SYS-07's TR-HD-006 gear clause** — "`defense` gains its first MVP source at SYS-16 authoring" is **resolved as retired** by TR-PRG-016 (D-ORCH-03 accepted the consequence; the axis stays implemented and unit-tested, and its revisit gate is OQ-PRG-8); a one-clause rider at SYS-07's next doc touch.
 
 ## Tuning Knobs
 
@@ -465,16 +475,16 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 | `MODULE_SLOTS` | 2 (1 drive + 1 frame) | 2 (fixed) | 1: no build · 3: stacking returns | the catalogue | TR-PRG-015 |
 | `MODULE_DAMAGE_BONUS` | 1 | 1 (fixed identity) | 0: the drive axis vanishes · 2: +4 chain points, unbuyable | `MODULE_HP_PER_CHAIN_POINT` | TR-PRG-012 |
 | `MODULE_HP_PER_CHAIN_POINT` | 3 | 2–4 | <2: damage is cheap (power creep) · >4: damage is a trap | `MODULE_DAMAGE_BONUS` | TR-PRG-014 |
-| `MODULE_DAMAGE_HP_COST` | 6 | 4–8 | <4: below the exchange floor · >8: the paid payload is unplayable | F-PRG-06(b) | TR-PRG-014 |
+| `MODULE_DAMAGE_HP_COST` | derived (3 × 2 × 1 = 6) | — (derived, never edited) | an edited value drifts the closure off the exchange floor (V-PRG-06) | F-PRG-06(b) | TR-PRG-014 |
 | `MODULE_FRAME_HP_BONUS` | 2 | 2–4 | 4: +20% pool, over the band · 2: exactly 10% | `GEAR_BAND_PCT` | TR-PRG-014 |
 | `MODULE_COUPLER_HP_COST` | 8 | 6–10 | 6: the pair overshoots the floor (+2 back) · 10: the pair is at −8 (over-paying) | F-PRG-06(b) | TR-PRG-019 |
 | `GEAR_BAND_PCT` | 0.10 | 0.05–0.15 | <0.05: no module fits · >0.15: the promise weakens | the budget table | TR-PRG-014 |
 | `WINDOW_EXCEPTION_ENABLED` | true | on/off | off: the Warden's module becomes the paid payload | F-PRG-07 | TR-PRG-017 |
 | `WINDOW_EXCEPTION_CHAIN_POINTS` | 2 | 2 (fixed bound) | 4: the exception doubles and the promise breaks | F-PRG-07 | TR-PRG-017 |
-| `PACING_T1_COUNT` | 10 | 8–12 | <8: the pre-boss total falls under 100 | F-PRG-04 | TR-PRG-005 |
-| `PACING_T2_COUNT` | 6 | 4–8 | — | F-PRG-04 | TR-PRG-005 |
-| `PACING_T3_COUNT` | 2 | 1–3 | — | F-PRG-04 | TR-PRG-005 |
-| `PACING_PREBOSS_MIN` | 100 | 90–110 | <90: L4 lands after the arena · >110: the boss award overshoots L5 | `XP_BOSS` | TR-PRG-005 |
+| `PACING_PASS_YIELD_MIN` | 30 | 24–40 | <24: the bar needs 5+ passes · >40: the curve flattens | the spawn list, the tiers | TR-PRG-005 |
+| `PACING_PASSES_L4_MAX` | 3 | 2–4 | >4: the growth is not felt in the slice | `PACING_PASS_YIELD_MIN` | TR-PRG-005 |
+| `PACING_PASSES_L5_MAX` | 4 | 3–5 | >5: the cap is unreachable in an MVP session | `XP_BOSS` | TR-PRG-005 |
+| `PACING_T3_PER_PASS` | 1 | 1–2 | 0: the punish lesson is optional-only · 2: RM-05's single spawn cannot hold it | the tier assignment | TR-PRG-005 |
 | `PROGRESSION_SCHEMA_VERSION` | 3 | 3 (the bump) | 2: the namespace cannot exist; 4 without a migration: refuse | SYS-03's registry | TR-PRG-025 |
 | `LOADOUT_SWAP_SURFACE` | `pause` | `pause` \| `cache` | `cache`: the swap joins SYS-15's frozen row set (a contract change) | SYS-24/SYS-15 | TR-PRG-020 |
 | `PRG_READOUT_VALUES` | 3 (level, HP, ATK) | 3 (fixed at MVP) | 4: DEF returns with no source (a lie); 9: the sheet (VS) | TR-PRG-011 | TR-PRG-011 |
@@ -494,8 +504,8 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 
 - **The dormant Dash socket:** hidden → dimmed-after-tease with a lock glyph → active. It must read as **a promise, not a broken button** — the dim is a slow, steady state, never a flash, never a "locked!" toast. The glyph is a silhouette-first shape (legible at 480×270).
 - **The module pickup:** the standard `TAKE` bubble (SYS-01's) and the memory-chime family's audio-led cue (TR-JCE-021's pickup-class treatment) + one print row naming the module. **No bespoke VFX at MVP** (the stone's glow, the wing motif are the art pass — OQ-PRG-3).
-- **The pause loadout rows:** two rows, the module's display name and its effect in the game's units (`damage +1`, `pool +2`, `damage +1 · pool −8`). **No percentage, no colour-coded rarity, no icon-only rows** (the meaning = text + shape law).
-- **The three-value readout:** level, HP, ATK — flat print rows in the terminal's voice, never a panel with borders. `DEF` renders only when it has a source.
+- **The pause loadout rows:** two rows, the module's display name and its effect in the game's units (`damage +1`, `chassis +2`, `damage +1 · chassis −8`). **No percentage, no colour-coded rarity, no icon-only rows** (the meaning = text + shape law).
+- **The three-value readout:** level, HP and ATK — ATK as the row's pair (`ATK 2/4`), flat print rows in the terminal's voice, never a panel with borders. `DEF` renders only when it has a source.
 - **The level-up:** SYS-29's existing level-up print (TR-JCE's edge) — no fanfare, no confetti; the point is a pip that appears.
 - **Audio:** the grant cue reuses the memory-chime voice (SYS-04 designs it; one chime per grant); the pickup is the same family; the equip is silent (a menu action is not a beat).
 
@@ -526,7 +536,7 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 ### Level 1–5 and the point
 
 - **AC-PRG-04** [GUT] *(TR-PRG-004)* — **GIVEN** kills accrue, **THEN** L2 at 20, L3 at 50, L4 at 90, L5 at 140; a Husk awards 3, a Spitter 7, a Warden 14, the boss 40 (from SYS-14's registration, not a literal); a kill at L5 accrues nothing and publishes no level edge.
-- **AC-PRG-05** [GUT] *(TR-PRG-005, F-PRG-04)* — **GIVEN** the authored population (10 T1 / 6 T2 / 2 T3), **WHEN** the ledger runs, **THEN** the cumulative table is 6/19/32/42/76/100/140, the four landmarks land in RM-03 / RM-05 / RM-06 / the boss, and a slice whose first-pass total is < `PACING_PREBOSS_MIN` is flagged at build time naming the room and the shortfall.
+- **AC-PRG-05** [GUT] *(TR-PRG-005, F-PRG-04)* — **GIVEN** SYS-02's five-spawn layout and SYS-13's tier assignment (RM-03's pinned pair), **WHEN** the ledger runs, **THEN** one pass yields **30** (6 + 10 + 14), the landmarks are L2@1 / L3@2 / L4@3 passes and L5 at the fourth pass's boss (160, the excess discarded), `passes_to(L4) = 3 ≤ PACING_PASSES_L4_MAX`, and a derived yield under `PACING_PASS_YIELD_MIN` is flagged at build time naming the pass count it would take; the table is regenerated from the spawn list and the tiers (a change to either re-derives it — nothing is hand-typed); the wing's spawn list stays empty (SYS-02's five-spawn fixture untouched).
 - **AC-PRG-06** [GUT] *(TR-PRG-006)* — **GIVEN** one banked point at the terminal, **WHEN** `STRIKES` commits, **THEN** +8 ATK and exactly one `StatRevision`; **GIVEN** `CHASSIS`, **THEN** max HP +2 **and** current HP +2 in the same application; **GIVEN** 0 banked points, **THEN** no row renders; a spend outside the terminal context is refused with the point intact.
 - **AC-PRG-07** [GUT] *(TR-PRG-007, F-PRG-08)* — **GIVEN** the budget identity, **THEN** `a + h + banked = min(L−1, 4)` at L1/L5/L6/L20; a level-up past 5 banks nothing; a fifth point is rejected with telemetry; a banked point survives a reconstruct and a fresh load.
 
@@ -535,7 +545,7 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 - **AC-PRG-08** [GUT] *(TR-PRG-008, F-PRG-01)* — **GIVEN** the six fixtures, **THEN** attack is 100 (L1/a0), 132 (L5/a4), 106 (L6/a0), 138 (L6/a4), 122 (L6/a2), 190 (L20/a0), 222 (L20/a4); the monotonicity sweep over every (L, a) pair finds no decrease in either axis; the L5→L6 step is +6 for all five splits.
 - **AC-PRG-09** [GUT] *(TR-PRG-009, F-PRG-02)* — **GIVEN** the pool fixtures, **THEN** 20 (L1/h0), 28 (L5/h4), 30 (L6/h4), 22 (L6/h0), 50 (L20/h0), **58 (L20/h4)**; a negative module delta clamps the current HP; a point's +2 heals; a module's +2 does not.
 - **AC-PRG-10** [GUT] *(TR-PRG-010, F-PRG-03)* — **GIVEN** attack 132 and 138, **THEN** both give 4/6/3/4, chain 10 (the seam is flat); **GIVEN** 162 and 222, **THEN** chain 11 and chain 16; **GIVEN** every (L, a) pair, **THEN** the dealt value is non-decreasing; **GIVEN** `arc = ABILITY`, **THEN** the ladder is not read.
-- **AC-PRG-11** [GUT] *(TR-PRG-011)* — **GIVEN** the pause readout, **THEN** exactly three values render (level, HP, ATK); no DEF row renders while `defense = 0`; a static audit finds no nine-stat surface, no comparison tooltip and no respec in the MVP build; the loadout rows print the effect in the game's units (no percentage).
+- **AC-PRG-11** [GUT] *(TR-PRG-011)* — **GIVEN** the pause readout, **THEN** exactly three values render (level, HP, ATK); **ATK prints as the ladder row's pair (`ATK 2/4`), never the raw 100–132 scale**; no DEF row renders while `defense = 0`; a static audit finds no nine-stat surface, no comparison tooltip and no respec in the MVP build; the loadout rows print the effect in the game's units and in the chassis vocabulary (`damage +1`, `chassis +2`), never a percentage and never "pool".
 
 ### The gear layer
 
@@ -544,7 +554,7 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 - **AC-PRG-14** [GUT] *(TR-PRG-014, F-PRG-06)* — **GIVEN** the six loadouts, **WHEN** the budget runs, **THEN** the table reproduces exactly (∅ pass; Governor +10% pass; Coupler −8 pass; Coupler+Governor −6 pass at the floor; Governor-000 exception; Governor-000+Governor exception); the table holds at L5 all-ATK and L5 all-HP; a loadout violating (b) fails authoring with the shortfall printed; the exception set is exactly one id.
 - **AC-PRG-15** [GUT] *(TR-PRG-015, F-PRG-05)* — **GIVEN** the loadout, **THEN** a drive in the frame slot is refused; a duplicate is refused; a synthetic two-drive catalogue yields the **max** (1), never the sum (2); the empty loadout's aggregate is `{0,0,0,0}` and every approved number is exact.
 - **AC-PRG-16** [GUT] *(TR-PRG-016)* — **GIVEN** the catalogue, **THEN** zero modules carry a `defense` payload; every MVP loadout's `defense` is 0; AC-HD-14's DEF 0/5/25 fixtures still pass unchanged; the revisit gate prints its threshold (`raw ≥ 12` on power 3) and its owners.
-- **AC-PRG-17** [GUT] *(TR-PRG-017, F-PRG-07)* — **GIVEN** the Warden's drop, **THEN** it is present, fixed, post-flip and identical on every run; its `chain_points` is 2 (the bound); the printed exceedance is +33.3% at row 0 and +20% at row 4; with `WINDOW_EXCEPTION_ENABLED = false` the payload becomes `{damage_bonus +1, hp_max −6}` and the budget re-runs with zero exceptions.
+- **AC-PRG-17** [GUT] *(TR-PRG-017, F-PRG-07)* — **GIVEN** the Warden-tier part, **THEN** it is a placed `TAKE` in the Cold Corridor wing beside M4, present on every run, **unreachable at epoch 0** (the zone gate is SEALED — SYS-02's TR-RWS-009); its `chain_points` is 2 (the bound); the printed exceedance is +33.3% at row 0 and +20% at row 4; with `WINDOW_EXCEPTION_ENABLED = false` the payload becomes `{damage_bonus +1, hp_max −MODULE_DAMAGE_HP_COST}` and the budget re-runs with zero exceptions.
 - **AC-PRG-18** [GUT] *(TR-PRG-018)* — **GIVEN** the catalogue, **THEN** three entries with unique ids, a declared slot each (2 drive + 1 frame), a payload inside the closed set, **exactly two lore lines** each, and a fixed source room (no table, no RNG); the lore audit finds no percentage and no banned term.
 - **AC-PRG-19** [GUT] *(TR-PRG-019)* — **GIVEN** the Coupler, **THEN** alone it is chain 8 / pool 12 (Δhp −8); with Governor-207 it is chain 8 / pool 14 (Δhp **−6**, the floor); the pair is the only loadout that lands exactly on the floor.
 - **AC-PRG-20** [GUT] *(TR-PRG-020)* — **GIVEN** a dropped module, **THEN** walking over it does nothing, `TAKE` acquires it (one print row + one chime edge, zero haptics), nothing auto-equips; **GIVEN** an equip, **THEN** exactly one `StatRevision` and the aggregate updates; a negative delta clamps; the pause surface shows two rows and no third surface exists.
@@ -568,12 +578,12 @@ Progression's formulas are **seam laws** (the points model → the full sheet), 
 
 - **AC-PRG-30** [DEVICE] *(TR-PRG-011/023)* — **GIVEN** the device matrix at the locked 480×270 art scale, **WHEN** the pause surface and the socket are inspected, **THEN** the three-value readout and the two loadout rows are legible, every row is ≥ 48 dp and reachable, the three socket states are distinguishable **by shape**, and no row occludes the body.
 - **AC-PRG-31** [DEVICE] *(TR-PRG-025)* — **GIVEN** a real device, **WHEN** the player levels, spends, equips, then suspends/kills the app (iOS background-kill / Android onStop / desktop quit), **THEN** the relaunch restores the level, the points, the grants and the loadout exactly; the suspension save's cause is the platform's event from SYS-15's closed set.
-- **AC-PRG-32** [DEVICE] *(TR-PRG-017/020)* — **GIVEN** a real device and the Gate-2 session script, **WHEN** the post-flip Warden is defeated and its governor taken, **THEN** the drop is noticed (the tester's own words name it) and equipped from the pause within the session; the print row and the chime are the only cues; no bespoke VFX is required for the beat to land.
+- **AC-PRG-32** [DEVICE] *(TR-PRG-017/020)* — **GIVEN** a real device and the Gate-2 session script, **WHEN** the player flips the truth, backtracks into the Cold Corridor and takes the Warden-tier part beside M4, **THEN** the part is noticed (the tester's own words name it) and equipped from the pause within the session; the print row and the chime are the only cues; no bespoke VFX is required for the beat to land.
 
 ### Feel and the promise
 
 - **AC-PRG-33** [PLAYTEST] *(TR-PRG-006, Player Fantasy)* — **GIVEN** ≥5 testers × ≥30 min (the SYS-01 AC-63 protocol) with at least one point spend each, **WHEN** the rubric codes **G1 growth-chosen** (inclusion: chose it, knew what it bought, picked it myself; exclusion: automatic, didn't notice, no difference), **THEN** ≥3/5 of the testers who spent ≥1 are coded G1.
-- **AC-PRG-34** [PLAYTEST] *(TR-PRG-017; the concept's Gate-2 parity-promise probe)* — **GIVEN** the same cohort and a script that includes the Warden's drop, **WHEN** the rubric codes **G2 parity-promise** (inclusion: earned it, a reward, it cost me the fight; exclusion: too strong, broke the game, a cheat), **THEN** ≥3/5 of the testers who took the drop read it as a reward; **a "broken promise" majority closes `WINDOW_EXCEPTION_ENABLED`** and the module becomes the paid payload.
+- **AC-PRG-34** [PLAYTEST] *(TR-PRG-017; the concept's Gate-2 parity-promise probe)* — **GIVEN** the same cohort and a script that includes the Warden-tier part, **WHEN** the rubric codes **G2 parity-promise** (inclusion: earned it, a reward, it cost me the fight; exclusion: too strong, broke the game, a cheat, a broken promise), **THEN** ≥3/5 of the testers who took the part read it as a reward; **a "broken promise" majority closes `WINDOW_EXCEPTION_ENABLED`** and the module becomes the paid payload.
 - **AC-PRG-35** [PLAYTEST] *(TR-PRG-019, the trade's legibility)* — **GIVEN** the same cohort and a script that includes one Coupler equip, **WHEN** the rubric codes **G3 trade-legible** (inclusion: it costs me pool, I read the row, I chose the trade; exclusion: didn't know, felt cheated, hidden), **THEN** ≥3/5 of the testers who equipped it can state its cost unprompted.
 - **AC-PRG-36** [PLAYTEST] *(TR-PRG-023, the anticipation design)* — **GIVEN** the same cohort and a session that includes the dimmed Dash socket, **WHEN** the rubric codes **G4 lock-as-promise** (inclusion: not yet, it's coming, I looked for where it goes; exclusion: broken, bugged, confusing), **THEN** ≥3/5 read the lock as a promise rather than a fault.
 
@@ -598,7 +608,7 @@ The **four playtest ACs** use the SYS-01 AC-63 protocol: ≥5 testers × ≥30 m
 | Code | Inclusion set | Exclusion set |
 |---|---|---|
 | **G1 growth-chosen** | chose it, knew what it bought, picked it myself, worth it | automatic, didn't notice, no difference, pointless |
-| **G2 parity-promise** | earned it, a reward, it cost me the fight, I went back for it | too strong, broke the game, a cheat, unearned |
+| **G2 parity-promise** | earned it, a reward, it cost me the fight, I went back for it | too strong, broke the game, a cheat, unearned, a broken promise |
 | **G3 trade-legible** | it costs me pool, I read the row, I chose the trade | didn't know, felt cheated, hidden, a trap |
 | **G4 lock-as-promise** | not yet, it's coming, I looked for where it goes | broken, bugged, confusing, a dead button |
 
@@ -608,8 +618,8 @@ The **four playtest ACs** use the SYS-01 AC-63 protocol: ≥5 testers × ≥30 m
 |---|---|---|---|
 | 1 | **The glass-alone build** — the Coupler with no frame is 12 HP; the MVP roster's heaviest strike is power 2 (no power-3 strike ships), so 6 hits — playable, or a trap? If it reads as a trap at playtest, `MODULE_COUPLER_HP_COST` drops to 6 and the Coupler+Governor pair is re-authored (the pair would overshoot the floor by 2). | SYS-16 + QA | Playtest (Gate 2) |
 | 2 | **The exception's closure** — AC-PRG-34's G2 code decides whether `WINDOW_EXCEPTION_ENABLED` stands; a "broken promise" majority closes it and the Warden's module becomes the paid payload (the same loadout as Coupler+Governor, and the module loses its reason to exist — a content decision follows). | SYS-16 + qa-lead | Gate 2 |
-| 3 | **The module art + the pickup's bespoke VFX** — the three modules' sprites, the socket's lock glyph, and whether the Warden's drop earns a bespoke glow (TR-JCE-021's OQ-J3 pattern: the relic's bespoke VFX is the art pass). | art-director + technical-artist | After the art bible; `/asset-spec system:progression` |
-| 4 | **The drop's exact placement** — the post-flip wing's Warden and its governor's fixed position are SYS-02's room data; the placement must satisfy the "noticed and equipped" instrument (AC-PRG-32) and the reveal's framing. | SYS-02 + level-designer | The next SYS-02 room-data touch |
+| 3 | **The module art + the pickup's bespoke VFX** — the three modules' sprites, the socket's lock glyph, and whether the Warden-tier part earns a bespoke glow (TR-JCE-021's OQ-J3 pattern: the relic's bespoke VFX is the art pass). | art-director + technical-artist | After the art bible; `/asset-spec system:progression` |
+| 4 | **The part's exact position in the wing** — the Cold Corridor wing (10×6 tiles, RM-03's zone) holds memory M4; the Warden-tier part sits beside it or at the wing's end. The placement is SYS-02's room data and must satisfy the "noticed and equipped" instrument (AC-PRG-32) and the reveal's framing. **A guard enemy in the wing is not available**: SYS-02's frozen layout pins five spawns with a two-per-room maximum. | SYS-02 + level-designer | The next SYS-02 room-data touch |
 | 5 | **The VS inventory migration** — the MVP's `owned`/`equipped` keys move to SYS-17's `inventory` namespace at VS (a v3→v4 bump + a migration step); the split's exact boundary (does SYS-17 own the catalogue's payloads too?) is SYS-17's authoring decision. | SYS-17 | At SYS-17 authoring |
 | 6 | **The fourth point's home** — it arrives at the boss's death and the MVP slice ends there; whether the player can walk back to the cache to spend it (SYS-05's post-boss state) or the point is banked for the VS carry is SYS-05's call. | SYS-05 | At SYS-05 authoring |
 | 7 | **The loadout surface's final shape** — the pause's two rows are SYS-24's render of SYS-16's law; whether the rows live in the pause's root or a sub-pane, and the a11y read-out order, are SYS-24's (with the accessibility specialist's baseline). | SYS-24 + accessibility-specialist | Before the first SYS-24 story |
@@ -621,7 +631,7 @@ The **four playtest ACs** use the SYS-01 AC-63 protocol: ≥5 testers × ≥30 m
 |---|---|---|---|
 | **SYS-07 OQ#20** | The L5→L6 growth handoff — does the ladder continue, or does the percent curve take over, and at what damage scale? | **The ladder continues.** The points stay additive, the level adds a flat +6 from L6, and the ladder extends by its top row (`max(row 4, floor(row 4 × attack ÷ 132))`). Monotone in the stat and the dealt value for every split; the frozen `100 + 6×(L−1)` candidate is superseded (it drops 2 attack at L6); the pool re-base is reproduced exactly (58 at L20 = the all-HP build). | TR-PRG-008/009/010; F-PRG-01/02/03; the rider request to SYS-07's F-HD-14 |
 | **SYS-07 OQ#5** | The SYS-16 scope split — MVP points-only 1–5 vs the full nine-stat sheet, and the curve handoff. | **Split confirmed:** MVP = the points model + the gear layer + three read values; VS = the nine-stat sheet, behavioural modifiers, a second drive slot. The handoff is OQ#20's, above. | TR-PRG-011/012; the no-full-sheet law |
-| **The benchmark audit's IP-5 (GA14/GA24)** | May weapons or modules break the ±10% sustained-damage band under situational conditions? | **Modules: no — except one enumerated, bounded, placed, closable exception.** The band is infeasible on the damage axis at the baseline (one chain point = +16.7%), so the guardrail is a two-axis pair (the free band, the exchange, the pool cap) and the single exception is the Warden's drop, closed by the Gate-2 probe. Weapons keep TR-HD-034's law untouched. | TR-PRG-013/014/017; F-PRG-06/07; AC-PRG-14/34 |
+| **The benchmark audit's IP-5 (GA14/GA24)** | May weapons or modules break the ±10% sustained-damage band under situational conditions? | **Modules: no — except one enumerated, bounded, placed, closable exception.** The band is infeasible on the damage axis at the baseline (one chain point = +16.7%), so the guardrail is a two-axis pair (the free band, the exchange, the pool cap) and the single exception is the Warden-tier part, closed by the Gate-2 probe. Weapons keep TR-HD-034's law untouched. | TR-PRG-013/014/017; F-PRG-06/07; AC-PRG-14/34 |
 | **D-ORCH-03's named consequence (the DEF axis)** | What does the gear layer do with `defense`? | **Retired from gear at MVP** — the axis is a binary at the baseline (any `defense ≥ 1` ≡ DEF 25), so it cannot express a build modifier; the defensive build is the frame axis; the take-side alternative is declined (it needs a SYS-07 pipeline stage); the revisit gate is named and owned. SYS-07's frozen text is untouched. | TR-PRG-016; AC-PRG-16; OQ-PRG-8 |
 
 ### VS record (not AC'd at MVP)
