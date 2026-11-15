@@ -32,10 +32,11 @@
   corridor's one chromatic signature.
 - **Blocking?** The art bible's first item; the grey default ships either way, so
   it does not block SYS-11's implementation.
-- **Status**: **RESOLVED (2026-11-15 — user chose B).** The SYS-02 Player
-  Fantasy line 36 is amended ("a purple bridge holding it together" → the grey
-  bridge / the bridge of neither truth) and the SYS-11 index row is qualified
-  (the OQ-M1 rider pattern). The grey `PROV_LIM_*` default ships. SYS-02 is a
+- **Status**: **APPROVED (2026-11-15 — user chose B).** The SYS-02 Player
+  Fantasy line 36 amendment is pending the executing commit ("a purple bridge
+  holding it together" → the grey bridge / the bridge of neither truth) and the
+  SYS-11 index row is qualified (the OQ-M1 rider pattern). The grey `PROV_LIM_*`
+  default ships. SYS-02 is a
   frozen contract: the edit is the user-approved contract revision, and the
   executing commit must name **D-ORCH-01**.
 - **Decision**: _B — amend the line (recorded 2026-11-15)._
