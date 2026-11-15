@@ -55,10 +55,11 @@ inside their own worktree.
   the autonomous runners — recorded): PR #59 triage in flight (8 threads,
   resumed runner) and PR #58 confirm re-running on the fix head (5 fixed + 1
   rebutted). NEW passes (the sync PRs) queue behind recorded dispositions.
-- **Shared-file writer**: **idle; the lock is free** — the SYS-15 sync landed
-  (PR #63, `1e9e524`) and the lock released (§4). The queue's next request:
-  SYS-28 (order 1, per `review-queue.md` §5); the sync lane re-acquires the
-  lock for it and applies serially.
+- **Shared-file writer**: **active — SYS-28 (order 1)**: the lock is held (§4);
+  branch `chore/sync-shared-files` (from `origin/Main` `ce46fac`), the two shared
+  files applied + validated, PR open on `Main` awaiting merge. ART-BIBLE
+  (order 2) waits for the release. Prior: the SYS-15 sync landed (PR #63,
+  `1e9e524`) and the lock released.
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock

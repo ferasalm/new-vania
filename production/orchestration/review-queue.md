@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
+| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | PR open (`chore/sync-shared-files`, base `Main`), awaiting merge |
 
 Full request (read from the lane worktree; `session-state` is gitignored but
 on disk):
