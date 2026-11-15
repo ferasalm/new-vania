@@ -458,3 +458,272 @@ new claims were the risk.
 
 `UNRESOLVED=0`; every thread in every wave was resolved by reply with its disposition.
 The waves' commit hashes are in the lane report §6.
+
+## 9 · Pass 2 — ADR-0004 Health & Damage
+
+> **What this section is.** The record for the ADR-DRAFT lane's **second pass**: one
+> document, `docs/architecture/adr-0004-health-damage.md`, `Status: Proposed`. Pass 1
+> (§§0–8) is untouched; its two ADRs merged at `b991714` (PR #79).
+> **Base**: `origin/Main` `016bbbe` (rebased onto `fa628cf` before the PR).
+> **Prompt**: `prompts/lanes/ADR-DRAFT.md` v1.0.0 / `9c08ed965d14` (matches the
+> manifest row).
+
+### 9.0 · Scope, and the feasibility findings (pre-authoring)
+
+**The scope, from the orchestrator's launch**: the lane's named candidate #1 — the
+**SYS-07 Health & Damage ADR** — drafted from the GDD's own flagged ADR raw material
+(§Overview's parenthetical: "*`HealthCore` reducer, `DamageResolver`, `StatBlock`
+revisions, the RNG port, the pooled damage-number labels*") plus TR-HD-028's explicit
+delegation ("*The ADR pins the exact node position*"). SYS-05's ADR stays queued
+behind its GDD (the pass-1 gap, §6.6, still open).
+
+**Consumed contracts (read once each).** The SYS-07 GDD (`design/gdd/health-damage.md`,
+39 TR-HD / 15 F-HD / 50 ACs / 15 V-HD / 68 edge bullets / 20 OQ rows / 33 knobs,
+gate manifest 42+3+5+0); the landed **SYS-16** GDD (`design/gdd/progression.md` — the
+six rider requests and TR-PRG-007…016); **SYS-15**'s GDD body row (TR-CSD-013/017);
+ADR-0001 §3/§5/§6; ADR-0002 §5/§6; the registry entries `damage_event`,
+`system_offline_contract`, `progression_namespace`, `six_system_perf_envelope`; the
+engine snapshots (`VERSION.md`, `breaking-changes.md`); `technical-preferences.md`.
+
+**Feasibility findings, all five recorded rather than edited.**
+
+1. **AC-HD-13's DEFLECT fixture contradicts its own dispatch.** The AC reads "one
+   `DEFLECT` fixture at a non-default `attack` (raw 2 → 3 at 132)"; F-HD-02 branch 5
+   and TR-CMB-015 make every deflect an **identity** (`dealt = raw_damage`). At 132 a
+   raw-2 deflect is 2. → **CR-HD-01**, one clause.
+2. **`defense` has no MVP source at all.** TR-HD-006 says "`defense` gains its first
+   MVP source at SYS-16 authoring" and "a module-produced DEF is legal at MVP";
+   SYS-16 landed **TR-PRG-016 — DEF is retired from the gear layer** (payload closed to
+   `damage_bonus`/`hp_max`; every MVP loadout's `defense` is 0). → **O-HD-2** (SYS-16's
+   own rider (c)).
+3. **`attack > 132` has two laws and one reachability.** F-HD-02 clamps at row 4;
+   TR-PRG-010/F-PRG-03 extends by the top row. They agree on the whole MVP domain
+   (`attack ≤ 132` by `POINT_BUDGET_CAP` 4 + TR-PRG-012's closed payload). §3d decides
+   the extension as the law's closed form; → **O-HD-6** (rider (f)).
+4. **AC-HD-08's "the save round-trips both [energy, mana]" has no namespace.**
+   SYS-03 declares SYS-07 a runtime non-dependency; `progression` carries no pool.
+   → **O-HD-7**.
+5. **AC-HD-41's four-system envelope is superseded** by the registry's seven-system
+   2.45/6.55 (`six_system_perf_envelope`); SYS-07's own 0.25/0.75 is unchanged.
+   → **O-HD-8**.
+
+Two further findings emerged **during** the gates and are filed the same way: the
+**body's persistence contradiction** (SYS-07's save field list vs SYS-15's
+`store-absent` body row vs SYS-03's non-dependency) → **O-HD-9**; and the **System
+Offline options publisher** (SYS-07's GDD says SYS-07 publishes it; the registry
+registers SYS-15 as publisher) → **O-HD-11**.
+
+### 9.1 · Draft checkpoint
+
+- `docs/architecture/adr-0004-health-damage.md` — `Status: Proposed`; the template's
+  full section order (ADR-0002's precedent), the engine verification register as §12
+  (ADR-0001/0002's pattern), the carried obligations as §13.
+- `docs/framework/technical-preferences.md` — the ADR index row (the established
+  convention; ADR-0001/0002/0003 are listed there).
+- **No** TR, formula or AC added: the ADR consumes the GDD's counts and decides
+  mechanism only (the no-implementation law).
+- **No** registry entry and **no** index row: ADRs are not registry entities.
+
+### 9.2 · The gate trail
+
+| Gate | Seat model | Verdict | Blockers | Disposition |
+|---|---|---|---|---|
+| CD (ADR alignment) | GLM-5.3-Flash | **APPROVED** | 0 | 3 recommendations: 2 applied, 1 rebutted |
+| Three-seat · creative | GLM-5.3-Flash | **NEEDS REVISION** | 1 | applied (the display-amount law) |
+| Three-seat · technical | DS | **NEEDS REVISION** | 6 | all applied |
+| Three-seat · QA | DS | **NEEDS REVISION** | 9 | all applied |
+| Repairs | — | **15 distinct applied** | — | + 11 recommendations applied, 6 deferred/rebutted |
+| qa-lead spot-check #1 | DS | **FAIL** | 5 rows | repaired |
+| qa-lead spot-check #2 | DS | **FAIL** | 1 row | repaired |
+| qa-lead spot-check #3 | DS | **FAIL** | 2 rows | repaired |
+| qa-lead spot-check #4 | DS | **PASS** | 0 | 4/4 rows |
+| Final micro-check #1 | DS | **PASS** | 0 | on the spot-check-#3 delta |
+| Final micro-check #2 | DS | **PASS** | 0 | on the final delta |
+| `/architecture-review` | DS | **FAIL** | 3 | all applied → re-verified by spot-check #4 + micro-check #2 |
+| CodeRabbit | — | see §9.7 | — | — |
+
+All seats ran as **nested subagents** with the model passed explicitly; no seat ran
+in-session. Every seat read the document once, in full. The CD gate and the panel were
+dispatched in the same batch against the draft commit `cfc4c35`; no CD blocker required
+a restructuring, so no seat's verdict was invalidated by another's.
+
+### 9.3 · The repair worklists
+
+**The creative seat (1).** ① `DamageNumber.amount` / `HealEdge.amount` were unpinned
+between `dealt` and `applied` — the ADR makes the two distinct (§3b) and then handed
+the display record a field that did not say which. → **APPLIED**: §10's "`amount` is
+`applied`, always", with the capped-6→2 and Suture-18/20→2 examples and `capped` kept
+for telemetry only.
+
+**The technical seat (6).**
+
+| # | Blocker | Disposition |
+|---|---|---|
+| 1 | The persistence boundary overrode SYS-07's save field list and left `restore_modules` undefined at load | **APPLIED** — §9's regime-1 row states `0`; §9b quotes TR-CSD-013 verbatim and files **O-HD-9** with two resolutions |
+| 2 | The floor release and the revive's 1000 ms grant had no writer and no API | **APPLIED** — §8b's `release_hp_floor()` + the revive window as reducer state; the lock is a disjunction (`port.invulnerable OR own_iframes`) |
+| 3 | `DamageNumber.amount` had no defined source | **APPLIED** — the same fix as the creative blocker |
+| 4 | §4b stated two incompatible orders for one batch | **APPLIED** — one total order `(contact_tick, source_id, publication_index)`; the GDD's arrival clause subsumed with the reason; **CR-HD-02** filed |
+| 5 | The VS key's `logic_tick` had no path into a clock-free resolver | **APPLIED** — `RngPort.bind_phase(logic_tick)` + `roll(attacker, defender, contact_tick)`; the late event keys on the bound tick |
+| 6 | TR-CSD-013 was misquoted, and the omitted clause is the one O-HD-5 revises | **APPLIED** — the verbatim quote, with **O-HD-5** cited against its superseded parenthetical |
+
+**The QA seat (9).**
+
+| # | Blocker | Disposition |
+|---|---|---|
+| 1 | Status cited a review-log §9 that did not exist, and a "six-seat" trail | **APPLIED** — the citation names §9 as this pass's record and enumerates the trail |
+| 2 | `AttackContext`/`DefenderSnapshot`/`HealthProfile` had no field lists, so criterion 1 was untestable | **APPLIED** — §2a's three lists, the value-to-record assignment, `StatBlock` as their source |
+| 3 | The age-bound criterion had no fixture a `physics_tick` bug would fail | **APPLIED** — a dedicated criterion with 0–2 logic vs 4–5 physics ticks and the negative control |
+| 4 | The V-coverage line falsely claimed V-HD-06/07 | **APPLIED** — restated as a named gap (O-HD-10), then made true by the arch-review batch (§9.5) |
+| 5 | V-HD-13's third clause claimed as carried though TR-PRG-016 retires it | **APPLIED** — "except its third clause — O-HD-2" |
+| 6 | Criterion 2 cited AC-HD-13 whose DEFLECT fixture the decision forbids | **APPLIED** — the citation qualified; CR-HD-01 + O-HD-7 + O-HD-2 in the story gate |
+| 7 | No multi-term first-failing fixture; no ledger-overwrite assertion | **APPLIED** — a terms-1-and-11 fixture and an occupancy spy over AC-HD-17's fuzz |
+| 8 | The ring criterion cited AC-HD-38 for size/overwrite/lease | **APPLIED** — size → AC-HD-40, overwrite/lease → register item 7 |
+| 9 | §3c's overkill order and §4b's total order had no criteria | **APPLIED** — both added |
+
+**The spot-check rounds (3 FAILs, 7 residual rows).** Each FAIL named a repair's **own
+new claim**, not the text it touched — the same pattern pass 1 recorded: the log §9
+claim that did not exist; the `O-HD-5` citation missing where the quote needed it; the
+ring criterion's un-re-pointed attribution; the backdash window written inverted
+(9 protected / 8 exposed, against F-CMB-08's 140/9/8); the V-coverage qualification
+count; and the "claimed, not named" ordering checks. All seven were applied; the
+micro-check found zero blockers on the final delta.
+
+### 9.4 · Rebuttals and deferrals (nothing silent)
+
+1. **CD rec 3 — route a dropped damage number through the telemetry ring.** **Not
+   applied**: the ring's `head`/`occupancy` is already the observable (a fixture
+   asserts 32/32 with the head wrapped), and SYS-07's telemetry set is the gate's named
+   reasons — a "number dropped" record would be a new record for a non-rejection.
+   Recorded in §10 instead.
+2. **Creative recs 2–8 — the cause row's weightiest-blow tiebreak, the diegetic surface
+   for the point/module asymmetry, the pause readout's DEF, the cause row's tick
+   formatting, the stacked-hit-stop clutter probe.** **Deferred**, all outside this
+   ADR's mechanism: the tiebreak is TR-HD-020's (and CR-HD-02's clause), the asymmetry's
+   surface is SYS-16/SYS-24's, the DEF row is already forbidden by TR-PRG-011 ("no DEF
+   row renders while `defense = 0`"), and the tick formatting is SYS-15/SYS-28's print
+   voice.
+3. **Technical recs — the non-Gameplay context, the off-switch injection path, the
+   `AttackContext.attack` source for a non-player attacker, the `hp_floor` reset in
+   regime 2, register item 9's arithmetic.** **Applied** (they were one-line and
+   in-lane). The two deferred: §12 item 9's off-by-one is pinned by the fixture rather
+   than resolved in prose (the GDD's own "8-tick exposure" is the fixture's number), and
+   the "`arc` differs" ledger fixture is AC-HD-18's.
+4. **QA recs — the VS half of AC-HD-39 in an MVP smoke AC.** **Resolved rather than
+   deferred**: the VS mixer ships **implemented and unit-tested at MVP** (inert, not
+   absent), which is what makes AC-HD-39's two-key clause a real MVP-suite assertion.
+   The crit's *consumption* stays VS-gated.
+5. **Arch-review rec 6 — an index-sync obligation for SYS-07's dependency row.** **Not
+   edited here** (the index is the sync lane's): recorded in §9.6 as a sync note.
+
+### 9.5 · The `/architecture-review` batch
+
+**FAIL, 3 blockers** — all three were **traceability gaps**, not mechanism defects:
+
+1. **TR-HD-008 (the pools)** had no mechanism: §9 covered only "inert, no consumer, no
+   HUD field". → **APPLIED**: §9c — the two max formulas (50/90 energy, 30/50 mana), the
+   `logic_tick` integer regen accumulator (60 logic ticks = +5 exactly, which is
+   AC-HD-08's fixture), the efficiency value carried with no consumer, mana's regen 0,
+   and a **test-only** `pool_state()` so the two regen fixtures are runnable without a
+   publication.
+2. **TR-HD-024/025 (the `DeathRecord` archive)** was unimplemented: both reset paths say
+   "archives the record", F-HD-08's list does not contain it, and no home existed.
+   → **APPLIED**: §9d — a reducer-owned ring of 8 (`DEATH_ARCHIVE_DEPTH`), written by
+   the edge, **surviving both resets**, read by `read_death_archive()`; the designation
+   counter stays SYS-15's and is not derived from it.
+3. **TR-HD-023 (the options contract)** duplicated a registered publisher. → **APPLIED**:
+   §9e takes the **registered** split (SYS-15 publishes the three rows and the three
+   options verbatim; SYS-07 publishes `DeathOptions {revive_available}` and the
+   `DeathRecord`), and **O-HD-11** reconciles SYS-07's sentence.
+
+Plus the batch's ten recommendations: the crit's `ABILITY` reading (TR-HD-005's
+`kind = NORMAL` includes branch 4, so an ability **may** crit at VS — a rule excluding
+it would be a second law); **CR-HD-02** for TR-HD-020's arrival clause; §4c's ring
+clear moved to ADR-0001's phase 3; regime 1's ADR-0002 ordering scoped (regime 2 has no
+`restore_complete`), with ADR-0002's acceptance named as a precondition; the touched
+registry entries named in Last Verified; the two-port/four-call correction; the
+four-rings wording; the branch count (seven content + else-reject); the SYS-06 row's
+TR-MOV note; the `attack` comment scoped to the player; the archive in the memory row
+and the allocation criterion.
+
+**The `/architecture-review`'s own counts check passed**: 39 TR-HD / 15 F-HD / 50 ACs
+(42+3+5+0) / 15 V-HD / 68 edge bullets / 20 OQ rows / 33 knobs reproduce against the
+GDD; the ADR adds none. Cross-ADR: **no conflict** with ADR-0001 (the freeze onset is
+phase 0 of `T+1`, so §4's "by construction" holds) or ADR-0003 (no shared surface);
+ADR-0002 is `Proposed` and the dependency is declared with no cycle.
+
+### 9.6 · Sync notes (for the orchestrator; not edited here)
+
+Nothing here touches `design/registry/entities.yaml` or `design/gdd/systems-index.md`.
+**ADRs are not registry entities**: this lane produced **no** registry entry and **no**
+index row. The notes below are corrections for the owning lanes:
+
+1. **SYS-07's systems-index dependency row omits SYS-16.** `systems-index.md`'s SYS-07
+   row does not list SYS-16, while this ADR makes `StatRevision` a runtime input
+   (SYS-16's row already lists SYS-07, so the edge is one-directional today). The row
+   should gain SYS-16 as an upstream MVP input — the sync lane's write.
+2. **ADR-0002 and ADR-0003 are still `Status: Proposed` on `Main`** (`fa628cf`), though
+   the user's **D-ORCH-06** decision (2026-11-15) accepted both. The two status lines
+   and their two `technical-preferences.md` index rows are an **administrative
+   follow-up for the orchestrator/TD**, not this lane's: pass 2 authored ADR-0004 and
+   must not flip another pass's acceptance.
+3. **`docs/architecture/tr-registry.yaml` is still empty** (`requirements: []`).
+   ADR-0001 governed 26+ SYS-01 TRs, ADR-0002/0003 26+39 more, and ADR-0004 governs
+   39 TR-HD + 10 cross-GDD TRs. The population is `/architecture-review`'s write — it
+   was **not** performed by this pass's architecture-review seat (which read the GDD
+   directly instead), so the next architecture-review run must not assume it was done.
+4. **`design/gdd/health-damage.md` carries six riders at its next doc touch** (O-HD-1…6,
+   SYS-16's requests a–f) plus O-HD-11 and the two CRs (CR-HD-01/02). None was applied
+   here: the GDD is frozen and a lane edits a frozen document only on a recorded
+   user-approved revision.
+5. **The `six_system_perf_envelope` handle** now composes seven systems (2.45/6.55);
+   SYS-07's 0.25/0.75 row is unchanged. O-HD-8 carries the AC-HD-41 wording fix.
+
+### 9.7 · Final verdict, and the acceptance record (unsigned)
+
+**ADR-0004: `Proposed` — gates complete, acceptance pending the technical-director's
+TD-ADR verdict.** The status is **never** self-assigned by the drafting lane. The
+`/architecture-review` returned FAIL and was repaired; its blockers were traceability
+gaps, and an advisory review verdict does not replace the TD-ADR gate either way. **The
+acceptance text is prepared below; flipping the status line is the TD's step** (or the
+orchestrator's, on the TD's word) — and it is a **separate future verdict from
+D-ORCH-06**, which accepted ADR-0002/0003 only.
+
+**On that verdict, ADR-0004 becomes `Accepted`, on this record:** the complete gate
+trail in §9.2 (16 seat blockers + 7 spot-check residual rows + 3 architecture-review
+blockers, all applied; 6 recommendations applied, 6 deferred or rebutted with a reason);
+the traceability matrix (39 TR-HD + 10 cross-GDD TRs, zero uncovered); and the carried
+obligations below — implementation gates, not status gates.
+
+| ID | What | Owner | Blocks |
+|---|---|---|---|
+| SYS-07 engine half | the 7 `PROBE-PENDING` items with Methods and Owners (§12) | the named owners | the first SYS-07 story |
+| CR-HD-01 | AC-HD-13's DEFLECT fixture value (raw 2 → 2 at 132) | the user (batched) | the first story that writes that fixture |
+| CR-HD-02 | TR-HD-020's late-event clause (the sorted position) | the user (batched) | AC-HD-22's late-event fixture |
+| O-HD-1…6 | the six SYS-16 riders to SYS-07's text | SYS-07's next doc touch | nothing in this ADR |
+| O-HD-7 | the energy/mana round-trip's missing namespace | SYS-03/SYS-16 | AC-HD-08's save clause |
+| O-HD-8 | AC-HD-41's superseded four-system envelope | qa-lead (the QA-plan sync) | nothing |
+| O-HD-9 | the body-state persistence contradiction (two resolutions) | SYS-03/SYS-15/SYS-16 + the user | nothing: §9b states the landed behaviour |
+| O-HD-10 | the two V-invariant coverage gaps (no MVP fixture) | qa-lead | the first story's evidence pack |
+| O-HD-11 | the System Offline options publisher | SYS-07's + SYS-15's next touch | nothing |
+
+**Counts at this record.** ADR-0004: 39 TR-HD / 15 F-HD / 50 ACs (42 smoke + 3 device
++ 5 playtest + 0 VS) / 15 V-HD / 68 edge bullets / 20 OQ rows / 33 knobs consumed, **0
+added**; 9 engine-probe items (7 `PROBE-PENDING`, 2 `DOCUMENTED`); 20 conformance
+criteria + 3 story-gate criteria; 2 CRs filed; 11 open obligations filed.
+
+### 9.8 · Notes on the review definition used
+
+- The lane prompt's definition (CD · creative · technical · QA · spot-check ·
+  micro-check) was applied **per ADR** — here, one ADR, so once each. The
+  `/architecture-review` obligation was run **document-scoped** (traceability +
+  cross-ADR + registry), and its 3 blockers were repaired and re-verified.
+- **Models**: CD + creative on `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`;
+  technical, QA, all four spot-checks, both micro-checks and the architecture-review on
+  `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017`. Every seat a nested
+  subagent with its model passed explicitly.
+- **Cost note, recorded honestly**: four spot-check passes and two micro-checks. Three
+  of the four spot-checks FAILed, and **every** FAIL named a claim the previous repair
+  had itself introduced — the un-created log section, the missing rider citation, the
+  un-re-pointed attribution, the inverted window arithmetic, the miscounted
+  qualification. That is the third consecutive pass in which "a repair's own new claims
+  are the risk" holds, and it is why the loop is not optional.
