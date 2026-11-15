@@ -280,6 +280,25 @@ SYS-12 repair), the module stage's branch-2 boundary as a SYS-16 input, the revi
 F-CMB-06 shorthand (corrected in § 6.2 above), and the identity law's three phrasings
 ("no harness" / "no gear" / "no modules" — one term at the next touch).
 
+### 7.4 The CodeRabbit batch (PR #75)
+
+One pass, triaged in one batch, one fix commit (`60a0c16`), every thread resolved with a
+recorded disposition. **14 threads** on the first review (`f6ec1a0`):
+
+| Disposition | Count | Findings |
+|---|---|---|
+| **Already fixed** in `67a14ed` (the applied-diff repair commit that landed after CodeRabbit's snapshot) | 3 | the `DamageResolver`'s `damage_bonus` input; F-CMB-06's range (1–6); the SYS-12 MVP scope at all four Combat sites — two of these the bot auto-resolved |
+| **Fixed** in `60a0c16` | 4 | the package's status header (now HISTORICAL — approved and applied); the review log's document-under-review header; 19 split Markdown table rows; F-HD-02's >132-with-a-module case (attack above the cap holds row 4) |
+| **Deferred** (the sync lane / the coordinated SYS-13 rider) | 5 | the registry's four damage values + `spitter_orb_damage`; SYS-13's counter fixture, strike table, roster and orb clause; SYS-15's cache point-spend rider |
+| **Rebutted** (recorded, not skipped) | 2 | the "formula template" request (not this corpus's template — all 15 formulas use the inline form, and converting four would break the document's consistency and exceed the approved scope); the player-profile cap ≥ 20 validation (TR-HD-012's fixture already gives the player the ∅ cap/immune defaults, so the pit cannot be clamped — a new invariant is out of scope) |
+
+**Why the deferred five are not fixes here**: `design/registry/entities.yaml` and
+`design/gdd/systems-index.md` are shared files under the single-writer law (the sync lane
+applies them), and `enemy-ai-telegraphs.md`'s orb/hp/award/ceiling clauses are one
+coordinated SYS-13 doc touch — a value-only edit there would leave its own sentence
+contradicting itself. Both routes are recorded in § 6.2, § 9 and the lane report; the
+threads are resolved with the disposition, not silently.
+
 ## 8. The residual risks the seats did not block (recorded for the user)
 
 - **R10 — the DEF axis collapses** at the low baseline (any `defense ≥ 1` ≡ DEF 25). The
