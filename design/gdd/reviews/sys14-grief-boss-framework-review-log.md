@@ -143,6 +143,8 @@ Advisories: TR-GBF-014's prose retyped on the published event · TR-GBF-023's He
 
 **Committed as the batch fix; the dispositions (7 applied, 1 partially applied + rebutted with the house precedent, 2 routed/rebutted):** CR-1 the Euclidean coverage bound + the lifetime re-derivation · CR-2 the threshold pinned at 3 (the stage ladder binds it) · CR-3 the two-term hold predicate (the resolved term) · CR-4 F-GBF-01's Variables line added; the structural rename REBUTTED with the house precedent (every APPROVED GDD uses this format) · CR-5 the early-crack case (the crack at 60 HP → the flat 10 chains — the skilled route's reward) · CR-6 the strike-side damage prohibition scoped · CR-7 B1's zero-tolerance precedence · CR-8 the lane prompt REBUTTED (the manifest-pinned render; the master-source correction routes to the orchestrator's next render pass) · CR-9 the SYS-15 rider ROUTED as a batched revision request (the sync request's A12).
 
+**Confirm pass (the Major-class fix batch's verify, on 779ea03): 1 new thread (CR-10, Minor) — APPLIED in f18d3da:** the duration band's scope stated — the fixture scope (the scripted fight, the reposition fixed at 30 s) is the pass/fail bar; the telemetry scope (player sessions) is a non-gating tuning target (a valid clean win can exceed the band through the player-chosen repositioning). Thread resolved. **Final thread state: 10 threads (9 + 1 confirm), 10/10 resolved — 8 applied, 1 partially applied + rebutted with the house precedent (CR-4), 1 rebutted + 1 routed as batched riders (CR-8/CR-9).**
+
 ## 6. Gate record (the summary)
 
 | Gate | Verdict | Trail |

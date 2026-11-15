@@ -190,7 +190,9 @@
 
 ## CodeRabbit
 
-**One pass, 9 threads — all resolved (7 applied, 2 routed/rebutted with recorded dispositions). The fix commit: the batch below.**
+## CodeRabbit
+
+**One pass + one confirm pass — 10 threads, 10/10 resolved (required-conversation-resolution satisfied). The fix commits: 779ea03 (the 9-thread batch) + f18d3da (the confirm's CR-10).**
 
 | # | Thread | Disposition |
 |---|---|---|
@@ -203,6 +205,7 @@
 | CR-7 (Minor, 488) | B1's zero-tolerance tokens could pass under the general majority rule (one "buggy" transcript + three positives). | **APPLIED** — B1's zero-tolerance precedence authored: any breakage token in any eligible transcript fails B1 outright before the majority rule; the majority rule governs B2/B3/B4. |
 | CR-8 (Minor, the lane prompt's 300 HP) | The rendered lane prompt still carries the stale 300-HP value. | **REBUTTED (recorded)** — the lane prompt is the manifest-pinned rendered launch contract (`a6ae5fbdfe32`); editing it mid-lane would invalidate the fail-closed precondition and the gate trail's provenance. The authoritative sources carry 60 (TR-GBF-006; the registry request A6; the index correction B1/B2). The master prompt source's correction routes to the **orchestrator's next render pass** (the next-action below). |
 | CR-9 (Minor, the report's SYS-15 row) | SYS-15's GDD lists SYS-14 as a VS non-dependency while SYS-14 consumes the offline/revive contracts at MVP. | **ROUTED as a batched rider (recorded)** — SYS-15's GDD is frozen; the rider (the non-dependency list's correction + the Interactions row) is batched in the sync request's A12 for the user-approved path. The systems-index's SYS-15 note (B5) carries the ruling in the meantime. |
+| CR-10 (Minor, 483 — the confirm pass on the fix batch) | AC-GBF-26's [46, 139] band on `duration_ticks` was unfalsifiable for player telemetry (a valid clean win can exceed it via the player-chosen repositioning). | **APPLIED in f18d3da** — the band's scope stated: the fixture scope (the scripted fight, the reposition fixed at 30 s) is the pass/fail bar; the telemetry scope is a non-gating tuning target (never a gate). Thread resolved. |
 
 ## Landing receipt
 
@@ -211,5 +214,6 @@ Not merged (the merge stays with the orchestrator).
 ## Next action
 
 1. The orchestrator queues this sync request; the sync lane applies it on a fresh `origin/Main` (the lock's discipline).
-2. The CodeRabbit pass runs on the PR; every thread resolved.
-3. The merge (squash, head-pinned) after the sync lands and the checks are green.
+2. The CodeRabbit passes are done (10/10 threads resolved); the CI checks are green (5/5 on the final head).
+3. The **required-review blocker** is the branch protection's reviewer rule (reviewDecision null; the threads are all resolved) — per the lane contract §5.4, if that is the only blocker at merge time, the admin merge is pre-authorized: bind the head with `--match-head-commit` (re-verify the head immediately before merging).
+4. **The orchestrator's next render pass** corrects the master prompt source's stale 300-HP value (CR-8's disposition) at the next lane boundary — the authoritative sources already carry 60.
