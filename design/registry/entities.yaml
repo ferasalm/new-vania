@@ -612,7 +612,12 @@ entities:
       live value across the restore (the store never lowers the live count; the saved value
       seeds only a fresh session load); never decrements within a run; resets only on an
       explicit new game (the pre-cache fallback carries the namespace, never resets it);
-      persists across quit/reload via the cache namespace at v2; DESIGNATION_PRINT_DIGITS 3
+      persists across quit/reload via the cache namespace at v2 at a save boundary —
+      the next event in the closed four-event trigger set (a station ack, or the
+      close/suspension save; TR-CSD-012's persist clause); an increment not yet saved
+      reverts with the rest of the unsaved world (a crash, or the offline screen's QUIT,
+      loses it — the count and the world always agree at a save boundary; never a partial
+      lie, TR-CSD-013's quit exception); DESIGNATION_PRINT_DIGITS 3
       (zero-padded, widens naturally past 999)"
     notes: "SYS-15 is the counter's writer (TR-RWS-025); SYS-02 writes neither the counter nor
       the activation. The pre-cache fallback (no save present) re-initializes to the default
