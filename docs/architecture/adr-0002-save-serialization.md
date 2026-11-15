@@ -47,10 +47,10 @@ hash) and the post-4.4 `FileAccess.store_*` boolean returns (every store call is
 checked, and a `false` is classified by §5a's explicit `Error`→code table, never
 by message inspection). The shape is one pure `PersistenceCore` over injected
 ports, one `SaveWriter` node owning a single dedicated `Thread` with a
-per-slot cancellable one-deep queue, one canonicalizer whose **fragment is both
-the hash's input and a byte-identical substring of the file**, and one path
-helper — with no second write path, no repair write, and no downgrade writer
-anywhere.
+per-slot cancellable one-deep queue, one canonicalizer whose **fragment is a
+byte-identical substring of the file and whose projection is the hash's input**,
+and one path helper — with no second write path, no repair write, and no downgrade
+writer anywhere.
 
 ## Engine Compatibility
 
@@ -61,7 +61,7 @@ anywhere.
 | **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The audio/render subsystems are stable across 4.4–4.7 per the repo's snapshots; the *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4) |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `modules/audio.md` (for the not-join precedent only); `docs/framework/technical-preferences.md` |
 | **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256) — **`FileAccess.get_sha256()` is rejected**: it would hash the file, and the hash input is the canonical projection, not the file bytes; `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `DirAccess.get_space_left()` **[unverified name for 4.7.2 — register item 10]**; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` (**not** `NOTIFICATION_APPLICATION_FOCUS_OUT`, which is not an exit and must never trigger a save) |
-| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. 6 items are `PROBE-PENDING` and block the first SYS-03 implementation story; 3 are `DOCUMENTED`; 1 is an inference folded into a probe. The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Verification Required** | The 10-item register in §13, each with a Method and an Owner. **9 are `PROBE-PENDING`** and block their named gate; **item 2 is the only `DOCUMENTED`** (the 4.4 `store_*` row the repo's snapshot pins). The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (HIGH).** Two failure modes are specific to this
 > version band and are load-bearing here: (1) `JSON` parses *every* number as a
@@ -141,9 +141,10 @@ trust without thinking (the Player Fantasy's honesty clause).
 
 ### Requirements
 
-- **R1 — One canonical fragment.** The canonical form is a pure function of
-  `{schema_version, payload}`; the bytes hashed are a **byte-identical substring**
-  of the file, and no second canonicalizer exists anywhere.
+- **R1 — One canonicalizer, one fragment.** The canonical form is a pure function
+  of `{schema_version, payload}`; the fragment `canon(payload)` is a
+  **byte-identical substring** of the file, and the hash input is the projection
+  `canon({schema_version, payload})`. No second canonicalizer exists anywhere.
 - **R2 — Integrity before interpretation.** The hash is checked before any
   semantic decision, but after the mechanical minimum (parse + normalize) that
   makes a hash computable.
@@ -377,8 +378,9 @@ parsed as a float too). The pass is idempotent and total over the schema.
 **non-integral number anywhere** is `REFUSE_FLOAT`, whatever its key's declared
 type — TR-SAV-006's "a float anywhere" is the stronger law; an **integral number
 at a non-integer key** is `REFUSE_TYPE`. `3.5` at a `String` key is therefore
-`REFUSE_FLOAT`, and the fixture that pins it is named in §13's list of the
-refusal matrix's ambiguous rows (AC-SAV-06 and AC-SAV-17 must not disagree).
+`REFUSE_FLOAT`, and the fixtures that pin it are AC-SAV-06 (the float, write and
+load sides) and AC-SAV-17's refusal matrix (the named code per fixture) — the two
+must agree on this input.
 
 **6b. Absence survives the hash.** A declared key that is absent **stays absent**
 in the normalized payload — materializing the defaults there would change the
@@ -547,8 +549,8 @@ narrated.
 | 10 | `DirAccess.get_space_left()` (or the platform equivalent) exists in 4.7.2 and reports the slot's volume | **PROBE-PENDING** | the call returns a plausible byte count for `user://saves/` and falls back to the store-only path if absent | godot-specialist | §5a's pre-flight |
 
 `PROBE-PENDING` is an open verdict, not a pass: no story may consume items 1, 3–10
-as settled fact (the AC-74 pattern from ADR-0001). Items 2 is the only
-engine fact the repo's own snapshot pins; the JSON float model is **not** in
+as settled fact (the AC-74 pattern from ADR-0001). **Item 2 is the only engine
+fact the repo's own snapshot pins**; the JSON float model is **not** in
 `docs/engine-reference/godot/` (a grep for `JSON` finds nothing), which is why it
 is a probe and not a citation — and why item 1's Method is the load path's proof.
 
@@ -562,12 +564,14 @@ game thread                                   worker thread
   │  eligibility (FreezePort) ── frozen ──▶ QUEUED ─┐
   │                                    ◀────────────┘ (first unfrozen tick)
   ▼
-SNAPSHOTTED  (deep copy, ≤150 elements, ≤0.5 ms)
-  │  canon() → bytes + hash          (synchronous, same step)
+SNAPSHOTTED  (deep copy, ≤150 elements, ≤0.5 ms — SYNCHRONOUS)
+  │  job = {snapshot copy, slot, cause}      (the copy is the only game-thread work)
   ▼
-job → one-deep queue ────────────────────────▶ 1 tmp ─ 2 store/check ─ 3 verify
-                                               4 rotate .bak ─ 5 RENAME (commit)
-                                               6 re-read verify ─▶ result record
+job → one-deep queue ────────────────────────▶ 1 canon() + hash
+                                               2 tmp write + store_* checks
+                                               3 verify ─ 4 rotate .bak
+                                               5 RENAME (commit) ─ 6 re-read verify
+                                               ─▶ result record
   ┌──────────────────────────────────────────────────────────┘
   ▼
 [tick boundary] drain → save_completed(slot, tick, bytes, hash)
@@ -741,8 +745,9 @@ func remove(path: String) -> Error
   a hypothesis.
 - The core/adapter split makes every law headless-testable; the twin's fixtures
   become the story's fixtures with no rewrite.
-- One canonicalizer means the hash and the file cannot drift: they are the same
-  bytes by construction.
+- One canonicalizer means the hash and the file cannot drift: **the fragment is a
+  substring of the file by construction**, so a re-serialized payload is
+  impossible.
 - The step-6 rollback makes "the committed state is the previous state" true even
   after the commit point, which is the strongest honest guarantee available.
 - The verification register turns the version band's uncertainty into a checklist
@@ -828,10 +833,10 @@ superseding ADR would replace the writer, not the laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** Criteria 1–13 are the **ADR acceptance** list (they must
-hold when this ADR is Accepted, because they are decided here). Criteria 14–15
-are the **story gate** (they cannot hold at acceptance by construction — the
-engine half and the probe register close at the first implementation story).
+**Two gates, two lists.** The **ADR acceptance** list (14 criteria) must hold when
+this ADR is Accepted, because every one is decided here. The **story gate**
+(2 criteria) cannot hold at acceptance by construction — the engine half and the
+probe register close at the first implementation story.
 
 **ADR acceptance.**
 
@@ -892,7 +897,7 @@ engine half and the probe register close at the first implementation story).
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-008/009 — the envelope; the canonical serialization | The fixed envelope order; the five canon rules; `game_version`/`saved_at_utc` outside the hash (§3) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-010 — the atomic write's six steps | The worker's six steps with the boolean-return discipline and the step-6 rollback (§5) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-011/016 — the slot model; the platform path policy | `SLOT_IDS`; the platform event set; the one `save_path()` helper; `user://saves/` (§10) |
-| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-012/014 — the snapshot; the worker thread and the shutdown path | The synchronous bounded snapshot with bytes produced in the same step; one `Thread`, one-deep queue, the tick-boundary drain, the close-save exception (§5, §8) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-012/014 — the snapshot; the worker thread and the shutdown path | The synchronous bounded **copy** (bytes off-thread, TR-SAV-012 verbatim); one `Thread`, the per-slot cancellable one-deep queue, the tick-boundary drain, the close-save's three guards (§5, §8) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-013 — the E4 freeze queue | The `FreezePort` predicate, `t_write`, coalescing, the `N_max` bound, the bounded-wait failure (§9) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-015 — the boot sweep and `.bak` promotion | The three-step sweep order, before any load (§11) |
 | `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-017 — the telemetry | The GDD's 13-record set is consumed unchanged (this ADR adds **no** record); the records are emitted by the core and drained at the tick boundary (§5, §12); the rate limit is a config read |

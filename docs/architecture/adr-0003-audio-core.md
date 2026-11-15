@@ -1,4 +1,4 @@
-﻿# ADR-0003: Audio Core — Bus Graph, Voice Pool, and the Flip's Sound Mechanism
+# ADR-0003: Audio Core — Bus Graph, Voice Pool, and the Flip's Sound Mechanism
 
 ## Status
 
@@ -428,11 +428,14 @@ func apply_duck(request: DuckRequest) -> void:
   ducked forever.
 - **A missing bus** drops the request with one `AUD_DUCK_BUS_MISSING` record —
   **never a silent Master duck**.
-- **The third exit is SYS-15's, and SYS-15 is not authored**: this ADR *assumes* the
-  offline screen has three exits (reconstruct, revive, quit) and that the quit exit
-  releases the duck. The assumption is recorded beside O-AUD-1, and the tree-exit
-  backstop makes the release robust to whatever SYS-15 decides — a missing edge
-  costs a telemetry record, never a permanently ducked score.
+- **The third exit is SYS-15's, and it is authored** — the audio GDD's §K.3 still
+  lists SYS-15 as "Not Started", but `design/gdd/cache-stations-death.md` carries
+  **TR-CSD-015 / AC-CSD-15**: the duck releases on the reconstruct exit, the revive
+  exit, **and the quit exit**. The `UNTIL_OFFLINE_EXIT` value already covers the
+  third exit, so **the schema is unchanged** and the audio core simply subscribes
+  to the release. The tree-exit backstop remains for a lost edge: a missing release
+  costs one telemetry record, never a permanently ducked score. (Stale-row note
+  routed to the sync lane; no frozen text edited here.)
 - **One application site** is structural: the duck lives in `DuckStage` and
   `apply_duck` is its only entry; V-AUD-01's static audit finds exactly one call
   site, and no hit-stop / flip / seam / reveal-hold / pause source calls it.
@@ -487,7 +490,7 @@ The GDD's pins (§G.6) are the *what*; this ADR owns the *engine side*:
   44.1 kHz 16-bit is 88.2 kB/s, so the beds fit the 10 MB bar at a combined
   duration ≤ **~78 s** (10 − 1.1 score − **0.55 mono fold** − 1.5 one-shots =
   6.85 MB). The fallback also makes the beds **resident rather than streamed**:
-  its runtime cost is priced against the 16 MB bar (~+2 MB at 78 s), not only the
+  its runtime cost is priced against the 16 MB bar (~+6.85 MB resident at 78 s), not only the
   disk bar. It changes no law; only the file format and the residency.
 - **No `AudioEffect` other than the limiter** may be added to the **production**
   graph without a new ADR: the "one effect" property is what makes the mix
@@ -582,7 +585,7 @@ the AC it unblocks — not an AC that already tests something else.
 | 1 | The Master limiter class in 4.7.2 (`AudioEffectHardLimiter` vs `AudioEffectLimiter`) and its gain-reduction readback | **PROBE-PENDING** | instantiate both candidates; the surviving class is instantiated on Master and its reduction is readable during AC-AUD-20's loudest fixture | godot-specialist | The first story; AC-AUD-20's ≤ 3 dB high-water |
 | 2 | Ogg Vorbis loop seams are gapless on 4.7.2 (beds, score) | **PROBE-PENDING** | §10's ten-iteration capture in the dev-only probe scene: zero seam deltas above `SEAM_DELTA_MAX` at ten consecutive loop points | sound-designer + godot-specialist | **The beds' and score's import**; the WAV fallback decision |
 | 3 | `AudioStreamPlayer.play(from_position)` preserves the playhead across the MONO swap | **PROBE-PENDING** | the swap at tick T: the post-swap `playback_position` is within 1 tick of the pre-swap value, and the gain ramp's two ticks are exact | lead-programmer | The MONO stage; AC-AUD-22's collapse assertion becomes meaningful |
-| 4 | Per-tick `set_bus_volume_db` at 60 tps is inside the core's tick bar and does not zipper | **PROBE-PENDING** | a 15-tick ramp at 240 ms: the core's tick stays within p99.9 ≤ 0.10 / max ≤ 0.30 ms **and** a capture of the ramp shows no step above `ZIPPER_DELTA_MAX`; a staircase reading fails the probe and moves the envelope to a per-tick interpolation inside one audio-thread callback | performance-analyst | AC-AUD-21 (the tick bar) + AC-AUD-02's schedule fidelity |
+| 4 | Per-tick `set_bus_volume_db` at 60 tps is inside the core's tick bar and does not zipper | **PROBE-PENDING** | a 15-tick ramp at 240 ms: the core's tick stays within p99.9 ≤ 0.10 / max ≤ 0.30 ms **and** a capture of the ramp shows no step above `ZIPPER_DELTA_MAX`; a staircase reading fails the probe and moves the envelope to a per-tick interpolation inside one audio-thread callback | performance-analyst | AC-AUD-21 (the tick bar) — the probe gates the measurement; AC-AUD-02 is a GUT over the fake `BusPort` and cannot zipper, so it is **not** a gate here |
 | 5 | Five buses + one Master effect is inside the mobile mix budget | **PROBE-PENDING** | measured as an **extra instrument** during AC-AUD-21's device run (mixer CPU share, no new AC); the bar is "the audio thread's share stays under 25% of the frame" | performance-analyst | The graph's viability on the reference SKU |
 | 6 | `AudioServer.set_bus_volume_db` / `get_bus_index` / `set_bus_mute` exist and behave as used | **DOCUMENTED** (`modules/audio.md`'s "Audio Buses" block) | — | — | — |
 | 7 | `AudioEffectCapture` can record a bus for the loop-seam probe | **PROBE-PENDING** | the probe scene captures 10 s of a known loop and the capture's length matches within one buffer | godot-specialist | Probe 2's method |
@@ -834,7 +837,7 @@ No existing audio code or assets exist; the migration is a greenfield scaffold.
    `TelemetryRing`, `Tuning`) and the GUT suite under `tests/unit/audio/` with the
    four port fakes. No `AudioServer`, no node.
 3. **The adapter + the players.** Add `AudioAdapter` and the eighteen players; wire
-   the six subscriptions; wire `ClockPort` to ADR-0001's `physics_tick`.
+   the five subscriptions; wire `ClockPort` to ADR-0001's `physics_tick`.
 4. **The assets' import.** Commit the `.import` flags; run the import audit; close
    probe 2 (the loop seam) before the beds are accepted.
 5. **The MONO stage.** Produce the score's mono fold; wire `MonoStage`; close
@@ -847,10 +850,10 @@ superseding ADR would replace the graph, not the laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** Criteria 1–15 are the **ADR acceptance** list. Criteria
-16–17 are the **story gate** (they cannot hold at acceptance by construction — the
-probe register and the engine-facing measurements close at the first
-implementation story).
+**Two gates, two lists.** The **ADR acceptance** list (16 criteria) must hold when
+this ADR is Accepted, because every one is decided here. The **story gate**
+(2 criteria) cannot hold at acceptance by construction — the probe register and
+the device measurements close at the first implementation story.
 
 **ADR acceptance.**
 
@@ -902,8 +905,8 @@ implementation story).
 
 | GDD Document | System | Requirement | How This ADR Satisfies It |
 |---|---|---|---|
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-001/002 — consume E1–E7 verbatim; the publisher map; publishes nothing | The adapter's six subscriptions equal the publisher map; the core returns commands, never events (§2, §11) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-003 — epoch-blindness | Ports instead of singletons; `MVP_FLIP_TO_EPOCH` as a boot-validated constant; the poisoned-sentinel run (§2, §11, §14) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-001/002 — consume E1–E7 verbatim; the publisher map; publishes nothing | The adapter's five subscriptions equal the publisher map; the core returns commands, never events (§2, §11) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-003 — epoch-blindness | Ports instead of singletons; `MVP_FLIP_TO_EPOCH` as a boot-validated constant; the poisoned-sentinel run (§2, §11, §13) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-004 — the closed list is closed | Thirteen voices over eighteen preallocated slots; the registration scan (AC-AUD-15/18) (§5) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-005 — the death duck is consumed, not designed | `DuckStage` + one `apply_duck` site; three fields; `UNTIL_OFFLINE_EXIT` (§8) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-006 — the missing-input failure paths | The six-row inbound table with named records and no synthesized substitute (§11) |
@@ -912,7 +915,7 @@ implementation story).
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-009 — the stillness bracket | `gate_open = false`; drop-never-queue; no loop restart; zero snapshot changes; ring-out (§5, §9) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-010 — the tear | The reserved P0 slot outside the steal table; 24 ticks in a 26-tick window; the silent-asset path (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-011 — the abort path | Zero orders; the force-release-derived `freeze_close` as an event; `DEGRADED` precedence; no `RELEASED` (§6, §9) |
-| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace relative to the raise tick; the post-resume hash equals the fresh run's (§6, §14) |
+| `design/gdd/audio-core.md` | SYS-04 | TR-AUD-012 — the resume re-run | The order trace relative to the raise tick; the post-resume hash equals the fresh run's (§6, §13) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-013/014 — the arena hum; the wing's no-op | RM-06 excluded by the order record; no separate wing bed; the room-entry path only at real entries (§6) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-015…021 — **the eleven** one-shot voices of the SYS-29 list (015 damage; 016 clash contact + midpoint; 017 deflect; 018 heal + death; 019 revive + level-up; 020 memory; 021 jump-2 + defeat) | The voice table's slots, classes, retrigger floors and signatures; the conc-2 slot mapping (§5); the variation law's deterministic draw (§7) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-022/024/025 — the bed table; the seam's exemption; the transition law | The derived bed map + `restored_epoch`; the room-entry crossfade only at a real entry; no restart, no duck (§6, §12) |
@@ -929,7 +932,7 @@ implementation story).
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-037 — the accessibility surface | The MONO stage + the three sliders' group map + the metadata port (§4, §11) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-038 — the variation law | The deterministic seeded draw; no immediate repeat; zero drift on the eight signatures and the clash pair (§5) |
 | `design/gdd/audio-core.md` | SYS-04 | TR-AUD-039 — the bed-contrast bar | The sound-bible pass owns the realisation; the DEVICE fixture (AC-AUD-31) owns the bar (§10) |
-| `design/gdd/dual-reality-state.md` | SYS-09 | TR-DR-004 / E1–E7 + G1–G7 | The six subscriptions; the arm, the bracket, the tear, the release, the resume (§2, §6, §7, §9) |
+| `design/gdd/dual-reality-state.md` | SYS-09 | TR-DR-004 / E1–E7 + G1–G7 | The five subscriptions; the arm, the bracket, the tear, the release, the resume (§2, §6, §7, §9) |
 | `design/gdd/world-mutation-epochs.md` | SYS-10 | E3b `ambient_shift` + the abort + the latched resume | The order record; zero orders on the abort; the resume hash (§6, §12) |
 | `design/gdd/juice-feedback.md` | SYS-29 | TR-JCE-027 + the `duck_request` schema | The ten edges → eleven voices; the three-field schema; one application site (§5, §8) |
 | `design/gdd/seam-borders.md` | SYS-11 | AR-SMB-01..04 | Zero audio publications; the bed continues; no duck; M4's chime is not the seam's (§6) |
