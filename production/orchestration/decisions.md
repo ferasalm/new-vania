@@ -63,7 +63,30 @@
 
 | ID | Lane | Decision | Date | Record |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| D-ORCH-04 | process | Lane runners spawn as the `lane-runner` agent (nested seats restored); §3.6 demoted to last resort; SYS-15/SYS-28 fallback records stand | 2026-11-15 | PR: `chore/lane-runner-subagent`; `TOOLING.md` §5.1 |
+
+### D-ORCH-04 — Nested seat spawning for lane runners (process)
+
+- **Context**: the SYS-15 and SYS-28 lane runners were spawned as OpenCode's
+  built-in `general` subagent, which **cannot launch further subagents** (V2
+  docs, built-ins table); both fell back to the lane-runner contract §3.6
+  (seats as in-session passes on the lane's GLM model). The V2 agents doc
+  confirms nesting is a per-agent `subagent` **permission**, not a hard
+  recursion guard: "The parent agent's `subagent` permissions control which
+  agents it may launch."
+- **Decision (user-approved 2026-11-15)**:
+  1. Add an `agents.lane-runner` definition to project `opencode.json`
+     (`mode: subagent`; `subagent` permission allowed for `*`). The
+     orchestrator spawns lanes as `agent: "lane-runner"` with the manifest
+     model passed explicitly.
+  2. Demote the §3.6 in-session fallback in `prompts/lane-runner.md` to a
+     last-resort path requiring the orchestrator's explicit order (reported
+     costs: seat independence, per-seat model routing, parallelism).
+  3. The §3.6 fallback records on SYS-15 (PR #59) and SYS-28 (PR #58) **stand**
+     — both gate trails are closed (micro-check PASS); a DS re-pass is NOT
+     ordered. Each landing receipt notes the limitation.
+- **Blocking?** No — process quality for future lanes.
+- **Status**: **RESOLVED** (2026-11-15).
 
 ## Standing authorizations
 

@@ -235,6 +235,26 @@ forbidden** without an explicit user decision — creativity is not to be
 compromised by a fallback. Park the lane `PAUSED` and surface the decision, or
 issue a launch package for a parallel chat on the same model.
 
+### 5.1 Spawning lanes — the `lane-runner` agent (D-ORCH-04)
+
+OpenCode's built-in `general` subagent **cannot launch further subagents** (it
+is hard-wired that way; nesting is a per-agent permission, not a recursion
+guard). The OCGS agent definitions carry no permission blocks, so no OCGS
+agent can spawn either. Consequence: a lane runner spawned as `general` cannot
+spawn its seats and degrades to the §3.6 in-session fallback (lost seat
+independence, lost per-seat model routing, no parallel seats).
+
+**The fix (user-approved 2026-11-15, landed in `opencode.json`)**: a dedicated
+project agent `lane-runner` (`mode: subagent`, `permissions: [{ action:
+"subagent", resource: "*", effect: "allow" }]`). The orchestrator spawns every
+lane as `agent: "lane-runner"` with the manifest model passed explicitly; the
+runner then spawns its seats as nested subagents (seats themselves spawn as
+`general` — they need nothing nested). Config hot-reloads; no restart.
+
+The §3.6 in-session fallback in `prompts/lane-runner.md` is demoted to a
+last-resort path that requires the orchestrator's explicit order. The SYS-15
+and SYS-28 fallback records stand (both gate trails closed under it).
+
 ---
 
 ## 6. Context policy (summary)

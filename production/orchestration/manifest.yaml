@@ -29,7 +29,7 @@ support_prompts:
   - id: lane-runner
     path: production/orchestration/prompts/lane-runner.md
     version: "1.0.0"
-    hash: "5d4a7cd96a29"
+    hash: "018d508e0e08"
   - id: sync-lane
     path: production/orchestration/prompts/sync-lane.md
     version: "1.0.0"
