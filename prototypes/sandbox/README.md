@@ -1,4 +1,7 @@
-﻿# The Sandbox Suite — v2
+﻿# PROTOTYPE - NOT FOR PRODUCTION
+# The Sandbox Suite — v2
+
+Date: 2026-11-16 (v2 — the playtest-feedback pass)
 
 **PROTOTYPE — NOT FOR PRODUCTION.** Throwaway code. It exists to answer one
 question: *does the game feel right when its landed numbers are played, not read?*
