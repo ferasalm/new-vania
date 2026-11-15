@@ -34,7 +34,12 @@ PR (#59) is open with CodeRabbit pending (§4).
 
 | Lane | PR | Pass | Threads | Dispositions | Status |
 |---|---|---|---|---|---|
-| SYS-15 | #59 | 1 (in flight) | — | — | pending |
+| SYS-15 | #59 | 1 (initial, 6m48s) | 8 | triage in flight (resumed runner) | fix head pending |
+| SYS-28 | #58 | 2 (initial + confirm re-run) | 6 | 5 applied (`3945b64`) + 1 rebutted (DS-seat routing; recorded) | confirm re-running |
+
+Note: the two lane passes ran concurrently — a serial-rule deviation by the
+autonomous runners, recorded here and in STATE §3. NEW passes (the sync PRs)
+queue behind these recorded dispositions.
 
 Batched cadence: one pass per landed milestone; triage in one batch → one fix
 commit → resolve threads manually with recorded dispositions. A confirm pass only
@@ -45,8 +50,12 @@ for a Major-class fix batch.
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
 | 1 | SYS-15 | +7 (5 contracts/doctrine + 2 knobs) + 1 rider on `duck_request_contract` | SYS-15 dependency-map bullet + MVP row → APPROVED + design order 12 | 2026-11-15 | queued |
+| 2 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
 
-Full request: `../new-vania-sys15-cache-stations-death/production/session-state/lane-SYS-15-report.md` §Sync (the exact YAML + rows). Counts for validation: TR 20 / F 4 / V 7 / ACs 26 (21 smoke = 17 GUT + 4 LINT · 3 device · 2 lock · 0 VS) / OQs 9; registry N + 7, no renames/retypes.
+Full requests (read from the lane worktrees; `session-state` is gitignored but
+on disk):
+- SYS-15: `../new-vania-sys15-cache-stations-death/production/session-state/lane-SYS-15-report.md` §Sync — counts TR 20 / F 4 / V 7 / ACs 26 (21 smoke = 17 GUT + 4 LINT · 3 device · 2 lock · 0 VS) / OQs 9; registry N + 7, no renames/retypes.
+- SYS-28: `../new-vania-sys28-narrative-presentation/production/session-state/lane-SYS-28-report.md` — counts TR 13 / F 3 / V 6 / ACs 15 (13 smoke = 8 LINT + 5 GUT · 0 device · 2 MVP-lock · 0 VS) / OQs 5.
 
 **Landed 2026-11-14** (removed from the active queue; the receipts are in
 `STATE.md` §11/§12): **SYS-03** — PR #47, `50a9a93` (head `07f9b27`; 3 threads:

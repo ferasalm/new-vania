@@ -41,7 +41,7 @@
 | SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
 | SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
 | SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **PR #59 open** — gates complete (CD APPROVED · seats 1+3+2 repaired · spot-check PASS · micro-check PASS); CodeRabbit pending | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
-| SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **AUTHORING** — runner launched 2026-11-15 on GLM (base `9e20653`) | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
+| SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **PR #58 open** — gates complete (CD APPROVED · creative APPROVED · seats 3+1 repaired · spot-check PASS · micro-check PASS); CodeRabbit confirm re-running | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
 lane runners write their reports to `production/session-state/lane-<ID>-report.md`
@@ -49,13 +49,15 @@ inside their own worktree.
 
 ## 3. Review queue (WIP ledger)
 
-- **Three-seat review**: 0 of 2 slots in use (SYS-28 is authoring; ART-BIBLE is
-  parked on D-ORCH-01/02; SYS-15's gates are complete). Next review slot: the
-  next lane to reach CD GATE.
-- **CodeRabbit**: 1 of 1 in flight — **PR #59** (SYS-15), pending. The triage is
-  the runner's (the session resumes when the review posts).
-- **Shared-file writer**: idle; the lock is free. The SYS-15 sync request is
-  queued (§5 of `review-queue.md`); the sync lane launches next.
+- **Three-seat review**: 0 of 2 slots in use (both SYS lanes' gates are closed;
+  ART-BIBLE is parked on D-ORCH-01/02).
+- **CodeRabbit**: both lane passes ran concurrently (a serial-rule deviation by
+  the autonomous runners — recorded): PR #59 triage in flight (8 threads,
+  resumed runner) and PR #58 confirm re-running on the fix head (5 fixed + 1
+  rebutted). NEW passes (the sync PRs) queue behind recorded dispositions.
+- **Shared-file writer**: idle; the lock is free. TWO sync requests are queued
+  (§5 of `review-queue.md`): SYS-15 (order 1) and SYS-28 (order 2); the sync
+  lane launches next and applies serially.
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
@@ -118,28 +120,31 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 1. **SYS-15 is at PR #59** — gates complete (CD APPROVED · three-seat 1+3+2
    repaired · spot-check PASS · micro-check PASS; §3.6 in-session fallback
-   recorded). CodeRabbit pending on #59: when it posts, resume the runner
-   (`ses_e2318d2a8ffe1Ie7DIw934S1eg`) to triage (one batch → one fix commit →
-   recorded dispositions). The sync request is queued in `review-queue.md` §5 —
-   launch the sync lane (DS). When BOTH the triage is clean and the sync has
-   landed: verify the head and squash-merge #59; write the landing receipt.
-2. **SYS-28 is AUTHORING** — runner in flight on GLM at base `9e20653`
-   (`ses_e2318d2a3ffeD0307IK5kC2NyM`). When its report arrives: same treatment
-   as SYS-15 (queue sync, run sync lane serially, merge).
-2. **ART-BIBLE lane** — D-ORCH-01 (the purple) and D-ORCH-02 (palette/grief pins)
+   recorded). CodeRabbit posted (6m48s, 8 threads): the triage is in flight
+   (resumed runner session `ses_e2318d2a8ffe1Ie7DIw934S1eg`). When the triage
+   is clean AND the sync has landed: verify the head and squash-merge #59.
+2. **SYS-28 is at PR #58** — gates complete (CD APPROVED · creative APPROVED ·
+   technical 3 repaired · QA 1 repaired · spot-check PASS 6/6 · micro-check
+   PASS; §3.6 fallback recorded, DS re-pass is a batched decision). CodeRabbit:
+   6 threads (5 fixed + 1 rebutted); the confirm pass re-runs on the fix head —
+   wait for it green. When the sync has landed: verify the head and
+   squash-merge #58.
+3. **Launch the sync lane** — both requests are queued in `review-queue.md` §5
+   (SYS-15 order 1, SYS-28 order 2); one branch + PR per request, serial.
+4. **ART-BIBLE lane** — D-ORCH-01 (the purple) and D-ORCH-02 (palette/grief pins)
    await the user; the lane resumes when they are decided.
-3. **SYS-04 header** — the audio-director countersign; then flip the GDD header
+5. **SYS-04 header** — the audio-director countersign; then flip the GDD header
    `In Review` → `APPROVED` (or downgrade the index row). A user decision.
-4. **Keep SYS-16/SYS-17 BLOCKED** on SYS-07-REWORK (D-ORCH-03). Do not launch.
-5. **Batch the user decisions** — D-ORCH-01/02 and D-ORCH-03 (see
+6. **Keep SYS-16/SYS-17 BLOCKED** on SYS-07-REWORK (D-ORCH-03). Do not launch.
+7. **Batch the user decisions** — D-ORCH-01/02 and D-ORCH-03 (see
    `decisions.md`). Do not interrupt for soft blockers.
-6. At any lane boundary: refresh `NEXT.md`
+8. At any lane boundary: refresh `NEXT.md`
    (`node tools/orchestration/render-prompts.mjs --next`).
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: SYS-15 + SYS-28 (AUTHORING, runners in flight on GLM); ART-BIBLE
-(parked; D-ORCH-01/02 pending).
+**Running**: SYS-15 (PR #59, CodeRabbit triage) + SYS-28 (PR #58, CodeRabbit
+confirm) + the sync lane (launching); ART-BIBLE parked; D-ORCH-01/02 pending.
 **Landed**: SYS-03 `66ae957` (PR #45), SYS-04 `ba07158` (PR #46).
 **Queued**: SYS-14, SYS-05, SYS-24, SYS-12, SYS-20, SYS-25, SYS-07-REWORK;
 SYS-16/SYS-17 blocked on SYS-07-REWORK.
