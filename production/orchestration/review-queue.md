@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-14 Grief-Boss | 5 published contracts + 1 contract + 1 constant (registry 113 → 119; the request's `boss_kill_award` folded onto `xp_boss`) | the SYS-14 APPROVED row + design order 14 + the dependency cell/bullet (the stale 300 HP → 60) + 6 neighbor notes + the A12 rider record | 2026-11-15 | **applied on `chore/sync-sys14` — PR open; the lock is held until it merges** |
+| 1 | SYS-24 HUD | 3 published contracts (`hud_caps_contract`, `settings_namespace`, `hud_registration_contract`) + 8 `referenced_by` appends + the envelope `2.45/6.55 → 2.55/6.85` (registry 119 → 122) | the SYS-24 APPROVED row + the dependency bullet + the SYS-15/16/03/32 row notes (design order 18 unchanged) | 2026-11-15 | **applied on `chore/sync-sys24` — PR open; the lock is held until it merges** |
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-16 Progression** —
 PR #84 squash-merged as `fac409f` (`fa91299` the lock + `e71183a` the sync +
@@ -70,19 +70,34 @@ row/bullet, design order 22, the SYS-16/17 unblock and game-concept's 5th
 Gate-2 probe. `spitter_orb_damage` stayed HELD at 8. The full request was
 `../new-vania-sys07-baseline-rework/production/session-state/lane-SYS-07-REWORK-report.md`.
 
-**In flight (order 1: the SYS-14 sync — applied on `chore/sync-sys14`, PR open;
-the lock held by transfer from the landed SYS-16 sync)**. Order 1 before it (the
-SYS-16 sync) **landed** as `fac409f` and is removed from the active table above;
-its release edit never landed, so the SYS-14 sync's `STATE.md` §4 edit releases
+**Landed 2026-11-15** (removed from the active queue): **SYS-14 Grief-Boss** —
+PR #85, `27aa989` (head `c40a8d1`; 4 CodeRabbit threads, 3 applied + 1 rebutted,
+all resolved). Registry 113 → 119 entries (5 published contracts +
+`staging_band_denial` + `boss_hp_pool` 60; the request's `boss_kill_award` folded
+onto `xp_boss`); the index gained the SYS-14 APPROVED row, design order 14, the
+dependency cell + bullet (the stale 300 HP → 60), the 6 neighbor notes and the A12
+rider record. Its release edit never landed — the SYS-24 sync's lock transfer
+(`STATE.md` §4) records it. The full request was
+`../new-vania-sys14-grief-boss-framework/production/session-state/lane-SYS-14-report.md`
+§A–§B.
+
+**In flight (order 1: the SYS-24 sync — applied on `chore/sync-sys24`, PR open;
+the lock held by transfer from the landed SYS-14 sync)**. Order 1 before it (the
+SYS-14 sync) **landed** as `27aa989` and is removed from the active table above;
+its release edit never landed, so the SYS-24 sync's `STATE.md` §4 edit releases
 that hold and re-acquires in one edit. **The release to `shared_file_lock: none`
 is recorded with the orchestrator's receipt for this sync's merge** — together
-with the landing hash. **PR #82 (the SYS-14 GDD) does not gate the release**; it
+with the landing hash. **PR #86 (the SYS-24 GDD) does not gate the release**; it
 merges after this sync by review-queue §7 rule 4 and its landing is recorded
 separately.
-**SYS-14** — 5 published contracts + `staging_band_denial` + `boss_hp_pool` 60 +
-the `xp_boss` fold + 4 referenced_by/note updates; the index dependency cell +
-bullet (the stale 300-HP → 60) + design order + tracker row + 6 neighbor notes +
-the A12 rider. One writer at a time; each re-acquires the lock in `STATE.md` §4.
+**SYS-24** — 3 published contracts (`hud_caps_contract`, `settings_namespace`,
+`hud_registration_contract`) + 8 `referenced_by` appends (the caps' rendered-center
+clause on `camera_publication_contract`; `progression_read`, `grant_event`,
+`hp_per_point`, `boss_hp_pool`, `boss_crack_route`, `save_contract`, and the
+envelope) + the envelope's value/notes/revised (`2.45/6.55 → 2.55/6.85`,
+eight-system); the index
+tracker row, the dependency bullet and the SYS-15/16/03/32 row notes; design order
+18 unchanged. One writer at a time; each re-acquires the lock in `STATE.md` §4.
 
 **Landed 2026-11-15** (removed from the active queue): **SYS-07-REWORK riders
 mini sync** — PR #80, `fe38c4c` (0 CodeRabbit threads; merged after its

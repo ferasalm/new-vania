@@ -169,7 +169,7 @@ lanes:
     worktree_state: planned
     prompt_path: production/orchestration/prompts/lanes/SYS-24.md
     prompt_version: "1.0.0"
-    prompt_hash: "pending"
+    prompt_hash: "491dcc7c2b7a"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
     status: QUEUED
     dependencies: [SYS-08, SYS-07, SYS-01, SYS-32]
