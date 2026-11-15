@@ -32,8 +32,13 @@
   corridor's one chromatic signature.
 - **Blocking?** The art bible's first item; the grey default ships either way, so
   it does not block SYS-11's implementation.
-- **Status**: **OPEN** — the ART-BIBLE lane prepares the decision package.
-- **Decision**: _pending_.
+- **Status**: **RESOLVED (2026-11-15 — user chose B).** The SYS-02 Player
+  Fantasy line 36 is amended ("a purple bridge holding it together" → the grey
+  bridge / the bridge of neither truth) and the SYS-11 index row is qualified
+  (the OQ-M1 rider pattern). The grey `PROV_LIM_*` default ships. SYS-02 is a
+  frozen contract: the edit is the user-approved contract revision, and the
+  executing commit must name **D-ORCH-01**.
+- **Decision**: _B — amend the line (recorded 2026-11-15)._
 
 ### D-ORCH-02 — SYS-11 OQ-4: the `PROV_LIM_*` L gaps + the grief pins
 
@@ -42,8 +47,10 @@
   grief tint's C/L, and the grief hue band [330, 20]; or relax the D-gap clause to
   ≥ 0.01; or close the tint.
 - **Blocking?** The art bible's palette section; not SYS-11's implementation.
-- **Status**: **OPEN** — the ART-BIBLE lane prepares the values.
-- **Decision**: _pending_.
+- **Status**: **RESOLVED (2026-11-15 — approved as proposed).** The four
+  `PROV_LIM_*` L values (with `gap_R ≥ 0.09`), the grief tint's C/L, and the
+  grief hue band [330, 20] stand as specified.
+- **Decision**: _approved as proposed (recorded 2026-11-15)._
 
 ### D-ORCH-03 — SYS-07-REWORK: the IP-17 baseline contract revision
 
@@ -55,15 +62,29 @@
 - **Why it is a decision**: SYS-07 is an APPROVED, frozen contract. The rework is
   a revision, not a silent edit.
 - **Blocking?** SYS-16 and SYS-17 are blocked until it lands.
-- **Status**: **OPEN** — the lane prepares the package; do not edit the GDD until
-  approved.
-- **Decision**: _pending_.
+- **Status**: **OPEN — ROUND 2 REQUESTED (2026-11-15).** The user reviewed the
+  round-1 package and answered "Revise again": the package is NOT approved as
+  proposed. The lane prepares a **revised** package (round 2) — re-present the
+  baseline rework with any alternatives the lane can identify; no specific
+  objections were recorded, so the revision should tighten the presentation and
+  surface the decision points explicitly. SYS-16/SYS-17 stay blocked until
+  round 2 is approved and landed.
+- **Decision**: _pending (round 2)._
 
 ## Resolved decisions (this era)
 
 | ID | Lane | Decision | Date | Record |
 |---|---|---|---|---|
 | D-ORCH-04 | process | Lane runners spawn as the `lane-runner` agent (nested seats restored); §3.6 demoted to last resort; SYS-15/SYS-28 fallback records stand | 2026-11-15 | PR: `chore/lane-runner-subagent`; `TOOLING.md` §5.1 |
+| D-ORCH-05 | SYS-04 | The GDD header flips to APPROVED after the audio-director's countersign; the index row stays | 2026-11-15 | PR: `chore/sys04-countersign` |
+
+### D-ORCH-05 — SYS-04 GDD header: countersign + flip
+
+- **Decision (user-approved 2026-11-15)**: the audio-director countersigns the
+  SYS-04 Audio Core GDD (the review log's §D.6 condition) and the header's
+  `Status` line flips `In Review` → `APPROVED`; the systems-index row (already
+  APPROVED with the condition named) stays unchanged.
+- **Status**: **RESOLVED** — the countersign run is in flight (`chore/sys04-countersign`).
 
 ### D-ORCH-04 — Nested seat spawning for lane runners (process)
 
