@@ -540,7 +540,7 @@ registers SYS-15 as publisher) → **O-HD-11**.
 | Final micro-check #1 | DS | **PASS** | 0 | on the spot-check-#3 delta |
 | Final micro-check #2 | DS | **PASS** | 0 | on the final delta |
 | `/architecture-review` | DS | **FAIL** | 3 | all applied → re-verified by spot-check #4 + micro-check #2 |
-| CodeRabbit | — | see §9.7 | — | — |
+| CodeRabbit | — | **pass** (2m46s) | **6 threads** | all 6 valid, all applied in `717f137`, all replied + resolved → **0 unresolved**; the re-review on the fix commit opened **0 new threads** |
 
 All seats ran as **nested subagents** with the model passed explicitly; no seat ran
 in-session. Every seat read the document once, in full. The CD gate and the panel were
@@ -727,3 +727,25 @@ criteria + 3 story-gate criteria; 2 CRs filed; 11 open obligations filed.
   un-re-pointed attribution, the inverted window arithmetic, the miscounted
   qualification. That is the third consecutive pass in which "a repair's own new claims
   are the risk" holds, and it is why the loop is not optional.
+
+### 9.9 · The CodeRabbit pass
+
+**One pass, 6 threads, all valid, all applied in `717f137`, all replied and resolved
+(`UNRESOLVED=0`).** The re-review on the fix commit ran the check green in 2m46s and
+opened **0 new threads** — so no confirm wave was needed beyond the automatic one.
+
+| # | Sev | Where | Finding | Disposition |
+|---|---|---|---|---|
+| 1 | Major | §4b | the third sort key (`publication_index`) is an **arrival** index, so reversing two same-tick same-source events changes the order — contradicting the criterion's "identical on two delivery orders" | **APPLIED** — **§4b-i**: the third key is only consulted when `contact_tick` and `source_id` both tie, and that pair is **unreachable at MVP** (a term-9 duplicate, or a producer bug → dev assert); OQ#17's `strike_id` is named as the VS remedy. The criterion now states the reachable domain explicitly |
+| 2 | Major | §9 | the Regime 2 cell said a "drawn module is consumed", which applies the revive's consumption to the **reconstruct** choice | **APPLIED** — the cell is split: reconstruct leaves the carried module unchanged (live session state, TR-CSD-013's "except the revive's consumption"); only the revive consumes it |
+| 3 | Major | §10 | `amount = applied` is post-cap but can still **exceed the HP removed** — a 6 into 1 HP drops the bar by 1 and would print 6 | **APPLIED** — `amount` is the **HP change** (`hp_before − hp_after`); a 6 into 1 HP publishes 1, a floor-held hit publishes 0, and `overkill` carries the excess. The risk row records that both `dealt` and `applied` are wrong sources |
+| 4 | Minor | §10 | the off-switch stops publication but does not clear the ring or release live leases, so a mid-session toggle leaves occupancy > 0 | **APPLIED** — `set_numbers_enabled(false)` empties the ring and resets the head in the same call, and publishes the flag so SYS-24/SYS-29 release every lease; SYS-07 owns the signal, the render side the release |
+| 5 | Major | §7a / §12.5 | the bound-tick key makes a late event's roll change with its lateness, contradicting register item 5's lateness-invariance clause | **APPLIED** — the frozen key is kept (`logic_tick` **is** the resolution tick) and the wrong clause removed: the invariant is replay agreement for the **same delivery timing**, never lateness-invariance |
+| 6 | Minor | `technical-preferences.md` | the ADR-0004 index row omitted CR-HD-02 and O-HD-9…11, and still said "eight-branch dispatch" | **APPLIED** — the row names CR-HD-01, CR-HD-02 and O-HD-1…11, corrects the branch phrasing, and gains the pools' regen, the archive and the restore-module split |
+
+**Thread 3 is the batch's sharpest find**, and it is the same defect class the seats
+raised twice: the display amount's source. The seats fixed `dealt` vs `applied`; the
+review found that **`applied` itself** is not the HP change. Three passes to reach the
+true law (`hp_before − hp_after`) is the honest record of how a "the number and the bar
+agree" law is actually proved — the first two answers were each *nearly* right, and the
+fixture that discriminates them is the 1-HP target, not the capped boss.
