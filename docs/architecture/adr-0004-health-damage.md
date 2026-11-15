@@ -578,9 +578,15 @@ AC-PRG-09's, and this ADR implements the mechanism that makes them true.
 **Identity at default is a boot assertion, not a comment.** `validate_config()` runs
 at boot and **fails closed** on: the eight approved numbers not reproducing at level
 1/no gear; the ladder's four V-HD-12 checks (monotone columns, a strictly increasing
-derived chain, row-0 equality with the four raw knobs, row 4's chain ≤ 10); a
-`DEF_CAP_PCT` outside its own safe range (`0–25` at MVP, `0–40` VS); a
-`hp_floor ≥ hp_max` in any registered profile; a non-integer anywhere. **The
+derived chain, row-0 equality with the four raw knobs, row 4's chain ≤ 10); **the
+tier ladder's monotonicity over the registered profiles' `hp_max`
+(`T1 < T2 < T3 < boss`, V-HD-06)**; **the strike ladder's monotonicity
+(`P1 < P2 < P3`, V-HD-07 — a violation raises `P2`/`P3` and never lowers the fixed
+`P1`, which is the invariant's own resolution)**; a `DEF_CAP_PCT` outside its own safe
+range (`0–25` at MVP, `0–40` VS); a `DAMAGE_EVENT_MAX_AGE_TICKS` outside `0–2`
+(**`clampi` to 2, V-HD-10's resolution** — a clamp, not a rejection, because a stale
+hit is a ghost and the tighter bound is always the safe one); a `hp_floor ≥ hp_max` in
+any registered profile; a non-integer anywhere. **The
 assertion is about the config, not about an entity's `defense`**: a per-entity
 `defense` outside `[0, DEF_CAP_PCT]` is a **runtime clamp** (`clampi`, V-HD-13's own
 resolution), never a boot failure — the two are different surfaces and this ADR does
@@ -804,14 +810,15 @@ none exists: the body is reconstructed from the station's law, not restored from
 file.
 
 **§9b · The body's persistence, quoted rather than paraphrased.** SYS-15's TR-CSD-013
-body row reads, verbatim: "**the body (store-absent: SYS-16/17's session-only
-namespaces) restores from the live session (the load never touches it — there is no
-file carrying it)**". **The clause's parenthetical is already superseded for
-`progression`**: SYS-16's rider (b) — carried here as **O-HD-5** — makes the body
-store-carried for `progression` at v3, live-carried by the same read-gated window;
-what stays store-absent is exactly the part no namespace carries (the pools, the
-charges, the modules, the ledger, the latch). Three things follow, and the ADR states
-them rather than letting a reader infer them:
+body clause reads, verbatim: "**the body** (store-absent: SYS-16/17's session-only
+namespaces) restores from **the live session** (the load never touches it — there is
+no file carrying it): it survives death outright, within the session." **The clause's
+parenthetical is already superseded for `progression`**: SYS-16's rider (b) — carried
+here as **O-HD-5** — makes the body store-carried for `progression` at v3,
+live-carried by the same read-gated window; what stays store-absent is exactly the
+part no namespace carries (the pools, the charges, the modules, the ledger, the
+latch). Three things follow, and the ADR states them rather than letting a reader
+infer them:
 
 1. **At MVP there is no file carrying the body** — no namespace exists for
    `hp_current`, `quick_charges`, `restore_modules`, the ledger or the latch. A load
@@ -1375,11 +1382,11 @@ qualification**). V-HD-01 by §8's latch and AC-HD-16; V-HD-02 by the integer la
 AC-HD-04/19, **with `heal > 0` carried by §8b's heal law and no dedicated fixture
 (part of O-HD-10)**; V-HD-03 by §8's exactly-once and AC-HD-17's fuzz; V-HD-04 by
 §9's reset list and AC-HD-26; V-HD-05 by §8b's disjunction and AC-HD-20/27; **V-HD-06
-and V-HD-07 by §5's boot assertion's ordering checks on the tier and strike tables —
-with no AC asserting the clamp/raise resolution, which is O-HD-10**; V-HD-08 by
+and V-HD-07 by §5's fail-closed ordering checks on the tier ladder and the strike
+ladder, with no AC asserting the clamp/raise resolution, which is O-HD-10**; V-HD-08 by
 `heal()`'s clamp (AC-HD-31); V-HD-09 by §8a's sentinel and the boot check; V-HD-10 by
-§4a's `logic_tick` bound, **with the knob's ≤ 2 clamp carried by the config
-validation and no dedicated fixture (O-HD-10)**; V-HD-11 by the reducer's clamps
+§4a's `logic_tick` bound plus **§5's `clampi(…, 0, 2)`**, **with no dedicated fixture
+(O-HD-10)**; V-HD-11 by the reducer's clamps
 (AC-HD-27/33); V-HD-12 by §6's four checks and the two-field transaction
 (AC-HD-05/13); **V-HD-13 by §3a's clamp-before-division and AC-HD-14, except its
 third clause ("the MVP DEF source is the module layer"), which TR-PRG-016 retires —
@@ -1387,10 +1394,11 @@ O-HD-2**; V-HD-14 by the parity harness's unchanged consumption (AC-HD-36); V-HD
 §3's "once each" and §4b's total order.
 
 **Two coverage gaps are named rather than claimed** (O-HD-10): V-HD-06/07's ordering
-resolution and V-HD-02/10's two minor clauses have **no MVP fixture**, because the GDD
-gives them none — AC-HD-03 has no ordering case, AC-HD-11 is TTK values, AC-HD-12 is
-profile fields. The ADR implements the checks (the boot assertion's ordering pass and
-the config's clamp) and records the gap; inventing an AC would be a second design.
+**resolution** and V-HD-02/10's two minor clauses have **no MVP fixture**, because the
+GDD gives them none — AC-HD-03 has no ordering case, AC-HD-11 is TTK values, AC-HD-12
+is profile fields. The ADR **implements both ordering checks and the age-bound clamp**
+in §5's fail-closed list and records the fixture gap; inventing an AC would be a
+second design.
 
 ## 13 · The carried obligations
 
@@ -1406,7 +1414,7 @@ the config's clamp) and records the gap; inventing an AC would be a second desig
 | **O-HD-7** | **The energy/mana round-trip has no registered namespace** — AC-HD-08 asserts "the save round-trips both"; SYS-03 declares SYS-07 a runtime non-dependency and SYS-16's `progression` carries no pool. | SYS-03/SYS-16 at their next touch | AC-HD-08's save clause only; both pools are inert at MVP |
 | **O-HD-8** | **AC-HD-41's "four-system arithmetic envelope" is superseded** by the registry's seven-system 2.45/6.55; SYS-07's own 0.25/0.75 allocation is unchanged. | qa-lead (the QA-plan sync) | nothing: the allocation this ADR prices is unchanged |
 | **O-HD-9** | **The body's persistence contradiction.** SYS-07's save field list names "charges, modules, quickslot"; SYS-03 declares SYS-07 a runtime non-dependency and registers no namespace; SYS-15's TR-CSD-013 body row says the body is store-absent ("there is no file carrying it"). At MVP the landed behaviour is session-only, so a save→quit→load loses a carried restore module. **Two candidate resolutions, for the user batch**: (i) declare the body session-only at MVP and re-scope SYS-07's field list (a one-line rider, no schema bump); or (ii) register a `body` namespace at a future v3→v4 bump (SYS-03's mechanism, SYS-16's writer discipline) — which the carried module's one-per-station faucet would then need to reconcile with TR-CSD-017. | SYS-03 + SYS-15 + SYS-16 (the user batches the choice) | nothing in this ADR: §9b states the landed behaviour and regime 1's `restore_modules = 0` explicitly |
-| **O-HD-10** | **Two V-invariant coverage gaps** — V-HD-06/07's ordering resolution (the tier ladder `T1<T2<T3<boss` and the strike ladder `P1<P2<P3`, with their clamp/raise rules) and V-HD-02's `heal > 0` / V-HD-10's `≤ 2` knob clamp have **no MVP fixture**: the GDD's AC set never asserts them. The ADR implements the checks and records the gap. | qa-lead (the SYS-07 QA plan) | the first SYS-07 story's evidence pack, which cannot claim full V coverage without them |
+| **O-HD-10** | **Two V-invariant coverage gaps** — V-HD-06/07's ordering **resolution** (the tier ladder `T1<T2<T3<boss` and the strike ladder `P1<P2<P3`, with their clamp/raise rules) and V-HD-02's `heal > 0` / V-HD-10's `≤ 2` knob clamp have **no MVP fixture**: the GDD's AC set never asserts them. The ADR **implements the two ordering checks and the age-bound clamp in §5's fail-closed list** and records the fixture gap. | qa-lead (the SYS-07 QA plan) | the first SYS-07 story's evidence pack, which cannot claim full V coverage without them |
 
 ## Related
 
