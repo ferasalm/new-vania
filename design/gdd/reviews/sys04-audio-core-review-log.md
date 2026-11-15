@@ -430,3 +430,9 @@ files · 1 contract-revision request (CR-AUD-01).
   13 voices · 17 roles · 29 files · 2 CRs.
 - **Next**: resolve the confirm threads; the lane stops (the document is
   done); the report and the final push close the lane.
+
+## 2026-11-15 — the audio-director's countersign (PR #46's condition closed)
+
+- **Countersign (user-approved 2026-11-15)**: the audio-director countersigns SYS-04 Audio Core as authored — the §D.6 material/acoustic split stands as the named ruling (the wing's no-touch is material; the acoustic no-op is the seam crossing, AR-SMB-02/04), and the receding-first law, the one-duck ruling, and the closed list are ratified as the document prints them.
+- **The condition closes**: §D.6's "countersigned by the audio-director at this document's approval" and the header's "audio-director countersign pending" are discharged by this countersign; the GDD's `Status` flips to `APPROVED (2026-11-15 — the audio-director's countersign; PR #46's recorded condition closed)`.
+- **Consistency**: the systems-index SYS-04 row already reads APPROVED and stays unchanged — with the header flipped, the document and the index are consistent. No design content changes: this record and the one-line header flip are the whole diff.
