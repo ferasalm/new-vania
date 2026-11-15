@@ -1,0 +1,824 @@
+# ADR-0002: Save & Serialization — The Persistence Boundary, the Canonical Record, and the Writer's Thread
+
+## Status
+
+**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support). It becomes
+`Accepted` only on a PASS from the `/architecture-review` gate; the lane's gate
+trail (CD · three-seat panel · qa-lead spot-check · micro-check) is recorded in
+`docs/architecture/adr-draft-review-log.md`. If a later architecture review finds
+a contradiction with a newer Accepted ADR, this ADR reverts to `Proposed` and is
+superseded explicitly.
+
+## Date
+
+2026-11-15
+
+## Last Verified
+
+2026-11-15 — verified against the SYS-03 GDD at Main `3fcedc6`
+(`design/gdd/save-serialization.md`, APPROVED 2026-11-14), the Godot 4.7.2
+engine-reference snapshots (`VERSION.md`, `breaking-changes.md`,
+`deprecated-apis.md`), and a live run of the authoring twin
+(`node tests/save-twin/save_twin.mjs` → **34/34 PASS**, 2026-11-15).
+
+## Decision Makers
+
+| Seat | Role in this decision |
+|---|---|
+| technical-director | Acceptance chair; the thread model, the refusal doctrine, the ADR dependency ruling |
+| lead-programmer | The core/adapter split, the canonicalizer, the migration registry API, the worker shape |
+| godot-specialist | Engine-API verdicts: `FileAccess`/`JSON`/`HashingContext`/`Thread`/`DirAccess`, the verification register |
+| qa-lead | The twin's engine half, the AC→gate ledger, the refusal fixtures |
+| user | Scope authority; the MVP posture pinned 2026-11-14 (OQ-SAV-2/3/4/9) |
+
+## Summary
+
+SYS-03 is design-complete but its GDD deliberately stopped at the behaviour level,
+leaving four implementation choices to this ADR: the writer's thread shape, the
+file's byte layout and canonicalization, the migration table's registration API,
+and the platform path helper. This ADR decides those four, plus the two engine
+facts the GDD could not settle without a code decision — Godot's float-typed
+`JSON` parse (handled by a schema-typed normalization pass that sits *below* the
+hash) and the post-4.4 `FileAccess.store_*` boolean returns (every store call is
+checked, and a `false` is classified into the named `SAVE_FAILED_*` vocabulary).
+The shape is one pure `PersistenceCore` over injected ports, one `SaveWriter` node
+owning a single dedicated `Thread` with a one-deep queue, one canonical byte
+stream that is both the hash's input and the file's payload, and one path helper —
+with no second write path, no repair write, and no downgrade writer anywhere.
+
+## Engine Compatibility
+
+| Field | Value |
+|-------|-------|
+| **Engine** | Godot 4.7.2 (pinned; GDScript) |
+| **Domain** | Core + Persistence (Core/FileAccess/JSON/Hashing/Threading) |
+| **Knowledge Risk** | **HIGH** — 4.7.2 is post-cutoff (May 2025). The audio/render subsystems are stable across 4.4–4.7 per the repo's snapshots; the *persistence* APIs are the ones that moved (`FileAccess.store_*` returns `bool` from 4.4) |
+| **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.3→4.4 `store_*` row; 4.6→4.7 table); `deprecated-apis.md`; `modules/audio.md` (for the not-join precedent only); `docs/framework/technical-preferences.md` |
+| **Post-Cutoff APIs Used** | `FileAccess.store_*` → `bool` (4.4, **pinned by `breaking-changes.md`**); `FileAccess.flush()` / `close()` / `get_error()`; `FileAccess.get_sha256()` **[unverified for a whole-file digest in 4.7.2]**; `JSON.parse_string()` returning floats for every number (the GDD's TR-SAV-026; the reason this ADR exists); `HashingContext` (SHA-256); `Thread.start(Callable)` / `wait_to_finish()`; `DirAccess.rename_absolute()`; `OS.get_user_data_dir()` **[not used outside the path helper]**; `NOTIFICATION_WM_CLOSE_REQUEST` / `NOTIFICATION_APPLICATION_PAUSED` / `NOTIFICATION_APPLICATION_FOCUS_OUT` |
+| **Verification Required** | The 9-item register in §13. 5 items are `PROBE-PENDING` and block the first SYS-03 implementation story; 4 are `DOCUMENTED`. The ADR is Accepted as architecture; no story may consume a `PROBE-PENDING` item as settled fact. |
+
+> **Knowledge-gap warning (HIGH).** Two failure modes are specific to this
+> version band and are load-bearing here: (1) `JSON` parses *every* number as a
+> float, so a canonicalizer that refuses floats would refuse every legitimate
+> save — the normalization pass (§6) is not optional polish, it is the load path;
+> (2) `store_*` returns `bool` since 4.4, so an unchecked store is a silent short
+> write, which is the exact torn-file failure the six-step write exists to make
+> unreachable.
+
+## ADR Dependencies
+
+| Field | Value |
+|-------|-------|
+| **Depends On** | **ADR-0001** (Accepted) — §3's freeze law (the E4 queue's window) and §5's tick-boundary pipeline (the completion drain, the snapshot tick) |
+| **Enables** | SYS-05 Game Flow (the `load_result`/`restore_complete`/`load_complete` ordering), SYS-15 (the `cache` namespace + the `v1→v2` bump), SYS-16/SYS-17 (`progress`/`inventory` namespaces), SYS-20/SYS-25 (the read-only families), SYS-24 (the refusal/load-result surfaces + slot metadata) |
+| **Blocks** | The first SYS-03 implementation story; every story that persists or restores state; the QA plan's device gate (AC-SAV-14/23) |
+| **Ordering Note** | SYS-05's authoring consumes this ADR's `restore_complete`→`load_complete` ordering; the ADR does not wait on SYS-05 (SYS-03 publishes the contract). The engine-path twin runs at the first story, not at this ADR. |
+
+## Context
+
+### Problem Statement
+
+The GDD is design-complete and its format contract is *proven* — the Node twin
+runs 34/34 on real files — but the GDD explicitly stops at behaviour:
+"*Implementation patterns (the writer's thread shape, the file's byte layout, the
+migration table's registration API) are ADR raw material for the planned Save &
+Serialization ADR; this GDD stays at the behavior level*" (§Overview) and
+"*The Save & Serialization ADR (owned by the ADR-DRAFT lane) carries: the
+writer's thread shape, the file's byte layout and canonicalization, the migration
+table's registration API, and the platform path helper*" (§Dependencies).
+
+Without this ADR, two implementers can build two incompatible persistence layers
+from the same GDD, and the specific failure mode is not cosmetic: a save format
+that is *almost* canonical writes files that fail their own hash on the next
+load; a writer that does not check `store_*`'s boolean commits a truncated file;
+a thread model that lets the game thread wait on IO blows the 16.6 ms budget at
+the worst possible moment (the close request); a load path that materializes
+absent-key defaults before the hash turns every valid sparse file into
+`REFUSE_HASH_MISMATCH`; and a migration API that is not contiguous ships a chain
+with a hole and silently strands a generation of saves.
+
+The cost of not deciding is therefore a class of bugs the player experiences as
+"the game forgot", in the one channel the design says the player must be able to
+trust without thinking (the Player Fantasy's honesty clause).
+
+### Current State
+
+- `src/` contains no game code; the project has no `project.godot`. There is no
+  persistence code to migrate.
+- The SYS-03 GDD is **APPROVED** (2026-11-14) at Main `3fcedc6`, with the
+  authoring gate recorded: the **reference twin, 34/34 PASS**
+  (`tests/save-twin/save_twin.mjs`). The engine half (Godot `FileAccess`/`JSON`,
+  `user://`, the worker `Thread`) is a **story-gated obligation** under the same
+  fixtures (OQ-SAV-1 option (a), user-approved).
+- The GDD's pinned MVP posture (2026-11-14): canonical JSON + SHA-256; `auto` +
+  `manual_1`; no autosave timer; one dedicated worker thread with a one-deep
+  queue; forward-only schema at v1 with zero registered migrations; no
+  encryption, no anti-cheat.
+- ADR-0001 is Accepted and supplies the two clocks, the freeze law and the
+  tick-boundary discipline this ADR consumes.
+- `docs/architecture/tr-registry.yaml` is still empty (`requirements: []`); the
+  TR population is `/architecture-review`'s write, not this lane's.
+
+### Constraints
+
+- **Engine**: Godot 4.7.2, GDScript; 2D; mobile-first (iOS/Android) with PC
+  secondary; 60 fps; 16.6 ms frame budget; ~150 MB memory ceiling.
+- **Platform**: `user://` only; iOS background-kill is the most common exit on
+  the primary platform, so the close/suspension event is the mobile kill path
+  (TR-SAV-011); Android 16 KB page support is irrelevant to file IO but the
+  export must still carry it.
+- **Design**: SYS-03 reads no gameplay value and publishes none; it is never in a
+  gameplay tick's critical path (the not-join precedent). No floats. No repair
+  writes. No downgrade writer. The file is evidence.
+- **Process**: Main is protected; work lands via branch + PR; the collaboration
+  protocol requires approval before writes; every checkpoint is pushed.
+
+### Requirements
+
+- **R1 — One canonical byte stream.** The bytes hashed and the bytes written are
+  the same bytes; the canonical form is a pure function of `{schema_version,
+  payload}` and of nothing else.
+- **R2 — Integrity before interpretation.** The hash is checked before any
+  semantic decision, but after the mechanical minimum (parse + normalize) that
+  makes a hash computable.
+- **R3 — The commit point is one rename.** No state is ever observable from a
+  partially written file; a failure on either side of the rename leaves either
+  the previous generation or a recoverable `.bak`.
+- **R4 — The game thread never waits on IO during gameplay.** One write in
+  flight per slot; one-deep queue; the completion drains at a tick boundary.
+  Exactly one legal blocking path (the close-save), bounded by
+  `SAVE_JOIN_TIMEOUT_MS`.
+- **R5 — The snapshot is taken at an eligible tick, once per request.** The E4
+  queue's predicate is read from SYS-29's `FreezeState`; a mid-choreography
+  snapshot is unreachable by construction.
+- **R6 — Forward-only, contiguous, pure migrations.** A chain with a hole fails
+  the boot; a migration moves values and only a genuinely new key takes a
+  conservative default.
+- **R7 — Refuse, never repair.** The eleven `REFUSE_*` and six `SAVE_FAILED_*`
+  codes are a stable API; no code path clamps, defaults a contradiction, or
+  rewrites a refused file.
+- **R8 — One path helper.** Every save path string comes from one function; no
+  `res://` writes, no absolute paths, no `OS.get_user_data_dir()` assembly
+  outside it.
+- **R9 — Testability.** The core is pure and injected (a `FileSystemPort`); the
+  twin's 34 fixtures are the contract; the engine half runs at the first story.
+- **R10 — Performance.** The snapshot is bounded constant (≤ ~150 elements,
+  ≤ 0.5 ms dev assert); the restore is ≤ 1 ms (dev assert); the write is ≤ 2 KB.
+
+## Decision
+
+### 1 · Scope and non-goals
+
+**In scope.** The core/adapter split; the byte layout and the canonicalizer; the
+hash; the six-step atomic write and its thread shape; the read path and the
+number-normalization pass; the migration registry API; the snapshot; the E4
+freeze queue; the path helper and the platform event set; the slot-state record
+and the boot sweep; the test seams; the engine verification register.
+
+**Out of scope (owned elsewhere).** The truth model and the five families
+(SYS-02); the flip's sequencer and E4's *law* (SYS-09); the epoch store and the
+reconciliation (SYS-10); the `FreezeState` publication (SYS-29); the `cache`
+namespace's shape (SYS-15); the refusal *flow* (SYS-05) and the refusal *surface*
+(SYS-24); the bindings file `user://controls.cfg` (SYS-01, TR-INP-036).
+
+**Non-goals.** No encryption or anti-cheat at MVP (the security audit may reopen);
+no autosave timer; no third slot; no backup depth beyond one `.bak`; no binary or
+`ResourceSaver` format; no compression; no cloud-sync logic; no repair write of
+any kind; no migration step registered at v1.
+
+### 2 · The node graph and the core/adapter split
+
+The GDD's laws are all *decidable from data* — the canonical form, the gate, the
+verdict, the queue's predicate — so they live in a pure `RefCounted` with no
+`FileAccess`, no `Time`, no `SceneTree`, and no `JSON` singleton read. The engine
+touches only the adapter.
+
+```
+                    ┌──────────────────────────── PersistenceCore (RefCounted, pure) ─┐
+ SYS-02 store ─────▶│ TruthPort.read_world() → Dictionary                             │
+ SYS-29 freeze ────▶│ FreezePort.sources_active() → PackedStringArray                 │
+ ADR-0001 clock ───▶│ ClockPort.tick() → int                                          │
+                    │                                                                 │
+                    │  Snapshotter · Canonicalizer · SchemaGate · MigrationChain      │
+                    │  IntegrityVerdict · QueueScheduler · RefusalCodes · Telemetry   │
+                    └───────────┬─────────────────────────────┬───────────────────────┘
+                                │ Snapshot (dict, bounded)    │ load_result / codes
+                                ▼                             ▼
+                    ┌──── SaveWriter (Node) ────┐   ┌──── LoadReader (Node) ────┐
+                    │ Thread + Mutex + Semaphore│   │ synchronous (≤ 2 KB)      │
+                    │ one-deep job queue        │   │ staging dict → swap       │
+                    └──────────┬────────────────┘   └──────────┬────────────────┘
+                               │ FileSystemPort                      │
+                               ▼                                     ▼
+                    ┌──────────── SaveIO (adapter) ──────────────────────┐
+                    │ FileAccess · DirAccess · HashingContext · PathHelper│
+                    └────────────────────────────────────────────────────┘
+                               │
+                               ▼
+                        user://saves/<slot>.sav · .bak · .tmp
+```
+
+**Why the split is load-bearing.** AC-SAV-07's port spy, V-SAV-05's runtime
+write ban, AC-SAV-26's static audits and AC-SAV-24's twin all need a core that
+runs headless against a temp directory. A core that calls `FileAccess` directly
+would make the twin an engine test, and the twin's whole value is that it runs at
+authoring time with no Godot binary.
+
+### 3 · The byte layout and the canonical form
+
+The file is one JSON object. **The layout is fixed and the order is the law**;
+the payload inside it is canonically ordered (sorted keys), so the two orders are
+different things and must not be conflated:
+
+- the **envelope's** key order is fixed and human-readable
+  (`schema_version`, `game_version`, `saved_at_utc`, `state_hash`, `payload`);
+- the **payload's** key order is canonical (byte-order sorted at every level).
+
+```
+{"schema_version":1,
+ "game_version":"0.1.0",
+ "saved_at_utc":"2026-11-14T12:00:00Z",
+ "state_hash":"<64 lowercase hex>",
+ "payload":{"world":{…}}}
+```
+
+**The canonicalizer** (`canon`, TR-SAV-009) is one pure function with five rules,
+applied to `{schema_version, payload}` only:
+
+1. object keys sorted by byte order, at every level;
+2. **only the three outer family arrays are sets** — `doors_opened`,
+   `memories_collected`, `cells_discovered` — sorted by their element's canonical
+   string; a coordinate pair's inner order is **data**, never sorted (the twin's
+   `CANON-pair` proves `[1,0] ≠ [0,1]`);
+3. integers in decimal, no leading zeros, no exponent form; **no floats**;
+4. strings JSON-escaped per the standard; booleans `true`/`false`; **no `null`**
+   (an absent key is the only "nothing");
+5. no insignificant whitespace inside the payload.
+
+`game_version` and `saved_at_utc` are informational, sit **outside** the hash
+input, and never gate anything (TR-SAV-008). A re-save of an unchanged state
+therefore hashes identically with a different timestamp — the twin's
+`RT-hash-stable`.
+
+**The byte stream is produced once.** The canonicalizer returns the exact bytes
+that are (a) hashed and (b) written. There is no second serializer and no
+"pretty" variant: a debug pretty-printer, if one is ever wanted, is a *different
+file* and never a save.
+
+### 4 · The hash
+
+`state_hash = sha256_hex(canon({schema_version, payload}))` (F-SAV-01), computed
+with `HashingContext` (SHA-256) over the canonical bytes — one pass, no string
+concatenation of hex, no `Crypto.sign` (there is no key and no authenticity
+claim; the hash is *integrity*, and the GDD says so explicitly: "integrity is not
+authenticity").
+
+Because `schema_version` is inside the hash input, a downgrade edit (`99 → 1`)
+yields `REFUSE_HASH_MISMATCH` and never a gate bypass (AC-SAV-22). This is the
+single most important property of the layout: **the version is part of the
+record, not metadata about it.**
+
+### 5 · The write path on the worker thread
+
+`SaveWriter` owns **one** `Thread`, one `Mutex`, one `Semaphore`, and a
+**one-deep job queue per slot** (TR-SAV-014). It is created at boot and joined at
+shutdown. The game thread hands over an immutable job (the canonical bytes + the
+slot id + the expected hash) and never touches the filesystem.
+
+Six steps, all on the worker (TR-SAV-010), with the boolean-return discipline
+from `breaking-changes.md`:
+
+| # | Step | Failure → |
+|---|---|---|
+| 1 | serialize the snapshot to bytes (**already done on the game thread** — the canonical bytes travel in the job) | `SAVE_FAILED_UNKNOWN` |
+| 2 | write bytes to `<slot>.tmp`; **check every `store_*` return**; `flush()`; `close()` | `SAVE_FAILED_DISK_FULL` / `SAVE_FAILED_PERMISSION` |
+| 3 | re-read `<slot>.tmp`, verify its hash (cheap at ≤ 2 KB) | `SAVE_FAILED_VERIFY` (pre-commit) |
+| 4 | if `<slot>.sav` exists, `rename_absolute` it to `<slot>.bak` (replacing an older `.bak`) | `SAVE_FAILED_RENAME` |
+| 5 | `rename_absolute` `<slot>.tmp` → `<slot>.sav` — **the commit point** | `SAVE_FAILED_RENAME` (`.sav` missing, `.bak` present → boot sweep recovers) |
+| 6 | re-read `<slot>.sav`, verify its hash, emit `save_completed` (or `save_failed`) | `SAVE_FAILED_VERIFY` (post-commit → **roll back**: promote `.bak` back to `.sav`; no `.bak` → delete the unverified `.sav`, slot `EMPTY`) |
+
+**The step-6 rollback is the one place a "restore" is legal**, and it is a
+*file-level* restore of the last good bytes — the same operation as the boot
+sweep. It invents no state. The distinction is stated once in the GDD and is a
+law here: **promoting a `.bak` restores bytes; it is not a repair write.**
+
+**The completion drain.** The worker's result record is drained at the **next
+tick boundary** on the game thread (ADR-0001 §5's pipeline phase), never from a
+signal callback into gameplay code. This keeps `save_completed` on a tick, which
+is what AC-SAV-12's frame probe asserts.
+
+**The close-save (the one legal block).** On the close request the save is
+written **synchronously** on the game thread — there is no frame to miss, the
+file is ≤ 2 KB, and the dev assert bound is `SAVE_JOIN_TIMEOUT_MS` 250 ms. Two
+guards, both from the GDD: (a) if a write is in flight, it completes first;
+(b) **if `flip_sources_active` is non-empty, the close-save is skipped** and the
+last station autosave is the fallback — a synchronous snapshot there would
+capture the mid-choreography state that V-SAV-05 and E4 forbid.
+
+### 6 · The read path and the number-normalization pass
+
+Nine steps (TR-SAV-018), and the ordering is the law. The two engine-specific
+decisions:
+
+**6a. `JSON.parse_string` yields floats for every number.** A legitimately
+written `truth_epoch: 0` re-parses as `0.0`; a canonicalizer that refuses floats
+would refuse *every legitimate save*. The **normalization pass** (TR-SAV-026)
+therefore sits between the parse and the hash, and it is **schema-typed, not
+heuristic**: walk the parsed payload against the declared type table, accept a
+number for an `int` key iff it is integral and in range and coerce it, refuse a
+non-integral number as `REFUSE_FLOAT`, refuse a number for a non-integer key as
+`REFUSE_TYPE`. The **envelope's `schema_version` gets the same pass** (it is
+parsed as a float too). The pass is idempotent and total over the schema.
+
+**6b. Absence survives the hash.** A declared key that is absent **stays absent**
+in the normalized payload — materializing the defaults there would change the
+hash input and turn a valid sparse file into `REFUSE_HASH_MISMATCH`. The defaults
+are applied **at restore, after the hash** (TR-SAV-023). This is the single
+easiest way to get the load path wrong, and it is why the twin has an
+`ABS-defaults` fixture.
+
+The verdict function (`integrity_verdict`, F-SAV-04) is an **ordered list** whose
+first three rows are mechanical (parse, version-is-int, every number integral) —
+they are the minimum that makes a hash computable — then the hash, then the
+interpretation (gate, shape, range). `MIGRATE` is an **output**, not a refusal.
+
+### 7 · The migration registry API
+
+```gdscript
+## Registers a one-step, pure migration. Called at boot, in code, never at runtime.
+## @param from_version  the source version; must be >= 1 and < CURRENT_SCHEMA_VERSION
+## @param migrate       Callable(payload: Dictionary) -> Dictionary; pure; must not
+##                      read the store, the clock, or any singleton
+## @param shape_note    the human-readable shape delta (one line) for the boot log
+func register_migration(from_version: int, migrate: Callable, shape_note: String) -> void
+```
+
+- **Contiguity is a boot check** (V-SAV-02): `MIGRATIONS[n]` must exist for every
+  `1 ≤ n < CURRENT_SCHEMA_VERSION`; a hole is a dev boot failure.
+- **One step at a time, forward only**: `migrate(v) = M_{CURRENT−1} ∘ … ∘ M_v`.
+- **A rename is `put(new_key, pop(old_key))`** — the value moves; only a genuinely
+  NEW key takes the conservative default. Losing a set flag to a default would
+  silently cancel the pending flip, which is the exact failure the migration
+  exists to prevent (the twin proves the idiom with a test-only `v1→v2` rename
+  that is **never shipped**).
+- **The chain is testable below the gate** by a synthetic `CURRENT = 3` harness
+  with two registered steps (AC-SAV-16); a `v0` file is a *refusal* fixture and
+  never a migration input.
+- **v1 registers zero migrations**; the machinery ships on day one anyway,
+  because retrofitting a chain into a shipped format is the change that cannot be
+  tested.
+
+### 8 · The snapshot
+
+The snapshot is taken **synchronously on the game thread at `t_write`**
+(TR-SAV-012): a deep copy of the `world` namespace plus every registered
+namespace's current values, **as typed containers** (`Array`/`Dictionary` of
+`int`/`String`/`bool`), never as engine resources. Its cost is bounded constant —
+SYS-02's registries bound the arrays (128 borders, 1 flag, 4 memories, 6 cells)
+so the copy is ≤ ~150 elements — and the dev assert prices it at ≤ 0.5 ms. The
+canonical bytes are produced **in the same synchronous step** (the job carries
+bytes, not a mutable dict), which removes the only shared-mutable-state question
+in the whole design: there is nothing for the worker to see half-written.
+
+The snapshot is taken **once per request**; a re-request after a failure is a new
+request with a new snapshot (a save is a snapshot of *now*).
+
+### 9 · The E4 freeze queue
+
+The predicate is `writable(t) ≡ flip_sources_active(t) = ∅`, read from **SYS-29's
+`FreezeState` publication** (the base `truth_flip` source plus every admitted
+`truth_flip_ext_n`). `t_write = min { t ≥ t_req : writable(t) }` (F-SAV-03), and
+the bound `N_max` is **consumed from SYS-09** (`worst_case_hold_ticks`, base plus
+the two admitted extension spans) — SYS-03 never re-derives the ms→tick
+conversion.
+
+- **Coalescing**: one pending request per slot; a second for the same slot is
+  latest-wins with one telemetry record. Different slots queue independently.
+- **The bound is the liveness proof**: a queued save cannot wait longer than the
+  longest legal hold.
+- **The unreadable publication** (a boot-order defect) reads **true** (the
+  conservative reading: unreadable means frozen) for at most `N_max` ticks, then
+  fails with `SAVE_FAILED_FREEZE_UNAVAILABLE` — a bounded wait, never a hang.
+
+### 10 · The path helper and the platform policy
+
+```gdscript
+## The ONLY place a save path is assembled. Every caller passes a slot id and a suffix.
+## @param slot    &"auto" or &"manual_1" (SLOT_IDS; a third is a code change + migration review)
+## @param suffix  &"sav" | &"bak" | &"tmp"
+## @return        "user://saves/<slot>.<suffix>"
+static func save_path(slot: StringName, suffix: StringName) -> String
+```
+
+- `user://saves/` is created by the helper on first use (`DirAccess.make_dir_recursive_absolute`).
+- **No** `res://` write, **no** absolute path, **no** `OS.get_user_data_dir()`
+  outside the helper. AC-SAV-26's audit greps for the second occurrence.
+- **The platform event set** is `{station ack, desktop quit, Android onStop, iOS
+  application-paused}` (TR-SAV-011) — an **event set, never a timer**. In Godot
+  terms: `NOTIFICATION_WM_CLOSE_REQUEST` (desktop quit),
+  `NOTIFICATION_APPLICATION_PAUSED` (both mobile platforms' suspension),
+  `NOTIFICATION_APPLICATION_FOCUS_OUT` is **not** in the set (a focus loss is not
+  an exit) and must not be wired to a save.
+- A read-only or full volume yields `SAVE_FAILED_PERMISSION` /
+  `SAVE_FAILED_DISK_FULL`; the session continues and the surface reports it.
+
+### 11 · The slot-state record and the boot sweep
+
+States: `EMPTY` · `OK` · `BAK_ONLY` · `REFUSED_READ_ONLY`. Edges are total
+(`EMPTY → OK` on the first successful write; `OK → BAK_ONLY` on a step-5 rename
+failure; `BAK_ONLY → OK` on the sweep or the next successful write;
+`OK|BAK_ONLY → REFUSED_READ_ONLY` **only when both files fail the load**).
+
+The **boot sweep** runs per slot, in this order, before any load: (1) if
+`<slot>.tmp` exists, delete it (`tmp_swept`); (2) if `<slot>.sav` is missing and
+`<slot>.bak` exists, promote the `.bak` (`bak_promoted`); (3) neither file →
+`EMPTY`, which is the first boot and not an error. The order matters: deleting the
+`.tmp` first means the promotion can never race a stale temp.
+
+### 12 · Test seams
+
+- **`FileSystemPort`** — `read_bytes(path) -> PackedByteArray`, `write_bytes(path,
+  bytes) -> Error`, `rename(from, to) -> Error`, `exists(path) -> bool`,
+  `remove(path) -> Error`. The real implementation is `SaveIO`; the twin's is an
+  in-memory/temp-dir implementation. Fault injection at each of the six steps is a
+  port decorator, not a code path in the writer.
+- **`ClockPort`**, **`TruthPort`**, **`FreezePort`**, **`TelemetryPort`** — the
+  four reads the core performs, all injected.
+- **The engine half** (story-gated): the same 34 fixtures, run in-engine, must
+  assert `typeof(value) == TYPE_INT` after the normalization pass on a real
+  `JSON.parse_string` result **and** reproduce the reference twin's three hashes
+  (`bf18d435…`, `e3f7a6a0…`, `05b1e48e…`). The reference twin cannot simulate the
+  float-typed parse (JavaScript has one number type) — it tests the refusal branch
+  and the coercion's identity only. **This is the named split, not an omission.**
+
+### 13 · The engine verification register
+
+| # | Item | Verdict | Blocks |
+|---|---|---|---|
+| 1 | `JSON.parse_string` returns `float` for every JSON number (incl. `schema_version`) | **DOCUMENTED** (the GDD's TR-SAV-026; the repo snapshot records the knowledge gap) | — |
+| 2 | `FileAccess.store_*` returns `bool` (4.4+) and `false` is detectable | **DOCUMENTED** (`breaking-changes.md`, 4.3→4.4 row) | — |
+| 3 | `HashingContext` SHA-256 digest over a byte buffer equals the twin's Node `crypto` digest for the same canonical bytes | **PROBE-PENDING** | The first story |
+| 4 | `DirAccess.rename_absolute` is atomic-enough on iOS/Android (the commit point) | **PROBE-PENDING** | The first story; AC-SAV-14/23 |
+| 5 | `Thread.start(Callable)` + `Semaphore` + `Mutex` gives a one-deep queue with no lost wakeup | **PROBE-PENDING** | The first story |
+| 6 | `FileAccess.flush()` before `close()` makes a short write detectable by the step-3 re-read | **PROBE-PENDING** | The first story |
+| 7 | `user://` resolves to the app's data dir on both platforms and survives a relaunch | **PROBE-PENDING** | AC-SAV-14 |
+| 8 | `NOTIFICATION_APPLICATION_PAUSED` is delivered before an iOS background-kill | **DOCUMENTED** (the GDD's platform claim; the device AC is the proof) | AC-SAV-23 |
+| 9 | A `FileAccess` write of ≤ 2 KB fits the platform's suspension window | **DOCUMENTED** (bounded by construction) | — |
+
+`PROBE-PENDING` is an open verdict, not a pass: no story may consume items 3–7 as
+settled fact (the AC-74 pattern from ADR-0001).
+
+### Architecture diagram — one save request at a glance
+
+```
+game thread                                   worker thread
+-----------                                   -------------
+[tick] request(slot, cause)
+  │  context gate (loading? → REJECTED)
+  │  eligibility (FreezePort) ── frozen ──▶ QUEUED ─┐
+  │                                    ◀────────────┘ (first unfrozen tick)
+  ▼
+SNAPSHOTTED  (deep copy, ≤150 elements, ≤0.5 ms)
+  │  canon() → bytes + hash          (synchronous, same step)
+  ▼
+job → one-deep queue ────────────────────────▶ 1 tmp ─ 2 store/check ─ 3 verify
+                                               4 rotate .bak ─ 5 RENAME (commit)
+                                               6 re-read verify ─▶ result record
+  ┌──────────────────────────────────────────────────────────┘
+  ▼
+[tick boundary] drain → save_completed(slot, tick, bytes, hash)
+                       | save_failed(slot, code) [+ rollback at step 6]
+```
+
+### Key interfaces
+
+```gdscript
+# ---- core (pure, injected) -------------------------------------------------
+class_name PersistenceCore extends RefCounted
+
+func request_save(slot: StringName, cause: StringName) -> void      # intent only
+func tick(t: int) -> void                                            # queue + drain
+func request_load(slot: StringName) -> LoadResult                    # synchronous
+func snapshot_world() -> Dictionary                                  # bounded copy
+func canon(envelope: Dictionary) -> PackedByteArray                  # the ONE serializer
+func integrity_verdict(bytes: PackedByteArray) -> Verdict           # F-SAV-04 order
+func normalize_numbers(parsed: Variant, schema: Dictionary) -> Variant
+
+# ---- ports ----------------------------------------------------------------
+class_name FileSystemPort extends RefCounted
+func read_bytes(path: String) -> PackedByteArray
+func write_bytes(path: String, bytes: PackedByteArray) -> Error
+func rename(from: String, to: String) -> Error
+func exists(path: String) -> bool
+func remove(path: String) -> Error
+
+# ---- the result records (stable API; never display text) ------------------
+# save_completed(slot, tick, bytes, hash)
+# save_failed(slot, code)             code ∈ the six SAVE_FAILED_*
+# load_result ∈ {restored(slot), refused(slot, code), absent(slot)}
+# restore_complete(slot, tick)        # strictly before SYS-05's load_complete
+```
+
+### Implementation guidelines
+
+- **Never** serialize twice. If a debug dump is wanted, it is a separate file and
+  a separate function name.
+- **Check every `store_*` return.** An unchecked store is a silent short write.
+- **Never materialize a default before the hash.** Defaults live in one function
+  (`apply_absent_defaults`) called at restore only.
+- **Never** call `FileAccess` from the core; the port is the only door.
+- **Never** write to a `.sav` directly; the temp+rename path is exclusive
+  (V-SAV-04, a CI grep).
+- The refusal codes are a **stable API**, not display text — SYS-24 owns the
+  sentences.
+- A new namespace is a registration + a migration step + at least one reader
+  (V-SAV-08), never a silent key.
+
+## Alternatives Considered
+
+### Alternative 1: A binary format (`store_var` / `ResourceSaver`)
+
+- **Description**: write a `Dictionary` via `FileAccess.store_var` or save a
+  `Resource`.
+- **Pros**: smaller, no canonicalization question, no float-parse problem.
+- **Cons**: `store_var` is not a stable cross-version contract and has no
+  canonical form, so the hash would be a hash of an unspecified byte stream;
+  `ResourceSaver` loads arbitrary resource types, which is a code-execution
+  surface from a user-writable file.
+- **Estimated Effort**: 0.4× the chosen approach to write, ∞ to keep.
+- **Rejection Reason**: the GDD pins canonical JSON + SHA-256 (OQ-SAV-3,
+  user-approved); a binary blob cannot be *evidence* in the design's sense.
+
+### Alternative 2: `ConfigFile` / INI
+
+- **Description**: one section per namespace.
+- **Pros**: human-readable, engine-native, no JSON float model.
+- **Cons**: no arrays of dicts, no nesting depth, no canonical ordering, and no
+  integer type guarantee.
+- **Estimated Effort**: 0.5×.
+- **Rejection Reason**: the schema is nested (`world.truth_flags`, coordinate
+  pairs); INI cannot express it without inventing an encoding, which is worse
+  than JSON.
+
+### Alternative 3: Encrypt at MVP
+
+- **Description**: AES the payload so a hand-edited file is not merely refused
+  but unreadable.
+- **Pros**: raises the tampering cost; hides the schema from casual inspection.
+- **Cons**: key storage on-device is theatre without a server; a lost key is an
+  unrecoverable save; the hash already detects every edit, and the refusal path
+  already handles it honestly.
+- **Estimated Effort**: +0.6×, plus a key-management surface.
+- **Rejection Reason**: the GDD records the abstention explicitly (OQ-SAV-3); the
+  security audit may reopen it as its own decision.
+
+### Alternative 4: A thread pool / `WorkerThreadPool`
+
+- **Description**: submit writes to the engine's pool.
+- **Pros**: no thread lifecycle to own; the engine handles the join.
+- **Cons**: the pool gives no ordering or one-in-flight guarantee per slot, and
+  the close-save needs a *specific* join with a bounded timeout; a pool task
+  cannot be cancelled or awaited per-slot without building the same bookkeeping.
+- **Estimated Effort**: 0.8×.
+- **Rejection Reason**: OQ-SAV-9 (user) pins one dedicated thread with a
+  one-deep queue; the ordering guarantee is the point.
+
+### Alternative 5: Direct overwrite (no temp+rename)
+
+- **Description**: write `<slot>.sav` in place.
+- **Pros**: simplest; half the IO.
+- **Cons**: a kill mid-write leaves a torn file, and a torn file is the one state
+  the whole design forbids.
+- **Estimated Effort**: 0.3×.
+- **Rejection Reason**: R3. The rename is the commit point; there is no
+  alternative that preserves it.
+
+### Alternative 6: Store the derived targets (avoid re-derivation)
+
+- **Description**: persist border states, gate openings, materials, MetSys's
+  Dictionary.
+- **Pros**: a faster load; no derivation code at load.
+- **Cons**: two sources of truth; a derived value that disagrees with its source
+  is a contradiction the file cannot resolve, and the design's whole promise is
+  "store sources, derive targets".
+- **Estimated Effort**: −0.2× to write, +2× to debug.
+- **Rejection Reason**: TR-SAV-002 and V-SAV-03; the MetSys Dictionary is a
+  **written derived target** only.
+
+### Alternative 7: Clamp or repair on load
+
+- **Description**: an out-of-range epoch is clamped to `max_epoch`; an impossible
+  combination is "fixed".
+- **Pros**: the player always gets a playable world; no refusal surface.
+- **Cons**: a repair write is the system lying about the past — the Player
+  Fantasy's honesty clause exists to forbid exactly this.
+- **Estimated Effort**: 0.2×.
+- **Rejection Reason**: R7. The refusal path is a first-class outcome with named
+  codes.
+
+### Alternative 8: An autosave timer
+
+- **Description**: autosave every N seconds.
+- **Pros**: never lose more than N seconds; no dependency on station placement.
+- **Cons**: a new cadence knob and a new perf surface; it duplicates the station
+  save and makes the diegetic save point meaningless.
+- **Estimated Effort**: 0.3×.
+- **Rejection Reason**: OQ-SAV-4 (user) — the event set replaces it, including
+  the iOS background-kill path.
+
+### Alternative 9: Snapshot inside the freeze window, guarded by a double epoch read
+
+- **Description**: take the snapshot at `t_req` and read the epoch twice to
+  detect a mid-flip race.
+- **Pros**: no queue, no wait.
+- **Cons**: the "read twice" defence is a race detector, not a guarantee, and the
+  GDD's E4 law is a *timing* law; a snapshot at an unfrozen tick makes the
+  post-flip capture true **by construction** instead.
+- **Estimated Effort**: 1.2× and permanently fragile.
+- **Rejection Reason**: TR-SAV-013 — "no read race exists, and no 'read the epoch
+  twice' defence is needed."
+
+### Alternative 10: A backup depth of two
+
+- **Description**: `.bak` + `.bak2`.
+- **Pros**: survives two consecutive corruptions.
+- **Cons**: new naming, rotation and sweep rules; two corruptions in a row is
+  already a storage failure, not a save-format failure.
+- **Estimated Effort**: 0.4×.
+- **Rejection Reason**: the GDD lists backup depth as **not a knob**; depth-2 is
+  a future change with its own review.
+
+## Consequences
+
+### Positive
+
+- The format contract is **already proven** (34/34) and this ADR only fixes the
+  implementation shape, so the first story starts from evidence rather than from
+  a hypothesis.
+- The core/adapter split makes every law headless-testable; the twin's fixtures
+  become the story's fixtures with no rewrite.
+- One canonicalizer means the hash and the file cannot drift: they are the same
+  bytes by construction.
+- The step-6 rollback makes "the committed state is the previous state" true even
+  after the commit point, which is the strongest honest guarantee available.
+- The verification register turns the version band's uncertainty into a checklist
+  with owners instead of a lurking risk.
+
+### Negative
+
+- A dedicated thread is a lifecycle the project now owns (create at boot, join at
+  shutdown, one lost-wakeup class of bug).
+- The canonical form costs a sort on every write and every load; at ≤ 150
+  elements this is microseconds, but it is not free.
+- The normalization pass is a second walk of the payload on every load.
+- `user://` is the only location: a player who reinstalls loses the save, and
+  that is the platform contract rather than a bug.
+
+### Neutral
+
+- The twin's engine half remains a story-gated obligation; this ADR does not
+  discharge it and does not pretend to.
+- `docs/architecture/tr-registry.yaml` stays empty until `/architecture-review`
+  populates it (ADR-0001 left it empty too).
+- The refusal codes' *sentences* are SYS-24's; this ADR owns only the codes.
+- `SAVE_TELEMETRY_RATE_LIMIT_MS` and `SAVE_JOIN_TIMEOUT_MS` are dev-assert and
+  telemetry knobs, not player-facing settings.
+
+## Risks
+
+| Risk | Probability | Impact | Mitigation |
+|---|---|---|---|
+| `JSON` float model mishandled → every save refuses | Medium | High | The schema-typed normalization pass below the hash; V-SAV-09; the engine-half fixture |
+| Unchecked `store_*` → silent short write | Medium | High | The boolean discipline in §5; the step-3 re-read; AC-SAV-09's six-step fault injection |
+| Rename not atomic on a mobile filesystem | Low | High | Register item 4; the `.bak` promotion path; AC-SAV-14/23 |
+| Lost wakeup / lost job in the one-deep queue | Low | High | Register item 5; one job per slot; the completion drained on a tick |
+| Close-save blocks past the suspension window | Low | Medium | ≤ 2 KB by construction; `SAVE_JOIN_TIMEOUT_MS` 250 ms; the freeze-skip guard |
+| Absent-key defaults materialized before the hash | Medium | High | TR-SAV-026 step 4 + TR-SAV-023; the twin's `ABS-defaults` |
+| Migration chain hole ships | Low | High | V-SAV-02's contiguity boot check; the synthetic `CURRENT = 3` harness |
+| A second write path appears (an ad-hoc `FileAccess` call) | Medium | High | V-SAV-04's CI grep; AC-SAV-26; the port is the only door |
+| A repair write is introduced "to be helpful" | Medium | High | R7; the law stated once (file-level restore ≠ state repair); review discipline |
+| Registry/twin count drift (32 vs 34) | High | Low | Reported to the sync lane; the twin's own output is the authority |
+
+## Performance Implications
+
+| Metric | Before | Expected After | Budget |
+|---|---|---|---|
+| CPU — snapshot + canon | N/A (no code) | ≤ 0.5 ms dev assert per request (≤ ~150 elements) | Inside the request's own tick; not the gameplay envelope |
+| CPU — write | N/A | ≤ 2 KB of IO on the worker; the game thread touches nothing | Zero gameplay-frame cost (AC-SAV-12) |
+| CPU — load | N/A | ≤ 1 ms restore (dev assert); synchronous inside the loading context | The loading context, not a gameplay tick |
+| Memory | N/A | One snapshot dict (≤ ~150 elements) + one job + a 256-record telemetry ring | ~150 MB process ceiling; the save is not a memory consumer |
+| Load time | N/A | ≤ 2 KB read + parse + normalize; sub-millisecond | Negligible |
+| Network | N/A | None (single-player; cloud backup is the platform's) | N/A |
+
+SYS-03 **does not join the gameplay-tick envelope** — the snapshot is bounded
+constant work and the write is off-thread (the SYS-02/SYS-09/SYS-10 not-join
+precedent). SYS-03 prices **event budgets** (the snapshot assert, the restore
+assert) instead of a frame share.
+
+## Migration Plan
+
+No existing game code exists; the migration is a greenfield scaffold.
+
+1. **Pure core.** Add `src/save/core/` (`PersistenceCore`, `Canonicalizer`,
+   `SchemaGate`, `MigrationChain`, `IntegrityVerdict`, `QueueScheduler`,
+   `RefusalCodes`, `TelemetryRing`) and the GUT suite under `tests/unit/save/`
+   with the `FileSystemPort` fake. No `FileAccess`, no `Thread`.
+2. **Adapters.** Add `SaveIO` (FileAccess/DirAccess/HashingContext), `PathHelper`,
+   `SaveWriter` (the thread), `LoadReader`. Wire the boot sweep and the platform
+   notification set.
+3. **The engine twin.** Run the 34 fixtures in-engine; assert the three hashes
+   and `TYPE_INT` after normalization; attach the verdict to the first story's
+   evidence. Close register items 3–7.
+4. **The seams.** Wire `FreezePort` to SYS-29's `FreezeState`, `TruthPort` to
+   SYS-02's store, `ClockPort` to ADR-0001's `physics_tick`; wire the MetSys
+   adapter's write-only Dictionary.
+5. **The publications.** `save_completed` / `save_failed` / `load_result` /
+   `restore_complete` + the slot-list metadata; hand SYS-05 the ordering
+   obligation (`restore_complete` strictly before `load_complete`).
+6. **Device gate.** AC-SAV-14/23 on real iOS and Android hardware.
+
+**Rollback plan.** Delete `src/save/` and the boot wiring. No save data needs
+migrating: v1 is the only version ever shipped at MVP, and the sweep/refusal paths
+already tolerate an absent or unreadable file. The GDD and this ADR remain; a
+superseding ADR would replace the writer, not the laws.
+
+## Validation Criteria
+
+- [ ] The canonicalizer is single-sourced: the bytes hashed equal the bytes
+      written, and no second serializer exists (AC-SAV-08/22, the twin's
+      `CANON-order` / `RT-hash-stable`).
+- [ ] The version is inside the hash: a `99 → 1` edit refuses with
+      `REFUSE_HASH_MISMATCH`, never a gate bypass (AC-SAV-22).
+- [ ] The six-step write's fault injection names the outcome **per commit point**;
+      no torn file is ever readable (AC-SAV-09, the twin's `WRITE-*`).
+- [ ] The step-6 rollback restores the previous generation, or leaves the slot
+      `EMPTY` on a first write (AC-SAV-09/23).
+- [ ] The snapshot is taken once per request, at an eligible tick, ≤ 0.5 ms dev
+      assert, and never mid-choreography (AC-SAV-10/11, V-SAV-05).
+- [ ] The queue's bound holds: `t_write ≤ t_req + N_max`; an unreadable
+      publication fails with `SAVE_FAILED_FREEZE_UNAVAILABLE` (AC-SAV-11).
+- [ ] The normalization pass runs below the hash, preserves absence, is
+      idempotent, and refuses a non-integral number (AC-SAV-25, V-SAV-09).
+- [ ] The migration chain is contiguous, pure, and forward-only; the rename idiom
+      preserves the value; a `v0` file is refused at the gate (AC-SAV-16).
+- [ ] All eleven `REFUSE_*` and six `SAVE_FAILED_*` codes have a fixture and the
+      file's bytes are identical after the attempt (AC-SAV-17).
+- [ ] The absent-key matrix holds: three arrays `[]`, `truth_flags` `{}` with every
+      flag unset, the absent epoch refuses (AC-SAV-19).
+- [ ] The epoch guard sits upstream of SYS-10; out-of-range never reaches it; state
+      (d) is restored as-is (AC-SAV-20).
+- [ ] `restore_complete` precedes `load_complete` in every case (AC-SAV-20).
+- [ ] No persistence module calls a UI API; every path string comes from the one
+      helper; every write goes through temp+rename (AC-SAV-26).
+- [ ] The engine twin's 34 fixtures pass in-engine and reproduce the three
+      recorded hashes (AC-SAV-24's story-gated half).
+- [ ] Zero `PROBE-PENDING` items remain before the first implementation story.
+
+## GDD Requirements Addressed
+
+| GDD Document | System | Requirement | How This ADR Satisfies It |
+|---|---|---|---|
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-001 — the five `world` families verbatim | The `world` namespace is copied by key and shape; the canonicalizer sorts set-arrays only, never a pair's inner order (§3) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-002/003 — store sources, derive targets; the MetSys write-only adapter | No derived key exists in the schema; the adapter writes the Dictionary from the sources after restore, before `restore_complete` (§2, §6) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-004 — the namespace registry (v1 = `world`; `cache` registered-but-absent) | `register_namespace(owner, shape, migration_step)`; the version-aware payload allowlist; the boot's owner+reader check (§7) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-005/006 — no transients; no floats | The schema type table admits `int|String|bool|Array|Dictionary` only; the normalization pass refuses a non-integral number (§6) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-007 — SYS-03 never writes a source at runtime | The runtime write ban from `restore_complete`; `TruthPort` is read-only; the port spy (AC-SAV-07) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-008/009 — the envelope; the canonical serialization | The fixed envelope order; the five canon rules; `game_version`/`saved_at_utc` outside the hash (§3) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-010 — the atomic write's six steps | The worker's six steps with the boolean-return discipline and the step-6 rollback (§5) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-011/016 — the slot model; the platform path policy | `SLOT_IDS`; the platform event set; the one `save_path()` helper; `user://saves/` (§10) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-012/014 — the snapshot; the worker thread and the shutdown path | The synchronous bounded snapshot with bytes produced in the same step; one `Thread`, one-deep queue, the tick-boundary drain, the close-save exception (§5, §8) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-013 — the E4 freeze queue | The `FreezePort` predicate, `t_write`, coalescing, the `N_max` bound, the bounded-wait failure (§9) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-015 — the boot sweep and `.bak` promotion | The three-step sweep order, before any load (§11) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-017 — the telemetry | The 13-record set in a 256-record ring; no record carries a value; the rate limit (§12, §8) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-018/026 — the load order; the number-normalization pass | The nine steps; the pass below the hash; absence preserved; the envelope's version normalized too (§6) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-019 — `schema_version` and the migration table | `register_migration()`; contiguity boot check; one-step purity; the rename idiom; the synthetic harness (§7) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-020/021 — the refusal codes; the `.bak` fallback | The eleven codes as a stable API; the recovery-then-`OK` rule; the schema-ahead no-fallback rule (§6, §11) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-022 — the refusal path's ownership | SYS-03 publishes `load_result`; SYS-05 flows; SYS-24 renders; no UI call from the module (§6) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-023/024 — the absent-key defaults; the reconciliation handoff | Defaults at restore, after the hash; the epoch guard upstream of SYS-10; `restore_complete` before `load_complete` (§6, §8) |
+| `design/gdd/save-serialization.md` | SYS-03 | TR-SAV-025 — the load's atomicity and budget | The staging dict + one swap; synchronous ≤ 2 KB; ≤ 1 ms dev assert (§6) |
+| `design/gdd/save-serialization.md` | SYS-03 | AC-SAV-01…26 (26: 22 GUT · 2 LINT · 2 DEVICE; smoke 24) | The twin's 34 fixtures + the port spy + the static audits + the device ACs (§12, §13) |
+| `design/gdd/input-control-mapping.md` | SYS-01 | TR-INP-036 — bindings are device-local, never in a slot | No `controls` key exists in the schema; V-SAV-07's static audit (§3) |
+| `design/gdd/dual-reality-state.md` | SYS-09 | TR-DR-015 / E4 — the save-during-freeze law | The queue's predicate and `t_write`; the post-flip capture by construction (§9) |
+| `design/gdd/world-mutation-epochs.md` | SYS-10 | TR-WME-006 / F-WME-01 — the reconciliation contract | No pending-flip field; the epoch guard upstream; state (d) restored as-is; no schema bump (§6, §7) |
+| `docs/architecture/adr-0001-input-architecture.md` | ADR-0001 | §3 freeze; §5 tick boundary | The queue's window and the completion drain consume both (§5, §9) |
+
+**Counts consumed, not re-derived:** 26 TR-SAV · 4 F-SAV · 9 V-SAV · 26 ACs
+(22 GUT + 2 LINT + 2 DEVICE + 0 PLAYTEST; smoke 24) · 2 knobs · 11 OQs (9
+resolved/carried-decided, 2 carried). This ADR adds **no** TR, **no** formula and
+**no** AC — it is a decision record, not a second design.
+
+## Related
+
+- **GDD**: `design/gdd/save-serialization.md` — the laws, the formulas (F-SAV-01…04),
+  the nine V-invariants, the 26 ACs, the twin's gate record.
+- **Review log**: `design/gdd/reviews/sys03-save-serialization-review-log.md` — the
+  authoring gate trail (CD APPROVED · 21 blockers repaired · spot-check #1 FAIL →
+  #2 PASS · micro-check PASS).
+- **Twin**: `tests/save-twin/save_twin.mjs` — 34/34 PASS (2026-11-14, re-run
+  2026-11-15); the story-gated engine half is named in §12.
+- **ADR-0001**: `docs/architecture/adr-0001-input-architecture.md` — §3 (freeze),
+  §5 (tick boundary), and the probe-register pattern this ADR's §13 follows.
+- **ADR-0003**: `docs/architecture/adr-0003-audio-core.md` — consumes SYS-03's
+  `restore_complete` and the load seam (`restored_epoch`, obligation O-AUD-1).
+- **Registry**: `save_contract`, `save_roundtrip_twin`, `epoch_mutation_reconciliation`
+  (all `status: active`).
