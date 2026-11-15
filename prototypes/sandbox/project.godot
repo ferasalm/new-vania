@@ -1,0 +1,32 @@
+; PROTOTYPE - NOT FOR PRODUCTION
+; Question: does the game feel right when its LANDED numbers are played, not read?
+; Date: 2026-11-16
+
+config_version=5
+
+[application]
+
+config/name="Sandbox Suite — Three Rooms to Feel"
+run/main_scene="res://menu.tscn"
+config/features=PackedStringArray("4.7")
+
+[autoload]
+
+K="*res://consts.gd"
+
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=540
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.078, 0.071, 0.063, 1)

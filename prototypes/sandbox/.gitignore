@@ -1,0 +1,5 @@
+# prototype artifacts — never committed
+*.png
+*.log
+.godot/
+.import/
