@@ -49,7 +49,7 @@ for a Major-class fix batch.
 
 | Order | Lane | Registry entries | Index row | Requested | Status |
 |---|---|---|---|---|---|
-| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | queued |
+| 1 | SYS-28 | +3 (1 contract + 1 formula + 1 constant) | 8 exact diffs (SYS-28 row → APPROVED, design order 21, Foundation bullet, SYS-10 countersign grant, SYS-05 ratification, SYS-02/03/20 notes) | 2026-11-15 | PR #69 open (`chore/sync-shared-files`, base `Main`), awaiting merge |
 | 2 | ART-BIBLE | registry note updates (`dual_reality_palette_tables`, `seam_admission_test`) | index updates: SYS-11 (the purple qualification), SYS-02/09/13/29 rider notes; the OQ-M1 rider list | 2026-11-15 | queued |
 
 Full requests (read from the lane worktrees; `session-state` is gitignored but
@@ -72,7 +72,9 @@ merge, required-review-only; 3 threads: 2 applied, 1 rebutted).
 
 The sync lane acquires the lock in `STATE.md`, rebases on `origin/Main`
 immediately before the edit, applies serially, validates, commits, pushes,
-updates the manifest, releases the lock. Never force-push.
+opens the PR, updates the manifest — and **releases the lock only after the
+sync PR merges** (`prompts/sync-lane.md` §6; a blocked PR keeps the lock and
+the request in place for retry). Never force-push.
 
 ## 6. Blocked / waiting
 

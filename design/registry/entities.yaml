@@ -689,6 +689,23 @@ entities:
     added: 2026-11-15
     revised: ""
 
+# 2026-11-15 (narrative-presentation.md): SYS-28's GDD authored (the text-only law; the print voice; the budget; the countersign).
+  - name: narrative_beat_contract
+    status: active
+    source: design/gdd/narrative-presentation.md
+    referenced_by:
+      - design/gdd/narrative-presentation.md
+      - design/gdd/room-world-structure.md
+      - design/gdd/save-serialization.md
+      - design/gdd/health-damage.md
+    kind: published_contract
+    published_by: SYS-28 Narrative Presentation
+    consumed_by: SYS-02 (the two READ placements' text join) · SYS-05 (the Reading context + the VS session beats) · SYS-15 (the terminal print + the System Offline fiction under the print-voice law) · SYS-20 (the memory rows under the budget + no-spoiler law) · SYS-24 (the overlay/bubble/load-result render)
+    values: "NarrativeBeat {beat_id, class in {FIELD, SESSION, DEATH}, variants {default (always present), <variant_id>}, keyed_variant_id (present iff selector_key is not none; boot-resolved), selector_key in {none, sanctum_log_read} at MVP, source_ref} · the text-only law (zero writes/orders/tick work; the one world edge is SYS-02's close flag — TR-RWS-014) · the print voice (three closed registers: HOUSE / CHASSIS / COURT; uppercase headline rows / lowercase quiet lines; second person = diegetic address, never meta) · the micro-copy budget: FIELD <= 3 lines x LINE_MAX_CHARS 46 [40, 60]; DEATH <= 3 authored rows (SYS-07's option affordances excluded); SESSION <= 8 lines / <= 30 s (VS, registered-but-absent) · the variant selector derives from the restored save only (an absent key reads false; an unknown/forward-version key degrades to the default + one rate-limited telemetry record — never blank, never a block) · the no-spoiler law (the selector guarantee; the forward-reference ban; the content cross-reference ban; the permutation test) · L2 is a single epoch-invariant text (TR-WME-008 — countersigned verbatim 2026-11-15) · no text surface in the seam region (SYS-11's no-interface row honored)"
+    notes: "The display-copy mapping for SYS-03's closed refusal vocabulary (11 REFUSE_* + 6 SAVE_FAILED_* codes + the recovery line) is authored in the GDD (TR-NAR-013) — SYS-24 renders, SYS-05 owns the flow, SYS-03's code strings stay a stable API. The memory rows land at SYS-20's authoring gate; the terminal phrase and the death fiction at SYS-15's gate (the lowercase co-ruling — SYS-07's OQ#8). OQ-NAR-2 pins the JSON schema before the first narrative story."
+    added: 2026-11-15
+    revised: ""
+
 # Example (remove when first real entry is added):
 #
 # entities:
@@ -865,6 +882,26 @@ formulas:
       output is exactly three unique keys). Uniqueness boot-enforced; consumers: SYS-09's
       cross-ref lint (one-directional — refs must resolve, deltas need no tell)."
     added: 2026-11-14
+    revised: ""
+
+  - name: beat_variant_selector
+    status: active
+    source: design/gdd/narrative-presentation.md
+    referenced_by:
+      - design/gdd/narrative-presentation.md
+      - design/gdd/room-world-structure.md
+    variables:
+      - beat (the NarrativeBeat row; boot-joined to the placements)
+      - save (the restored source families; read-only)
+      - selector_key (none | sanctum_log_read — the closed MVP set)
+      - keyed_variant_id (the alternate's id; boot-resolved in variants)
+    output_range: [1, 8]
+    expression: "text(beat, save) = variants[beat][selector(beat, save)]; selector = none -> default; key k -> (save.flags[k] (absent reads false) ? beat.keyed_variant_id : default)"
+    notes: "F-NAR-01 — derived, never stored; the same save renders the same
+      bytes (V-NAR-03; the L2 epoch-invariance fixture is the consumed
+      instance). No ms operand — no rate conversion (the reading estimate is
+      review-side CI math, never runtime timing)."
+    added: 2026-11-15
     revised: ""
 
 # Example:
@@ -1497,6 +1534,23 @@ constants:
     unit: digits
     notes: "The designation's zero-padded print width (TR-CSD-011); safe range [3, 4];
       the count never wraps (999 -> 1000)."
+    added: 2026-11-15
+    revised: ""
+
+# 2026-11-15 (narrative-presentation.md): SYS-28's copy-side constants (the IP-8 budget).
+  - name: micro_copy_budget
+    status: active
+    source: design/gdd/narrative-presentation.md
+    referenced_by:
+      - design/gdd/narrative-presentation.md
+      - design/gdd/cache-stations-death.md
+    value: "LINE_MAX_CHARS 46 [40, 60] · FIELD_LINES 3 (fixed at MVP — the IP-8 rider's law; a change is a contract revision) · CPS_FLOOR 12 [10, 15] · READING_BUDGET_S 20 [15, 30] · SESSION_LINES 8 / SESSION_BUDGET_S 30 (VS-active) · NAR_TELEMETRY_RATE_LIMIT_MS 60000"
+    unit: mixed (chars / lines / s / ms)
+    notes: "F-NAR-02/03 — the copy-side budget enforced by the CI lint (a
+      violating beat fails the merge naming the beat); validated at CI and
+      re-validated on every live edit; production keeps the last good table
+      (SYS-02's validation law consumed). LINE_MAX_CHARS re-pins at the font
+      lock (OQ-NAR-3)."
     added: 2026-11-15
     revised: ""
 
