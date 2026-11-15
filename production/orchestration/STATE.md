@@ -98,6 +98,24 @@ review-queue §7 rule 4) · the counts reproduce · no entry deleted. CodeRabbit
 **5 threads, 5 applied, 0 rebutted, 0 deferred, all resolved**. Its lock release
 rides the transfer above.
 
+**Receipt (in flight, 2026-11-15)** — **PR #85** (`chore/sync-sys14` → `Main`):
+`fedde76` (the lock transfer) + `b4862a8` (the sync) + `c40a8d1` (the CodeRabbit
+batch). Registry **113 → 119** entries (+5 published contracts, +1 `contract`;
+`boss_hp_pool` 60; the request's `boss_kill_award` **folded onto `xp_boss`** —
+one fact, one entry). Index: the SYS-14 APPROVED row, design order 14, the
+dependency cell + bullet (the stale **300 HP → 60**, the D-ORCH-03 number), the
+6 neighbor notes, the A12 rider recorded. Validation: YAML parses · no duplicate
+names · no missing `source`/`referenced_by` path (`design/gdd/grief-boss-framework.md`
+is the one pending path — it lands with **PR #82**, which merges **after** this
+sync by review-queue §7 rule 4) · the counts reproduce (24 + 2 + 4 + 0 = 30) ·
+no entry deleted. CodeRabbit: **4 threads, 3 applied, 1 rebutted, 0 deferred,
+all resolved** (the `arena_hold` two-term predicate; the landed SYS-16 row
+removed from the active queue; the release decoupled from PR #82; **rebutted**:
+the tracker's status cell stays the house `**APPROVED (date — trail)**` form —
+14 of 31 rows carry it and no consumer parses the cell). **The lock stays
+`SYNC-LANE`; the release to `none` is the orchestrator's receipt for this sync's
+merge.** Landing order: **this sync first, then PR #82.**
+
 **Prior release 2026-11-15 (the riders mini sync)**: PR #80 at `fe38c4c` —
 `spitter_orb_damage` 8 → 2, `enemy_strike_contract`'s payload `power_band`
 1 → 2, the index's SYS-07 Suture 25 → 5.
