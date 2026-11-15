@@ -56,7 +56,8 @@ The active request is the "Sync request" section of
 (the lane's PR #75 is the baseline). **`spitter_orb_damage` is held at 8** until the
 coordinated SYS-13 rider lands in `enemy-ai-telegraphs.md`; the strike contract's
 payload already reads 2 and the two re-converge at the rider. The queue's §6 rows for
-SYS-16/SYS-17 flip when the orchestrator records the landing receipt.
+SYS-16/SYS-17 lose their SYS-07-REWORK blocker when the orchestrator records the landing
+receipt + this sync; SYS-17 keeps its own SYS-16 dependency (it starts after SYS-16).
 
 **Landed 2026-11-15** (removed from the active queue): **ART-BIBLE** — PR #72,
 `bc8c6be` (head `8eb621d`; 0 CodeRabbit threads). Registry notes on
