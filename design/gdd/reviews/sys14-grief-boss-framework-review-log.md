@@ -73,3 +73,19 @@
 **Planned counts** (stated now, re-verified after drafting — the seats re-count): 24 TR-GBF · 6 F-GBF · 11 V-GBF · 26 ACs · 9 OQs. The gate partition is printed in the AC section and must reproduce exactly.
 
 **Authoring note (2026-11-15, pre-gate)**: the drafting self-audit found a coverage gap — TR-GBF-022's handshake fixtures and TR-GBF-023's seam proof had no owning AC, and the Ratification table carried two stale AC references (both pointed at the silhouette AC). Repairs applied before the gates: **AC-GBF-21 inserted** (the handshake + the seam; TR-GBF-022/023), the device/lock ACs renumbered (21→22, 22→23, 23–26→24–27), the two Ratification refs corrected (the seal → AC-GBF-17; the revive → AC-GBF-21). **Final counts: 24 TR-GBF · 6 F-GBF · 11 V-GBF · 27 ACs (smoke 21 + device 2 + lock 4 + VS 0) · 9 OQs.**
+
+## 3. Gate trail
+
+### 3.1 CD gate — round 1 (GLM, 2026-11-15)
+
+**Verdict: CONCERNS — 3 blockers (all accepted), 5 recommendations (all applied as one-liners).**
+
+| # | Blocker | Disposition |
+|---|---|---|
+| CD-B1 | The post-victory basin was a soft-lock: the drop seal + the empty RESOLVED state left every winning player sealed with no exit (the death paths unreachable; V-RWS-07 forbade a mutation). | **Accepted — the scripted exit arc authored**: `ARENA_EXIT_MS` 700 [400, 1200] (a declared scripted move in SYS-02's arc-machinery class, the door arc's shape in reverse — no prompt, no ack, the goodbye's completion is the ack; the re-anchor at RM-05's anchor behind the door frame; the camera's atomic swap). No collision change, no mutation set, no new mechanism. TR-GBF-017/021 + the States table's RESOLVED row + the knob table + AC-GBF-20 + the carried obligations reconciled. |
+| CD-B2 | TR-GBF-019 promised the empty-basin post-flip return while TR-GBF-022's no-persistence law makes it unreachable — a silent assumption of the batched VS revision. | **Accepted — re-scoped**: the post-flip punch is now the fight re-applied (the denial repeats — she is still there, hands clasped, the scuff still hers); the empty-basin payoff explicitly conditioned on the VS-gated wall-jump return + the batched save family (OQ-GBF-4's estate), never promised at MVP. |
+| CD-B3 | The clasped thrust had no initiating trigger — the lose cause, the punish latch and the ring jab were unreachable in live play (V-GBF-04 passed on dead data). | **Accepted — the four-cycle authored**: the in-reach selection is `count mod 4` → [sweep, lift, sweep, thrust]; the sweep holds every even index (the crack's fuel preserved); the thrust is reachable at index 3 mod 4. TR-GBF-010's row + phase gates + AC-GBF-09's fixture updated; F-GBF-04's route window unchanged (the sweep cadence is intact). |
+
+Recommendations applied: R1 the boss codes' contact named (a dedicated boss session — the AC-63 bar cannot run inside the Gate-1 contacts) · R2 the air attack's boss-side scope recorded (no air clash at MVP; the matrix's trio is the grounded answer-space) · R3 the ring return's launch rule authored (the straight line to the published position; no corridor tolerance) · R4 TR-GBF-002's schema-scope clarified (the strike-side absence; the projectile's damage is SYS-13's schema data) · R5 the XP re-grant cycle noted in OQ-9 (the economy rider at the QA-plan sync).
+
+**Re-run verdict: see 3.1a.**
