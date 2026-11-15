@@ -14,8 +14,9 @@ that drafts the document.** The engine-probe register in §12 is an **implementa
 gate**, not an ADR-status gate. Carried obligations (not status gates): the six
 SYS-16 riders (O-HD-1…6), the DEF retirement (O-HD-2), the AC-HD-13 DEFLECT fixture
 (CR-HD-01), the energy/mana round-trip (O-HD-7), the superseded four-system
-envelope (O-HD-8), the body-state persistence contradiction (O-HD-9) and the
-tier/strike ordering coverage gap (O-HD-10). If a later
+envelope (O-HD-8), the body-state persistence contradiction (O-HD-9), the
+tier/strike ordering coverage gap (O-HD-10) and the System Offline publisher's split
+(O-HD-11); plus **CR-HD-02** (the late-event sort's one-clause rider). If a later
 architecture review finds a contradiction with a newer Accepted ADR, this ADR
 reverts to `Proposed` and is superseded explicitly.
 
@@ -31,8 +32,15 @@ D-ORCH-03**, the IP-17 low-stat baseline rework), the landed SYS-16 GDD
 (`design/gdd/progression.md`, APPROVED 2026-11-15 — the source of the six riders),
 the SYS-15 GDD's body row (`design/gdd/cache-stations-death.md`, TR-CSD-013), the
 registry entries `damage_event`, `system_offline_contract`, `progression_namespace`,
-`six_system_perf_envelope`, and the Godot 4.7.2 engine-reference snapshots
-(`VERSION.md`, `breaking-changes.md`).
+`six_system_perf_envelope` — and the entries this ADR's decisions **touch** but do not
+write: `damage_ladder_mvp` (the 5×4 table), `atk1_damage`/`atk2_damage`/
+`crouch_attack_damage`/`air_attack_damage` (row 0's four knobs), `atk_per_point` 8,
+`player_atk_base` 100, `level_cap_mvp` 5, `chassis_module` (the closed payload set),
+`gear_aggregate` (the equip-change revision and the `hp_max` delta),
+`grief_boss_rig_contract` (the floor release) and `designation_counter` (SYS-15's
+increment points) — and the Godot 4.7.2 engine-reference snapshots
+(`VERSION.md`, `breaking-changes.md`). **No registry entry and no index row is edited
+by this lane**: ADRs are not registry entities, and §13's riders are the route.
 
 **Cross-contract findings, recorded not edited** (each is a rider or a carried
 obligation, never a silent change to frozen text):
@@ -91,7 +99,8 @@ event past the 2-tick bound); **where the per-event cap is applied exactly once*
 (the apply boundary, with `DamageResult.dealt` pre-cap and `applied` post-cap); and
 **who owns the damage-number pool** (SYS-07 owns the 32-slot record ring and the
 zero-frame publication; SYS-24/SYS-29 own the label nodes and lease slots from the
-ring). The shape is one pure `DamageResolver` over four injected ports, one
+ring). The shape is one pure `DamageResolver` over two injected ports (`HealthPort`,
+`RngPort`), one
 `HealthCore` reducer that is the pool's only writer, one 5×4 ladder validated as a
 unit with its knobs, and one ordered six-stage pipeline with no branch ambiguity.
 
@@ -316,7 +325,7 @@ var raw_damage: int          # the producer's, already including the counter's 1
 var kind: int                # NORMAL | COUNTER | DEFLECT | ENEMY_STRIKE | ENVIRONMENT
 var arc: int                 # ATK1 | ATK2 | CROUCH | AIR | ABILITY | NONE
 var contact_tick: int        # a LOGIC tick (TR-INP-076)
-var attack: int              # the ATTACKER's StatBlock.attack (100-132 at MVP)
+var attack: int              # the ATTACKER's StatBlock.attack (the PLAYER's 100-132 at MVP)
 var damage_bonus: int        # the ATTACKER's StatBlock.damage_bonus (0 at no gear)
 
 class_name DefenderSnapshot extends RefCounted
@@ -359,15 +368,16 @@ not.
 
 The order is TR-HD-005's and V-HD-15's: **raw → ladder/percent (dealt) or F-HD-03
 (taken) → module → crit → floor → cap**. The resolver is one function with one entry
-and eight branches; every branch produces the same six-stage walk, and no branch
-re-enters a stage.
+and **seven content branches plus an else-reject** (the registry's `damage_event` note
+calls the content set "seven-branch"; the else is the eighth arm and carries no law);
+every branch produces the same six-stage walk, and no branch re-enters a stage.
 
 | # | Stage | What it does | Branches that reach it | Forbidden here |
 |---|---|---|---|---|
 | 1 | **raw** | the producer's `raw_damage`, already including the counter's 1.5× | all | any SYS-07 re-application of `COUNTER_CLASH_MULT` |
 | 2 | **ladder / percent / taken** | `NORMAL`+arc → `LADDER[step][arc]`; `COUNTER`/`NORMAL`+`ABILITY` → `max(1, ceil(raw × attack ÷ 100))`; `ENEMY_STRIKE`/`ENVIRONMENT` → F-HD-03's `taken`; `DEFLECT` → the identity | 2–7 | a percent curve for `NORMAL`+arc; a DEF read on `ENVIRONMENT` |
 | 3 | **module** | `dealt = max(1, dealt + ctx.damage_bonus)` — **branch 2 only** | 2 | applying `damage_bonus` to `COUNTER`, `DEFLECT`, `ABILITY`, `ENEMY_STRIKE` or `ENVIRONMENT` |
-| 4 | **crit** | `dealt = floor(dealt × CRIT_MULT)` — **VS, `NORMAL` only** | 2 (VS) | a crit on `COUNTER` (no 2.25×), on `ABILITY`, or on the taken side |
+| 4 | **crit** | `dealt = floor(dealt × CRIT_MULT)` — **VS, `kind = NORMAL` only** | 2 **and 4** (VS) | a crit on `COUNTER` (no 2.25×), on `DEFLECT`, on `ENEMY_STRIKE`, or on the taken side |
 | 5 | **floor** | `dealt = 0` if `raw = 0`, else `max(1, dealt)` | all | a floor on a zero-raw event (the zero-exempt rule) |
 | 6 | **cap** | `applied = min(dealt, profile.damage_cap_per_event)`, then the subtraction | all | a cap as a **gate** (it is a clamp: TR-HD-017 term 10) |
 
@@ -383,7 +393,10 @@ validation's rule (V-HD), not this one.
    `raw = floor(ATK.damage × 1.5)`; SYS-07 **must not** re-apply the multiplier.
 4. `NORMAL ∧ arc = ABILITY` → the same percent law on the event's raw (D-3's Stinger
    cell). `ABILITY` is **not** a ladder column; the ladder's four columns are
-   `ATK1/ATK2/CROUCH/AIR`.
+   `ATK1/ATK2/CROUCH/AIR`. It **is** a `NORMAL`, so at VS it takes the crit stage like
+   any other `NORMAL` — TR-HD-005's "dealt, `kind = NORMAL` only" is the crit's scope,
+   and branch 4's kind is `NORMAL`; a rule that excluded `ABILITY` would be a second
+   law the GDD does not state.
 5. `DEFLECT` → **the identity, `dealt = raw_damage`**, whichever side deflected it
    (TR-CMB-015: the deflected projectile keeps its **original** damage). For a
    player target the value then passes F-HD-03's `taken` at stage 2's arithmetic
@@ -511,7 +524,8 @@ non-total rule makes `hp_before` (and therefore `overkill`, and therefore SYS-29
 sting) depend on delivery order. Stated as the law: *the batch has one total order;
 a late event is ordered by its stamp, not by its lateness.* A late event that reaches
 its sorted position when the target is already `DEAD` is rejected and never rewrites
-the recorded cause.
+the recorded cause. **Because this reads TR-HD-020's sentence rather than restating
+it, it is filed as CR-HD-02** — a one-clause rider, not a silent reading.
 
 The **heal/use phase resolves after the damage phase in the same tick**: a heal whose
 target reached `DEAD` is refused and its charge is preserved. The reducer exposes
@@ -520,9 +534,10 @@ target reached `DEAD` is refused and its charge is preserved. The reducer expose
 **§4c · The non-Gameplay context.** The damage phase is a **Gameplay** service: it
 does not run in the loading, menu or System Offline contexts, because no producer
 publishes a contact there. Pending damage events **drop at gate entry** (TR-HD-027) —
-the gate's entry is ADR-0001's phase 3, and the drop is the same `clear_intents_at_entry`
-shape applied to SYS-07's event ring, which is why the ring is cleared *before* the
-freeze/unfreeze application in a context transition rather than after it.
+the gate's entry is ADR-0001's **phase 3**, and the drop is the same
+`clear_intents_at_entry` shape applied to SYS-07's event ring: the ring is cleared
+**at phase 3, in the same phase ADR-0001 clears the intents**, not before phase 0 and
+not after the gate has opened.
 
 ### 5 · The `StatBlock`, the revision discipline, and identity at default
 
@@ -804,10 +819,16 @@ with a different name:
 | Progression source | the **save** (`progression` namespace, SYS-16's carry) | the **live carry** — a level earned after the last save is never rolled back (TR-CSD-013's no-XP-loss law, the read-gated window) |
 | i-frames | **none at MVP** — the cache is a safe context; an in-place respawn would need a grant (VS, SYS-07 OQ#16) | the revive's 1000 ms window is the only grant |
 
-Both consume ADR-0002's ordering (`restore_complete` strictly before
-`load_complete`) and both end at a full pool. **Neither reads an HP field**, because
-none exists: the body is reconstructed from the station's law, not restored from a
-file.
+Both consume ADR-0002's ordering where a save is involved — **regime 1 strictly**
+(`restore_complete` then `load_complete`); regime 2 is an in-session gate/load with no
+`restore_complete` at all, so it consumes only `load_complete`. **ADR-0002's acceptance
+therefore precedes any story that implements regime 1**, and this ADR declares the
+dependency rather than assuming it. Both end at a full pool. **Neither reads an HP
+field**, because none exists: the body is reconstructed from the station's law, not
+restored from a file. Regime 1's `quick_charges = CACHE_REFILL` is TR-HD-032's
+"reconstructs at the station" read together with TR-CSD-007's activation restore — the
+load applies the cache restore's values, which is why the slot is full without a
+stored charge count.
 
 **§9b · The body's persistence, quoted rather than paraphrased.** SYS-15's TR-CSD-013
 body clause reads, verbatim: "**the body** (store-absent: SYS-16/17's session-only
@@ -837,6 +858,56 @@ infer them:
    carried module. That is the landed MVP behaviour of TR-CSD-013 + TR-CSD-017, and
    this ADR does not paper over it by inventing a namespace — a new namespace is
    SYS-03's + SYS-16's decision and a schema bump, not an ADR's.
+
+**§9c · The pools (TR-HD-008), which the reducer does own.** The pools are **inert**
+at MVP, not absent: `HealthCore` holds `energy`/`mana` as reducer state, ticks them on
+`logic_tick`, and publishes nothing.
+
+```
+energy_max = ENERGY_BASE + ENERGY_PER_LEVEL * (level - 1)      # 50 at L1, 90 at L5
+mana_max   = MANA_BASE   + MANA_PER_LEVEL   * (level - 1)      # 30 at L1, 50 at L5
+# ENERGY_REGEN_PER_S = 5; the integer accumulator makes 60 logic ticks == +5 exactly
+regen_acc += ENERGY_REGEN_PER_S
+while regen_acc >= TPS:  energy = mini(energy + 1, energy_max); regen_acc -= TPS
+```
+
+- **The regen runs on `logic_tick`**, so a freeze holds it by construction (the clock
+  does not advance) — AC-HD-08's "a 30-tick freeze holds it" is the clock law, not a
+  special case.
+- **The efficiency term** (`max(70, 100 − 2×(L−1))%`) is carried as a stored value and
+  has **no consumer at MVP**; it is written only by the level seam.
+- **No publication.** `HealthRead` deliberately omits both pools (TR-HD-008's "the HUD
+  read contains no energy/mana field at MVP"); the GUT half reads them through a
+  **test-only accessor** (`pool_state()`, not a publication), which is what makes
+  AC-HD-08's two regen fixtures runnable without adding a HUD field.
+- **Mana has regen 0** and no consumer; it is initialised at `mana_max` and never
+  moves at MVP.
+- **"Saved at defaults"** is O-HD-7's: no namespace carries either pool, so a load
+  starts at the max — which *is* the default, and is why the clause is currently
+  unsatisfiable rather than violated.
+
+**§9d · The `DeathRecord` archive (TR-HD-024/025).** Both reset paths say "archives
+the `DeathRecord`", and F-HD-08's list does not contain it — so the ADR names the
+home rather than leaving each implementer to invent one. The archive is **reducer
+state**: a bounded ring of **8** `DeathRecord`s (`DEATH_ARCHIVE_DEPTH`), appended by
+the **edge** (the same write that publishes it), and **surviving both resets** — that
+is what "archive" means and it is why the reset clears the latch and the ledger but
+not this ring. `read_death_archive()` is the read; SYS-15's cause row and counter and
+SYS-29's sting are its consumers. The ring's depth is bounded because a life's deaths
+are bounded and the ring is a diagnostic, not a ledger — the designation *counter* is
+SYS-15's and is not derived from this ring.
+
+**§9e · The options contract's split (TR-HD-023, the registry's reading).** The
+active registry entry `system_offline_contract` registers **SYS-15** as the publisher
+of the three rows (SYSTEM OFFLINE / *you are destroyed* / the cause row) and the three
+options **verbatim**, with **SYS-07 as a verbatim consumer** — added 2026-11-15 at
+SYS-15's authoring. SYS-07's GDD says "SYS-07 publishes the options contract". The
+ADR takes the **registered** split, which is the later landed contract, and records
+the divergence as **O-HD-11**: SYS-15 publishes the rows and the three option
+surfaces; **SYS-07 publishes the availability predicate** it alone can know —
+`DeathOptions {revive_available: bool}` (the module is carried), which is what
+"greys, never hides" needs, and the `DeathRecord` that fills the cause row. Nothing
+is rendered here and nothing duplicates a registered publisher.
 
 **The persistence boundary, stated once.** What persists and what does not is a
 landed-contract fact, not a choice this ADR makes:
@@ -928,6 +999,9 @@ func release_hp_floor(target_id: int) -> void                    # SYS-14's phas
 func draw_restore_module() -> bool                              # DEAD only; opens SYS-07's window
 func reconstruct_complete() -> void
 func read() -> HealthRead
+func read_death_archive() -> Array[DeathRecord]                 # §9d; survives both resets
+func pool_state() -> Vector2i                                   # TEST-ONLY (§9c); never published
+func options() -> DeathOptions                                  # §9e; revive_available
 
 # ---- the ports (the only doors) ---------------------------------------------
 class_name HealthPort extends RefCounted
@@ -966,7 +1040,7 @@ and an **Owner**, so a probe can be closed or failed rather than narrated.
 |---|---|---|---|---|---|
 | 1 | GDScript's `/` on two ints yields an int and **truncates toward zero** (not floor) | **DOCUMENTED** (language reference) | — | — | — |
 | 2 | `floori(float)` exists and floors correctly, including `floori(-0.5) = -1` | **DOCUMENTED** (language reference) | — | — | — |
-| 3 | Four `Callable` ports per event stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the four port references read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
+| 3 | The **four port calls per event** (`profile`, `invulnerable`, `anchor`, `publish`, all on `HealthPort`) stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the port reference read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
 | 4 | A preallocated typed `Array` of `RefCounted` records + an overwrite-oldest head performs **zero allocation** across 10,000 ticks | **PROBE-PENDING** | the soak with `Performance.MONITOR_OBJECT_COUNT`/`MEMORY_STATIC` sampled at the warm-up and at the end: net object delta 0, net resource delta 0, heap growth ≤ 256 KB, churn ≤ 16 KB / 1,000 ticks | lead-programmer | The first story; AC-HD-40 |
 | 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts, **keyed through `bind_phase`** | **PROBE-PENDING** | the same `(bound logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture); **and a late event's key uses the bound tick, not its `contact_tick`** (the two differ by 1–2 ticks, and the roll must not change with the event's lateness) | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
 | 6 | `HealthCore.damage_phase()` can assert "the freeze onset has not been applied for `t`" from the publication SYS-29 actually offers | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the damage phase for `T` observes the onset as *pending*, not *applied*, 100/100 runs; the same assertion fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer | §4's dev assert; AC-HD-30 |
@@ -1129,7 +1203,7 @@ than trusting the operator.
 
 ### Negative
 
-- Four injected ports on a 0.25 ms p99.9 budget is real overhead; register item 3
+- Four port **calls** per event (two ports) on a 0.25 ms p99.9 budget is real overhead; register item 3
   prices it and §12's mitigation (a per-phase port cache) is the fallback.
 - The resolver/reducer split costs one extra record (`DamageResult`) per event and one
   call boundary; at a swarm's 32 events/tick this is measurable but bounded.
@@ -1174,7 +1248,7 @@ than trusting the operator.
 |---|---|---|---|
 | CPU — damage phase | N/A (no code) | the resolver's six stages + the gate, per event; the rings preallocated | **p99.9 ≤ 0.25 ms / max ≤ 0.75 ms** (SYS-07's allocation in the seven-system envelope) |
 | CPU — heal phase | N/A | one clamp and one publication per use | inside the same allocation |
-| Memory | N/A | entity table 64 · event ring 32 · ledger 256 · number ring 32 · telemetry ring 600 · one `HealthRead`/`StatRevision` | ~150 MB process ceiling; SYS-07 is not a memory consumer |
+| Memory | N/A | entity table 64 · event ring 32 · ledger 256 · number ring 32 · telemetry ring 600 · death archive 8 · one `HealthRead`/`StatRevision` | ~150 MB process ceiling; SYS-07 is not a memory consumer |
 | Allocation | N/A | **zero net** over a 10,000-tick soak (600-tick warm-up, counters reset); heap growth ≤ 256 KB; churn ≤ 16 KB / 1,000 ticks | AC-HD-40's bars |
 | Load time | N/A | no health field is read; the reconstruct is a reset, not a restore | negligible |
 | Network | N/A | None (single-player) | N/A |
@@ -1214,7 +1288,7 @@ laws.
 
 ## Validation Criteria
 
-**Two gates, two lists.** The **decision-conformance** list (19 criteria) states what
+**Two gates, two lists.** The **decision-conformance** list (20 criteria) states what
 this decision must be able to prove; several are verified by fixtures that land with
 the implementation (`src/health/` does not exist yet), so they are the criteria the
 *decision* fixes. The **story gate** (3 criteria) closes at the first implementation
@@ -1286,7 +1360,7 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 - [ ] **The RNG is inert at MVP**: zero rolls, `FixedRngPort` 0.5, and the VS mixer is
       stateless, explicit, platform-stable and keyed through `bind_phase` (AC-HD-39's
       two-key clause, runnable at MVP because the mixer ships inert; register item 5).
-- [ ] **No hot-path allocation**: the five rings are preallocated, the soak shows zero
+- [ ] **No hot-path allocation**: the four rings plus the entity table are preallocated, the soak shows zero
       net object/resource delta, ≤ 256 KB heap growth and ≤ 16 KB churn per 1,000
       ticks; the number ring is **32** and bounded (AC-HD-40's preallocation list,
       which is where the ring's size is asserted — AC-HD-38 does not assert it).
@@ -1306,7 +1380,12 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
       in-session reconstruct both end at `hp_max` with the slot at `CACHE_REFILL`,
       differ on the progression source (the save vs the live carry — a level earned
       after the last save is never rolled back), and both reset `hp_floor` to the
-      profile's base (§9, F-HD-08; AC-HD-26/34).
+      profile's base (§9, F-HD-08; AC-HD-26/34). **The `DeathRecord` archive survives
+      both resets** and the designation counter is not derived from it (§9d).
+- [ ] **The System Offline split holds**: SYS-15's three rows and three options are
+      consumed verbatim (the registered publisher), and SYS-07 publishes only
+      `DeathOptions {revive_available}` plus the `DeathRecord` — with the revive
+      option greyed and unselectable at 0 modules (§9e, AC-HD-25).
 
 **Story gate (the first SYS-07 implementation story).**
 
@@ -1328,10 +1407,10 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-002 — the five-value consumer enum and the `ENV` sentinel | The gate's term 11 and the source-domain law; `target ≠ ENV` (§8) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-003 — the strike table (1/2/4) | `enemy_strike_damage(power)`, SYS-07's knob, a boot failure if absent (§8) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-004 — the integer law | Integer-only schemas; a non-integer is rejected with telemetry (§3, §5) |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-005 — the damage order | §3's six-stage table, the eight-branch dispatch, and the "once each" rule |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-005 — the damage order | §3's six-stage table, the seven content branches plus the else-reject, and the "once each" rule |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-006 — the `StatBlock` and identity at default | §5's schema, the revision discipline, the boot assertion, the DEF retirement note |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-007 — MVP progression (1–5, points-only) | §5/§9: the points are SYS-16's `atk_points`/`hp_points`; the reducer applies the pool delta |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-008 — the inert pools | §9: no consumer, no HUD field, no namespace (O-HD-7) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-008 — the inert pools | §9c: the two max formulas, the `logic_tick` regen accumulator, the efficiency value, the test-only accessor, mana's regen 0; no publication (O-HD-7 for the save clause) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-009 — the defeat edge and `soul_class` | §8b's mirrored latch and `DefeatEvent`, one per entity per life |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-010 — the player pool and the only writer | `HealthCore` is the sole writer; the static assertion is AC-HD-10; the revision guard is §5 (§5, §8) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-011 — the enemy tiers | Consumed as profile `hp_max` values; the TTK ruler is F-HD-10's, unchanged |
@@ -1346,9 +1425,9 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-020 — same-tick ordering; heals after damage | §4b's total order and the distinct `heal_phase` entry |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-021 — boss exceptions | §8a's hooks: cap, floor, immune kinds, `death_scripted` |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-022 — the health state machine | §8's four states and the total transition table |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-023 — no auto-respawn; the options contract | `DEAD` persists; the options are SYS-07's, the screen SYS-15's (§9) |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-024 — the reconstruct reset | §9's regime 2 and F-HD-08's reset list |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-025 — the restore module | The revive's clamp and the 1000 ms grant through the i-frame lock (§9) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-023 — no auto-respawn; the options contract | §9e: SYS-15 publishes the rows and options (registered); SYS-07 publishes `DeathOptions {revive_available}` and the `DeathRecord` (O-HD-11) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-024 — the reconstruct reset | §9's regime 2 and F-HD-08's reset list, **plus §9d's archive** (the record survives the reset) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-025 — the restore module | §8b's revive window + §9's revive row; the record is archived by §9d |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-026/027 — the non-ack gate request; terminality | The edge queues through ADR-0001 §6; no damage on the transition frame (§4) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-028 — freeze; the damage phase's position | §4's pin: the entry point, the position, the clock, the freeze onset, the assert |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-029 — the heal API | §8b's heal law: clamp, refuse at full, refuse a `DEAD` target, publish `HealEdge` |
@@ -1360,11 +1439,11 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-035 — the read contract | §11's records, read-only, no writer field |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-036 — the damage-number render law | §10's ring, the zero-frame law, the palette, the off-switch |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-037 — testability | §2/§11's split, the four ports, the two fakes, the stateless RNG |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-038 — performance and allocation | §Performance: the five rings, the soak's three bars, the device gate |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-038 — performance and allocation | §Performance: the four rings + the entity table + §9d's 8-slot archive, the soak's three bars, the device gate |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-039 — traceability | Consumed unchanged: 39 TR / 15 F / 50 AC / 15 V / 68 edge bullets / 20 OQ / 33 knobs |
 | `design/gdd/combat.md` | SYS-08 | TR-CMB-025 — the `DamageEvent` boundary (six fields, `arc`) | Consumed verbatim; `arc` is the ladder's column selector, `ABILITY` is not a column (§3) |
 | `design/gdd/combat.md` | SYS-08 | TR-CMB-015 — a deflected projectile keeps its original damage | §3 branch 5's identity; the source of **CR-HD-01** |
-| `design/gdd/movement.md` | SYS-06 | the 1200 ms arc, `DISABLED`, `body_busy` | Consumed as the death edge's body consequence; no movement mechanism here |
+| `design/gdd/movement.md` | SYS-06 | the 1200 ms arc, `DISABLED`, `body_busy`, the knockback distances | Consumed as the death edge's body consequence and the revive window's shape; **no movement mechanism is decided here**, so this row cites the GDD's laws rather than a TR-MOV ID |
 | `design/gdd/input-control-mapping.md` | SYS-01 | TR-INP-029/068/075/076 — body availability, the chip, custody, stamping | The chip arrives as a pulled intent; `contact_tick` is the stamp; the age bound is measured on it (§4a) |
 | `design/gdd/progression.md` | SYS-16 | TR-PRG-007/008/009/010 — the budget, the two seams, the dealt extension | §3d's one function; §5's `hp_max` seam and the gear-delta asymmetry |
 | `design/gdd/progression.md` | SYS-16 | TR-PRG-012/016 — the closed payload set; DEF retired | §5's `defense` comment; **O-HD-2** |
@@ -1415,6 +1494,8 @@ second design.
 | **O-HD-8** | **AC-HD-41's "four-system arithmetic envelope" is superseded** by the registry's seven-system 2.45/6.55; SYS-07's own 0.25/0.75 allocation is unchanged. | qa-lead (the QA-plan sync) | nothing: the allocation this ADR prices is unchanged |
 | **O-HD-9** | **The body's persistence contradiction.** SYS-07's save field list names "charges, modules, quickslot"; SYS-03 declares SYS-07 a runtime non-dependency and registers no namespace; SYS-15's TR-CSD-013 body row says the body is store-absent ("there is no file carrying it"). At MVP the landed behaviour is session-only, so a save→quit→load loses a carried restore module. **Two candidate resolutions, for the user batch**: (i) declare the body session-only at MVP and re-scope SYS-07's field list (a one-line rider, no schema bump); or (ii) register a `body` namespace at a future v3→v4 bump (SYS-03's mechanism, SYS-16's writer discipline) — which the carried module's one-per-station faucet would then need to reconcile with TR-CSD-017. | SYS-03 + SYS-15 + SYS-16 (the user batches the choice) | nothing in this ADR: §9b states the landed behaviour and regime 1's `restore_modules = 0` explicitly |
 | **O-HD-10** | **Two V-invariant coverage gaps** — V-HD-06/07's ordering **resolution** (the tier ladder `T1<T2<T3<boss` and the strike ladder `P1<P2<P3`, with their clamp/raise rules) and V-HD-02's `heal > 0` / V-HD-10's `≤ 2` knob clamp have **no MVP fixture**: the GDD's AC set never asserts them. The ADR **implements the two ordering checks and the age-bound clamp in §5's fail-closed list** and records the fixture gap. | qa-lead (the SYS-07 QA plan) | the first SYS-07 story's evidence pack, which cannot claim full V coverage without them |
+| **O-HD-11** | **The System Offline options contract's publisher.** SYS-07's GDD says "SYS-07 publishes the options contract"; the active registry entry `system_offline_contract` (added 2026-11-15 at SYS-15's authoring) registers **SYS-15** as the publisher of the three rows and the three options verbatim, with SYS-07 a verbatim consumer. The ADR takes the registered split (§9e) and this rider reconciles SYS-07's sentence. | SYS-07's next doc touch (with SYS-15's, if it prefers the other split) | nothing: §9e's split is implementable either way, and the availability predicate is SYS-07's under both readings |
+| **CR-HD-02** | **TR-HD-020's late-event clause.** "A late event whose `contact_tick` precedes the phase in which it arrives is applied **in arrival order** if the target is `ALIVE`" gains "…which is its **sorted** position, since a late event's `publication_index` is its arrival index" — one clause, so the total order in §4b and the GDD's sentence are the same law. | the user (batched) | nothing in this ADR: §4b's sort is the decision and this clause makes the GDD agree with it. A story that writes AC-HD-22's late-event fixture against the unamended wording would assert delivery order |
 
 ## Related
 
@@ -1435,8 +1516,9 @@ second design.
   ("the store never carries it"), the module faucet.
 - **Registry**: `damage_event`, `system_offline_contract`, `progression_namespace`,
   `six_system_perf_envelope` (all `status: active`).
-- **Carried**: **CR-HD-01** (AC-HD-13's DEFLECT fixture value — §13); **O-HD-1…6**
-  (the six SYS-16 riders, SYS-07's next doc touch); **O-HD-7** (the energy/mana
-  round-trip's missing namespace); **O-HD-8** (the superseded four-system envelope);
-  **O-HD-9** (the body-state persistence contradiction and its two candidate
-  resolutions); **O-HD-10** (the two V-invariant coverage gaps).
+- **Carried**: **CR-HD-01** (AC-HD-13's DEFLECT fixture value — §13); **CR-HD-02**
+  (TR-HD-020's late-event clause); **O-HD-1…6** (the six SYS-16 riders, SYS-07's next
+  doc touch); **O-HD-7** (the energy/mana round-trip's missing namespace); **O-HD-8**
+  (the superseded four-system envelope); **O-HD-9** (the body-state persistence
+  contradiction and its two candidate resolutions); **O-HD-10** (the two V-invariant
+  coverage gaps); **O-HD-11** (the System Offline options publisher).
