@@ -6,7 +6,7 @@ Version: 1.0.0
 Model: cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash
 Hash: fe36c9a4acd2
 Source: production/orchestration/lane-kickoff-master.md
-Generated: 2026-11-14
+Generated: 2026-11-15
 -->
 
 ## Shared contract — every lane
