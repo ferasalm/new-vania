@@ -55,19 +55,21 @@ inside their own worktree.
 - **CodeRabbit**: the lane passes are done — PR #59 triaged + merged (8+4
   threads dispositioned), PR #58's confirm resolved; PR #67's pass clean. NEW
   passes (the sync PRs) queue behind recorded dispositions.
-- **Shared-file writer**: **active — SYS-28 (order 1)**: the lock is held (§4);
-  branch `chore/sync-shared-files` (from `origin/Main` `ce46fac`, merged up to
-  `4629bb8`), the two shared files applied + validated, **PR #69** open on
-  `Main` awaiting merge. ART-BIBLE (order 2) waits for the release. Prior: the
-  SYS-15 sync landed (PR #63, `1e9e524`) and the lock released.
+- **Shared-file writer**: **idle; the lock is free** — the SYS-28 sync landed
+  (PR #69, `a5a1f81`; 4 threads applied + resolved) and the lock released (§4).
+  The queue's next request: ART-BIBLE (order 2); the sync lane re-acquires the
+  lock for it. Prior: the SYS-15 sync landed (PR #63, `1e9e524`) and the lock
+  released.
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **acquired 2026-11-15** for the SYS-28 sync
-(the queue's order 1). Branch `chore/sync-shared-files`, branched from
-`origin/Main` `ce46fac`; **PR #69** open on `Main`. The lock is released only
-after the sync PR merges (the #49 pattern); ART-BIBLE (order 2) waits.
+`shared_file_lock: none` — **released 2026-11-15** after the SYS-28 sync
+landed: PR #69 merged at `a5a1f81` (head `eb85da4`; 4 CodeRabbit threads, all
+applied + resolved). Registry 77 → 80 entries (`narrative_beat_contract`,
+`beat_variant_selector`, `micro_copy_budget`); the index gained the SYS-28
+APPROVED row, design order 21 and the 10 request diffs. ART-BIBLE (order 2)
+re-acquires the lock when its sync run launches.
 
 **Prior release 2026-11-15**: after the SYS-15 sync landed — PR #63 merged at
 `1e9e524` (head `5f67ee0`; 1 CodeRabbit thread applied — the
