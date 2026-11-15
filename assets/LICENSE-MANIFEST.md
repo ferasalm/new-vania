@@ -77,7 +77,7 @@ a human verification with its date is on record (2026-11-16), and a license file
 a provenance stub is staged at `assets/<category>/<pack>/LICENSE`.
 
 Verification is complete for all listed packs, on the basis of the user
-authorization above; the three gates stay open for the seven `provenance pending`
+authorization above; the per-pack gates stay open for the seven `provenance pending`
 rows until their download page and license text are captured. Per-pack promotion
 (bulk copy into `assets/`) happens on use, at the asset-spec pass — capture the
 evidence for a pending row at that moment and replace the stub note before copying.
