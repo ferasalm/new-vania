@@ -468,11 +468,13 @@ correct there; if a later pass wants symmetry with the ATK1 floor, the same `max
 form applies.
 
 **A second observation, from the confirm pass**: `ENEMY_STAGGER_MS`'s knob row (Combat's
-table, SYS-13's value) prints a safe range of **500–1000**, but F-ENM-04's ceiling needs
-`37 ticks ≤ stagger_ticks` — **617 ms**. A sub-617 value shortens the window and the
-ceiling is unreachable, so F-ENM-04's Variables clause now states **617–1000** for this
-formula and names the knob's wider range. **Whether the knob's floor should rise to 617**
-is SYS-13's call (the knob is Combat's row, the value SYS-13's); recorded, not decided.
+table, SYS-13's value) prints a safe range of **500–1000**, but F-ENM-04's full ceiling
+needs the window still running when the chain's damage lands at **T+37** —
+`stagger_ticks ≥ 38`, i.e. **617 ms** at 60 tps (616 ms → 37 ticks, and the chain lands on
+the expiry tick, so the ceiling is the counter alone, **6**). F-ENM-04's Variables clause
+now states the convention, the 617 threshold and the sub-617 result. **Whether the knob's
+floor should rise to 617** is SYS-13's call (the knob is Combat's row, the value
+SYS-13's); recorded, not decided.
 
 ## 10. The residual risks the seats did not block (recorded for the user)
 
