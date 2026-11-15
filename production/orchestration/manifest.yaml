@@ -143,9 +143,9 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: AUTHORING
+    status: SYNC
     dependencies: [SYS-13, SYS-08, SYS-32]
-    review_state: "not-started"
+    review_state: "GATES CLOSED (2026-11-15): CD CONCERNS(3) repaired → APPROVED · creative NR(2) · technical NR(5) · QA NR(6) — all repaired · spot-check PASS (round 4) · micro-check PASS · CodeRabbit 11 threads resolved. D-ORCH-14 decided A. Counts 24 TR / 6 F / 11 V / 30 AC; OQ-ENM-8/OQ-HD-10/OQ-CAM-3/OQ-RWS-8/IP-10 closed."
     next_action: "PR #82 open (CLEAN, head 9b172a8; 11 CodeRabbit threads resolved; all gates closed — 24 TR / 6 F / 11 V / 30 AC; OQ-ENM-8/OQ-HD-10/OQ-CAM-3/OQ-RWS-8/IP-10 closed). D-ORCH-14 decided A. The sync is order 2 (serial after SYS-16's); the orchestrator merges after it lands."
 
   - id: SYS-05
@@ -244,9 +244,9 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: AUTHORING
+    status: SYNC
     dependencies: [SYS-07-REWORK, SYS-08, SYS-13]
-    review_state: "not-started"
+    review_state: "GATES CLOSED (2026-11-15): CD APPROVED · creative NR(3) repaired · technical NR(10): 9 repaired + 1 rebutted-with-rider · QA NR(10) repaired · spot-check PASS (round 4) · micro-check PASS · CodeRabbit 12 threads resolved. D-ORCH-13 decided (i). Counts 28 TR / 10 F / 12 V / 36 AC."
     next_action: "PR #81 open (CLEAN, head 18d8e75; 12 CodeRabbit threads resolved; all gates closed — 28 TR / 10 F / 12 V / 36 AC). D-ORCH-13 decided (i): the gear layer ships as authored, rider (d) to SYS-07's next touch. The sync (the lane report's §4a–4e) is order 1; the orchestrator merges after it lands; SYS-17 unblocks on the merge."
 
   - id: SYS-17
