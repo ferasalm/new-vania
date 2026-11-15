@@ -19,15 +19,12 @@
 - Model: GLM (`cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash`), brief `seat-briefs/cd-gate.md`.
 - Verdict: **APPROVED — 0 blockers** (2026-11-15). 6 recommendations: 5 applied as one-line non-gating fixes (AC-15's geared-state form; F-HUD-01 example 1's arithmetic; §13's directional-weights note; OQ-HUD-1's gate-manifest clause-flip recording; the `LOW_HP_PULSE_PERIOD_MS` floor 900 → 1000), 1 rebutted (§D.1 — the designation-row claim contradicts SYS-15's landed TR-CSD-015).
 
-### B.2 Three-seat panel
+### B.2 Three-seat panel (2026-11-15, spawned in parallel, each with its neutral brief; each read the document once in full)
 
-- creative (GLM): **PENDING**
-- technical (DS `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017`): **PENDING**
-- QA (DS): **PENDING**
-
-### B.3 Repairs
-
-**PENDING** (the worklist appends below as repairs land).
+- creative (GLM): **NEEDS REVISION — 1 blocker** (the dormant socket's `hidden` boot state vs SYS-01's TR-INP-012 dormant-visible law + SYS-16's AC-PRG-23; 8 recommendations).
+- technical (DS): **NEEDS REVISION — 13 blockers** (the EQUIP signature; the `bak_loaded` channel; the settings-float serialization violation; the shake sign; the boss bar's float-fragile segmentation + the unconsumed `boss_hp_max` + the BOSS_HP/LIE_FLOOR range trip; the player bar's false divisor premise (PLAYER_MAX_HP 12–32 × HP_PER_POINT 1–3); the undeclared SYS-06 extent dependency; the socket's missing persisted-grant init; `DORMANT_DIM_AFTER_TEASE`'s unsigned value; the AC-25/AC-27 pointer mix-ups; the missing envelope re-record items in §14; the soak's missing device gate; OQ-HUD-3's wrong renumber counterparty; 10 recommendations).
+- QA (DS): **NEEDS REVISION — 8 blockers** (the tag census vs the house four-gate manifest + AC-35 double-homed; TR-HUD-000a uncited + the torn-read path untested; the grayscale fixture inside a LINT; the 32-px read double-homed GUT/DEVICE; the soak's unnamed host; the small-safe-area edge case unfixed + miscited; AC-29's unresolvable V-HUD-08 citation; AC-34's orphan citation; 10 recommendations).
+- Dispositions: **all 22 blockers ACCEPTED** (no rebuttals this round — every blocker verified against the cited contract); the valid recommendations applied as one-liners. The repairs re-derive the counts: **25 TR (000, 000a–c, 001–021) / 7 F / 8 V / 37 ACs = 28 GUT + 2 LINT + 5 DEVICE + 1 PLAYTEST + 1 MVP-lock**; the house gate manifest: **30 smoke + 5 device + 2 lock + 0 VS = 37**.
 
 ### B.4 qa-lead spot-check
 
@@ -47,6 +44,29 @@
 | CD-4 | CD gate | OQ-HUD-1 should name the gate-manifest clause flips the promotion forces | APPLIED — OQ-HUD-1 now lists the SYS-01 chip-clause gate flips (VS → MVP) as part of the recorded promotion | lane |
 | CD-5 | CD gate | TR-HUD-010's revive-path Gameplay designation row "beyond SYS-15's three named print forms" | REBUTTED — §D.1 | lane |
 | CD-6 | CD gate | `LOW_HP_PULSE_PERIOD_MS` floor 900 ms ≈ 1.11 Hz contradicts the ≤ 1 Hz claim | APPLIED — the floor is 1000 ms | lane |
+| T-1 | technical | `EQUIP(module_id, slot)` re-derives SYS-16's forbidden two-arg form (TR-PRG-028: the slot is read from the catalogue) | APPLIED — `EQUIP(module_id)` only; the cycle filters by the catalogue's slot typing | lane |
+| T-2 | technical | `bak_loaded` has no published input (it is telemetry; TR-SAV-022 publishes `load_result` without a recovery flag) | APPLIED — TR-HUD-016 consumes `load_result.restored.recovered_from_bak`, recorded as a one-field rider on SYS-03's §UI obligation (the OQ-M1 pattern); the Interactions row and AC-24 updated | lane |
+| T-3 | technical | the `settings` shape violates SYS-03's no-float law (`text_scale` fractional; the volumes "80%") | APPLIED — `text_scale_pct` ∈ {100, 125, 150}; `*_volume_pct` ints 0–100 (defaults 80) | lane |
+| T-4 | technical | the shake term's sign (the camera composes +offset onto itself; the world shifts −offset) | APPLIED — `rendered_center = player_screen_px − shake_offset_px`; the signed fixture added to AC-05 | lane |
+| T-5 | technical | the boss bar's segmentation: float-fragile ratio (`floor(20/60×6) = 1`), `boss_hp_max` unconsumed, `BOSS_BAR_SEGMENTS` 6 trips V-HUD-05 on legal BOSS_HP 40–80 / LIE_FLOOR 10–30 | APPLIED — the rig's read binding consumes integer `boss_hp_current`/`boss_hp_max`; new F-HUD-07 (integer cross-multiply); V-HUD-05 reworded (no divisor assert); the knob rationale softened | lane |
+| T-6 | technical | the player bar's divisor premise is false (F-HD-04 is the subtraction; PLAYER_MAX_HP 12–32 × HP_PER_POINT 1–3 can yield 23 mod 3 = 2 — a legal config boot-fails the HUD) | APPLIED — `segments = ceil(hp_max ÷ HP_PER_POINT)` with the remainder last segment; V-HUD-04 reworded; the config-sweep fixture in AC-06 | lane |
+| T-7 | technical | the guard's "SYS-06 published standing-extent constants" is an undeclared dependency on a knob (STAND_HEIGHT is a Movement knob, not a published contract) | APPLIED — the SYS-06 boot read declared: a soft Interactions row + the §8 consumed entry; the guard halves derive from SYS-06's extent constants at boot (the per-tick law still governs positions) | lane |
+| T-8 | technical | the socket's state machine has no init from the persisted grant set (TR-PRG-022's late-consumer law) | APPLIED — the init transition (a persisted `DASH ∈ grants` boots active) + the AC-09 fixture | lane |
+| T-9 | technical | `DORMANT_DIM_AFTER_TEASE` is delegated to SYS-24 (the SYS-24 sign-off) and returned silently with no value | APPLIED — the sign-off values pinned as HUD knobs (`SOCKET_DIM_BASE_ALPHA` 0.45, `SOCKET_DIM_AFTER_TEASE_ALPHA` 0.35); struck from the consumed list | lane |
+| T-10 | technical | four test pointers name AC-25 (the z-order AC) for the soak/replay | APPLIED — the perf clauses point at AC-27; the replay clause at AC-01b | lane |
+| T-11 | technical | the envelope re-record promised in TR-HUD-000b is absent from §14 (the registry's envelope record) | APPLIED — §14 gains the envelope item (the value 2.55/6.85, the `referenced_by` append, the not-join `revised` note) | lane |
+| T-12 | technical | AC-27 asserts the ms budget headless; the siblings split the SKU-timed enforcement to a DEVICE AC | APPLIED — AC-27 keeps the fake-port GUT half; new AC-HUD-36 [DEVICE] carries the reference-SKU timing | lane |
+| T-13 | technical | OQ-HUD-3 names SYS-17 as the renumber counterparty; the real competitor is SYS-16's `progression` bump (MIGRATIONS[2]) | APPLIED — the rider names both counterparties (progression's MIGRATIONS[2]; SYS-17's planned v3→v4) and states the landing-order law | lane |
+| Q-1 | QA | the printed partition is a tag census, not the house four-gate manifest; no exactly-one proof; AC-35 double-homed (says "smoke gate", counted in MVP-lock) | APPLIED — the manifest table printed (30 smoke + 5 device + 2 lock + 0 VS = 37) with the exactly-one proof; AC-35's text says the MVP-lock gate | lane |
+| Q-2 | QA | TR-HUD-000a has no AC; the torn-read path untested; the pointer mix-ups compound it | APPLIED — AC-27's citation block gains TR-HUD-000a; the torn-read assertion added; the pointers fixed (with T-10) | lane |
+| Q-3 | QA | AC-28 [LINT] contains a grayscale render fixture (cannot run headless) | APPLIED — the grayscale read moved to AC-26 as a color-transform fixture; the red sweep stays LINT | lane |
+| Q-4 | QA | AC-22 [GUT] asserts the 32-px silhouette read (human legibility), double-homed with AC-32 | APPLIED — the read dropped from AC-22; AC-32 keeps it | lane |
+| Q-5 | QA | AC-27's soak host unnamed (the sibling precedent: the reference SKU) | APPLIED — the fake ports carry determinism/allocation; the reference SKU carries the timing (with T-12) | lane |
+| Q-6 | QA | the small-safe-area edge case cites TR-HUD-000 and has no fixture | APPLIED — recited to TR-HUD-017; the small-safe-area fixture added to AC-25 | lane |
+| Q-7 | QA | AC-29 cites "V-HUD-08's copy half" (unresolvable) | APPLIED — the citation deleted | lane |
+| Q-8 | QA | AC-34 cites §1's glanceability bar — not a TR (an orphan; the pillar's instrument has no numbered requirement) | APPLIED — new **TR-HUD-021** (the glanceability criterion); AC-34 recited; the counts re-derived (25 TR) | lane |
+
+**Also applied (non-gating recommendations, one line each)**: the F-HUD-06 syntax line; F-HUD-05's `BOSS_BAR_WIDTH_DP` + the y pin; the row-set count fix (six interactive rows + the static readout); AC-04's one-tick restore scoped to the hold trigger; the failsafe's collapse definition; `view_rect_px` made load-bearing (the strip's bottom reference); `CAPS_SETTLE_EPS_PX` declared as the integer-exact zero-motion test; the panic-brush twin's U-6 rider; the bible fill/accents reconciliation note; the "a11y flags" nine-item realization line; the map tab's gate-on-SYS-25 presence; the chip's empty render (dim/dashed pips); the save indicator's static in-flight form; the chip's MIRROR line; the bubble-edge accent's AC-10 clause; OQ-HUD-1's sprint-plan dependency framing; the collapse-misattribution token in AC-34; AC-23's 17-line count; TR-HUD-020's AC pointer fix; AC-33's numeric predicates + V-HUD-03 cite; AC-30's typography reference; the §7 payload-edit fixture name; AC-09's color-transform label; the 4.7 stretch-mode pointer in TR-HUD-000.
 
 ## D · Rebuttals (a blocker judged invalid gets its line here, never a silent skip)
 
