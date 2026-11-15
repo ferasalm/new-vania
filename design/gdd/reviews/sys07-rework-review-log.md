@@ -300,6 +300,22 @@ coordinated SYS-13 doc touch — a value-only edit there would leave its own sen
 contradicting itself. Both routes are recorded in § 6.2, § 9 and the lane report; the
 threads are resolved with the disposition, not silently.
 
+**The confirm pass** (CodeRabbit's re-review of `60a0c16`) posted **5 more threads**, all
+valid and all closed in `270b9ad`:
+
+| Finding | Disposition |
+|---|---|
+| F-CMB-06's output range ignored the multiplier's own 1.2–2.0 range (6 × 2.0 = 12) | **Fixed** — the range is **1–12** |
+| The TTK envelope did not cover a module build (a `damage_bonus` of 1 puts a 24-HP T3 in two chains) | **Fixed** — the envelope is scoped to the **no-gear build**; a module build is measured against the parity bands (matching § 7b(4)'s Warden guardrail) |
+| A player-targeted `DEFLECT` skipped defense mitigation (TR-HD-018 names only `ENVIRONMENT`) | **Fixed** — a `DEFLECT` routes by its **target**: `taken` when the target carries defense, the dealt law otherwise |
+| § 6.3's "still owed" read as current | **Fixed** — marked as the status at that stage, pointing at § 7 |
+| The six-field `DamageEvent` is not in the registry | **Deferred to the sync** — the registry has **no `DamageEvent` entry at all**, so it needs a new one (the sync lane's write); added to the sync request |
+
+**Totals across both passes**: 19 threads, all resolved — 7 fixed before the review
+landed (`67a14ed`), 8 fixed in the triage commits (`60a0c16`, `270b9ad`), 6 deferred to
+the sync / the SYS-13 rider, 2 rebutted with the reason. No thread was resolved without a
+recorded disposition.
+
 ## 8. The residual risks the seats did not block (recorded for the user)
 
 - **R10 — the DEF axis collapses** at the low baseline (any `defense ≥ 1` ≡ DEF 25). The
