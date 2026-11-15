@@ -210,21 +210,32 @@ the same fixture could be one; (3) AC-PRG-06 pins the Warden and boss columns bu
 the Husk/Spitter to "cell for cell". All three are cosmetic or covered by the
 re-derivation clause; none blocks a story.
 
-## I. CodeRabbit (PR #81) — one pass, one batch, six threads, all resolved
+## I. CodeRabbit (PR #81) — one pass + two confirm passes, twelve threads, all resolved
+
+The first pass found six; the two confirm passes (required by the Major-class fix
+batches) found six more, all real. **Twelve threads: eleven applied, one rebutted, zero
+deferred, zero unresolved.** The four that mattered most were found by the reviewer, not
+by the seats: the HP aggregate dropping a drive's cost, the closed pair failing the
+exchange, and the two load-path gaps a catalogue change opens under an existing save.
 
 | # | Class | Finding | Disposition |
 |---|---|---|---|
-| 1 | Major | The pool-only fallback would strand the Coupler-dependent ACs (the catalogue, the pair, the trade rubric) — it cannot pass the gates as a data-only change. | **APPLIED.** TR-PRG-013's fallback names its **conditional criteria** (one frame entry; AC-PRG-19 and AC-PRG-35 vacated with the Coupler; AC-PRG-14's table becomes the two frame states; AC-PRG-32's G5 still runs), and AC-PRG-18 carries the fallback clause. |
-| 2 | Minor | A grant recorded while SYS-06 is absent never reaches a consumer that starts later — the latch blocks re-publication, not re-application. | **APPLIED.** TR-PRG-022 states the reader contract (a consumer reads the persisted set at init/restore and applies each grant without a new event); AC-PRG-22 gains the late-consumer fixture. |
-| 3 | Major | Unequipping one slot cleared the other — BUILT had no defined partial exit. | **APPLIED.** The loadout table's EMPTY/BUILT transitions are corrected (BUILT → FRAMED on `UNEQUIP(drive)`, → DRIVEN on `UNEQUIP(frame)`), transition law 2 states it, AC-PRG-15 gains the unequip fixture. |
-| 4 | Minor | The formulas use inline variables rather than the rule's variable tables. | **REBUTTED.** The requirement's substance (types, ranges, an Output clause, a worked example) is met in all ten; every APPROVED, merged GDD in this corpus uses the inline form (`health-damage.md`, `cache-stations-death.md`, `seam-borders.md`, `enemy-ai-telegraphs.md`), and a late ten-formula reformat carries arithmetic-drift risk. Recorded here, not silently skipped. |
-| 5 | Major | **`hp_max_delta` summed only frame modules**, so the Coupler's `−8` never reached the aggregate and the exchange was unpayable. | **APPLIED — a real defect the three seats and both spot-checks missed.** F-PRG-05 now sums **both** slots (`Σ {m.hp_max : m equipped}`); AC-PRG-15 gains the aggregate fixture (Coupler `−8`, Coupler+Governor `−6`, Regulator+Governor `+2`), which matches the budget table's rows exactly. |
-| 6 | Major | **The closed Regulator + a frame fails term (b)** (`Δhp −4` vs the required `−6`), so the closure's "zero exceptions" claim was false for that pair. | **APPLIED — and it followed from #5.** F-PRG-07's closure now states the **refusal**: the paid module alone passes; the paid module with a frame is refused at equip with the shortfall printed. The closure narrows the loadout rather than raising the derived `MODULE_DAMAGE_HP_COST` (which V-PRG-06 forbids). AC-PRG-17 asserts both arms. |
+| 1 | Major | The pool-only fallback would strand the Coupler-dependent ACs — it cannot pass the gates as a data-only change. | **APPLIED.** TR-PRG-013's fallback names its **conditional criteria**; AC-PRG-18 carries the fallback clause. |
+| 2 | Minor | A grant recorded while SYS-06 is absent never reaches a consumer that starts later — the latch blocks re-publication, not re-application. | **APPLIED.** TR-PRG-022 states the reader contract (init/restore reads the persisted set); AC-PRG-22 gains the late-consumer fixture. |
+| 3 | Major | Unequipping one slot cleared the other — BUILT had no defined partial exit. | **APPLIED.** BUILT → FRAMED / DRIVEN; transition law 2; AC-PRG-15's unequip fixture. |
+| 4 | Minor | The formulas use inline variables rather than the rule's variable tables. | **REBUTTED.** The substance (types, ranges, Output, worked examples) is met in all ten; every APPROVED, merged GDD in this corpus uses the inline form; a late ten-formula reformat carries arithmetic-drift risk. |
+| 5 | Major | **`hp_max_delta` summed only frame modules**, so the Coupler's `−8` never reached the aggregate and the exchange was unpayable. | **APPLIED — a real defect the seats and both spot-checks missed.** F-PRG-05 sums **both** slots; AC-PRG-15's aggregate fixture now matches the budget table exactly. |
+| 6 | Major | **The closed Regulator + a frame fails term (b)** (`−4` vs `−6`), so the closure's "zero exceptions" claim was false for that pair. | **APPLIED — it followed from #5.** F-PRG-07 states the **refusal** (the paid module alone passes; with a frame the equip is refused with the shortfall printed); the closure narrows the loadout rather than raising the derived cost (V-PRG-06 forbids it). |
+| 7 | Major | The fallback clause omitted AC-PRG-15, AC-PRG-17 and AC-PRG-34 from its conditional criteria. | **APPLIED.** The clause is now exhaustive (18, 15, 17, 19, 35, 34, 14, 32). |
+| 8 | Major | AC-PRG-14 and AC-PRG-19 contradicted the closed switch (the paid Regulator alone also lands on the floor). | **APPLIED.** Both carry their condition inline. |
+| 9 | Major | No defined load outcome for an equipped id absent from the catalogue (a save from a build that shipped a removed module). | **APPLIED.** TR-PRG-025's **load-time validation**: the slot clears to `null` with one report and the load succeeds (SYS-03's absent-key-unset shape); V-PRG-05 and AC-PRG-25 carry it. |
+| 10 | Minor | No defined load outcome for a saved pair that fails the guardrail after the closure. | **APPLIED — same law:** the **drive** clears (the side the closure changed), the frame stands, one report. |
+| 11 | Minor | `owned` ids absent from the catalogue would render loadout rows with no payload. | **APPLIED.** The same rule removes them in the same load, folded into the one report. |
+| 12 | — | CodeRabbit's analysis-chain notes (not findings). | n/a |
 
-**Outcome:** 6 threads, **5 applied, 1 rebutted, 0 deferred, 0 unresolved**. All five CI
-checks green at head `0501aa5`; CodeRabbit SUCCESS. **The merge is not taken by this
-lane** — the contract merges only after the sync lands, and merge authority is the
-orchestrator's.
+**Outcome:** all five CI checks green at head `ca8cd75`; `mergeStateStatus` **CLEAN**;
+12 threads, **0 unresolved**. **The merge is not taken by this lane** — the contract
+merges only after the sync lands, and merge authority is the orchestrator's.
 
 ## H. The one item for the orchestrator / user
 
