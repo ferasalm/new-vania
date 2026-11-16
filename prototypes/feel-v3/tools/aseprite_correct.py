@@ -23,8 +23,13 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "..", "assets")
-# the worktree as the Aseprite MCP container sees it
-CONT_ASSETS = "/workspace/new-vania-proto-v3-weapons/prototypes/feel-v3/assets"
+# the worktree as the Aseprite MCP container sees it. The docker mount maps the
+# host checkout to /workspace/<worktree-name>, so point ASEPRITE_CONT_ASSETS at
+# this checkout's assets when running from another worktree
+CONT_ASSETS = os.environ.get(
+    "ASEPRITE_CONT_ASSETS",
+    "/workspace/new-vania-proto-v3-weapons/prototypes/feel-v3/assets",
+)
 CONTAINER = "opencode-workspace-opencode-1"
 SERVER = "/workspace/setup/pixel-mcp/bin/pixel-mcp"
 
@@ -80,8 +85,15 @@ class PixelMcp:
         resp = self.call("tools/call", {"name": name.replace("aseprite_", ""),
                                         "arguments": args})
         if "error" in resp:
-            raise RuntimeError("%s: %s" % (name, resp["error"]))
-        text = "".join(c.get("text", "") for c in resp.get("result", {}).get("content", [])
+            raise RuntimeError("{}: {}".format(name, resp["error"]))
+        result = resp.get("result", {})
+        if result.get("isError"):
+            # the MCP spec reports tool execution failures through isError; a
+            # failed correction must not pass as ordinary output
+            text = "".join(c.get("text", "") for c in result.get("content", [])
+                           if c.get("type") == "text")
+            raise RuntimeError("{} failed: {}".format(name, text))
+        text = "".join(c.get("text", "") for c in result.get("content", [])
                        if c.get("type") == "text")
         try:
             return json.loads(text)

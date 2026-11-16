@@ -287,6 +287,8 @@ func _start_attack(btn: String, kind: String) -> void:
 	else:
 		var set_name := "weapon-elegy" if _is_elegy() else "weapon-dirge"
 		var wa := "low" if kind == "crouch" else ("j" if btn == "attack" else "i")
+		# a weapon picked mid-swing in the panel must not stack two blades
+		_hide_weapons()
 		_weps[set_name].sprite_frames.set_animation_speed(wa, 5.0 / _attack_total())
 		_weps[set_name].play(wa)
 		_weps[set_name].frame = 0

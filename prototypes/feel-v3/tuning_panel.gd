@@ -130,14 +130,16 @@ func _sound_page() -> Control:
 		var s := _slider(-30.0, 6.0, 1.0, float(Sfx.ev[name]["volume_db"]), 36)
 		row.add_child(s)
 		s.value_changed.connect(_volume.bind(name))
-		var ps := _slider(0.0, 0.25, 0.01, float(Sfx.ev[name]["pitch_random"]), 24)
-		row.add_child(ps)
-		ps.value_changed.connect(_pitch.bind(name))
+		if Sfx.ev[name]["group"] == "sfx":
+			# music ignores pitch variation, so it gets no dead slider
+			var ps := _slider(0.0, 0.25, 0.01, float(Sfx.ev[name]["pitch_random"]), 24)
+			row.add_child(ps)
+			ps.value_changed.connect(_pitch.bind(name))
+			_pitches[name] = ps
 		s.mouse_entered.connect(_hover.bind("< and > try the other sounds for this moment. The sliders are its loudness and its pitch variety."))
 		made[1].add_child(row)
 		_picks[name] = opt
 		_vols[name] = s
-		_pitches[name] = ps
 	return made[0]
 
 
@@ -244,5 +246,6 @@ func _reset() -> void:
 	for name in _picks:
 		_picks[name].text = Sfx.option_text(name)
 		_vols[name].set_value_no_signal(float(Sfx.ev[name]["volume_db"]))
-		_pitches[name].set_value_no_signal(float(Sfx.ev[name]["pitch_random"]))
+		if _pitches.has(name):
+			_pitches[name].set_value_no_signal(float(Sfx.ev[name]["pitch_random"]))
 	_status.text = "back to the saved values"
