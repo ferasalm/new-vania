@@ -59,7 +59,7 @@ def main():
     order = [0, 3, 2, 1, 4]     # wind up, then the arc runs the other way
     for i, src in enumerate(order):
         save(recolour(load("attack_%02d" % src)), "attack2_%02d" % i)
-    save(crouch(load("attack_00")), "crouch_00")
+    save(crouch(load("idle_00")), "crouch_00")   # idle faces forward; the wind-up frame looked backward
     for i in range(5):
         save(crouch(load("attack_%02d" % i)), "crouchatk_%02d" % i)
     # the special attack's blade wave: the arc cut out of an attack frame, in violet

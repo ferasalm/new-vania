@@ -2,7 +2,7 @@
   "sfx": {
     "footstep": {
       "file": "sfx/footstep/step_scuff.wav",
-      "volume_db": -22.0,
+      "volume_db": -4.0,
       "pitch_random": 0.08,
       "options": [
         {
@@ -21,7 +21,7 @@
     },
     "jump": {
       "file": "sfx/jump/jump_soft.ogg",
-      "volume_db": -21.0,
+      "volume_db": -3.0,
       "pitch_random": 0.06,
       "options": [
         {
@@ -40,7 +40,7 @@
     },
     "land": {
       "file": "sfx/land/made_soft_land.wav",
-      "volume_db": -24.0,
+      "volume_db": -3.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -59,7 +59,7 @@
     },
     "swing": {
       "file": "sfx/swing/attack_swish.ogg",
-      "volume_db": -9.0,
+      "volume_db": -4.0,
       "pitch_random": 0.07,
       "options": [
         {
@@ -78,7 +78,7 @@
     },
     "hit": {
       "file": "sfx/hit/shock_hit.wav",
-      "volume_db": -19.0,
+      "volume_db": -4.0,
       "pitch_random": 0.06,
       "options": [
         {
@@ -101,7 +101,7 @@
     },
     "hurt": {
       "file": "sfx/hurt/shock_sting.wav",
-      "volume_db": -22.0,
+      "volume_db": -3.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -120,7 +120,7 @@
     },
     "enemy_die": {
       "file": "sfx/enemy_die/kill_pop.ogg",
-      "volume_db": -9.0,
+      "volume_db": -1.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -143,7 +143,7 @@
     },
     "backdash": {
       "file": "sfx/backdash/made_soft_whoosh.wav",
-      "volume_db": -12.0,
+      "volume_db": -1.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -162,7 +162,7 @@
     },
     "door": {
       "file": "sfx/door/door_creak.wav",
-      "volume_db": -15.0,
+      "volume_db": -1.0,
       "pitch_random": 0.0,
       "options": [
         {
@@ -180,8 +180,8 @@
       ]
     },
     "special": {
-      "file": "sfx/special/magic_shot.wav",
-      "volume_db": -18.0,
+      "file": "sfx/special/magic_charge.wav",
+      "volume_db": 0.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -199,8 +199,8 @@
       ]
     },
     "pickup": {
-      "file": "sfx/pickup/coin_chime.wav",
-      "volume_db": -18.0,
+      "file": "sfx/pickup/bright_blip.ogg",
+      "volume_db": -4.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -218,8 +218,8 @@
       ]
     },
     "no_energy": {
-      "file": "sfx/no_energy/dull_click.wav",
-      "volume_db": -18.0,
+      "file": "sfx/no_energy/soft_denied.wav",
+      "volume_db": 5.0,
       "pitch_random": 0.05,
       "options": [
         {
@@ -262,7 +262,7 @@
   "music": {
     "music_room": {
       "file": "music/cyberpunk_city_2.ogg",
-      "volume_db": -15.0,
+      "volume_db": 2.0,
       "options": [
         {
           "file": "music/cavern_loop.ogg",

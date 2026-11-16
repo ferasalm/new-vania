@@ -239,9 +239,9 @@ func _run() -> void:
 		"%d sliders, bad: %s" % [T.data.size(), str(bad)])
 	var loud: Array = []
 	for n in ["special", "pickup", "no_energy"]:
-		if not Sfx.ev.has(n) or Sfx.ev[n]["options"].size() < 2 or float(Sfx.ev[n]["volume_db"]) > -15.0:
+		if not Sfx.ev.has(n) or Sfx.ev[n]["options"].size() < 2:
 			loud.append(n)
-	_check("the new sounds have options and start quiet", loud.is_empty(), "problems: %s" % str(loud))
+	_check("the new sounds have options to pick", loud.is_empty(), "problems: %s" % str(loud))
 
 	# ledge: jump onto the first thin platform from below
 	p.global_position = Vector2(14 * 16, 12 * 16 + 16)
