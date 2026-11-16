@@ -305,4 +305,33 @@ with a gate after each.
 
 Lessons from real POGR runs. Newest first. Keep each note to one or two lines.
 
-_Pending: to be filled from the first sprint (2026-11-16)._
+### Sprint of 2026-11-16 (90 minutes, one lead, three helpers)
+
+Source: the lead's running notes up to 22:40, about 16 minutes into the sprint.
+Later notes are in `production/handoff/POGR-FIELD-NOTES.md` on the game branch.
+
+- **Check the remaining usage before starting workers.** The strongest model
+  ran out about 6 minutes in, not at the planned end. One helper was stopped
+  after 3 minutes with nothing saved. (Dated fact: Fable is not available again
+  until 21 November; the next sessions run on Opus in Claude Code and on
+  cheaper models in OpenCode.)
+- **Every brief says: save to disk in the first minutes.** Commit and push
+  work in progress early. A stopped worker then loses minutes, not everything.
+- **A fallback that worked:** restart the stopped helper one tier down with
+  the same brief, plus the corrections learned so far.
+- **A step that depends on an outside program needs a time limit and a
+  fallback in the plan.** One call to an outside tool did not answer and held
+  the lead for 2 minutes.
+- **Do not wait for a slow step that nothing depends on.** The helpers were
+  started before the outside tool answered. That was against the plan's
+  order, and it was the right call.
+- **Send one cheap test request before sending five.** The gate caught a
+  sign-in problem on a paid tool, and no credits were lost finding it.
+- **Check paid tools before the sprint, not inside it.** About 8 minutes of
+  lead time went on sign-in and key problems. Do a 2-minute "is it really
+  usable" check first.
+- **When a bridge to a tool fails, try the tool directly.** A 40-line script
+  that talked to the program itself took 3 minutes and unblocked the sprint.
+- **Briefs with exact file ownership, the clock and the report format are
+  quick to write:** about 3 minutes for three helpers. Reusing the user's own
+  words in a brief saved time.
