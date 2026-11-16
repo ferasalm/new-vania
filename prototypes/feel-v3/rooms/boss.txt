@@ -1,4 +1,4 @@
-theme=sanctum,music=music_boss,left=lab
+theme=sanctum,music=music_boss,left=save2
 ##############################
 #............................#
 #............................#

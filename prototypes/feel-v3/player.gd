@@ -22,7 +22,7 @@ const WEAPONS := [
 # one swing: where her shoulder is, the angle the weapon starts and ends at
 # (degrees, 0 = straight ahead, minus = up), and how far the hand is from the shoulder
 const SWINGS := {
-	"stand_j": {"at": Vector2(3, -35), "a0": -150.0, "a1": 8.0, "r0": 9.0, "r1": 22.0},
+	"stand_j": {"at": Vector2(3, -35), "a0": -150.0, "a1": 30.0, "r0": 9.0, "r1": 22.0},
 	"stand_i": {"at": Vector2(1, -34), "a0": 115.0, "a1": -14.0, "r0": 8.0, "r1": 13.0},
 	"crouch_j": {"at": Vector2(3, -17), "a0": -120.0, "a1": 4.0, "r0": 9.0, "r1": 22.0},
 	"crouch_i": {"at": Vector2(1, -17), "a0": 60.0, "a1": -8.0, "r0": 8.0, "r1": 13.0},
@@ -31,7 +31,7 @@ const SWINGS := {
 }
 
 var facing := 1
-var state := "move"   # move | crouch | attack | backdash | hurt | dead
+var state := "move"   # move | crouch | attack | backdash | hurt | wall | dead
 var hp := 100.0
 var energy := 100.0
 var mp := 60.0
@@ -60,6 +60,13 @@ var _drop_t := 0.0
 var _step_t := 0.0
 var _ghost_t := 0.0
 var _was_floor := true
+var _wall_t := 0.0          # seconds left of the wall latch
+var _wall_dir := 0          # which side the wall is on: -1 left, 1 right
+var _latch_cd := 0.0
+var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
+var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
+var _spin_hits := 0
+var hit_pts := PackedVector2Array()   # where the blade cut this tick (shown by "show hit areas")
 
 
 func _ready() -> void:
@@ -114,19 +121,35 @@ func weapon_name() -> String:
 	return WEAPONS[1 if _is_elegy() else 0]["name"]
 
 
-func attack_rect() -> Rect2:
-	var reach := T.v("elegy_reach") if _is_elegy() else T.v("attack_reach")
-	var x := global_position.x + (4.0 if facing > 0 else -4.0 - reach)
-	if _attack_kind == "crouch":
-		return Rect2(x, global_position.y - 30.0, reach, 28.0)
-	return Rect2(x, global_position.y - 54.0, reach, 48.0)
+func blade_points(from_ang: float, to_ang: float) -> PackedVector2Array:
+	# The cut is exactly what you see: points along the weapon, from her hand to
+	# its tip, for every angle the weapon passed through since the last tick.
+	# "Weapon reach" stretches or shrinks it; 1.0 = the picture.
+	var pts := PackedVector2Array()
+	var r: float = _blade.position.length()
+	var tip: float = r + _blade_len * T.v("hit_reach")
+	var base := global_position + Vector2(_swing["at"].x * facing, _swing["at"].y)
+	var steps := maxi(1, int(ceil(absf(to_ang - from_ang) / 0.12)))
+	for i in steps + 1:
+		var a := lerpf(from_ang, to_ang, float(i) / steps)
+		var d := Vector2(cos(a) * facing, sin(a))
+		var x := 0.0
+		while x < tip:
+			pts.append(base + d * x)
+			x += 4.0
+		pts.append(base + d * tip)
+	return pts
 
 
 func _physics_process(delta: float) -> void:
-	if G.frozen() or state == "dead":
+	if G.frozen() or state == "dead" or G.main.hold:
 		return
 	invuln = maxf(0.0, invuln - delta)
 	_dash_cd = maxf(0.0, _dash_cd - delta)
+	_latch_cd = maxf(0.0, _latch_cd - delta)
+	_steer_lock = maxf(0.0, _steer_lock - delta)
+	hit_pts = PackedVector2Array()
+	var hold_y := false
 	_jump_buf = maxf(0.0, _jump_buf - delta)
 	if _energy_wait > 0.0:
 		_energy_wait -= delta
@@ -161,6 +184,34 @@ func _physics_process(delta: float) -> void:
 				state = "crouch"
 				velocity.x = 0.0
 				_spr.play("crouch")      # she folds down over a few frames, then holds
+			elif _can_latch(dir, on_floor):
+				state = "wall"
+				_wall_dir = int(dir)
+				_wall_t = T.v("wall_latch_time")
+				facing = -_wall_dir      # she looks away from the wall, ready to kick off
+				velocity = Vector2(_wall_dir * 30.0, 0.0)
+				Sfx.play("land", 1.3)
+				G.main.dust(global_position + Vector2(_wall_dir * 6.0, -20.0), 2)
+		"wall":
+			# the latch does not last: she slides slowly, then her grip gives out
+			_wall_t -= delta
+			velocity.x = _wall_dir * 30.0      # keeps her pressed on the wall
+			velocity.y = T.v("wall_slide_speed")
+			hold_y = true
+			if _jump_buf > 0.0:
+				_jump_buf = 0.0
+				state = "move"
+				facing = -_wall_dir
+				velocity = Vector2(-_wall_dir * T.v("wall_jump_push"), -T.v("wall_jump_velocity"))
+				_steer_lock = T.v("wall_jump_lock")
+				_latch_cd = 0.12
+				hold_y = false
+				Sfx.play("jump", 1.15)
+				G.main.dust(global_position + Vector2(_wall_dir * 6.0, -10.0), 4)
+			elif _wall_t <= 0.0 or on_floor or not is_on_wall() or Input.is_action_pressed("down"):
+				state = "move"
+				_latch_cd = 0.35
+				hold_y = false
 		"crouch":
 			velocity.x = 0.0
 			if dir != 0.0:
@@ -179,7 +230,10 @@ func _physics_process(delta: float) -> void:
 			if _attack_air:
 				_steer(dir, run, false)
 				if on_floor and velocity.y >= 0.0:
-					_end_attack()   # landing cuts an air attack short
+					if _attack_kind == "special":
+						_attack_air = false   # a special is never cut short by landing
+					else:
+						_end_attack()   # landing cuts an air attack short
 			else:
 				velocity.x = 0.0
 			if state == "attack":
@@ -203,7 +257,8 @@ func _physics_process(delta: float) -> void:
 	# letting go of jump early cuts the rise: tap = hop, hold = full jump
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
 		velocity.y *= T.v("jump_cut")
-	velocity.y = minf(velocity.y + T.v("gravity") * delta, T.v("max_fall"))
+	if not hold_y:
+		velocity.y = minf(velocity.y + T.v("gravity") * delta, T.v("max_fall"))
 	move_and_slide()
 
 	var now_floor := is_on_floor()
@@ -224,8 +279,19 @@ func _physics_process(delta: float) -> void:
 func _steer(dir: float, run: float, on_floor: bool) -> void:
 	if on_floor:
 		velocity.x = dir * run   # full speed at once, dead stop on release
+	elif _steer_lock > 0.0:
+		pass                     # just kicked off a wall: carry the push
 	else:
 		velocity.x = lerpf(velocity.x, dir * run, T.v("air_control"))
+
+
+func _can_latch(dir: float, on_floor: bool) -> bool:
+	# the wall latch is an ability she finds before the warden (main.has_latch)
+	if on_floor or dir == 0.0 or _latch_cd > 0.0 or not G.main.has_latch:
+		return false
+	if velocity.y < -60.0 or not is_on_wall():
+		return false
+	return signf(get_wall_normal().x) == -dir
 
 
 func _try_jump() -> void:
@@ -273,15 +339,18 @@ func _spend_energy(cost: float) -> bool:
 
 
 func _begin_attack(btn: String) -> bool:
-	# Up + Attack = the special, if there is MP for it; otherwise a normal swing
+	# Up + Attack = the special, if there is MP for it; otherwise a normal swing.
+	# The MP is only taken when the special actually goes off (_attack_step).
 	if Input.is_action_pressed("up"):
-		if mp >= T.v("special_cost"):
-			mp -= T.v("special_cost")
+		if mp >= special_cost():
 			_start_attack(btn, "special")
 			return true
 		Sfx.play("no_energy")
 		G.main.hud.flash("mp")
-	if not _spend_energy(T.v("elegy_energy") if _is_elegy() else T.v("attack_energy")):
+	# Elegy is two-handed: J and I are the same one heavy cut
+	if _is_elegy():
+		btn = "attack"
+	if not _spend_energy(T.v("attack_energy") * (T.v("elegy_energy_mult") if _is_elegy() else 1.0)):
 		return false
 	var airborne := not is_on_floor() or velocity.y < 0.0
 	var low := not airborne and Input.is_action_pressed("down")
@@ -289,9 +358,22 @@ func _begin_attack(btn: String) -> bool:
 	return true
 
 
+func special_cost() -> float:
+	return T.v("elegy_special_cost") if _is_elegy() else T.v("special_cost")
+
+
+func _sweep() -> float:
+	# 0 = the weapon is still raised, 1 = the cut is finished
+	var u := clampf(_attack_t / _attack_total(), 0.0, 1.0)
+	if _attack_kind == "special":
+		return clampf((u - 0.12) / 0.7, 0.0, 1.0)      # the Requiem turns at a steady speed
+	var s := clampf((u - 0.1) / 0.3, 0.0, 1.0)
+	return 1.0 - (1.0 - s) * (1.0 - s)
+
+
 func _attack_total() -> float:
 	if _attack_kind == "special":
-		return T.v("special_time")
+		return T.v("elegy_special_time") if _is_elegy() else T.v("special_time")
 	return T.v("elegy_time") if _is_elegy() else T.v("attack_time")
 
 
@@ -313,7 +395,8 @@ func _start_attack(btn: String, kind: String) -> void:
 	_spr.sprite_frames.set_animation_speed(anim, 5.0 / _attack_total())
 	_spr.play(anim)
 	_spr.frame = 0
-	if kind == "special":
+	_spin_hits = 0
+	if kind == "special" and not _is_elegy():
 		_arm.visible = false
 		Sfx.play("special")
 		return
@@ -322,12 +405,21 @@ func _start_attack(btn: String, kind: String) -> void:
 	_blade.offset = -w["grip"]
 	_blade_len = _blade.texture.get_width() - w["grip"].x
 	_swing = SWINGS[pose + "_" + hand].duplicate()
+	if kind == "special":
+		# Elegy's special, the Requiem: the scythe turns twice all the way round her
+		_swing = {"at": Vector2(0, -26), "a0": -90.0, "a1": 630.0, "r0": 8.0, "r1": 8.0}
+		_arm.visible = true
+		_prev_ang = deg_to_rad(-90.0)
+		_pose_weapon()
+		Sfx.play("special", 0.8)
+		return
 	if _is_elegy():
 		# the two-handed scythe takes a wider arc
 		var down: bool = _swing["a0"] < 0.0
 		_swing["a0"] += -25.0 if down else 25.0
 		_swing["a1"] += 22.0 if down else -18.0
 	_arm.visible = true
+	_prev_ang = deg_to_rad(_swing["a0"])
 	_pose_weapon()
 	if _is_elegy():
 		Sfx.play("swing_heavy", 1.0 if btn == "attack" else 0.92)
@@ -338,8 +430,7 @@ func _start_attack(btn: String, kind: String) -> void:
 func _pose_weapon() -> void:
 	# materialize -> sweep through the cut -> hold at the end of the arc -> fade
 	var u := clampf(_attack_t / _attack_total(), 0.0, 1.0)
-	var s := clampf((u - 0.1) / 0.3, 0.0, 1.0)
-	s = 1.0 - (1.0 - s) * (1.0 - s)
+	var s := _sweep()
 	var ang := deg_to_rad(lerpf(_swing["a0"], _swing["a1"], s))
 	var r := lerpf(_swing["r0"], _swing["r1"], s)
 	_arm.position = Vector2(_swing["at"].x * facing, _swing["at"].y)
@@ -348,12 +439,16 @@ func _pose_weapon() -> void:
 	_blade.rotation = ang
 	var alpha := clampf(u / 0.1, 0.0, 1.0) if u < 0.8 else clampf((1.0 - u) / 0.2, 0.0, 1.0)
 	_blade.modulate = Color(1, 1, 1, alpha) if u < 0.8 else Color(0.5, 1.0, 1.0, alpha)
+	if _attack_kind == "special":
+		_blade.modulate = Color(0.75, 1.0, 1.0, clampf(u / 0.1, 0.0, 1.0) * clampf((1.0 - u) / 0.15, 0.0, 1.0))
 	var back := deg_to_rad(95.0) * signf(_swing["a1"] - _swing["a0"])
 	var a0 := deg_to_rad(_swing["a0"])
 	var from := ang - back
 	if (back > 0.0 and from < a0) or (back < 0.0 and from > a0):
 		from = a0
 	var glow := clampf(1.0 - (u - 0.4) / 0.25, 0.0, 1.0) if s > 0.0 else 0.0
+	if _attack_kind == "special":
+		glow = 1.0 if (s > 0.0 and s < 1.0) else 0.0
 	_trail.set_arc(from, ang, r + _blade_len * 0.3, r + _blade_len, glow)
 
 
@@ -373,22 +468,40 @@ func swap_weapon() -> void:
 
 func _attack_step() -> void:
 	var total := _attack_total()
-	if _attack_kind != "special":
+	if _arm.visible:
 		_pose_weapon()
 	var pressed := _pressed_attack()
 	if pressed != "":
-		_attack_queued = pressed
-	if _attack_kind == "special":
+		_attack_queued = "attack" if _is_elegy() else pressed
+	var ang: float = _blade.rotation
+	if _attack_kind == "special" and not _is_elegy():
 		if not _wave_thrown and _attack_t >= total * 0.3:
 			_wave_thrown = true
+			mp -= T.v("special_cost")      # paid only now, when the wave really leaves
 			G.main.throw_wave(global_position + Vector2(facing * 14.0, -22.0), facing)
-	# the swing can hurt during the middle of the animation
-	elif _attack_t >= total * 0.2 and _attack_t <= total * 0.65:
-		var dmg := T.v("elegy_damage") if _is_elegy() else T.v("attack_damage")
-		G.main.player_swing(attack_rect(), dmg, facing, _attack_hit)
-	# alternating the two buttons chains sooner than pressing the same one
-	var chain := T.v("elegy_chain") if _is_elegy() else T.v("attack_chain")
-	var gate := chain if (_attack_queued != "" and _attack_queued != _attack_btn and _attack_kind != "special") else total * 0.85
+	elif _attack_kind == "special":
+		# the Requiem: every half turn of the scythe can cut each enemy once more
+		if _attack_t >= total * 0.12 and _attack_t <= total * 0.82:
+			if not _wave_thrown:
+				_wave_thrown = true
+				mp -= T.v("elegy_special_cost")
+			var turn := int((ang - deg_to_rad(-90.0)) / PI)
+			if turn != _spin_hits:
+				_spin_hits = turn
+				_attack_hit.clear()
+				Sfx.play("swing_heavy", 1.1)
+			hit_pts = blade_points(_prev_ang, ang)
+			G.main.player_cut(hit_pts, T.v("elegy_special_damage"), facing, _attack_hit)
+	# the cut hurts exactly where the weapon is: through the sweep, then held out
+	elif _attack_t >= total * 0.1 and _attack_t <= total * 0.65:
+		var dmg := T.v("attack_damage") * (T.v("elegy_damage_mult") if _is_elegy() else 1.0)
+		hit_pts = blade_points(_prev_ang, ang)
+		G.main.player_cut(hit_pts, dmg, facing, _attack_hit)
+	_prev_ang = ang
+	# Dirge: alternating the two buttons chains sooner than pressing the same one.
+	# Elegy has one cut and no chain bonus.
+	var fast := _attack_queued != "" and _attack_queued != _attack_btn and _attack_kind != "special" and not _is_elegy()
+	var gate := T.v("attack_chain") if fast else total * 0.85
 	if _attack_queued != "" and _attack_t >= gate:
 		var next := _attack_queued
 		_attack_queued = ""
@@ -439,7 +552,9 @@ func take_hit(damage: float, from_x: float) -> void:
 	Sfx.play("hurt")
 	G.main.number(global_position + Vector2(0, -44), int(damage), Color("#E8A94A"))
 	G.main.shake(T.v("shake") * 1.5, 0.16)
-	_hide_weapons()
+	var casting := state == "attack" and _attack_kind == "special"
+	if not casting or hp <= 0.0:
+		_hide_weapons()
 	if hp <= 0.0:
 		hp = 0.0
 		state = "dead"
@@ -448,6 +563,8 @@ func take_hit(damage: float, from_x: float) -> void:
 		_spr.play("dead")
 		G.main.player_died()
 		return
+	if casting:
+		return      # a hit hurts but never breaks a special that has started
 	state = "hurt"
 	_spr.play("hurt")
 	_hurt_t = T.v("hurt_time")
@@ -475,6 +592,12 @@ func _animate(on_floor: bool) -> void:
 	_spr.visible = not (invuln > 0.0 and state != "backdash" and int(invuln * 20.0) % 2 == 0)
 	if state != "attack":
 		_arm.visible = false
+	if state == "wall":
+		if _spr.sprite_frames.has_animation("wall"):
+			_show("wall", 0)
+		else:
+			_show("jump", 2)
+		return
 	# these states started their own animation when they began
 	if state == "attack" or state == "backdash" or state == "hurt" or state == "crouch":
 		return

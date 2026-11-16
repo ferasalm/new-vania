@@ -18,6 +18,7 @@ var _pool: Array = []
 var _next := 0
 var _music: AudioStreamPlayer
 var _music_name := ""
+var _music_held := false
 
 
 func _ready() -> void:
@@ -103,6 +104,13 @@ func play_music(name: String, restart: bool = false) -> void:
 	_music.stream = o["stream"]
 	_music.volume_db = float(e["volume_db"]) + float(o["gain_db"])
 	_music.play()
+	_music.stream_paused = _music_held
+
+
+func pause_music(on: bool) -> void:
+	# the pause menu and the SYSTEM OFFLINE screen hold the music; it picks up where it stopped
+	_music_held = on
+	_music.stream_paused = on
 
 
 # ---- used by the F1 panel ----

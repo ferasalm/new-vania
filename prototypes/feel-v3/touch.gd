@@ -7,6 +7,11 @@
 # 45 deg exit, 90 ms hold guard), attack is the largest and innermost button,
 # jump sits above it, backdash is double-tap-back on the stick, and a small BACK
 # button is the a11y direct press. The save terminal gets a world-anchored bubble.
+# The buttons sit in a diamond under the right thumb (attack left, jump bottom,
+# backdash right, special top), the way Bloodstained: Ritual of the Night lays
+# them out on a phone. Pause > CONTROLS lets the player drag every button and the
+# stick anywhere, resize them, fade them and pick a floating or fixed stick; the
+# layout is kept in user://touch_layout.json.
 extends Control
 
 const VIEW := Vector2(384, 216)
@@ -24,18 +29,34 @@ const BACK_WINDOW := 0.28
 const BACK_FLICK := 0.55
 const BUBBLE_R := 22.0
 
-const BTN := [
-	{"id": "attack", "pos": Vector2(330, 152), "r": 26.0, "label": "ATTACK", "size": 8},
-	{"id": "jump", "pos": Vector2(357, 98), "r": 22.0, "label": "JUMP", "size": 8},
-	{"id": "special", "pos": Vector2(282, 190), "r": 17.0, "label": "SPEC", "size": 7},
-	{"id": "swap", "pos": Vector2(238, 190), "r": 14.0, "label": "SWAP", "size": 6},
-	{"id": "backdash", "pos": Vector2(272, 128), "r": 14.0, "label": "BACK", "size": 6},
+const DEFAULT_BTN := [
+	{"id": "attack", "pos": Vector2(286, 152), "r": 20.0, "label": "ATK", "size": 8},
+	{"id": "jump", "pos": Vector2(322, 184), "r": 20.0, "label": "JUMP", "size": 8},
+	{"id": "backdash", "pos": Vector2(358, 152), "r": 18.0, "label": "BACK", "size": 7},
+	{"id": "special", "pos": Vector2(322, 120), "r": 18.0, "label": "SPEC", "size": 7},
+	{"id": "swap", "pos": Vector2(250, 196), "r": 13.0, "label": "SWAP", "size": 6},
 	{"id": "pause", "pos": Vector2(366, 14), "r": 10.0, "label": "", "size": 6},
 ]
-const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "save": "CACHE", "lab": "LAB", "boss": "BOSS"}
+const LAYOUT_FILE := "user://touch_layout.json"
+const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "save": "CACHE 1", "lab": "LAB", "save2": "CACHE 2", "boss": "BOSS"}
 
 var active := false
 var paused := false
+var blocked := false:        # the SYSTEM OFFLINE screen owns the fingers
+	set(v):
+		blocked = v
+		if v:
+			_release_all()
+		queue_redraw()
+var editing := false         # Pause > CONTROLS: drag, resize and fade the buttons
+var BTN: Array = []          # the live layout (DEFAULT_BTN + what the player saved)
+var rest := REST             # where the stick sits
+var fixed_stick := false     # false = the stick appears under the thumb
+var see := 1.0               # how solid the controls are drawn (0.3 .. 1.6)
+var _edit_bar: CanvasLayer
+var _edit_pick := ""         # the control being edited ("stick" or a button id)
+var _edit_drag := false
+var _stick_label: Button
 
 var _stick_id := -1
 var _origin := REST
@@ -59,8 +80,9 @@ func _ready() -> void:
 		or OS.get_cmdline_user_args().has("--touch") or OS.get_cmdline_user_args().has("touch")
 	visible = active
 	set_process(active)
-	set_process_input(active)
+	_load_layout()
 	_build_menu()
+	_build_edit_bar()
 	if active and G.main != null and G.main.hud != null:
 		G.main.hud.touch_mode = true
 	queue_redraw()
@@ -83,23 +105,34 @@ func _build_menu() -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	center.add_child(col)
+	col.add_theme_constant_override("separation", 2)
 	_menu_button(col, "RESUME", _resume)
-	_menu_button(col, "RESTART", _restart)
+	_menu_button(col, "CONTROLS", _edit_start)
+	_menu_button(col, "RECONSTRUCT", _restart)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 2)
+	grid.add_theme_constant_override("v_separation", 2)
+	col.add_child(grid)
 	for room in ROOM_LABELS:
-		_menu_button(col, ROOM_LABELS[room], _goto_room.bind(room))
+		_menu_button(grid, ROOM_LABELS[room], _goto_room.bind(room), 65.0)
+	_menu_button(col, "QUIT", get_tree().quit)
 
 
-func _menu_button(col: VBoxContainer, text: String, cb: Callable) -> void:
+func _menu_button(col: Container, text: String, cb: Callable, width: float = 132.0) -> void:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(132, 17)
+	b.custom_minimum_size = Vector2(width, 17)
 	b.add_theme_font_size_override("font_size", 9)
 	b.pressed.connect(cb)
 	col.add_child(b)
 
 
 func _input(event: InputEvent) -> void:
-	if not active or paused:
+	if editing:
+		_edit_input(event)
+		return
+	if not active or paused or blocked:
 		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -148,9 +181,11 @@ func _down_at(id: int, pos: Vector2) -> void:
 	if pos.x <= ZONE_X and _stick_id < 0:
 		_stick_id = id
 		_bind[id] = {"kind": "stick"}
-		_origin = pos.clamp(Vector2(STICK_R + 4.0, STICK_R + 4.0), VIEW - Vector2(STICK_R + 4.0, STICK_R + 4.0))
+		_origin = rest if fixed_stick else pos.clamp(Vector2(STICK_R + 4.0, STICK_R + 4.0), VIEW - Vector2(STICK_R + 4.0, STICK_R + 4.0))
 		_vec = Vector2.ZERO
 		_crouch_t = 0.0
+		if fixed_stick:
+			_drag_at(id, pos)      # a fixed stick answers the first touch at once
 		queue_redraw()
 
 
@@ -288,11 +323,22 @@ func _release_all() -> void:
 	_down.clear()
 
 
+func toggle_pause() -> void:
+	# Esc / P / Start on a keyboard or pad, the corner button on a phone
+	if blocked or editing:
+		return
+	if paused:
+		_resume()
+	elif G.main != null and not G.main._busy:
+		_pause()
+
+
 func _pause() -> void:
 	_release_all()
 	paused = true
 	_overlay.visible = true
 	get_tree().paused = true
+	Sfx.pause_music(true)      # the music stops with the game and picks up where it was
 	queue_redraw()
 
 
@@ -300,6 +346,7 @@ func _resume() -> void:
 	_overlay.visible = false
 	get_tree().paused = false
 	paused = false
+	Sfx.pause_music(false)
 	queue_redraw()
 
 
@@ -307,8 +354,160 @@ func _restart() -> void:
 	if G.main == null or G.main._busy:
 		return
 	_resume()
-	G.main.player.hp = 0.0
-	G.main.enter("save" if G.main.saved else "church", "M" if G.main.saved else "P")
+	G.main.reconstruct()
+
+
+# ---- Pause > CONTROLS: the player's own layout ----
+
+func _load_layout() -> void:
+	BTN = []
+	for b in DEFAULT_BTN:
+		BTN.append(b.duplicate())
+	rest = REST
+	fixed_stick = false
+	see = 1.0
+	if not FileAccess.file_exists(LAYOUT_FILE):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT_FILE))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return
+	var saved_btn: Dictionary = parsed.get("btn", {})
+	for b in BTN:
+		var got = saved_btn.get(b["id"], null)
+		if typeof(got) == TYPE_ARRAY and got.size() == 3:
+			b["pos"] = Vector2(float(got[0]), float(got[1])).clamp(Vector2(8, 8), VIEW - Vector2(8, 8))
+			b["r"] = clampf(float(got[2]), 8.0, 40.0)
+	var st = parsed.get("stick", null)
+	if typeof(st) == TYPE_ARRAY and st.size() == 2:
+		rest = Vector2(float(st[0]), float(st[1])).clamp(Vector2(20, 20), VIEW - Vector2(20, 20))
+	fixed_stick = bool(parsed.get("fixed", false))
+	see = clampf(float(parsed.get("see", 1.0)), 0.3, 1.6)
+
+
+func _save_layout() -> void:
+	var out := {"btn": {}, "stick": [rest.x, rest.y], "fixed": fixed_stick, "see": see}
+	for b in BTN:
+		out["btn"][b["id"]] = [b["pos"].x, b["pos"].y, b["r"]]
+	var f := FileAccess.open(LAYOUT_FILE, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(out))
+
+
+func _build_edit_bar() -> void:
+	_edit_bar = CanvasLayer.new()
+	_edit_bar.layer = 41
+	_edit_bar.process_mode = Node.PROCESS_MODE_ALWAYS
+	_edit_bar.visible = false
+	add_child(_edit_bar)
+	var row := HBoxContainer.new()
+	row.position = Vector2(4, 2)
+	row.add_theme_constant_override("separation", 2)
+	_edit_bar.add_child(row)
+	_menu_button(row, "SMALLER", _edit_size.bind(-2.0), 44.0)
+	_menu_button(row, "BIGGER", _edit_size.bind(2.0), 40.0)
+	_menu_button(row, "FAINTER", _edit_see.bind(-0.15), 42.0)
+	_menu_button(row, "SOLID", _edit_see.bind(0.15), 34.0)
+	_stick_label = Button.new()
+	_stick_label.custom_minimum_size = Vector2(72, 17)
+	_stick_label.add_theme_font_size_override("font_size", 9)
+	_stick_label.pressed.connect(_edit_stick_mode)
+	row.add_child(_stick_label)
+	_menu_button(row, "RESET", _edit_reset, 36.0)
+	_menu_button(row, "DONE", _edit_done, 36.0)
+
+
+func _edit_start() -> void:
+	# the game stays paused; the buttons are drawn and can be dragged
+	_overlay.visible = false
+	editing = true
+	visible = true
+	_edit_pick = "attack"
+	_edit_bar.visible = true
+	_stick_label.text = "STICK: FIXED" if fixed_stick else "STICK: FLOATS"
+	queue_redraw()
+
+
+func _edit_done() -> void:
+	_save_layout()
+	editing = false
+	_edit_bar.visible = false
+	visible = active
+	_overlay.visible = true
+	queue_redraw()
+
+
+func _edit_reset() -> void:
+	if FileAccess.file_exists(LAYOUT_FILE):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(LAYOUT_FILE))
+	_load_layout()
+	_stick_label.text = "STICK: FLOATS"
+	queue_redraw()
+
+
+func _edit_size(by: float) -> void:
+	for b in BTN:
+		if b["id"] == _edit_pick:
+			b["r"] = clampf(float(b["r"]) + by, 8.0, 40.0)
+	queue_redraw()
+
+
+func _edit_see(by: float) -> void:
+	see = clampf(see + by, 0.3, 1.6)
+	queue_redraw()
+
+
+func _edit_stick_mode() -> void:
+	fixed_stick = not fixed_stick
+	_stick_label.text = "STICK: FIXED" if fixed_stick else "STICK: FLOATS"
+
+
+func _edit_input(event: InputEvent) -> void:
+	# a finger (or the mouse, on a computer) picks a control up and moves it
+	var pos := Vector2.ZERO
+	var down := false
+	var up := false
+	var move := false
+	var desk := not OS.has_feature("mobile")
+	if event is InputEventScreenTouch:
+		pos = event.position
+		down = event.pressed
+		up = not event.pressed
+	elif event is InputEventScreenDrag:
+		pos = event.position
+		move = true
+	elif desk and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		pos = event.position
+		down = event.pressed
+		up = not event.pressed
+	elif desk and event is InputEventMouseMotion:
+		pos = event.position
+		move = true
+	else:
+		return
+	if down and pos.y > 24.0:
+		_edit_drag = false
+		var best := 9999.0
+		for b in BTN:
+			var d: float = pos.distance_to(b["pos"]) - float(b["r"])
+			if d < 8.0 and d < best:
+				best = d
+				_edit_pick = b["id"]
+				_edit_drag = true
+		if not _edit_drag and pos.distance_to(rest) < STICK_R + 8.0:
+			_edit_pick = "stick"
+			_edit_drag = true
+		queue_redraw()
+	elif up:
+		_edit_drag = false
+	elif move and _edit_drag:
+		var at := pos.clamp(Vector2(8, 28), VIEW - Vector2(8, 8))
+		if _edit_pick == "stick":
+			rest = at.clamp(Vector2(STICK_R, STICK_R + 24.0), Vector2(ZONE_X - 4.0, VIEW.y - STICK_R))
+		else:
+			for b in BTN:
+				if b["id"] == _edit_pick:
+					b["pos"] = at
+		queue_redraw()
 
 
 func _goto_room(room: String) -> void:
@@ -341,11 +540,16 @@ func _notification(what: int) -> void:
 
 
 func _draw() -> void:
-	if not active or paused:
+	if editing:
+		_draw_edit()
 		return
+	if not active or paused or blocked:
+		return
+	modulate.a = clampf(see, 0.3, 1.0)
+	var boost := maxf(1.0, see)      # past 1.0 the fills themselves get more solid
 	# the stick: faint at rest, solid under the thumb
-	var base := _origin if _stick_id >= 0 else REST
-	var a := 0.38 if _stick_id >= 0 else 0.13
+	var base := _origin if _stick_id >= 0 else rest
+	var a := (0.38 if _stick_id >= 0 else 0.13) * boost
 	draw_circle(base, STICK_R, Color(0.03, 0.04, 0.07, a))
 	draw_arc(base, STICK_R, 0.0, TAU, 32, Color(0.55, 0.9, 1.0, a + 0.15), 1.5)
 	var knob := base + _vec * STICK_R if _stick_id >= 0 else base
@@ -354,7 +558,7 @@ func _draw() -> void:
 	# the cluster
 	for b in BTN:
 		var on: bool = _down.has(b["id"])
-		draw_circle(b["pos"], float(b["r"]), Color(0.55, 0.9, 1.0, 0.55) if on else Color(0.05, 0.07, 0.12, 0.55))
+		draw_circle(b["pos"], float(b["r"]), Color(0.55, 0.9, 1.0, 0.55) if on else Color(0.05, 0.07, 0.12, minf(0.95, 0.55 * boost)))
 		draw_arc(b["pos"], float(b["r"]), 0.0, TAU, 28, Color(0.55, 0.9, 1.0, 0.7 if on else 0.35), 1.2)
 		if b["id"] == "pause":
 			draw_rect(Rect2(b["pos"] + Vector2(-3, -4), Vector2(2, 8)), Color(1, 1, 1, 0.85))
@@ -372,3 +576,21 @@ func _text_centered(text: String, at: Vector2, font_size: int, color: Color) -> 
 	var font := ThemeDB.fallback_font
 	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	draw_string(font, at + Vector2(-w / 2.0, font_size * 0.36), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+
+
+func _draw_edit() -> void:
+	modulate.a = 1.0
+	draw_rect(Rect2(Vector2.ZERO, VIEW), Color(0.02, 0.02, 0.05, 0.55))
+	_text_centered("drag a control to move it  -  tap one, then SMALLER / BIGGER", Vector2(192, 34), 7, Color(0.85, 1.0, 1.0))
+	draw_line(Vector2(ZONE_X, 44), Vector2(ZONE_X, VIEW.y), Color(0.55, 0.9, 1.0, 0.2), 1.0)
+	_text_centered("the stick works anywhere left of this line", Vector2(ZONE_X * 0.5, 50), 6, Color(0.7, 0.9, 1.0, 0.7))
+	var picked := _edit_pick == "stick"
+	draw_circle(rest, STICK_R, Color(0.03, 0.04, 0.07, 0.6))
+	draw_arc(rest, STICK_R, 0.0, TAU, 32, Color(1.0, 0.9, 0.3) if picked else Color(0.55, 0.9, 1.0, 0.7), 2.0 if picked else 1.2)
+	draw_circle(rest, KNOB_R, Color(0.55, 0.9, 1.0, 0.5))
+	_text_centered("STICK", rest + Vector2(0, STICK_R + 6.0), 6, Color(1, 1, 1, 0.8))
+	for b in BTN:
+		picked = _edit_pick == b["id"]
+		draw_circle(b["pos"], float(b["r"]), Color(0.05, 0.07, 0.12, 0.8))
+		draw_arc(b["pos"], float(b["r"]), 0.0, TAU, 28, Color(1.0, 0.9, 0.3) if picked else Color(0.55, 0.9, 1.0, 0.7), 2.0 if picked else 1.2)
+		_text_centered(String(b["label"]) if String(b["label"]) != "" else "II", b["pos"], int(b["size"]), Color(1, 1, 1, 0.9))

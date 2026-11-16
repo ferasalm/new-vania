@@ -24,13 +24,14 @@ var _banner_t := 0.0
 var _toast_t := 0.0
 var _hint: Label
 var touch_mode := false
+var _name: Label
 
 
 func _ready() -> void:
 	layer = 5
 	for i in BARS.size():
 		var name: String = BARS[i][0]
-		var y := 6.0 + i * 8.0
+		var y := 13.0 + i * 8.0
 		var tag := _label(BARS[i][1], Vector2(6, y - 4.0))
 		tag.modulate = Color(BARS[i][2])
 		var back := ColorRect.new()
@@ -46,10 +47,12 @@ func _ready() -> void:
 		_fill[name] = fill
 		_back[name] = back
 		_flash[name] = 0.0
-	_kills = _label("", Vector2(110, 2))
-	_weapon = _label("", Vector2(110, 11))
+	_name = _label("PANDORA-001", Vector2(6, 0))
+	_name.modulate = Color("#BFF6FF")
+	_kills = _label("", Vector2(110, 9))
+	_weapon = _label("", Vector2(110, 18))
 	_weapon.modulate = Color("#7BE6F2")
-	_hint = _label("A/D move  S crouch  K jump  J/I attack  W+J special  L backdash  E weapon  F1 tune", Vector2(6, 203))
+	_hint = _label("A/D move  S crouch  K jump  J/I attack  W+J special  L backdash  E weapon  Esc pause  F1 tune", Vector2(6, 203))
 	_hint.modulate = Color(1, 1, 1, 0.55)
 	_banner = _centered(Vector2(0, 60), 16)
 	_toast = _centered(Vector2(0, 84), 8)
@@ -98,6 +101,7 @@ func _centered(at: Vector2, font: int) -> Label:
 func refresh(player: Node, kills: int) -> void:
 	var now := {"hp": player.hp / maxf(1.0, T.v("player_hp")), "energy": player.energy / maxf(1.0, T.v("energy_max")),
 		"mp": player.mp / maxf(1.0, T.v("mp_max"))}
+	_fill["mp"].modulate = Color.WHITE if player.mp >= player.special_cost() else Color(0.55, 0.55, 0.7)
 	var delta := get_process_delta_time()
 	for name in _fill:
 		_fill[name].size.x = WIDTH * clampf(now[name], 0.0, 1.0)
@@ -110,6 +114,11 @@ func refresh(player: Node, kills: int) -> void:
 	_toast_t = maxf(0.0, _toast_t - delta)
 	_toast.modulate.a = clampf(_toast_t * 2.0, 0.0, 1.0)
 	_hint.visible = not touch_mode
+
+
+func set_unit(n: int) -> void:
+	# the name above the bars: every reconstruction is the next Pandora
+	_name.text = "PANDORA-%03d" % n
 
 
 func flash(name: String) -> void:

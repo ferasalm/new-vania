@@ -29,20 +29,23 @@ first (the debug signature is stable, so normal updates install over it).
 
 ## Controls
 
+The buttons sit in a diamond under the right thumb, like Bloodstained: Ritual of the Night on a phone: ATK on the left, JUMP at the bottom, BACK on the right, SPEC on top, and SWAP lower left of them. Pause is in the top-right corner.
+
 | Touch | What it does |
 |---|---|
-| Floating stick (left 42%) | move. It appears where your thumb lands |
+| Floating stick (left 42%) | move. It appears where your thumb lands. Can be set to "fixed" under Pause > CONTROLS |
 | Stick pushed down, held 90 ms | crouch; the down-zone uses the GDD's 25 deg entry / 45 deg exit cone |
 | Down + JUMP on a thin ledge | drop through |
-| ATTACK | attack; one button, alternating hands, so the faster two-hand chain works |
-| JUMP | hold = high jump, tap = hop |
-| SPEC | blade wave (the keyboard's Up + Attack) |
+| ATK | attack; one button, alternating hands, so the faster two-hand chain works. With Elegy-013 each press is one heavy cut |
+| JUMP | hold = high jump, tap = hop. At a wall, with the stick held toward it, JUMP makes her cling (needs the GRIP SERVOS relic); JUMP again kicks her away |
+| SPEC | the special (the keyboard's Up + Attack): blade wave with Dirge-042, the Requiem with Elegy-013 |
 | SWAP | Dirge-042 / Elegy-013 |
 | BACK | backdash (the accessibility direct press; the double-tap-back stick gesture also works) |
-| CACHE bubble | heal and save at the terminal; it appears next to the terminal when she is close |
-| Pause (top right) | resume, restart, or jump to church / library / cache / lab / boss |
+| CACHE bubble | heal and save at the brain cache station; it appears next to it when she is close |
+| Pause (top-right corner) | resume, restart, jump to one of the six rooms, RECONSTRUCT, or QUIT |
+| Pause > CONTROLS | drag buttons and the stick; SMALLER / BIGGER and FAINTER / SOLID for a tapped button; stick "floats" or "fixed"; RESET; DONE saves. Remembered on the phone |
 
-Keyboard and gamepad are unchanged on desktop. On desktop the touch layer can be shown
+Keyboard and gamepad still work on desktop, as described in README.md. On desktop the touch layer can be shown
 with `--touch` (mouse clicks become touches because
 `input_devices/pointing/emulate_touch_from_mouse` is on).
 
@@ -59,7 +62,8 @@ debug keystore).
 4. A debug keystore (Godot's default is
    `%APPDATA%\Godot\keystores\debug.keystore`, alias `androiddebugkey`, password `android`).
 5. Hero frames are not in the repository. Build them once with `play.cmd`, or copy
-   `assets/hero/*.png` from a checkout that has them.
+   `assets/hero/*.png` from a checkout that has them. The save-room pictures are built by
+   `tools/build_save_rooms.py`.
 6. Export:
 
 ```bat
@@ -76,5 +80,5 @@ The export packs the raw PNG/JSON/TXT/OGG/WAV files (`include_filter` in
 - The touch layer draws in the game's 384x216 viewport, so it scales with the integer
   stretch and sits inside the 16:9 band. The production two-canvas/dp model (GDD
   TR-INP-059) is not implemented here; bars on very wide phones are black.
-- The F1 tuning panel is desktop-only. The pause menu's room jump covers phone testing.
+- The F1 tuning panel is desktop-only. The pause menu's room jump (all six rooms) covers phone testing.
 - Debug build: larger than a release build and debuggable. Not for a store.

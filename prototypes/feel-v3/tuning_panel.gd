@@ -7,7 +7,8 @@
 # "Save" writes tuning.json and assets/audio/events.json; "Reset" undoes every unsaved change.
 extends CanvasLayer
 
-const WEAPON_KEYS := ["weapon", "elegy_time", "elegy_damage", "elegy_reach", "elegy_energy", "elegy_chain"]
+const WEAPON_KEYS := ["weapon", "hit_reach", "hit_thickness", "show_hitboxes", "elegy_time", "elegy_damage_mult", "elegy_energy_mult",
+	"elegy_special_cost", "elegy_special_damage", "elegy_special_time"]
 
 var _root: PanelContainer
 var _rows := {}     # key -> [slider, value label]
@@ -108,7 +109,7 @@ func _weapon_page() -> Control:
 	row.add_child(_button(">", _wpick.bind(1)))
 	row.mouse_entered.connect(_hover.bind(String(d["help"])))
 	made[1].add_child(row)
-	for key in ["elegy_time", "elegy_damage", "elegy_reach", "elegy_energy", "elegy_chain"]:
+	for key in WEAPON_KEYS.slice(1):
 		made[1].add_child(_slider_row(key))
 	return made[0]
 

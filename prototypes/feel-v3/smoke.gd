@@ -85,6 +85,7 @@ func _run() -> void:
 	var looks := {}
 	for name in main.ROOMS:
 		var r := Room.new()
+		r.position = Vector2(0, -9000)      # far from the live room: its walls are real
 		add_child(r)
 		var ok: bool = r.load_room(name)
 		for side in r.doors:
@@ -97,7 +98,7 @@ func _run() -> void:
 		_check("room '%s' loads, doors sit in the room edge" % name, ok, "size=%s doors=%s" % [str(r.size), str(r.doors.keys())])
 		r.queue_free()
 	_check("five enemy kinds are placed in the rooms", kinds.size() == 5, str(kinds.keys()))
-	_check("every room has its own look", looks.size() == 5, str(looks.keys()))
+	_check("every room has its own look", looks.size() == 6, str(looks.keys()))
 	await _shot("1_church_start")
 
 	var x0 := p.global_position.x
@@ -155,6 +156,59 @@ func _run() -> void:
 	_check("Up + Attack throws the blade wave", main.waves.size() == 1 and p._spr.animation == "cast", "waves=%d anim=%s" % [main.waves.size(), p._spr.animation])
 	await _shot("6_special")
 	await _frames(60)
+	# a special that is cut off before it goes off costs nothing; a hit does not cut it off
+	p.mp = T.v("mp_max")
+	p.invuln = 0.0
+	Input.action_press("up")
+	Input.action_press("attack")
+	await _frames(2)
+	Input.action_release("attack")
+	Input.action_release("up")
+	_check("the special takes no MP before the wave leaves", p.mp == T.v("mp_max") and p.state == "attack", "mp=%.0f" % p.mp)
+	p.take_hit(1.0, p.global_position.x + 10.0)
+	await _frames(int(T.v("special_time") * 60.0 * 0.3) + 4)
+	_check("a hit does not cancel the special, and now it has cost MP", main.waves.size() >= 1 and p.mp == T.v("mp_max") - T.v("special_cost"), "waves=%d mp=%.0f" % [main.waves.size(), p.mp])
+	await _frames(60)
+	# in the air: landing must not cut the special short
+	p.mp = T.v("mp_max")
+	p.invuln = 0.0
+	p.hp = T.v("player_hp")
+	var before_waves: int = main.waves.size()
+	Input.action_press("jump")
+	await _frames(26)
+	Input.action_release("jump")
+	await _frames(20)
+	Input.action_press("up")
+	Input.action_press("attack")
+	await _frames(2)
+	Input.action_release("attack")
+	Input.action_release("up")
+	await _frames(int(T.v("special_time") * 60.0 * 0.3) + 6)
+	_check("a special started just before landing still goes off", main.waves.size() == before_waves + 1, "waves=%d" % main.waves.size())
+	await _frames(70)
+	# Elegy: J and I are the same single cut; the Requiem spins the scythe
+	T.set_v("weapon", 1.0)
+	p.energy = T.v("energy_max")
+	var e0: float = p.energy
+	await _tap("attack2", 2)
+	_check("Elegy: I gives the same one cut as J, at 1.5x the energy", p._attack_btn == "attack" and is_equal_approx(e0 - p.energy, T.v("attack_energy") * T.v("elegy_energy_mult")), "btn=%s spent=%.1f" % [p._attack_btn, e0 - p.energy])
+	await _frames(int(T.v("elegy_time") * 60.0) + 10)
+	p.mp = T.v("mp_max")
+	Input.action_press("up")
+	Input.action_press("attack")
+	await _frames(2)
+	Input.action_release("attack")
+	Input.action_release("up")
+	await _frames(int(T.v("elegy_special_time") * 60.0 * 0.4))
+	_check("Elegy special spins the scythe and costs its own MP", p.state == "attack" and p._arm.visible and p.mp == T.v("mp_max") - T.v("elegy_special_cost"), "mp=%.0f" % p.mp)
+	await _shot("6_requiem")
+	await _frames(int(T.v("elegy_special_time") * 60.0) + 10)
+	T.set_v("weapon", 0.0)
+	# the pause menu holds the music
+	main.touch.toggle_pause()
+	_check("pause holds the music", get_tree().paused and Sfx._music.stream_paused, "")
+	main.touch.toggle_pause()
+	_check("resume lets the music go on", not get_tree().paused and not Sfx._music.stream_paused, "")
 
 	# fight: stand next to the first hound and swing until it dies
 	var hound: Node2D = null
@@ -222,7 +276,58 @@ func _run() -> void:
 			await _frames(6)
 			await _shot("14_lab_%d" % i)
 	var bd = main.room.doors.get("right")
-	_check("the lab ends in the special boss door", bd != null and bd.boss and bd.to == "boss", "")
+	_check("the lab leads to the second save room", bd != null and bd.to == "save2", "")
+	_check("the wall-latch relic waits in the lab, before the warden", main._relic != null and main.room.spawns.has("A"), "")
+	p.global_position = main.room.spawns["A"] + Vector2(0, 0)
+	await _frames(4)
+	_check("walking into the relic gives the wall latch", main.has_latch, "")
+	# the wall latch: jump at the tall wall, cling, kick off
+	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
+	p.velocity = Vector2.ZERO
+	Input.action_press("right")
+	await _frames(6)
+	_check("she clings to the wall", p.state == "wall", "state=%s" % p.state)
+	await _shot("14_wall_latch")
+	var y_cling: float = p.global_position.y
+	Input.action_press("jump")
+	await _frames(3)
+	Input.action_release("jump")
+	_check("jump kicks her off the wall, up and away", p.velocity.x < -50.0 and p.velocity.y < 0.0, "vel=%s" % str(p.velocity))
+	await _frames(40)
+	Input.action_release("right")
+	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
+	p.velocity = Vector2.ZERO
+	Input.action_press("right")
+	await _frames(int(T.v("wall_latch_time") * 60.0) + 20)
+	Input.action_release("right")
+	_check("the latch gives out by itself", p.state != "wall", "state=%s" % p.state)
+	await _goto("save2", "left")
+	p = main.player
+	bd = main.room.doors.get("right")
+	_check("the second save room ends in the boss door", bd != null and bd.boss and bd.to == "boss" and main.room.spawns.has("K") and main.room.spawns.has("M"), "")
+	p.global_position.x = main.room.spawns["M"].x
+	await _frames(10)
+	await _tap("up", 2)
+	await _frames(4)
+	_check("the second save room saves too", main.saved_room == "save2", main.saved_room)
+	await _shot("15_save2")
+	# death: SYSTEM OFFLINE, then RECONSTRUCT rebuilds her at the capsule as the next Pandora
+	G.peace = false
+	p.take_hit(9999.0, 0.0)
+	await _frames(130)
+	_check("death shows SYSTEM OFFLINE", main.offline.active and main.offline.visible, "")
+	await _shot("15_offline")
+	await _tap("attack", 2)
+	await _frames(200)
+	G.peace = true
+	p = main.player
+	_check("RECONSTRUCT rebuilds her at the capsule of the last save room", main.room_name == "save2" and not main.offline.visible and p.hp == T.v("player_hp")
+		and absf(p.global_position.x - main.room.spawns["K"].x) < 40.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
+	_check("she is the next Pandora", main.unit == 2 and main.hud._name.text == "PANDORA-002", main.hud._name.text)
+	await _shot("15_reconstructed")
+	await _goto("lab", "left")
+	p = main.player
+	bd = main.room.doors.get("right")
 	if bd != null:
 		p.global_position = Vector2(main.room.size.x - 70.0, bd.feet().y)
 		await _frames(30)

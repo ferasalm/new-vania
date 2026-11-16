@@ -4,6 +4,7 @@
 #   #  solid          =  thin ledge (jump up through it, Down + Jump to drop)
 #   P  start          D  door (only in the first or last column: the edge of the room)
 #   X  the boss door  M  the save terminal       O  where the boss waits
+#   K  the empty capsule she is rebuilt in       A  the wall-latch relic
 #   H hound  G ghost  C choir  S spitter  W warden
 # Each theme has its own wall art, tiles, door and music, so no two areas look alike.
 extends Node2D
@@ -23,6 +24,8 @@ const THEMES := {
 		"clear": Color("#03080f"), "door": "lab", "dust": Color(0.5, 1.0, 1.0, 0.55)},
 	"save": {"tiles": "", "wall": "env/save_room.png", "tint": Color.WHITE, "tile_tint": Color.WHITE,
 		"clear": Color("#020608"), "door": "save", "dust": Color(0.6, 1.0, 0.95, 0.5)},
+	"save2": {"tiles": "", "wall": "env/save_room2.png", "tint": Color.WHITE, "tile_tint": Color.WHITE,
+		"clear": Color("#070310"), "door": "save", "dust": Color(0.85, 0.7, 1.0, 0.5)},
 	"sanctum": {"tiles": "church", "wall": "panels", "tint": Color(0.62, 0.3, 0.85), "tile_tint": Color(0.75, 0.5, 1.0),
 		"clear": Color("#0c0416"), "door": "boss", "dust": Color(1.0, 0.8, 0.3, 0.6)},
 }
@@ -60,7 +63,7 @@ func load_room(room_name: String) -> bool:
 		_tiles = G.tex("env/%s_tiles.png" % theme["tiles"])
 		_ledge = G.tex("env/%s_ledge.png" % theme["tiles"])
 	_wall = G.tex("env/church_backgrounds.png" if theme["wall"] == "panels" else theme["wall"])
-	if head.get("theme", "") == "save":
+	if theme["tiles"] == "":
 		size.y = minf(size.y, 216.0)     # the save room is one painted screen
 	_build()
 	queue_redraw()
@@ -106,7 +109,7 @@ func _build() -> void:
 			var feet := Vector2(x * TILE + TILE / 2.0, (y + 1) * TILE)
 			if ENEMY.has(ch):
 				enemies.append([ENEMY[ch], feet])
-			elif ch == "P" or ch == "M" or ch == "O":
+			elif ch == "P" or ch == "M" or ch == "O" or ch == "K" or ch == "A":
 				spawns[ch] = feet
 			elif ch == "D" or ch == "X":
 				# a door lives in the edge column; she walks off the screen through it
@@ -138,7 +141,7 @@ func _draw() -> void:
 	elif _wall != null:
 		# one wall picture repeated sideways (and upward in a tall room), standing on the floor
 		var ws := _wall.get_size()
-		var bottom := size.y if head.get("theme", "") == "save" else size.y - TILE
+		var bottom := size.y if theme["tiles"] == "" else size.y - TILE
 		var y := bottom - ws.y
 		while y > -ws.y:
 			var x := 0.0

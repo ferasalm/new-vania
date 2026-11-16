@@ -13,9 +13,10 @@ const Boss := preload("res://boss.gd")
 const Hud := preload("res://hud.gd")
 const TuningPanel := preload("res://tuning_panel.gd")
 const Touch := preload("res://touch.gd")
-const ROOMS := ["church", "library", "save", "lab", "boss"]
+const Offline := preload("res://offline.gd")
+const ROOMS := ["church", "library", "save", "lab", "save2", "boss"]
 const TITLES := {"church": "THE NAVE OF ASH", "library": "THE UNREAD STACKS", "save": "CACHE STATION 002",
-	"lab": "SPECIMEN HALL", "boss": "THE PALLBEARER"}
+	"lab": "SPECIMEN HALL", "save2": "CACHE STATION 003", "boss": "THE PALLBEARER"}
 
 var world: Node2D
 var room: Node2D
@@ -32,6 +33,13 @@ var waves: Array = []        # blade waves in flight: {node, dir, left, hit}
 var orbs: Array = []         # blue MP orbs: {node, wait}
 var shots: Array = []        # enemy shots in flight (Shot nodes)
 var saved := false           # she has cached her memory at the terminal
+var saved_room := ""         # the save room she last cached in (she is rebuilt there)
+var has_latch := false       # the wall latch: found in the lab, before the warden
+var unit := 1                # which Pandora this is: 001, then 002 after a reconstruction...
+var hold := false            # she cannot move (she is being rebuilt in the capsule)
+var offline: CanvasLayer     # the SYSTEM OFFLINE screen
+var _relic: Node2D
+var _marks: Array = []       # recent blade points, for "show hit areas"
 var boss_beaten := false
 var _shake_t := 0.0
 var _shake_amp := 0.0
@@ -50,6 +58,8 @@ func _ready() -> void:
 	add_child(touch_layer)
 	touch = Touch.new()
 	touch_layer.add_child(touch)
+	offline = Offline.new()
+	add_child(offline)
 	var start := "church"
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("room=") and ROOMS.has(a.substr(5)):
@@ -104,6 +114,15 @@ func enter(next_room: String, spawn_key: String) -> void:
 		world.add_child(boss)
 		boss.setup(room.spawns["O"], room.size)
 		enemies.append_array(boss.parts())
+	_relic = null
+	if room.spawns.has("A") and not has_latch:
+		_relic = Relic.new()
+		_relic.position = room.spawns["A"] + Vector2(0, -22)
+		_relic.z_index = 6
+		world.add_child(_relic)
+	var marks := Marks.new()
+	marks.z_index = 50
+	world.add_child(marks)
 	_motes()
 	Sfx.play_music(room.head.get("music", "music_church"))
 	hud.banner(TITLES.get(next_room, ""))
@@ -145,6 +164,14 @@ func _physics_process(delta: float) -> void:
 	_move_shots(delta)
 	_terminal()
 	_boss_watch()
+	if _relic != null and is_instance_valid(_relic) and _relic.position.distance_to(player.global_position + Vector2(0, -18)) < 18.0:
+		_relic.queue_free()
+		_relic = null
+		has_latch = true
+		Sfx.play("pickup", 0.6)
+		Sfx.play("special", 1.3)
+		ring_fx(player.global_position + Vector2(0, -20), 60.0, Color(0.5, 1.0, 1.0))
+		hud.toast("GRIP SERVOS ONLINE  -  jump at a wall and hold toward it to cling, jump again to kick off", 7.0)
 	# the doors are in the room edges: walking off the screen goes through
 	var px := player.global_position.x
 	if px < 5.0 and room.doors.has("left") and room.doors["left"].open > 0.85:
@@ -156,19 +183,22 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if not _busy:
 		if Input.is_action_just_pressed("restart"):
-			player.hp = 0.0      # so the new room starts her with full bars
-			enter("save" if saved else "church", "M" if saved else "P")
+			reconstruct()
+			return
 		for i in ROOMS.size():
 			# tester shortcut: number keys jump straight to a room
 			if Input.is_action_just_pressed("room%d" % (i + 1)):
 				player.hp = 0.0
 				enter(ROOMS[i], "P" if i == 0 else "left")
+				break
 	if cam != null and is_instance_valid(cam):
 		if _shake_t > 0.0:
 			_shake_t -= delta
 			cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * _shake_amp
 		else:
 			cam.offset = Vector2.ZERO
+	if player == null:
+		return
 	hud.refresh(player, kills)
 	if boss != null and is_instance_valid(boss) and boss.started and boss.alive:
 		hud.boss_bar(TITLES["boss"], boss.hp / maxf(1.0, T.v("boss_hp")))
@@ -183,6 +213,7 @@ func _terminal() -> void:
 	hud.prompt("" if touch_on else ("W: cache memory (heal and save)" if near else ""))
 	if near and Input.is_action_just_pressed("up") and player.state == "move":
 		saved = true
+		saved_room = room_name
 		player.hp = T.v("player_hp")
 		player.mp = T.v("mp_max")
 		Sfx.play("pickup", 0.7)
@@ -224,19 +255,40 @@ func boss_died() -> void:
 
 
 func player_swing(rect: Rect2, dmg: float, dir: int, already: Array) -> void:
+	# a box-shaped hit (the blade wave)
 	# a copy of the list: an enemy that dies here leaves the real list at once
 	for en in enemies.duplicate():
 		if not is_instance_valid(en) or already.has(en):
 			continue
 		if en.hurt_rect().intersects(rect):
-			already.append(en)
-			var at: Vector2 = en.hurt_rect().get_center()
-			en.take_hit(dmg, dir)
-			fx("spark", at)
-			number(at + Vector2(0, -14), int(dmg), Color("#F4F0E0"))
-			Sfx.play("hit")
-			G.hitstop = T.v("hitstop")
-			shake(T.v("shake"), 0.1)
+			_land_hit(en, dmg, dir, already)
+
+
+func player_cut(pts: PackedVector2Array, dmg: float, dir: int, already: Array) -> void:
+	# a weapon cut: it lands if any point of the blade is inside the enemy.
+	# "Hit forgiveness" grows every enemy box a little so near misses still count.
+	var pad: float = T.v("hit_thickness")
+	if T.v("show_hitboxes") >= 0.5:
+		_marks.append({"pts": pts, "t": 0.25})
+	for en in enemies.duplicate():
+		if not is_instance_valid(en) or already.has(en):
+			continue
+		var box: Rect2 = en.hurt_rect().grow(pad)
+		for p in pts:
+			if box.has_point(p):
+				_land_hit(en, dmg, dir, already)
+				break
+
+
+func _land_hit(en: Node2D, dmg: float, dir: int, already: Array) -> void:
+	already.append(en)
+	var at: Vector2 = en.hurt_rect().get_center()
+	en.take_hit(dmg, dir)
+	fx("spark", at)
+	number(at + Vector2(0, -14), int(dmg), Color("#F4F0E0"))
+	Sfx.play("hit")
+	G.hitstop = T.v("hitstop")
+	shake(T.v("shake"), 0.1)
 
 
 func throw_wave(at: Vector2, dir: int) -> void:
@@ -357,12 +409,52 @@ func enemy_died(en: Node2D) -> void:
 
 
 func player_died() -> void:
+	# SYSTEM OFFLINE: the picture loses its colour and breaks up; two choices.
 	_busy = true
 	await get_tree().create_timer(0.7).timeout      # let her fall first
-	await hud.fade(1.0, 0.5)
+	Sfx.pause_music(true)
+	Sfx.play("no_energy", 0.5)
+	touch.blocked = true
+	var choice: String = await offline.ask()
+	touch.blocked = false
+	if choice == "quit":
+		get_tree().quit()
+		return
+	await reconstruct(true)
+
+
+func reconstruct(from_offline: bool = false) -> void:
+	# A new Pandora is built in the empty capsule of the last save room she cached
+	# in (the church start if she never cached), steps out, and takes the next number.
+	if _busy and not from_offline:
+		return
+	_busy = true
+	hold = true
+	await hud.fade(1.0, 0.35)
+	offline.close()
 	player.hp = 0.0
-	enter(room_name, _entry)      # she wakes at the door she came in by, bars full
+	var at := saved_room if saved_room != "" else "church"
+	enter(at, "K" if saved_room != "" else "P")
+	Sfx.pause_music(false)
+	unit += 1
+	hud.set_unit(unit)
+	player.modulate = Color(0.3, 1.0, 1.0, 0.0)
 	await hud.fade(0.0, 0.3)
+	Sfx.play("special", 0.6)
+	ring_fx(player.global_position + Vector2(0, -22), 40.0, Color(0.5, 1.0, 1.0))
+	var tw := create_tween()
+	tw.tween_property(player, "modulate", Color(0.5, 1.0, 1.0, 1.0), 0.9)
+	tw.tween_property(player, "modulate", Color.WHITE, 0.25)
+	await tw.finished
+	if room.spawns.has("K") and saved_room != "":
+		# she steps out of the capsule
+		player._spr.play("run")
+		var step := create_tween()
+		step.tween_property(player, "position:x", player.position.x + 30.0, 0.45)
+		await step.finished
+	Sfx.play("pickup", 0.7)
+	hud.toast("PANDORA-%03d RECONSTRUCTED" % unit, 3.0)
+	hold = false
 	_busy = false
 
 
@@ -426,6 +518,49 @@ func number(at: Vector2, value: int, color: Color) -> void:
 	tw.tween_property(l, "position:y", l.position.y - 18.0, 0.6)
 	tw.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(0.25)
 	tw.chain().tween_callback(l.queue_free)
+
+
+# The wall-latch relic: a slowly bobbing cyan claw-mark she walks into.
+class Relic extends Node2D:
+	var _t := 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		var y := sin(_t * 3.0) * 2.0
+		draw_circle(Vector2(0, y), 9.0 + sin(_t * 5.0), Color(0.3, 1.0, 1.0, 0.18))
+		draw_colored_polygon(PackedVector2Array([Vector2(0, y - 7), Vector2(6, y), Vector2(0, y + 7), Vector2(-6, y)]), Color(0.1, 0.25, 0.3))
+		draw_polyline(PackedVector2Array([Vector2(0, y - 7), Vector2(6, y), Vector2(0, y + 7), Vector2(-6, y), Vector2(0, y - 7)]), Color(0.6, 1.0, 1.0), 1.0)
+		for i in 3:
+			draw_line(Vector2(-3 + i * 3, y - 3), Vector2(-4 + i * 3, y + 3), Color(0.8, 1.0, 1.0), 1.0)
+
+
+# "Show hit areas" (F1): where the blade cut (yellow), what can be hit (red), her own box (green).
+class Marks extends Node2D:
+	func _process(delta: float) -> void:
+		visible = T.v("show_hitboxes") >= 0.5
+		for m in G.main._marks.duplicate():
+			m["t"] -= delta
+			if m["t"] <= 0.0:
+				G.main._marks.erase(m)
+		if visible:
+			queue_redraw()
+
+	func _draw() -> void:
+		var main: Node = G.main
+		if main.player == null:
+			return
+		var pad: float = T.v("hit_thickness")
+		for en in main.enemies:
+			if is_instance_valid(en):
+				draw_rect(en.hurt_rect(), Color(1, 0.2, 0.2, 0.9), false, 1.0)
+				draw_rect(en.hurt_rect().grow(pad), Color(1, 0.5, 0.2, 0.5), false, 1.0)
+		draw_rect(main.player.body_rect(), Color(0.3, 1, 0.3, 0.9), false, 1.0)
+		for m in main._marks:
+			for p in m["pts"]:
+				draw_rect(Rect2(p - Vector2(0.5, 0.5), Vector2(1, 1)), Color(1, 1, 0.2, m["t"] * 4.0))
 
 
 # One enemy shot. It draws itself by kind and points the way it flies.

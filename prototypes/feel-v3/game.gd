@@ -15,7 +15,8 @@ const KEYS := {
 	"swap": [KEY_E, KEY_TAB],
 	"tuning": [KEY_F1],
 	"restart": [KEY_R],
-	"room1": [KEY_1], "room2": [KEY_2], "room3": [KEY_3], "room4": [KEY_4], "room5": [KEY_5],
+	"pause": [KEY_ESCAPE, KEY_P],
+	"room1": [KEY_1], "room2": [KEY_2], "room3": [KEY_3], "room4": [KEY_4], "room5": [KEY_5], "room6": [KEY_6],
 }
 const PAD := {
 	"left": [JOY_BUTTON_DPAD_LEFT], "right": [JOY_BUTTON_DPAD_RIGHT],
@@ -23,6 +24,7 @@ const PAD := {
 	"jump": [JOY_BUTTON_A], "attack": [JOY_BUTTON_X], "attack2": [JOY_BUTTON_Y],
 	"backdash": [JOY_BUTTON_B, JOY_BUTTON_LEFT_SHOULDER],
 	"swap": [JOY_BUTTON_RIGHT_SHOULDER],
+	"pause": [JOY_BUTTON_START],
 }
 
 var hitstop := 0.0
@@ -54,6 +56,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if hitstop > 0.0:
 		hitstop = maxf(0.0, hitstop - delta)
+	# Esc / P / Start: the pause menu (it also holds the music)
+	if Input.is_action_just_pressed("pause") and main != null and main.touch != null:
+		main.touch.toggle_pause()
 
 
 func frozen() -> bool:
