@@ -113,7 +113,7 @@ In the user's words, tidied:
 |---|---|---|
 | 1 The body | Movement, jump, backdash, attack, two enemies, two rooms, sounds | done (approved) |
 | 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | done (approved 2026-11-16) |
-| Weapons and hands | J and I are her right and left hand, one weapon each; two-handed weapons; the fast two-hit combo; Pandora-001 redrawn with weapons | planned (plan put to the user 2026-11-16) |
+| Weapons and hands | J and I are her right and left hand, one weapon each; two-handed weapons; the fast two-hit combo; Pandora-001 redrawn with weapons | in progress (plan agreed 2026-11-16) |
 | Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | done (the user's answers are recorded below) |
 | 2 The place | Four or five connected rooms with doors, demons and machines | planned |
 | 3 The boss | Arnetria rebuilt; counter as an optional bonus | planned |
@@ -195,5 +195,23 @@ In the user's words, tidied. This is the brief for every redraw.
    Amythia (the depression boss). Everything else is unsure and may be redrawn.
 
 What this changes: the stage 1b "J blue cut, I pink cut" becomes "right hand, left hand" with a
-weapon per hand. That is a new stage of work (weapons and hands) to plan with the user before
-stage 2. Status: planned.
+weapon per hand. That is a new stage of work (weapons and hands), agreed with the user before
+stage 2. Status: agreed (see below).
+
+## Weapons and hands — the plan agreed with the user, 2026-11-16
+
+The user's answers to the four plan questions, in their words, tidied:
+
+1. **One Dirge, equipped in both hands.** The user's exact answer: "One dirge, but can be
+   equipped twice; meaning that when she attacks with her right hand, the weapon materializes
+   as she attacks with her right hand and then dematerializes; same thing when she attacks with
+   her left hand. So she can equip it in both hands, attacking with either hand using the
+   weapon, but she is not holding two weapons at the same time, but rather chaining attacks and
+   swapping between right and left hand using the same weapon, similar to Castlevania Order of
+   Ecclesia."
+2. **Elegy first.** Of the two two-handed weapons, Elegy-013 is built first (the design book
+   already holds its swing numbers); Lament comes after.
+3. **Two-handed feel: yes, slower but stronger**, with a longer reach; one swing hits harder
+   than one short-sword swing.
+4. **Pandora-001 is redrawn now**, from her concept art, holding the weapons, with the paid
+   generation tool; the user's yes covers this redraw. Poses like the Order of Ecclesia heroine.
