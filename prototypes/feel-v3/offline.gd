@@ -72,10 +72,12 @@ func _ready() -> void:
 	for i in 2:
 		var b := Button.new()
 		b.text = ["RECONSTRUCT", "QUIT"][i]
-		b.custom_minimum_size = Vector2(120, 22)
-		b.size = Vector2(120, 22)
-		b.position = Vector2(132, 116 + i * 28)
 		b.add_theme_font_size_override("font_size", 10)
+		# wide enough for "> RECONSTRUCT <", so the button does not change size when it is
+		# picked; the second button starts under the real height of the first
+		b.custom_minimum_size = Vector2(136, 22)
+		b.size = b.get_combined_minimum_size()
+		b.position = Vector2((384.0 - b.size.x) / 2.0, 110.0 + i * (b.size.y + 6.0))
 		b.focus_mode = Control.FOCUS_NONE
 		b.pressed.connect(_choose.bind(i))
 		b.mouse_entered.connect(_hover.bind(i))

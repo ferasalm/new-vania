@@ -146,3 +146,33 @@ Bugs found by the first run and fixed in my files:
 
 Still rough (not fixed): the stick has one size (SMALLER / BIGGER do nothing when the stick is picked, measured);
 controls may be dragged on top of each other (nothing stops it).
+
+## 3. Pictures looked at, and where the work stopped (sprint ended early, 22:45)
+
+Windowed runs worked (window 1152x648, picture scale 3). Pictures: `prototypes/feel-v3/shots/h2_touch_*.png` (15 files).
+Opened and looked at 10: offline, offline_quit, hud_boss, hud_relic_message, hud_save, hud_church, pause, edit_open,
+edit_changed, play_own_layout.
+
+- OFFLINE (touch): title centred and readable, sub-line readable, touch controls gone, RECONSTRUCT clearly picked.
+  Rough: the unpicked QUIT is dim grey text with no visible button box on the grey picture (low contrast). Not fixed.
+- HUD: bars, name, defeated, weapon, boss name + bar, messages, pause button, touch buttons: no overlap seen by eye in
+  church, lab (long relic message fits, 339 px), boss fight, save room. Nit: in the boss room the big area name and the
+  small boss name both say THE PALLBEARER for the first 2.6 s.
+- Pause menu: all buttons readable and on screen.
+- CONTROLS editor: works, but rough (not fixed): the HUD bars show through under the editor's button row and under the
+  instruction line; FAINTER / SOLID change nothing you can see until you leave the editor (it always draws at full strength).
+- Windowed run 1 was 35 of 36: "OFFLINE: Down moves to QUIT" failed only there. Test artifact, not a game bug: the key
+  press is sent right after a screenshot, one frame late for `is_action_just_pressed`; headless (no screenshot) it passes.
+  So `h2_touch_offline_quit.png` shows RECONSTRUCT still picked. Windowed run 2 (restart): 7 of 7.
+
+Self-test after my last change to touch.gd / offline.gd (run with --fixed-fps 60, includes the lead's player.gd lines): SMOKE PASS  passed=58 failed=0
+
+Files I changed: touch.gd, offline.gd. Not changed: hud.gd, rooms/lab.txt.
+New files: climb_test.gd/.tscn, climb_test_patch.gd, climb_test_smoke.gd/.tscn, shot_h2.gd/.tscn (all in prototypes/feel-v3),
+and in production/handoff: HELPER2-REPORT.md, helper2_apply.py, helper2-smoke-insert.txt, helper2-climb-*.txt (3).
+Backups of touch.gd, hud.gd, offline.gd, lab.txt as they were at 22:41: scratchpad `backup/` (session temp folder).
+
+NOT RUN: 2a weapon grip (dropped by the lead); 2b "show hit areas" against the blade picture; the key-mode (no touch)
+pictures; the stale shots/15_offline.png etc. were not retaken. The new smoke.gd checks are proposed only (section 1c):
+if they are added now that player.gd has option A, expect 61 of 61 (measured in memory before the lead's edit).
+I ran one read-only `git status` by mistake at 22:39; no other git command.

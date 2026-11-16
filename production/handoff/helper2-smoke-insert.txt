@@ -1,0 +1,60 @@
+	# the climb, both ways: a player who only taps jump (6 frames) and waits a quarter
+	# of a second after each latch gets over the tall wall in a few wall jumps
+	# (the full table comes from climb_test.tscn)
+	for way in [1, -1]:
+		var toward := "right" if way == 1 else "left"
+		var floor_y: float = main.room.size.y - 32.0
+		await _frames(30)
+		p.global_position = Vector2((55 * 16 - 30.0) if way == 1 else (57 * 16 + 30.0), floor_y)
+		p.velocity = Vector2.ZERO
+		await _frames(4)
+		var kicks := 0
+		var clung := 0
+		var held := 0
+		var took := -1
+		Input.action_press(toward)
+		for i in 420:
+			if held > 0:
+				held -= 1
+				if held == 0:
+					Input.action_release("jump")
+			elif p.state == "wall":
+				clung += 1
+				if clung >= 15:
+					clung = 0
+					kicks += 1
+					held = 6
+					Input.action_press("jump")
+			elif p.is_on_floor() and p.global_position.y > floor_y - 1.0 and i >= 6:
+				held = 6
+				Input.action_press("jump")
+			if p.state != "wall":
+				clung = 0
+			await get_tree().physics_frame
+			var on_top: bool = p.is_on_floor() and p.global_position.y < floor_y - 120.0
+			if on_top or (p.global_position.x - 56 * 16) * way > 24.0:
+				took = i
+				break
+		Input.action_release("jump")
+		Input.action_release(toward)
+		_check("tapping jump climbs the tall wall from the %s in at most 4 wall jumps" % ("left" if way == 1 else "right"),
+			took >= 0 and kicks <= 4, "wall jumps=%d frames=%d" % [kicks, took])
+	# and the wall is a real gate: without the relic she cannot cling to it
+	main.has_latch = false
+	await _frames(30)
+	p.global_position = Vector2(55 * 16 - 30.0, main.room.size.y - 32.0)
+	p.velocity = Vector2.ZERO
+	var gate_top: float = p.global_position.y
+	var gate_clung := false
+	Input.action_press("right")
+	await _frames(6)
+	Input.action_press("jump")
+	for i in 70:
+		await get_tree().physics_frame
+		gate_top = minf(gate_top, p.global_position.y)
+		gate_clung = gate_clung or p.state == "wall"
+	Input.action_release("jump")
+	Input.action_release("right")
+	main.has_latch = true
+	_check("without the relic the tall wall stops her", not gate_clung and gate_top > main.room.size.y - 32.0 - 128.0 + 30.0,
+		"clung=%s reached %.0f of 128 px" % [str(gate_clung), main.room.size.y - 32.0 - gate_top])

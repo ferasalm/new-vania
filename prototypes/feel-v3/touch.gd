@@ -53,7 +53,9 @@ var BTN: Array = []          # the live layout (DEFAULT_BTN + what the player sa
 var rest := REST             # where the stick sits
 var fixed_stick := false     # false = the stick appears under the thumb
 var see := 1.0               # how solid the controls are drawn (0.3 .. 1.6)
+var layout_file := LAYOUT_FILE   # a test passes "layout=<name>.json" to use its own file
 var _edit_bar: CanvasLayer
+var _edit_row: HBoxContainer   # the editor's own buttons, along the top
 var _edit_pick := ""         # the control being edited ("stick" or a button id)
 var _edit_drag := false
 var _stick_label: Button
@@ -80,6 +82,9 @@ func _ready() -> void:
 		or OS.get_cmdline_user_args().has("--touch") or OS.get_cmdline_user_args().has("touch")
 	visible = active
 	set_process(active)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("layout=") and a.get_file().length() > 7:
+			layout_file = "user://" + a.substr(7).get_file()
 	_load_layout()
 	_build_menu()
 	_build_edit_bar()
@@ -366,17 +371,17 @@ func _load_layout() -> void:
 	rest = REST
 	fixed_stick = false
 	see = 1.0
-	if not FileAccess.file_exists(LAYOUT_FILE):
+	if not FileAccess.file_exists(layout_file):
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT_FILE))
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(layout_file))
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return
 	var saved_btn: Dictionary = parsed.get("btn", {})
 	for b in BTN:
 		var got = saved_btn.get(b["id"], null)
 		if typeof(got) == TYPE_ARRAY and got.size() == 3:
-			b["pos"] = Vector2(float(got[0]), float(got[1])).clamp(Vector2(8, 8), VIEW - Vector2(8, 8))
 			b["r"] = clampf(float(got[2]), 8.0, 40.0)
+			b["pos"] = Vector2(float(got[0]), float(got[1])).clamp(Vector2(b["r"], b["r"]), VIEW - Vector2(b["r"], b["r"]))
 	var st = parsed.get("stick", null)
 	if typeof(st) == TYPE_ARRAY and st.size() == 2:
 		rest = Vector2(float(st[0]), float(st[1])).clamp(Vector2(20, 20), VIEW - Vector2(20, 20))
@@ -388,7 +393,7 @@ func _save_layout() -> void:
 	var out := {"btn": {}, "stick": [rest.x, rest.y], "fixed": fixed_stick, "see": see}
 	for b in BTN:
 		out["btn"][b["id"]] = [b["pos"].x, b["pos"].y, b["r"]]
-	var f := FileAccess.open(LAYOUT_FILE, FileAccess.WRITE)
+	var f := FileAccess.open(layout_file, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(out))
 
@@ -401,6 +406,7 @@ func _build_edit_bar() -> void:
 	add_child(_edit_bar)
 	var row := HBoxContainer.new()
 	row.position = Vector2(4, 2)
+	_edit_row = row
 	row.add_theme_constant_override("separation", 2)
 	_edit_bar.add_child(row)
 	_menu_button(row, "SMALLER", _edit_size.bind(-2.0), 44.0)
@@ -437,8 +443,8 @@ func _edit_done() -> void:
 
 
 func _edit_reset() -> void:
-	if FileAccess.file_exists(LAYOUT_FILE):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(LAYOUT_FILE))
+	if FileAccess.file_exists(layout_file):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(layout_file))
 	_load_layout()
 	_stick_label.text = "STICK: FLOATS"
 	queue_redraw()
@@ -448,6 +454,7 @@ func _edit_size(by: float) -> void:
 	for b in BTN:
 		if b["id"] == _edit_pick:
 			b["r"] = clampf(float(b["r"]) + by, 8.0, 40.0)
+			b["pos"] = _on_screen(b["pos"], float(b["r"]))      # a control that grew at the edge moves in
 	queue_redraw()
 
 
@@ -484,7 +491,7 @@ func _edit_input(event: InputEvent) -> void:
 		move = true
 	else:
 		return
-	if down and pos.y > 24.0:
+	if down and not _on_edit_row(pos):
 		_edit_drag = false
 		var best := 9999.0
 		for b in BTN:
@@ -500,14 +507,26 @@ func _edit_input(event: InputEvent) -> void:
 	elif up:
 		_edit_drag = false
 	elif move and _edit_drag:
-		var at := pos.clamp(Vector2(8, 28), VIEW - Vector2(8, 8))
 		if _edit_pick == "stick":
-			rest = at.clamp(Vector2(STICK_R, STICK_R + 24.0), Vector2(ZONE_X - 4.0, VIEW.y - STICK_R))
+			rest = _on_screen(pos, STICK_R).clamp(Vector2(STICK_R, STICK_R), Vector2(ZONE_X - 4.0, VIEW.y - STICK_R))
 		else:
 			for b in BTN:
 				if b["id"] == _edit_pick:
-					b["pos"] = at
+					b["pos"] = _on_screen(pos, float(b["r"]))
 		queue_redraw()
+
+
+func _on_edit_row(pos: Vector2) -> bool:
+	# a press on the editor's own row of buttons is for those buttons, not for a control
+	return _edit_row != null and _edit_row.get_global_rect().grow(3.0).has_point(pos)
+
+
+func _on_screen(at: Vector2, r: float) -> Vector2:
+	# the whole control stays on the screen, and out from under the editor's row of buttons
+	var top := r
+	if _edit_row != null and at.x - r < _edit_row.get_global_rect().end.x + 3.0:
+		top = maxf(r, _edit_row.get_global_rect().end.y + 3.0 + r)
+	return at.clamp(Vector2(r, top), VIEW - Vector2(r, r))
 
 
 func _goto_room(room: String) -> void:
