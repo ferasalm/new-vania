@@ -41,9 +41,12 @@ The user judges feel by playing, not by reading numbers. So:
   the game keeps running. `Save` writes `tuning.json`; `Reset` returns to the saved values.
 - Choices that cannot be a number (which sound, which music) get a "previous / next" picker
   in the same panel, saved the same way.
-- After the user plays: run `git diff` on the prototype's `tuning.json` (and other saved
-  choice files), copy the changed values into `production/playtests/VERDICTS.md` with a
-  plain-words meaning for each, then commit the file. Never overwrite values the user saved.
+- Before the user plays, commit the prototype including `tuning.json` and the saved choice
+  files, so the diff after play shows only the user's changes (`git diff` does not show
+  untracked files). After the user plays, run `git diff` on those files and copy the changed
+  values into `production/playtests/VERDICTS.md` with a plain-words meaning for each. Then
+  commit `tuning.json`, the saved choice files and `VERDICTS.md` together. Never overwrite
+  values the user saved.
 - Copy the working example instead of writing a new one: `prototypes/feel-v3/tuning.gd`,
   `tuning_panel.gd` and `tuning.json`.
 

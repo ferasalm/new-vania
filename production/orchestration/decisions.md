@@ -270,7 +270,7 @@
   the feel (stage 4). The design-document queue stays paused until then.
   Everything put to the user for approval follows
   `.agents/rules/plain-language.md`.
-- **Status**: **DECIDED — standing direction.**
+- **Status**: **done** — standing direction.
 
 ### D-ORCH-25 — concept art is reference only; ask the user before making art; Pandora-001 and three bars (DECIDED by the user, 2026-11-16)
 
