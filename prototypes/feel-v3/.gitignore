@@ -12,3 +12,6 @@ build/
 assets/hero/
 assets/references/
 __pycache__/
+# scratch renders and helper scratch files
+tools/models/_probe/
+tools/_v2_scratch/

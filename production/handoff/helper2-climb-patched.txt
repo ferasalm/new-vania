@@ -1,0 +1,38 @@
+patched in memory: res://player.gd (4 edits)
+wall: columns 55-56, top y=112, floor y=240, height to climb 128 px (8 tiles)
+numbers: jump 325  gravity 780  jump_cut 0.40  wall_jump 300  push 150  lock 0.16  latch 1.2 s  slide 22
+side   hold  gap   over?  time    wall jumps  floor jumps  peak / needed
+left    6f   10f   yes    1.60 s  2           1            134 / 128 px   (slow)
+left    6f   15f   yes    1.73 s  2           1            130 / 128 px   (slow)
+left    6f   20f   yes    2.65 s  3           1            156 / 128 px   (sloppy)
+left    6f   30f   yes    3.37 s  3           1            163 / 128 px   (sloppy)
+left   12f   10f   yes    1.80 s  2           1            151 / 128 px   (slow)
+left   12f   15f   yes    1.93 s  2           1            147 / 128 px   (slow)
+left   12f   20f   yes    2.08 s  2           1            144 / 128 px   (sloppy)
+left   12f   30f   yes    2.37 s  2           1            136 / 128 px   (sloppy)
+left   20f   10f   yes    2.00 s  2           1            165 / 128 px   (slow)
+left   20f   15f   yes    2.15 s  2           1            161 / 128 px   (slow)
+left   20f   20f   yes    2.30 s  2           1            158 / 128 px   (sloppy)
+left   20f   30f   yes    2.58 s  2           1            150 / 128 px   (sloppy)
+right   6f   10f   yes    1.60 s  2           1            134 / 128 px   (slow)
+right   6f   15f   yes    1.73 s  2           1            130 / 128 px   (slow)
+right   6f   20f   yes    2.92 s  3           1            174 / 128 px   (sloppy)
+right   6f   30f   yes    3.37 s  3           1            163 / 128 px   (sloppy)
+right  12f   10f   yes    1.80 s  2           1            151 / 128 px   (slow)
+right  12f   15f   yes    1.93 s  2           1            147 / 128 px   (slow)
+right  12f   20f   yes    2.08 s  2           1            144 / 128 px   (sloppy)
+right  12f   30f   yes    2.37 s  2           1            136 / 128 px   (sloppy)
+right  20f   10f   yes    2.00 s  2           1            165 / 128 px   (slow)
+right  20f   15f   yes    2.15 s  2           1            161 / 128 px   (slow)
+right  20f   20f   yes    2.30 s  2           1            158 / 128 px   (sloppy)
+right  20f   30f   yes    2.58 s  2           1            150 / 128 px   (sloppy)
+tries=24  failed=0  needed more than 4 wall jumps=0  most wall jumps in a success=3
+gate (the wall must stop her without the relic):
+  left   from the floor, full jumps, no relic: over? no   peak 65 / 128 px
+  left   running jump off the ledge at column 36, 144 px up, no relic: over? no   peak 188 / 128 px, got to 198 px from the wall
+  left   running jump off the ledge at column 42, 96 px up, no relic: over? no   peak 161 / 128 px, got to 90 px from the wall
+  left   running jump off the ledge at column 49, 48 px up, no relic: over? no   peak 113 / 128 px, got to 0 px from the wall
+  right  from the floor, full jumps, no relic: over? no   peak 65 / 128 px
+  right  running jump off the ledge at column 68, 48 px up, no relic: over? no   peak 113 / 128 px, got to 49 px from the wall
+CLIMB PASS
+ERROR: 4 resources still in use at exit (run with --verbose for details).

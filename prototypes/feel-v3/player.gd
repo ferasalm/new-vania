@@ -66,6 +66,7 @@ var _wall_dir := 0          # which side the wall is on: -1 left, 1 right
 var _latch_cd := 0.0
 var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
 var _kick_t := 0.0          # seconds left of the kick-off picture after a wall jump
+var _kicked := false        # rising from a wall jump: letting go of jump does not cut it short
 var _swings := {}           # SWINGS, with shoulder and hand distance read from the hero frames
 var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
 var _spin_hits := 0
@@ -169,6 +170,8 @@ func _physics_process(delta: float) -> void:
 			collision_mask = 1 | 2
 	var on_floor := is_on_floor()
 	_coyote = T.v("coyote_time") if on_floor else maxf(0.0, _coyote - delta)
+	if on_floor:
+		_kicked = false
 	var dir := signf(Input.get_axis("left", "right")) if absf(Input.get_axis("left", "right")) > 0.3 else 0.0
 	if Input.is_action_just_pressed("jump"):
 		_jump_buf = maxf(T.v("jump_buffer"), 0.02)
@@ -211,6 +214,7 @@ func _physics_process(delta: float) -> void:
 				velocity = Vector2(-_wall_dir * T.v("wall_jump_push"), -T.v("wall_jump_velocity"))
 				_steer_lock = T.v("wall_jump_lock")
 				_kick_t = KICK_SHOW
+				_kicked = true
 				_latch_cd = 0.12
 				hold_y = false
 				Sfx.play("jump", 1.15)
@@ -262,7 +266,7 @@ func _physics_process(delta: float) -> void:
 				state = "move"
 
 	# letting go of jump early cuts the rise: tap = hop, hold = full jump
-	if Input.is_action_just_released("jump") and velocity.y < 0.0:
+	if Input.is_action_just_released("jump") and velocity.y < 0.0 and not _kicked:
 		velocity.y *= T.v("jump_cut")
 	if not hold_y:
 		velocity.y = minf(velocity.y + T.v("gravity") * delta, T.v("max_fall"))
