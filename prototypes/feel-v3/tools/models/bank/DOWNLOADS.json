@@ -1,0 +1,470 @@
+{
+ "generated_at": "2026-11-16T23:53:12",
+ "source_ledger": "../rodin-bank.json",
+ "ledger_jobs_at_write": 53,
+ "note": "Bounded download batch. Files validated locally: glTF magic, GLB header length == exact filesize, sha256 of full file. No signed URLs stored; result_page is the permanent Hyper3D page. Existing valid files were preserved, never overwritten.",
+ "counts": {
+  "saved": 26,
+  "invalid_on_disk": 0,
+  "pending_in_this_ledger": 27
+ },
+ "total_bytes": 266404044,
+ "files": [
+  {
+   "name": "boss_glass_widow",
+   "file": "boss_glass_widow.glb",
+   "bytes": 8311688,
+   "glb_version": 2,
+   "sha256": "f13a0543aa0a2e036d4ea5d3526c7252de2a888506272982ca64fc0792b8df00",
+   "job_id": "8f402394-3e1b-4930-aeeb-dddb2dac0500",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/8f402394-3e1b-4930-aeeb-dddb2dac0500"
+  },
+  {
+   "name": "boss_mourning_bell",
+   "file": "boss_mourning_bell.glb",
+   "bytes": 12053208,
+   "glb_version": 2,
+   "sha256": "7603850252757ad5b73f6cdecff8ede5ded2a65d187a2c0d9c458618965226c8",
+   "job_id": "e9a51656-31e3-4ca7-8ba3-a9949c6d3479",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/e9a51656-31e3-4ca7-8ba3-a9949c6d3479"
+  },
+  {
+   "name": "boss_ossuary_matriarch",
+   "file": "boss_ossuary_matriarch.glb",
+   "bytes": 10212096,
+   "glb_version": 2,
+   "sha256": "2f259d00fd963fea8bbdfec18c3b3043b1a2cddd83ce2ea5b7405d27be42eeef",
+   "job_id": "0b2e89e8-5e7e-4a3f-abed-31ea20f67abf",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/0b2e89e8-5e7e-4a3f-abed-31ea20f67abf"
+  },
+  {
+   "name": "cache_station",
+   "file": "cache_station.glb",
+   "bytes": 9536272,
+   "glb_version": 2,
+   "sha256": "c7dc3ef798762933483caf26bd363c29c9211bcbfe9c2c2e2fe0d86debbc4b3a",
+   "job_id": "469664e9-afb1-4671-ad65-430337a8390b",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/469664e9-afb1-4671-ad65-430337a8390b"
+  },
+  {
+   "name": "capsule",
+   "file": "capsule.glb",
+   "bytes": 11192188,
+   "glb_version": 2,
+   "sha256": "af08f7bd99a0aab707841b26abf1d0b065975a5ddab4e842bb2f9225d8812156",
+   "job_id": "bb537dfc-ecc6-4f28-a1ac-e08474f8bf87",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/bb537dfc-ecc6-4f28-a1ac-e08474f8bf87"
+  },
+  {
+   "name": "choir",
+   "file": "choir.glb",
+   "bytes": 8269164,
+   "glb_version": 2,
+   "sha256": "50404d1336f44de06d672c91a6eaf138574f3d63b008474382514a09a025b267",
+   "job_id": "6150fa31-a90e-4982-82ed-befc170f4921",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/6150fa31-a90e-4982-82ed-befc170f4921"
+  },
+  {
+   "name": "enemy_neural_sentinel",
+   "file": "enemy_neural_sentinel.glb",
+   "bytes": 7427332,
+   "glb_version": 2,
+   "sha256": "1e7ddd94b22e5e55e4532980cdb2e3ed6cbe0420138c7c1f7aa34390b4627a24",
+   "job_id": "b736e16f-5464-4a5b-8cc8-8676479db3a8",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/b736e16f-5464-4a5b-8cc8-8676479db3a8"
+  },
+  {
+   "name": "enemy_thread_leech",
+   "file": "enemy_thread_leech.glb",
+   "bytes": 10647564,
+   "glb_version": 2,
+   "sha256": "08bbbb614aa9f34f95bcc16395844ad7c0ee09fa71ded8d9571160a5daabc231",
+   "job_id": "fc94b36d-6a67-4505-87bc-e0b50f3fae9d",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/fc94b36d-6a67-4505-87bc-e0b50f3fae9d"
+  },
+  {
+   "name": "glass_widow_rig",
+   "file": "glass_widow_rig.glb",
+   "bytes": 11558440,
+   "glb_version": 2,
+   "sha256": "91fd97e1f042eb77ea020dc196b737046c689642a9f0df0ad27482f2d61eb468",
+   "job_id": "68a6750b-0404-4473-aea3-773ca8c87ab4",
+   "kind": "rigging",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/68a6750b-0404-4473-aea3-773ca8c87ab4",
+   "source_id": "8f402394-3e1b-4930-aeeb-dddb2dac0500"
+  },
+  {
+   "name": "hound",
+   "file": "hound.glb",
+   "bytes": 10222672,
+   "glb_version": 2,
+   "sha256": "b68c00bf52477c652f4d3f75bc49cdf739caad491582c765ceba31b314e51117",
+   "job_id": "acf49fe3-0514-437a-900d-dff37e3497df",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/acf49fe3-0514-437a-900d-dff37e3497df"
+  },
+  {
+   "name": "hound_motion_library",
+   "file": "hound_motion_library.glb",
+   "bytes": 12075100,
+   "glb_version": 2,
+   "sha256": "1ae5e89d956b00366e21bf4b4eb1c62662cdaa5640109d90999b129cce484657",
+   "job_id": "20292b96-3959-4bff-8499-3e3ec6fc3867",
+   "kind": "rigging",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/20292b96-3959-4bff-8499-3e3ec6fc3867",
+   "source_id": "acf49fe3-0514-437a-900d-dff37e3497df"
+  },
+  {
+   "name": "landmark_memory_organ",
+   "file": "landmark_memory_organ.glb",
+   "bytes": 11666152,
+   "glb_version": 2,
+   "sha256": "bd2026910a2582db2e810b184c4adec75d2d2686c9114664136b14c522ca9367",
+   "job_id": "b8866326-5ecb-485b-99d2-883c9387f8a6",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/b8866326-5ecb-485b-99d2-883c9387f8a6"
+  },
+  {
+   "name": "landmark_neural_tree",
+   "file": "landmark_neural_tree.glb",
+   "bytes": 9154212,
+   "glb_version": 2,
+   "sha256": "dc71aa0a481c6e1eea80a8d4a3d2dc1e745219d4c50bd489a382eed08a17cb4a",
+   "job_id": "8b6b826d-6aff-4d2f-9ccb-c70d906c62c9",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/8b6b826d-6aff-4d2f-9ccb-c70d906c62c9"
+  },
+  {
+   "name": "librarian",
+   "file": "librarian.glb",
+   "bytes": 9421944,
+   "glb_version": 2,
+   "sha256": "4d4a6ccebac5ae485ff875d45f993eeba472f9f4edeae3e75420ae0fdce084aa",
+   "job_id": "c12a0ae0-e3d9-44de-a49b-746414e6d78d",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/c12a0ae0-e3d9-44de-a49b-746414e6d78d"
+  },
+  {
+   "name": "librarian_rig",
+   "file": "librarian_rig.glb",
+   "bytes": 12476672,
+   "glb_version": 2,
+   "sha256": "fa78abaa27b5b653c0a902f936d9bb5b0a6276e373a434a596123cda57706930",
+   "job_id": "45402a12-57aa-42d5-8dd2-f0ab86196512",
+   "kind": "rigging",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/45402a12-57aa-42d5-8dd2-f0ab86196512",
+   "source_id": "c12a0ae0-e3d9-44de-a49b-746414e6d78d"
+  },
+  {
+   "name": "miniboss_archive_mantis",
+   "file": "miniboss_archive_mantis.glb",
+   "bytes": 8509384,
+   "glb_version": 2,
+   "sha256": "143532b06d825be2b92479bdd1c9209ec9d062eba7d54ab6077601d64d2b38bf",
+   "job_id": "2c700c8c-a331-42da-80e0-c71944472d53",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/2c700c8c-a331-42da-80e0-c71944472d53"
+  },
+  {
+   "name": "miniboss_glass_stag",
+   "file": "miniboss_glass_stag.glb",
+   "bytes": 7400964,
+   "glb_version": 2,
+   "sha256": "255ff7bd8589f88cce85fbe77f84bd2c3c43c1daf46d06bbe38e4405a95b00cf",
+   "job_id": "dad21846-5506-4c12-9924-1261cce96e7e",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/dad21846-5506-4c12-9924-1261cce96e7e"
+  },
+  {
+   "name": "miniboss_suture_knight",
+   "file": "miniboss_suture_knight.glb",
+   "bytes": 9353952,
+   "glb_version": 2,
+   "sha256": "ddfca664c41638b8407d584e8234bc80a2f48c880497c8832d8486a9a5ffc410",
+   "job_id": "1b6b31eb-18ba-4652-963a-58387e3a6e62",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/1b6b31eb-18ba-4652-963a-58387e3a6e62"
+  },
+  {
+   "name": "mourning_bell_rig",
+   "file": "mourning_bell_rig.glb",
+   "bytes": 16202120,
+   "glb_version": 2,
+   "sha256": "54ada5ffeb1834674aae8f5420aef0737cb69818a706f0753082affe03e0597d",
+   "job_id": "6f288004-27aa-464f-928e-912bbd0d8c3a",
+   "kind": "rigging",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/6f288004-27aa-464f-928e-912bbd0d8c3a",
+   "source_id": "e9a51656-31e3-4ca7-8ba3-a9949c6d3479"
+  },
+  {
+   "name": "npc_capsule_keeper",
+   "file": "npc_capsule_keeper.glb",
+   "bytes": 8728036,
+   "glb_version": 2,
+   "sha256": "ebdaa10709a75c4a45705ec8b72b8e94617cf2329be959ae671560150fed71c1",
+   "job_id": "bc490cbf-c791-41aa-8185-547f5111a907",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/bc490cbf-c791-41aa-8185-547f5111a907"
+  },
+  {
+   "name": "prop_memory_loom",
+   "file": "prop_memory_loom.glb",
+   "bytes": 11500808,
+   "glb_version": 2,
+   "sha256": "0f3503ce1189fee0f882a998ff2217237ca877c67bb9142c2f49a82bf80825ac",
+   "job_id": "e64739c2-0f42-4a9a-bdc7-81effd681063",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/e64739c2-0f42-4a9a-bdc7-81effd681063"
+  },
+  {
+   "name": "prop_ossuary_altar",
+   "file": "prop_ossuary_altar.glb",
+   "bytes": 9195852,
+   "glb_version": 2,
+   "sha256": "6a1f6562491f3468cf581e074320c9ec3cff4cc384317081bcd311a60a8b4db5",
+   "job_id": "226460c0-6d93-421d-ba83-3d48c03ac0c4",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/226460c0-6d93-421d-ba83-3d48c03ac0c4"
+  },
+  {
+   "name": "prop_relic_shrine",
+   "file": "prop_relic_shrine.glb",
+   "bytes": 8405224,
+   "glb_version": 2,
+   "sha256": "f9cf468d6555fd44c1ea776b1ebd19051d995ab94d5f5cf95f35ad9faa0dd3e6",
+   "job_id": "d949292b-cce3-4c01-b2b9-c631eb5e52c7",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/d949292b-cce3-4c01-b2b9-c631eb5e52c7"
+  },
+  {
+   "name": "relic",
+   "file": "relic.glb",
+   "bytes": 11315800,
+   "glb_version": 2,
+   "sha256": "50b973635e163696d027b2e5edea083b96874e564f08ddb5334271f168418af6",
+   "job_id": "4168ef8b-89b7-410a-86b1-fd3b08fe3ee6",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/4168ef8b-89b7-410a-86b1-fd3b08fe3ee6"
+  },
+  {
+   "name": "spitter",
+   "file": "spitter.glb",
+   "bytes": 8167360,
+   "glb_version": 2,
+   "sha256": "e6b3b27307112cb0c9e1e43184da43f214f6c70ada80867cee6ef843bca30c91",
+   "job_id": "4c453306-02a3-4c4e-997d-b03b0d4e595b",
+   "kind": "generate",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/4c453306-02a3-4c4e-997d-b03b0d4e595b"
+  },
+  {
+   "name": "suture_knight_rig",
+   "file": "suture_knight_rig.glb",
+   "bytes": 13399840,
+   "glb_version": 2,
+   "sha256": "a09a556db8b686857a5d3f4a88b3da0b69fed2bd85f3a8a7788fe5b19c1c25ef",
+   "job_id": "bf257e1e-58cf-4524-bfce-d98ec79586b8",
+   "kind": "rigging",
+   "source_file_in_pack": "base_basic_pbr.glb",
+   "result_page": "https://hyper3d.ai/workspace/rodin/bf257e1e-58cf-4524-bfce-d98ec79586b8",
+   "source_id": "1b6b31eb-18ba-4652-963a-58387e3a6e62"
+  }
+ ],
+ "invalid_on_disk": [],
+ "pending": [
+  {
+   "name": "pandora_motion_library",
+   "id": "109ca55a-51bd-444c-9677-182d830601f7",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "enemy_censer_moth",
+   "id": "fbfd1370-3d19-4a6a-bae6-2c88dd0b48b6",
+   "kind": "generate",
+   "note": "not completed at last sweep"
+  },
+  {
+   "name": "enemy_spine_crab",
+   "id": "3b3fccc4-081a-4c3a-84f3-3111f0e0c759",
+   "kind": "generate",
+   "note": "not completed at last sweep"
+  },
+  {
+   "name": "enemy_needle_scribe",
+   "id": "f6a7ede1-fa67-48f2-a0c9-f13a46783e70",
+   "kind": "generate",
+   "note": "not completed at last sweep"
+  },
+  {
+   "name": "boss_chain_penitent",
+   "id": "44c94c9d-7e8c-4503-b30e-0fac1eb0987c",
+   "kind": "generate",
+   "note": "not completed at last sweep"
+  },
+  {
+   "name": "pandora_parts",
+   "id": "ad6a0c64-72e7-4ef7-b50c-d781025a9033",
+   "kind": "bang",
+   "note": "not completed at last sweep"
+  },
+  {
+   "name": "pandora_animation_clean",
+   "id": "86c636c1-9042-4efa-b23f-f8bd3aa3f952",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "boss_reliquary_seraph",
+   "id": "949c7aaa-a5fa-4ef7-bb65-02385ff3c7ff",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "miniboss_memory_eater",
+   "id": "d6987a5a-a1c0-4663-ac38-f34f1d16ce90",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "enemy_amniote",
+   "id": "12559161-429c-4ae2-8da1-6fa049425380",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "landmark_drowned_chime",
+   "id": "c898a6da-760a-484a-811f-090ecb64ca59",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "prop_lift_cradle",
+   "id": "b4aa3f20-6fd6-4107-99a6-4dc66945b911",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "prop_neural_root_gate",
+   "id": "c1f147c0-d6e8-402e-8c39-424e5694eaa8",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "prop_archive_sarcophagus",
+   "id": "fbf2bac2-e461-4456-917a-6e8fa2db1b8c",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "creature_ossuary_walker",
+   "id": "f8edc0df-8d3b-4c0b-8956-83b25c217e34",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "prop_memory_ferry",
+   "id": "e427b818-ef05-4b3f-af57-f83973ca7bd2",
+   "kind": "generate",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "ossuary_matriarch_rig",
+   "id": "f35f1cfd-b2e9-46b0-969c-8872c48076b8",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "capsule_keeper_rig",
+   "id": "eaeb4d9f-d8f4-4521-b49a-01cf3dd6028f",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "needle_scribe_rig",
+   "id": "08eb0f2c-00cc-4ce2-aa44-8c6ff837e909",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "chain_penitent_rig",
+   "id": "afea4552-9516-4f14-9fb0-dd0e3d65c14b",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "pandora_clean_motion_library",
+   "id": "f08e54b8-35d9-413d-ab9f-57907765adfe",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "glass_stag_rig",
+   "id": "c7825230-6633-4bbd-b81f-b802f4242480",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "memory_eater_rig",
+   "id": "93bc28bb-1306-44fa-8dd9-505c8cadf3a7",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "moth_custom_rig",
+   "id": "e4d71437-d882-4b03-9993-41b50806f123",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "crab_custom_rig",
+   "id": "7d4b04ee-a3f0-416e-b40e-1189030ab2f3",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "leech_custom_rig",
+   "id": "9470702f-ff2a-4657-8bec-bca3e7cf5f09",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  },
+  {
+   "name": "choir_custom_rig",
+   "id": "c8338c65-0029-445c-b6c4-48eb4e13e4c4",
+   "kind": "rigging",
+   "note": "status completed at last sweep"
+  }
+ ]
+}
