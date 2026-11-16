@@ -65,8 +65,13 @@ func _run() -> void:
 	await _frames(40)
 	var p: CharacterBody2D = main.player
 	_check("stands on the floor", p.is_on_floor(), "y=%.0f" % p.global_position.y)
-	_check("sounds loaded", Sfx.missing.is_empty() and Sfx.sfx.size() >= 11 and Sfx.music.size() >= 2,
-		"sfx=%d music=%d missing=%s" % [Sfx.sfx.size(), Sfx.music.size(), str(Sfx.missing)])
+	_check("sounds loaded", Sfx.missing.is_empty() and Sfx.count("sfx") >= 11 and Sfx.count("music") >= 2,
+		"sfx=%d music=%d missing=%s" % [Sfx.count("sfx"), Sfx.count("music"), str(Sfx.missing)])
+	var few: Array = []
+	for n in ["hit", "hurt", "backdash", "swing", "music_room"]:
+		if not Sfx.ev.has(n) or Sfx.ev[n]["options"].size() < 2:
+			few.append(n)
+	_check("the disliked sounds have other options to pick", few.is_empty(), "too few: %s" % str(few))
 	await _shot("1_start")
 
 	var x0 := p.global_position.x
@@ -105,10 +110,11 @@ func _run() -> void:
 		p.facing = 1
 		await _frames(4)
 		var hp0: float = hound.hp
+		var swing_frames := int(T.v("attack_time") * 60.0) + 4
 		await _tap("attack", 2)
 		await _frames(6)
 		await _shot("3_attack")
-		await _frames(14)
+		await _frames(swing_frames - 6)
 		var hit_once: bool = (not is_instance_valid(hound)) or hound.hp < hp0
 		_check("a swing hurts the hound", hit_once, "hp %.0f -> %s" % [hp0, str(hound.hp) if is_instance_valid(hound) else "dead"])
 		var swings := 1
@@ -116,7 +122,7 @@ func _run() -> void:
 			p.global_position = hound.global_position + Vector2(-30, 0)
 			p.facing = 1
 			await _tap("attack" if swings % 2 == 0 else "attack2", 2)
-			await _frames(22)
+			await _frames(swing_frames)
 			swings += 1
 		_check("the hound dies in 3 swings", not is_instance_valid(hound) and swings == 3, "swings=%d kills=%d" % [swings, main.kills])
 
@@ -161,3 +167,10 @@ func _run() -> void:
 	await _frames(20)
 	await _shot("5_room2")
 	_check("room 2 has enemies", main.enemies.size() >= 3, "count=%d" % main.enemies.size())
+	if shots:
+		main.panel._root.visible = true
+		await _frames(3)
+		await _shot("6_panel_feel")
+		main.panel._page(1)
+		await _frames(3)
+		await _shot("7_panel_sounds")

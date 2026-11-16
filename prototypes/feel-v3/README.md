@@ -38,8 +38,16 @@ A gamepad also works (A jump, X / Y attack, B or left shoulder backdash).
 
 Sliders for every feel number: run speed, jump power, gravity, short hop, backdash,
 attack length, chain speed, reach, hit pause, screen shake, enemy speed. Drag one and
-the game changes at once. Point at a slider to read what it does. **Save** writes the
-values to `tuning.json`; **Reset** goes back to the last saved values.
+the game changes at once. Point at a slider to read what it does.
+
+The **SOUNDS** page (button at the top of the panel) lists each moment that makes a sound
+and the music. `<` and `>` try the other options for that moment and play them; the small
+slider is its loudness. Options named "made ..." are soft sounds generated for this
+prototype.
+
+**Save** writes the feel values to `tuning.json` and the sound choices to
+`assets/audio/events.json`; **Reset** goes back to the last saved feel values. After a
+playtest, `git diff` on those two files shows exactly what the user chose.
 
 ## What is in it
 
@@ -72,4 +80,6 @@ The heroine has no crouch and no backdash picture of her own (it reuses a jump f
 
 ## Findings
 
-None yet. To be filled in from the user's verdict.
+- 2026-11-16, stage 1: the user approved the feel (movement, jump, backdash, attack, chains)
+  after tuning six values with the sliders, and rejected the sounds. Details and the saved
+  values are in `production/playtests/VERDICTS.md`.
