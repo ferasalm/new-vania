@@ -49,6 +49,15 @@ inside the audio folder; the paths below point at the exact file read.
 | `sfx/door/switch_latch.wav` | `.../organized/projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/Audio/switch.wav` | Super Grotto Escape (Ansimuz) | MIT © 2022 Luis Zuno — `projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/LICENSE` | 0.335 s | latch click |
 | `sfx/ui_move.wav` | `.../organized/projects/metroidvania-godot-4-main/music_and_sounds/click.wav` | metroidvania-godot-4-main (Heart Gamedev) | MIT © 2023 Heart Gamedev LLC — `projects/metroidvania-godot-4-main/LICENSE.txt` | 0.076 s | unchanged |
 | `sfx/ui_confirm.ogg` | `.../organized/projects/GothicVania-town-files/code/phaser-code/assets/sounds/switch.ogg` | GothicVania town (Ansimuz) | CC0 — `projects/GothicVania-town-files/public-license.pdf` (the music in that pack is credit-required per `projects/GothicVania-town-files/Music/readme.txt`; `switch.ogg` is a demo sound, not that music) | 0.115 s | unchanged |
+| `sfx/special/magic_shot.wav` | `.../organized/projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/Audio/Laser_Shoot.wav` | Super Grotto Escape (Ansimuz) | MIT © 2022 Luis Zuno — `projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/LICENSE` | 0.566 s | chosen; energy shot, audible only 0–0.125 s then silence |
+| `sfx/special/magic_rise.ogg` | `.../organized/projects/gothicvania-cemetery-files/gothicvania-cemetery-files/Assets/Phaser Demo/assets/sounds/rise.ogg` | Gothicvania — cemetery demo (Ansimuz) | CC0 — `projects/gothicvania-cemetery-files/gothicvania-cemetery-files/public-license.pdf` | 0.441 s | rising tonal sweep (also a `jump` / `backdash` option) |
+| `sfx/special/magic_charge.wav` | `.../organized/projects/metroidvania-godot-4-main/music_and_sounds/powerup.wav` | metroidvania-godot-4-main (Heart Gamedev) | MIT © 2023 Heart Gamedev LLC — `projects/metroidvania-godot-4-main/LICENSE.txt` | 0.286 s | bright sustained shimmer |
+| `sfx/pickup/coin_chime.wav` | `.../organized/projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/Audio/Pickup_Coin.wav` | Super Grotto Escape (Ansimuz) | MIT © 2022 Luis Zuno — `projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/LICENSE` | 0.277 s | chosen; coin chime |
+| `sfx/pickup/bright_blip.ogg` | `.../organized/projects/GothicVania-town-files/code/phaser-code/assets/sounds/switch.ogg` | GothicVania town (Ansimuz) | CC0 — `projects/GothicVania-town-files/public-license.pdf` | 0.115 s | short bright blip (same source file as `ui_confirm`) |
+| `sfx/pickup/soft_chime.wav` | `.../organized/projects/metroidvania-godot-4-main/music_and_sounds/unpause.wav` | metroidvania-godot-4-main (Heart Gamedev) | MIT © 2023 Heart Gamedev LLC — `projects/metroidvania-godot-4-main/LICENSE.txt` | 0.272 s | soft tonal blip |
+| `sfx/no_energy/dull_click.wav` | `.../organized/projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/Audio/switch.wav` | Super Grotto Escape (Ansimuz) | MIT © 2022 Luis Zuno — `projects/SGE_GODOT_PROJECT/SuperGrottoEscapeGodotProject/LICENSE` | 0.200 s | chosen; trimmed from 0.335 s (content ends at 0.115 s) |
+| `sfx/no_energy/tiny_tick.wav` | `.../organized/projects/metroidvania-godot-4-main/music_and_sounds/click.wav` | metroidvania-godot-4-main (Heart Gamedev) | MIT © 2023 Heart Gamedev LLC — `projects/metroidvania-godot-4-main/LICENSE.txt` | 0.076 s | tiny high tick (same source file as `ui_move`) |
+| `sfx/no_energy/soft_denied.wav` | `.../organized/projects/metroidvania-godot-4-main/music_and_sounds/pause.wav` | metroidvania-godot-4-main (Heart Gamedev) | MIT © 2023 Heart Gamedev LLC — `projects/metroidvania-godot-4-main/LICENSE.txt` | 0.240 s | soft low blip; trimmed from 0.273 s with a 60 ms fade-out |
 
 ## Music
 
@@ -88,6 +97,12 @@ ffmpeg -i <file> -af volumedetect -f null -
   It was removed from the prototype.
 - **`enemy_die`** — `explosion_small` and `explosion_tiny` are literal explosions;
   they are alternatives, not the default (`kill_pop`).
+- **`special` / `pickup` / `no_energy`** — the three events added for stage 1b. `special`
+  options level to −26 dB mean. In `pickup` and `no_energy` the loudest option hits the
+  brief's `gain_db` floor of −12.0 (`coin_chime` mean −8.5 dB, `dull_click` mean −9.9 dB),
+  so those two sit roughly 4–5 dB above their siblings; audition by ear.
+- **`pickup` / `no_energy` reuse two UI files** — `bright_blip` is the same source as
+  `ui_confirm`, and `tiny_tick` the same as `ui_move`. They are options, not defaults.
 
 ## Excluded
 

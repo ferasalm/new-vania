@@ -32,6 +32,7 @@ explanation, no metaphors.
 ## Good example
 
 > ## In plain words
+> We recommend yes: this speed felt right in the last playtest.
 > You press right and the heroine runs at full speed at once, and stops the
 > moment you let go. We ask you to approve the run speed: 960, which crosses
 > the screen in about two seconds. Say yes and v3 keeps this speed. Say no and

@@ -112,7 +112,7 @@
     "help": "Damage per hit. The hound has 30 health, the ghost 20."
   },
   "hitstop": {
-    "value": 0.05,
+    "value": 0.03,
     "min": 0.0,
     "max": 0.2,
     "step": 0.01,
@@ -120,7 +120,7 @@
     "help": "The tiny freeze when a hit lands. It makes hits feel heavy. 0 = off."
   },
   "shake": {
-    "value": 2.0,
+    "value": 1.0,
     "min": 0.0,
     "max": 6.0,
     "step": 0.5,
@@ -174,5 +174,213 @@
     "step": 2.0,
     "label": "Ghost speed",
     "help": "How fast the ghost drifts toward her."
+  },
+  "crouch_height": {
+    "value": 22.0,
+    "min": 12.0,
+    "max": 36.0,
+    "step": 1.0,
+    "label": "Crouch height",
+    "help": "How tall she is while crouching (Down). Standing she is 36. Lower = ducks under more."
+  },
+  "energy_max": {
+    "value": 100.0,
+    "min": 40.0,
+    "max": 300.0,
+    "step": 10.0,
+    "label": "Energy: amount",
+    "help": "The size of the green Energy bar. Attacks and backdashes spend it."
+  },
+  "attack_energy": {
+    "value": 12.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "Energy per attack",
+    "help": "Energy one swing costs. 12 out of 100 = about 8 swings in a row."
+  },
+  "backdash_energy": {
+    "value": 10.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "Energy per backdash",
+    "help": "Energy one backdash costs."
+  },
+  "energy_refill": {
+    "value": 45.0,
+    "min": 10.0,
+    "max": 200.0,
+    "step": 5.0,
+    "label": "Energy refill speed",
+    "help": "Energy gained per second while resting. 45 refills an empty bar in about 2 seconds."
+  },
+  "energy_wait": {
+    "value": 0.35,
+    "min": 0.0,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Energy refill wait",
+    "help": "Seconds after spending energy before it starts to refill."
+  },
+  "mp_max": {
+    "value": 60.0,
+    "min": 10.0,
+    "max": 200.0,
+    "step": 5.0,
+    "label": "MP: amount",
+    "help": "The size of the blue MP bar. Only the special attack spends it."
+  },
+  "special_cost": {
+    "value": 15.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "MP per special",
+    "help": "MP one special attack (Up + Attack) costs. 15 out of 60 = 4 specials."
+  },
+  "special_damage": {
+    "value": 30.0,
+    "min": 5.0,
+    "max": 80.0,
+    "step": 1.0,
+    "label": "Special damage",
+    "help": "Damage of the blade wave. 30 kills a hound in one hit."
+  },
+  "special_speed": {
+    "value": 220.0,
+    "min": 80.0,
+    "max": 400.0,
+    "step": 10.0,
+    "label": "Special speed",
+    "help": "How fast the blade wave flies."
+  },
+  "special_range": {
+    "value": 150.0,
+    "min": 40.0,
+    "max": 380.0,
+    "step": 10.0,
+    "label": "Special range",
+    "help": "How far the blade wave flies before it fades. The screen is 384 wide."
+  },
+  "special_time": {
+    "value": 0.45,
+    "min": 0.15,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Special length",
+    "help": "How long she is busy throwing the blade wave."
+  },
+  "mp_pickup": {
+    "value": 8.0,
+    "min": 1.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "MP per orb",
+    "help": "MP one blue orb gives back."
+  },
+  "mp_drop_chance": {
+    "value": 0.6,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.1,
+    "label": "Orb drop chance",
+    "help": "How often a defeated enemy leaves a blue orb. 0.6 = about 6 times in 10."
+  },
+  "orb_speed": {
+    "value": 160.0,
+    "min": 40.0,
+    "max": 400.0,
+    "step": 10.0,
+    "label": "Orb speed",
+    "help": "How fast a blue orb flies to her."
+  },
+  "coyote_time": {
+    "value": 0.09,
+    "min": 0.0,
+    "max": 0.3,
+    "step": 0.01,
+    "label": "Late jump grace",
+    "help": "Seconds she can still jump after running off an edge."
+  },
+  "jump_buffer": {
+    "value": 0.12,
+    "min": 0.0,
+    "max": 0.3,
+    "step": 0.01,
+    "label": "Early jump grace",
+    "help": "A jump pressed this long before landing still happens."
+  },
+  "drop_time": {
+    "value": 0.22,
+    "min": 0.1,
+    "max": 0.5,
+    "step": 0.01,
+    "label": "Drop-through time",
+    "help": "How long a thin platform lets her fall through after Down + Jump."
+  },
+  "hurt_push": {
+    "value": 90.0,
+    "min": 0.0,
+    "max": 250.0,
+    "step": 10.0,
+    "label": "Push when hit",
+    "help": "How hard a hit pushes her back and up."
+  },
+  "hound_patrol_speed": {
+    "value": 28.0,
+    "min": 10.0,
+    "max": 80.0,
+    "step": 2.0,
+    "label": "Hound walk speed",
+    "help": "How fast the hound walks before it notices her."
+  },
+  "hound_notice": {
+    "value": 130.0,
+    "min": 40.0,
+    "max": 300.0,
+    "step": 10.0,
+    "label": "Hound notice distance",
+    "help": "How close she must be before the hound starts its warning."
+  },
+  "hound_charge_time": {
+    "value": 0.7,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Hound charge length",
+    "help": "Seconds one hound charge lasts."
+  },
+  "hound_rest": {
+    "value": 0.6,
+    "min": 0.1,
+    "max": 2.0,
+    "step": 0.05,
+    "label": "Hound rest",
+    "help": "Seconds the hound rests after a charge. This is your opening."
+  },
+  "ghost_notice": {
+    "value": 170.0,
+    "min": 60.0,
+    "max": 380.0,
+    "step": 10.0,
+    "label": "Ghost notice distance",
+    "help": "How close she must be before the ghost starts to chase."
+  },
+  "ghost_retreat": {
+    "value": 0.9,
+    "min": 0.2,
+    "max": 2.5,
+    "step": 0.1,
+    "label": "Ghost back-off",
+    "help": "Seconds the ghost backs away after touching her."
+  },
+  "enemy_stun": {
+    "value": 0.22,
+    "min": 0.0,
+    "max": 0.8,
+    "step": 0.02,
+    "label": "Enemy stagger",
+    "help": "Seconds an enemy is stopped after you hit it."
   }
 }

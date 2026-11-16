@@ -145,6 +145,104 @@ func _run() -> void:
 	_check("control returns after the flinch", p.state == "move", "state=%s after %.2f s" % [p.state, T.v("hurt_time")])
 	G.peace = true
 
+	# ---- stage 1b: crouch, two attack looks, the three bars, the special ----
+	var swing_n := int(T.v("attack_time") * 60.0) + 6
+	await _frames(40)
+	Input.action_press("down")
+	await _frames(4)
+	_check("Down crouches and makes her shorter", p.state == "crouch" and is_equal_approx(p.body_rect().size.y, T.v("crouch_height")),
+		"state=%s height=%.0f" % [p.state, p.body_rect().size.y])
+	await _shot("8_crouch")
+	var cx := p.global_position.x
+	await _tap("right", 10)
+	_check("she does not walk while crouching", absf(p.global_position.x - cx) < 1.0, "moved %.1f px" % (p.global_position.x - cx))
+	await _tap("attack", 2)
+	await _frames(6)
+	_check("crouch attack is a low swing with its own animation", p.state == "attack" and p._spr.animation == "crouchatk" and p.attack_rect().position.y > p.global_position.y - 30.0,
+		"anim=%s" % p._spr.animation)
+	await _shot("9_crouch_attack")
+	await _frames(swing_n)
+	_check("she stays crouched after the low swing", p.state == "crouch", "state=%s" % p.state)
+	Input.action_release("down")
+	await _frames(4)
+	_check("letting go of Down stands her up", p.state == "move", "state=%s" % p.state)
+
+	await _frames(150)
+	var e0: float = p.energy
+	await _tap("attack", 2)
+	await _frames(3)
+	var anim_j := String(p._spr.animation)
+	_check("an attack spends Energy", is_equal_approx(e0 - p.energy, T.v("attack_energy")), "%.0f -> %.0f" % [e0, p.energy])
+	await _frames(swing_n)
+	await _tap("attack2", 2)
+	await _frames(8)
+	var anim_i := String(p._spr.animation)
+	await _shot("10_attack_i")
+	_check("the J and I attacks use different animations", anim_j == "attack" and anim_i == "attack2", "J=%s I=%s" % [anim_j, anim_i])
+	await _frames(swing_n)
+	await _frames(int((T.v("energy_wait") + T.v("energy_max") / T.v("energy_refill")) * 60.0) + 10)
+	_check("Energy refills by itself", is_equal_approx(p.energy, T.v("energy_max")), "energy=%.0f" % p.energy)
+	e0 = p.energy
+	await _tap("backdash", 2)
+	await _frames(30)
+	_check("a backdash spends Energy", e0 - p.energy > 0.0 or T.v("backdash_energy") == 0.0, "%.0f -> %.0f" % [e0, p.energy])
+	p.energy = 0.0
+	p._energy_wait = 5.0
+	await _tap("attack", 2)
+	await _frames(2)
+	_check("no Energy, no attack", p.state == "move", "state=%s" % p.state)
+	p._energy_wait = 0.0
+	await _frames(150)
+
+	# the special: Up + Attack throws a blade wave, costs MP, kills a hound, an orb gives MP back
+	T.set_v("mp_drop_chance", 1.0)
+	var target: Node2D = null
+	for en in main.enemies:
+		if en.kind == "hound":
+			target = en
+			break
+	_check("another hound exists for the special", target != null, "")
+	if target != null:
+		p.global_position = target.global_position + Vector2(-70, 0)
+		p.facing = 1
+		await _frames(4)
+		var mp0: float = p.mp
+		var kills0: int = main.kills
+		Input.action_press("up")
+		await _tap("attack", 2)
+		Input.action_release("up")
+		await _frames(int(T.v("special_time") * 0.3 * 60.0) + 3)
+		_check("Up + Attack throws a blade wave and spends MP", main.waves.size() == 1 and is_equal_approx(mp0 - p.mp, T.v("special_cost")),
+			"waves=%d mp %.0f -> %.0f" % [main.waves.size(), mp0, p.mp])
+		await _shot("11_special")
+		await _frames(50)
+		_check("the blade wave defeats the hound", main.kills == kills0 + 1, "kills %d -> %d" % [kills0, main.kills])
+		var mp1: float = p.mp
+		await _frames(90)
+		_check("a blue orb gives MP back", p.mp > mp1 and main.orbs.is_empty(), "mp %.0f -> %.0f" % [mp1, p.mp])
+	p.mp = 0.0
+	Input.action_press("up")
+	await _tap("attack", 2)
+	Input.action_release("up")
+	await _frames(3)
+	_check("with no MP, Up + Attack is a normal swing", p.state == "attack" and p._attack_kind == "stand" and main.waves.is_empty(), "kind=%s" % p._attack_kind)
+	await _frames(swing_n)
+	p.mp = T.v("mp_max")
+	T.reset()
+
+	var bad: Array = []
+	for key in T.data:
+		var d: Dictionary = T.data[key]
+		if String(d.get("label", "")) == "" or String(d.get("help", "")) == "" or float(d["value"]) < float(d["min"]) or float(d["value"]) > float(d["max"]):
+			bad.append(key)
+	_check("every number has a slider with a label and a help line", bad.is_empty() and T.data.has("energy_max") and T.data.has("special_cost") and T.data.has("crouch_height"),
+		"%d sliders, bad: %s" % [T.data.size(), str(bad)])
+	var loud: Array = []
+	for n in ["special", "pickup", "no_energy"]:
+		if not Sfx.ev.has(n) or Sfx.ev[n]["options"].size() < 2:
+			loud.append(n)
+	_check("the new sounds have options to pick", loud.is_empty(), "problems: %s" % str(loud))
+
 	# ledge: jump onto the first thin platform from below
 	p.global_position = Vector2(14 * 16, 12 * 16 + 16)
 	await _frames(6)

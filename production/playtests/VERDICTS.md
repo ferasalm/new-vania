@@ -112,8 +112,85 @@ In the user's words, tidied:
 | Stage | What you get to play | Status |
 |---|---|---|
 | 1 The body | Movement, jump, backdash, attack, two enemies, two rooms, sounds | done (approved) |
-| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | planned (next) |
+| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | in progress (played 2026-11-16; one bug fixed; ask the user for the verdict in words) |
 | Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | planned (questions first) |
 | 2 The place | Four or five connected rooms with doors, demons and machines | planned |
 | 3 The boss | Arnetria rebuilt; counter as an optional bonus | planned |
 | 4 Write it down | The approved numbers go into the design documents, in plain words | planned |
+
+## Prototype v3 stage 1b — played 2026-11-16 — verdict: played; values saved; full verdict in words still waiting on user
+
+What was built, for the user to judge by playing. Every value below has a slider in the F1 panel.
+
+| What | How it works now | Starting value |
+|---|---|---|
+| Crouch | Hold Down: she ducks and cannot be hit as high | 22 tall (standing is 36) |
+| Crouch attack | Attack while crouching: a low swing | same damage and length as a normal swing |
+| Two attack looks | `J` is a blue cut, `I` is a pink cut that runs the other way | stand-in art, edited from the pack |
+| Energy bar | Attacks and backdashes spend it; it refills after a short rest | 100; attack 12, backdash 10; refills in about 2 seconds |
+| MP bar | Only the special spends it; blue orbs from defeated enemies refill it | 60; special 15 (4 uses); orb gives 8, drops about 6 times in 10 |
+| Special (Up + Attack) | A blade wave flies forward and cuts through enemies | damage 30 (one hit kills a hound), flies 150 px |
+| New sounds | Special, orb pickup, "no energy" click: three options each in the SOUNDS page | quiet (-18) |
+
+Also fixed from the review of stage 1: a tap pressed just before landing is now a short hop; an
+attack pressed together with a jump keeps air steering; the hound no longer jitters against a
+wall; two enemies hit by one swing both take the hit; dying inside a door no longer starts two
+fades; Reset also restores the sound choices; the remaining enemy and jump timings have sliders.
+
+**What the user said after playing (2026-11-16)**
+
+- "I noticed a problem where the character faces the opposite side when crouching." Fixed: the
+  crouch picture is now made from the standing pose, which faces forward. Status: done.
+- No other complaint was given yet. Ask for the verdict in words on crouch, the low attack, the
+  two attack looks, the three bars and the special before stage 2.
+
+**The values the user saved with the F1 panel**
+
+| Setting | Before | Saved | What it means |
+|---|---|---|---|
+| Hit pause | 0.05 s | 0.03 s | The tiny freeze when a hit lands is shorter |
+| Screen shake | 2 | 1 | The screen shakes half as much on a hit |
+| Footstep / jump / landing | -22 / -21 / -24 | -4 / -3 / -3 | Much louder |
+| Attack swing / hit connects | -9 / -19 | -4 / -4 | Louder |
+| She gets hit | -22 | -3 | Much louder |
+| Enemy dies / backdash / door | -9 / -12 / -15 | -1 / -1 / -1 | Louder |
+| Special attack | "magic shot", -18 | "magic charge", 0 | Different sound, much louder |
+| Orb pickup | "coin chime", -18 | "bright blip", -4 | Different sound, louder |
+| No energy | "dull click", -18 | "soft denied", +5 | Different sound, much louder |
+| Music | -15 | +2 | Much louder |
+
+Every sound went up by about 10 to 20. This reverses the earlier "everything much quieter"
+pattern, so the earlier rule (start at -18) is now in doubt: ask the user whether the game was
+too quiet, or their speakers were turned down, before choosing a starting loudness for new sounds.
+
+## Art direction — the user's answers, 2026-11-16
+
+In the user's words, tidied. This is the brief for every redraw.
+
+1. **Pandora-001**: the concept is exactly her in the game (silver-white ponytail, black armoured
+   suit with cyan lines, torn black scarf, cyan eyes). She poses like the main character of
+   Castlevania: Order of Ecclesia.
+2. **Weapons and hands**: `J` and `I` are her two hands. She can hold one weapon in each hand, as
+   in Order of Ecclesia.
+   - Dirge-042 is her short sword and her starting weapon. It can be held in both hands.
+   - Elegy and Lament are two-handed: nothing else can be held with them. `J` and `I` are two
+     different swings, and chaining them makes a two-hit combo.
+   - The same weapon in both hands: `J` and `I` are two different swings, and chaining them makes
+     a fast two-hit combo (two Dirges: one hand, then the other).
+   - More weapons come later, including ranged ones (a pistol, or a boomerang-like weapon). Two
+     pistols chained with `J` and `I` should look like stylish two-gun gunslinging.
+3. **Enemies**: the future leans to colder colours and metal (dominant, with other colours too);
+   the past leans to warmer colours and flesh. Cyborgs of the past look steampunk; cyborgs of the
+   future look cyberpunk. All enemies look scary; even sad ones are eerie, with unique, searing
+   names and attributes. Liked references, past: Order of Ecclesia, Symphony of the Night, Devil
+   May Cry. Future: Metroid, Metal Gear Solid, Cyberpunk, Pragmata. The user's own addition: a
+   demonic feel in the cyber future.
+4. **Places**: the user did not like the test rooms. Places are eerie and scary but iconic, in the
+   future and in the past. Not depressing, except the depression stage, much later in the game.
+5. **Concept pictures that are right**: Lenore (the original past version); Pandora (all
+   versions); Dirge-042; the Demon Lord (fits the past); Arnetria (denial, the first main boss);
+   Amythia (the depression boss). Everything else is unsure and may be redrawn.
+
+What this changes: the stage 1b "J blue cut, I pink cut" becomes "right hand, left hand" with a
+weapon per hand. That is a new stage of work (weapons and hands) to plan with the user before
+stage 2. Status: planned.

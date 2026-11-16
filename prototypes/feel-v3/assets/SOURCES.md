@@ -16,3 +16,4 @@ except env/ and fx/, copied from prototypes/sandbox/assets (origins in its MANIF
 - `ghost/shriek` <- `art/Legacy Collection/Legacy Collection/Assets/Gothicvania/Characters/Ghost-Files/Sprites/Shriek`
 - `ghost/appear` <- `art/Legacy Collection/Legacy Collection/Assets/Gothicvania/Characters/Ghost-Files/Sprites/Appear`
 - `ghost/vanish` <- `art/Legacy Collection/Legacy Collection/Assets/Gothicvania/Characters/Ghost-Files/Sprites/Vanish`
+- `hero/attack2`, `hero/crouch`, `hero/crouchatk`, `fx/wave` <- edited from `hero/attack` by `tools/build_stage1b.py` (stage 1b stand-ins, same CC0 source)

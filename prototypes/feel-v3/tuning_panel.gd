@@ -2,12 +2,13 @@
 # F1 opens this. Two pages:
 #   FEEL   - a slider per feel number; the game changes at once.
 #   SOUNDS - pick each sound and the music by ear (previous / next) and set its volume.
-# "Save" writes tuning.json and assets/audio/events.json; "Reset" undoes unsaved feel changes.
+# "Save" writes tuning.json and assets/audio/events.json; "Reset" undoes every unsaved change.
 extends CanvasLayer
 
 var _root: PanelContainer
 var _rows := {}     # key -> [slider, value label]
 var _picks := {}    # sound name -> option label
+var _vols := {}     # sound name -> volume slider
 var _pages: Array = []
 var _tabs: Array = []
 var _help: Label
@@ -96,6 +97,7 @@ func _sound_page() -> Control:
 		s.mouse_entered.connect(_hover.bind("< and > try the other sounds for this moment. The slider is its loudness."))
 		made[1].add_child(row)
 		_picks[name] = opt
+		_vols[name] = s
 	return made[0]
 
 
@@ -176,4 +178,8 @@ func _reset() -> void:
 	for key in _rows:
 		_rows[key][0].set_value_no_signal(T.v(key))
 		_rows[key][1].text = _fmt(T.v(key))
-	_status.text = "feel values reset"
+	Sfx.reset()
+	for name in _picks:
+		_picks[name].text = Sfx.option_text(name)
+		_vols[name].set_value_no_signal(float(Sfx.ev[name]["volume_db"]))
+	_status.text = "back to the saved values"

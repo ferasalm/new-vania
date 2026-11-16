@@ -20,10 +20,15 @@ Rules for this session:
 - Continue any stage marked `in progress`. Otherwise build only the next stage marked `planned` whose previous stage has a user verdict in the log. Never build further ahead. If a stage is `waiting on user`, do not build — ask the user to play.
 - Feel numbers live only in `prototypes/feel-v3/tuning.json`. The user changes them with the F1 sliders while playing and presses Save. Never overwrite values the user saved; propose a change and let them try it.
 - Any new thing the user should judge (a new move, a new enemy, a sound) gets a slider or a picker in the F1 panel, as `.agents/rules/prototype-code.md` requires.
-- Before you ask the user to play, verify the game with a headless Godot run and fix whatever fails.
+- Before you ask the user to play, verify the game with a headless Godot run and fix whatever fails. Before the user plays, commit `tuning.json` and `assets/audio/events.json`, so the diff after play shows only what the user changed.
 - After the user plays, write their exact words into the verdict log before you change anything. Then run `git diff prototypes/feel-v3/tuning.json prototypes/feel-v3/assets/audio/events.json`, record the values they saved in the log with a plain-words meaning, and commit them.
 - The design-document queue stays paused. Do not resume it until stage 4 is done.
 
 Play command, to give the user when a build is ready:
 
-"C:/Users/AUC/opencode-workspace/tools/Godot/Godot_v4.7.2-stable_win64.exe" --path prototypes/feel-v3
+Give the user the full (absolute) path of the prototype folder inside the task
+worktree, and tell them to double-click `play.cmd` in that folder. For example:
+`C:/Users/AUC/opencode-workspace/workspace/<worktree>/prototypes/feel-v3`.
+
+Never give a relative path such as `prototypes/feel-v3`. A relative path only
+works from inside the worktree, and the user runs the game from outside it.

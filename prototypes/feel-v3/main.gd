@@ -1,7 +1,8 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # Runs the prototype: loads a room, the hero and the enemies, resolves hits,
 # moves between rooms through doors, and owns the effects (sparks, dust,
-# numbers, shake, the short hit pause).
+# numbers, shake, the short hit pause), the special attack's blade wave and the
+# blue MP orbs.
 extends Node2D
 
 const Room := preload("res://room.gd")
@@ -19,6 +20,8 @@ var panel: CanvasLayer
 var room_name := ""
 var enemies: Array = []
 var kills := 0
+var waves: Array = []        # blade waves in flight: {node, dir, left, hit}
+var orbs: Array = []         # blue MP orbs: {node, wait}
 var _shake_t := 0.0
 var _shake_amp := 0.0
 var _busy := false           # a door or death transition is running
@@ -40,6 +43,8 @@ func enter(next_room: String, spawn_key: String) -> void:
 	if world != null:
 		world.queue_free()
 	enemies.clear()
+	waves.clear()
+	orbs.clear()
 	world = Node2D.new()
 	add_child(world)
 	room = Room.new()
@@ -49,10 +54,12 @@ func enter(next_room: String, spawn_key: String) -> void:
 	_entry = spawn_key
 	var keep_hp: float = player.hp if player != null and player.hp > 0.0 else T.v("player_hp")
 	var keep_facing: int = player.facing if player != null else 1
+	var keep_mp: float = player.mp if player != null and player.hp > 0.0 else T.v("mp_max")
 	player = Player.new()
 	player.position = room.spawns.get(spawn_key, room.spawns.get("P", Vector2(64, 64)))
 	world.add_child(player)
 	player.hp = keep_hp
+	player.mp = keep_mp
 	player.facing = keep_facing if spawn_key != "P" else 1
 	if spawn_key == "D":
 		player.facing = -1
@@ -86,6 +93,10 @@ func _physics_process(delta: float) -> void:
 		if is_instance_valid(en) and en.can_hurt() and player.invuln <= 0.0 and en.hurt_rect().intersects(body):
 			player.take_hit(en.damage(), en.global_position.x)
 			en.touched_player()
+	if _busy:
+		return      # that hit was the last one: the death fade owns the screen now
+	_move_waves(delta)
+	_move_orbs(delta)
 	# doors: walk into one to go through; it re-arms once you step away
 	var in_door := false
 	for d in room.doors:
@@ -100,7 +111,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("restart") and not _busy:
-		player.hp = T.v("player_hp")
+		player.hp = 0.0      # so the new room starts her with full bars
 		enter("room1", "P")
 	if cam != null and is_instance_valid(cam):
 		if _shake_t > 0.0:
@@ -108,11 +119,12 @@ func _process(delta: float) -> void:
 			cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * _shake_amp
 		else:
 			cam.offset = Vector2.ZERO
-	hud.refresh(player.hp, T.v("player_hp"), kills)
+	hud.refresh(player, kills)
 
 
 func player_swing(rect: Rect2, dmg: float, dir: int, already: Array) -> void:
-	for en in enemies:
+	# a copy of the list: an enemy that dies here leaves the real list at once
+	for en in enemies.duplicate():
 		if not is_instance_valid(en) or already.has(en):
 			continue
 		if en.hurt_rect().intersects(rect):
@@ -126,9 +138,63 @@ func player_swing(rect: Rect2, dmg: float, dir: int, already: Array) -> void:
 			shake(T.v("shake"), 0.1)
 
 
+func throw_wave(at: Vector2, dir: int) -> void:
+	# the special attack: a blade wave that flies forward and cuts through enemies
+	var s := Sprite2D.new()
+	s.texture = G.tex("fx/wave_00.png")
+	s.flip_h = dir < 0
+	s.global_position = at
+	s.z_index = 4
+	world.add_child(s)
+	waves.append({"node": s, "dir": dir, "left": T.v("special_range"), "hit": []})
+
+
+func _move_waves(delta: float) -> void:
+	for w in waves.duplicate():
+		var s: Sprite2D = w["node"]
+		var step: float = T.v("special_speed") * delta
+		s.global_position.x += w["dir"] * step
+		w["left"] -= step
+		s.modulate.a = clampf(w["left"] / 30.0, 0.0, 1.0)
+		var size: Vector2 = s.texture.get_size()
+		player_swing(Rect2(s.global_position - size / 2.0, size), T.v("special_damage"), w["dir"], w["hit"])
+		if w["left"] <= 0.0:
+			waves.erase(w)
+			s.queue_free()
+
+
+func _drop_orb(at: Vector2) -> void:
+	var o := Polygon2D.new()
+	o.polygon = PackedVector2Array([Vector2(0, -4), Vector2(4, 0), Vector2(0, 4), Vector2(-4, 0)])
+	o.color = Color("#5AB4FF")
+	o.global_position = at
+	o.z_index = 6
+	world.add_child(o)
+	orbs.append({"node": o, "wait": 0.35})
+
+
+func _move_orbs(delta: float) -> void:
+	# an orb hangs for a moment, then flies to her
+	var target: Vector2 = player.global_position + Vector2(0, -18)
+	for ob in orbs.duplicate():
+		var o: Polygon2D = ob["node"]
+		if ob["wait"] > 0.0:
+			ob["wait"] -= delta
+			continue
+		o.global_position = o.global_position.move_toward(target, T.v("orb_speed") * delta)
+		if o.global_position.distance_to(target) < 6.0:
+			orbs.erase(ob)
+			o.queue_free()
+			player.gain_mp(T.v("mp_pickup"))
+			Sfx.play("pickup")
+			number(target + Vector2(0, -20), int(T.v("mp_pickup")), Color("#5AB4FF"))
+
+
 func enemy_died(en: Node2D) -> void:
 	kills += 1
 	enemies.erase(en)
+	if randf() < T.v("mp_drop_chance"):
+		_drop_orb(en.hurt_rect().get_center())
 	fx("burst", en.hurt_rect().get_center())
 	Sfx.play("enemy_die")
 
