@@ -65,3 +65,55 @@ saved file: attack length (message 0.35, file 0.40) and backdash safety (message
 |---|---|---|
 | 1 | Sounds: several options per sound, chosen by ear in the F1 panel; no voices for getting hit; softer hits; softer backdash; other music options | in progress |
 | 2 | Every prototype gets tuning sliders that save to a file (rule: `.agents/rules/prototype-code.md`) | done |
+
+## Prototype v3 stage 1, sounds — played 2026-11-16 — verdict: sounds chosen by the user
+
+The user picked sounds by ear in the F1 panel and saved. Their choices are in
+`prototypes/feel-v3/assets/audio/events.json`. The clear pattern: **everything much quieter.**
+
+| Moment | The user's choice | Loudness |
+|---|---|---|
+| Footstep | kept | much quieter (-12 to -22) |
+| Jump | kept | much quieter (-6 to -21) |
+| Landing | kept | much quieter (-6 to -24) |
+| Attack swing | changed to "attack swish" | a little quieter (-6 to -9) |
+| Hit connects | changed to "shock hit" | much quieter (-10 to -19) |
+| She gets hit | changed to "shock sting" (not a voice) | much quieter (-6 to -22) |
+| Enemy dies | kept | a little quieter (-6 to -9) |
+| Backdash | kept the soft whoosh | quieter (-6 to -12) |
+| Door | kept | quieter (-6 to -15) |
+| Music | changed to "cyberpunk city 2" | quieter (-8 to -15) |
+
+Rule for later sounds: start quiet (around -18 for small sounds, -15 for music) and let the
+user raise them.
+
+## New direction from the user — 2026-11-16 (after stage 1)
+
+In the user's words, tidied:
+
+1. **Concept only.** "The sprites and stuff inside design, they are not ready to use in game,
+   they are merely concept." Everything in the game is either redrawn, or reused from the
+   asset packs we own and then edited to fit our game.
+2. **Ask for concept art.** "The current concept art is not enough, there should be much more,
+   I just need to be asked for it." Agents must ask the user what they want to see before
+   drawing or choosing art.
+3. **Redraw the sprites and edit the levels** to fit the theme of the game and the concept art.
+4. **The protagonist is Pandora-001.**
+5. **Crouch, and a crouch attack.**
+6. **The two attacks look different**: the `J` attack and the chained `I` attack each get
+   their own animation.
+7. **Three bars**: HP (hit points); Energy, spent by attacks and backdashes, like in
+   Castlevania: Order of Ecclesia; MP, spent by special attacks such as Up + Attack, like
+   hearts in Order of Ecclesia.
+8. **Every prototype gets the tuning sliders**, in OpenCode too.
+
+## Stages (revised 2026-11-16)
+
+| Stage | What you get to play | Status |
+|---|---|---|
+| 1 The body | Movement, jump, backdash, attack, two enemies, two rooms, sounds | done (approved) |
+| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | planned (next) |
+| Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | planned (questions first) |
+| 2 The place | Four or five connected rooms with doors, demons and machines | planned |
+| 3 The boss | Arnetria rebuilt; counter as an optional bonus | planned |
+| 4 Write it down | The approved numbers go into the design documents, in plain words | planned |

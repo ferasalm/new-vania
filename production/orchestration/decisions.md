@@ -271,3 +271,14 @@
   Everything put to the user for approval follows
   `.agents/rules/plain-language.md`.
 - **Status**: **DECIDED — standing direction.**
+
+### D-ORCH-25 — concept art is reference only; ask the user before making art; Pandora-001 and three bars (DECIDED by the user, 2026-11-16)
+
+- **The change**: Everything under `design/art/` and `assets/processed/` is **concept**, not
+  game-ready art. Game art is redrawn, or reused from the owned asset packs and edited to fit.
+  Before drawing or choosing art, an agent **asks the user** what they want to see; the
+  current concept art is not enough and the user will supply more when asked. The protagonist
+  is **Pandora-001**. The player has three bars: **HP**, **Energy** (attacks and backdashes),
+  and **MP** (special attacks such as Up + Attack). The record is
+  `production/playtests/VERDICTS.md`.
+- **Status**: **DECIDED — standing direction.**

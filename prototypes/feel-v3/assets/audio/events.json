@@ -2,94 +2,181 @@
   "sfx": {
     "footstep": {
       "file": "sfx/footstep/step_scuff.wav",
-      "volume_db": -12.0,
+      "volume_db": -22.0,
       "pitch_random": 0.08,
       "options": [
-        {"file": "sfx/footstep/step_scuff.wav", "gain_db": -12.0},
-        {"file": "sfx/footstep/soft_tap.wav", "gain_db": -2.6},
-        {"file": "sfx/footstep/boot_thunk.wav", "gain_db": -12.0}
+        {
+          "file": "sfx/footstep/step_scuff.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/footstep/soft_tap.wav",
+          "gain_db": -2.6
+        },
+        {
+          "file": "sfx/footstep/boot_thunk.wav",
+          "gain_db": -12.0
+        }
       ]
     },
     "jump": {
       "file": "sfx/jump/jump_soft.ogg",
-      "volume_db": -6.0,
+      "volume_db": -21.0,
       "pitch_random": 0.06,
       "options": [
-        {"file": "sfx/jump/jump_soft.ogg", "gain_db": 0.9},
-        {"file": "sfx/jump/jump_short.wav", "gain_db": -10.4},
-        {"file": "sfx/jump/jump_riser.ogg", "gain_db": -10.0}
+        {
+          "file": "sfx/jump/jump_soft.ogg",
+          "gain_db": 0.9
+        },
+        {
+          "file": "sfx/jump/jump_short.wav",
+          "gain_db": -10.4
+        },
+        {
+          "file": "sfx/jump/jump_riser.ogg",
+          "gain_db": -10.0
+        }
       ]
     },
     "land": {
       "file": "sfx/land/made_soft_land.wav",
-      "volume_db": -6.0,
+      "volume_db": -24.0,
       "pitch_random": 0.05,
       "options": [
-        {"file": "sfx/land/made_soft_land.wav", "gain_db": -2.6},
-        {"file": "sfx/land/land_thud.wav", "gain_db": -9.2},
-        {"file": "sfx/land/metal_land.wav", "gain_db": -12.0}
+        {
+          "file": "sfx/land/made_soft_land.wav",
+          "gain_db": -2.6
+        },
+        {
+          "file": "sfx/land/land_thud.wav",
+          "gain_db": -9.2
+        },
+        {
+          "file": "sfx/land/metal_land.wav",
+          "gain_db": -12.0
+        }
       ]
     },
     "swing": {
-      "file": "sfx/swing/made_light_swish.wav",
-      "volume_db": -6.0,
+      "file": "sfx/swing/attack_swish.ogg",
+      "volume_db": -9.0,
       "pitch_random": 0.07,
       "options": [
-        {"file": "sfx/swing/made_light_swish.wav", "gain_db": -12.0},
-        {"file": "sfx/swing/attack_swish.ogg", "gain_db": -9.0},
-        {"file": "sfx/swing/made_low_swish.wav", "gain_db": -12.0}
+        {
+          "file": "sfx/swing/made_light_swish.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/swing/attack_swish.ogg",
+          "gain_db": -9.0
+        },
+        {
+          "file": "sfx/swing/made_low_swish.wav",
+          "gain_db": -12.0
+        }
       ]
     },
     "hit": {
-      "file": "sfx/hit/made_soft_thud.wav",
-      "volume_db": -10.0,
+      "file": "sfx/hit/shock_hit.wav",
+      "volume_db": -19.0,
       "pitch_random": 0.06,
       "options": [
-        {"file": "sfx/hit/made_soft_thud.wav", "gain_db": -6.5},
-        {"file": "sfx/hit/made_tick.wav", "gain_db": -2.2},
-        {"file": "sfx/hit/shock_hit.wav", "gain_db": -12.0},
-        {"file": "sfx/hit/bullet_tap.wav", "gain_db": -0.2}
+        {
+          "file": "sfx/hit/made_soft_thud.wav",
+          "gain_db": -6.5
+        },
+        {
+          "file": "sfx/hit/made_tick.wav",
+          "gain_db": -2.2
+        },
+        {
+          "file": "sfx/hit/shock_hit.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/hit/bullet_tap.wav",
+          "gain_db": -0.2
+        }
       ]
     },
     "hurt": {
-      "file": "sfx/hurt/made_low_bump.wav",
-      "volume_db": -6.0,
+      "file": "sfx/hurt/shock_sting.wav",
+      "volume_db": -22.0,
       "pitch_random": 0.05,
       "options": [
-        {"file": "sfx/hurt/made_low_bump.wav", "gain_db": -8.4},
-        {"file": "sfx/hurt/error_blip.wav", "gain_db": -12.0},
-        {"file": "sfx/hurt/shock_sting.wav", "gain_db": -12.0}
+        {
+          "file": "sfx/hurt/made_low_bump.wav",
+          "gain_db": -8.4
+        },
+        {
+          "file": "sfx/hurt/error_blip.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/hurt/shock_sting.wav",
+          "gain_db": -12.0
+        }
       ]
     },
     "enemy_die": {
       "file": "sfx/enemy_die/kill_pop.ogg",
-      "volume_db": -6.0,
+      "volume_db": -9.0,
       "pitch_random": 0.05,
       "options": [
-        {"file": "sfx/enemy_die/kill_pop.ogg", "gain_db": -10.0},
-        {"file": "sfx/enemy_die/enemy_die_zap.wav", "gain_db": -12.0},
-        {"file": "sfx/enemy_die/explosion_small.wav", "gain_db": -12.0},
-        {"file": "sfx/enemy_die/explosion_tiny.wav", "gain_db": -7.8}
+        {
+          "file": "sfx/enemy_die/kill_pop.ogg",
+          "gain_db": -10.0
+        },
+        {
+          "file": "sfx/enemy_die/enemy_die_zap.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/enemy_die/explosion_small.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/enemy_die/explosion_tiny.wav",
+          "gain_db": -7.8
+        }
       ]
     },
     "backdash": {
       "file": "sfx/backdash/made_soft_whoosh.wav",
-      "volume_db": -6.0,
+      "volume_db": -12.0,
       "pitch_random": 0.05,
       "options": [
-        {"file": "sfx/backdash/made_soft_whoosh.wav", "gain_db": -12.0},
-        {"file": "sfx/backdash/made_quick_air.wav", "gain_db": -12.0},
-        {"file": "sfx/backdash/rise_sweep.ogg", "gain_db": -10.0}
+        {
+          "file": "sfx/backdash/made_soft_whoosh.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/backdash/made_quick_air.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/backdash/rise_sweep.ogg",
+          "gain_db": -10.0
+        }
       ]
     },
     "door": {
       "file": "sfx/door/door_creak.wav",
-      "volume_db": -6.0,
+      "volume_db": -15.0,
       "pitch_random": 0.0,
       "options": [
-        {"file": "sfx/door/door_creak.wav", "gain_db": -2.7},
-        {"file": "sfx/door/terminal_clank.wav", "gain_db": -12.0},
-        {"file": "sfx/door/switch_latch.wav", "gain_db": -12.0}
+        {
+          "file": "sfx/door/door_creak.wav",
+          "gain_db": -2.7
+        },
+        {
+          "file": "sfx/door/terminal_clank.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/door/switch_latch.wav",
+          "gain_db": -12.0
+        }
       ]
     },
     "ui_move": {
@@ -97,7 +184,10 @@
       "volume_db": -6.0,
       "pitch_random": 0.0,
       "options": [
-        {"file": "sfx/ui_move.wav", "gain_db": -8.1}
+        {
+          "file": "sfx/ui_move.wav",
+          "gain_db": -8.1
+        }
       ]
     },
     "ui_confirm": {
@@ -105,27 +195,48 @@
       "volume_db": -6.0,
       "pitch_random": 0.0,
       "options": [
-        {"file": "sfx/ui_confirm.ogg", "gain_db": -12.0}
+        {
+          "file": "sfx/ui_confirm.ogg",
+          "gain_db": -12.0
+        }
       ]
     }
   },
   "music": {
     "music_room": {
-      "file": "music/cavern_loop.ogg",
-      "volume_db": -8.0,
+      "file": "music/cyberpunk_city_2.ogg",
+      "volume_db": -15.0,
       "options": [
-        {"file": "music/cavern_loop.ogg", "gain_db": -12.0},
-        {"file": "music/room.ogg", "gain_db": -12.0},
-        {"file": "music/cyberpunk_city_2.ogg", "gain_db": -12.0},
-        {"file": "music/boss_battle_room.ogg", "gain_db": -12.0},
-        {"file": "music/magic_cliffs.ogg", "gain_db": -12.0}
+        {
+          "file": "music/cavern_loop.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cyberpunk_city_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle_room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/magic_cliffs.ogg",
+          "gain_db": -12.0
+        }
       ]
     },
     "music_boss": {
       "file": "music/boss.ogg",
       "volume_db": -8.0,
       "options": [
-        {"file": "music/boss.ogg", "gain_db": -12.0}
+        {
+          "file": "music/boss.ogg",
+          "gain_db": -12.0
+        }
       ]
     }
   }
