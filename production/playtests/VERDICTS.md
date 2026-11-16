@@ -112,13 +112,14 @@ In the user's words, tidied:
 | Stage | What you get to play | Status |
 |---|---|---|
 | 1 The body | Movement, jump, backdash, attack, two enemies, two rooms, sounds | done (approved) |
-| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | in progress (played 2026-11-16; one bug fixed; ask the user for the verdict in words) |
-| Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | planned (questions first) |
+| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | done (approved 2026-11-16) |
+| Weapons and hands | J and I are her right and left hand, one weapon each; two-handed weapons; the fast two-hit combo; Pandora-001 redrawn with weapons | planned (plan put to the user 2026-11-16) |
+| Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | done (the user's answers are recorded below) |
 | 2 The place | Four or five connected rooms with doors, demons and machines | planned |
 | 3 The boss | Arnetria rebuilt; counter as an optional bonus | planned |
 | 4 Write it down | The approved numbers go into the design documents, in plain words | planned |
 
-## Prototype v3 stage 1b — played 2026-11-16 — verdict: played; values saved; full verdict in words still waiting on user
+## Prototype v3 stage 1b — played 2026-11-16 — verdict: approved (all five good)
 
 What was built, for the user to judge by playing. Every value below has a slider in the F1 panel.
 
@@ -141,8 +142,9 @@ fades; Reset also restores the sound choices; the remaining enemy and jump timin
 
 - "I noticed a problem where the character faces the opposite side when crouching." Fixed: the
   crouch picture is now made from the standing pose, which faces forward. Status: done.
-- No other complaint was given yet. Ask for the verdict in words on crouch, the low attack, the
-  two attack looks, the three bars and the special before stage 2.
+- The verdict, asked point by point on 2026-11-16: the crouch "Good, keep it"; the low attack
+  "Good, keep it"; the two attack looks "Good, keep both"; the three bars "Good, keep them";
+  the special "Good, keep it". All five are approved; nothing was asked to change.
 
 **The values the user saved with the F1 panel**
 
@@ -159,9 +161,10 @@ fades; Reset also restores the sound choices; the remaining enemy and jump timin
 | No energy | "dull click", -18 | "soft denied", +5 | Different sound, much louder |
 | Music | -15 | +2 | Much louder |
 
-Every sound went up by about 10 to 20. This reverses the earlier "everything much quieter"
-pattern, so the earlier rule (start at -18) is now in doubt: ask the user whether the game was
-too quiet, or their speakers were turned down, before choosing a starting loudness for new sounds.
+Every sound went up by about 10 to 20. We asked the user: were the sounds too quiet, or were
+the speakers turned down? Their answer on 2026-11-16: "Sounds were too quiet." So the earlier
+rule (start quiet, around -18) is dropped. Rule for later sounds: start at about the loudness
+the user saved (small sounds around -4 to 0, music around +2) and let them tune from there.
 
 ## Art direction — the user's answers, 2026-11-16
 
