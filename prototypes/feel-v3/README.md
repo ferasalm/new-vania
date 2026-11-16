@@ -118,10 +118,15 @@ the stage-1b thigh edits (`tools/build_stage1b.py`); the backdash reuses a jump 
 - Art is copied in by `tools/build_assets.py` (sources in `assets/SOURCES.md` and
   `assets/audio/SOURCES.md`). Sprites and sounds load as raw files, so there is no
   import step. A full rebuild runs in this order: `build_assets.py` →
-  `build_stage1b.py` (it cuts the special's wave sprite out of the pack arcs, so it
-  must run before the bake) → `bake_pandora.py` (identity recolour, arcs stripped from
-  the bodies) → `bake_weapons.py` (the weapon sets) → `aseprite_correct.py` (the
-  correction pass). The bakes read only `tools/pristine/`; every step is idempotent.
+  `build_stage1b.py` (it cuts the special's wave sprite out of the pack arcs; it runs
+  once, before the bake — the bake strips those arcs, and a rerun would overwrite the
+  baked frames) → `bake_pandora.py` (identity recolour, arcs stripped from the bodies) →
+  `bake_weapons.py` (the weapon sets) → `aseprite_correct.py` (the correction pass).
+  The bakes read only `tools/pristine/` and are idempotent. The correction pass needs
+  Docker with the `opencode-workspace-opencode-1` container; when the checkout name
+  differs, point `ASEPRITE_CONT_ASSETS` at this checkout's assets path as the
+  container sees it (`/workspace/<worktree-name>/prototypes/feel-v3/assets`), so the
+  pass never touches another checkout's frames.
 - Sounds were chosen by file name and length, not by ear. `backdash` and `door` are
   weak fits; re-pick them after the playtest.
 
