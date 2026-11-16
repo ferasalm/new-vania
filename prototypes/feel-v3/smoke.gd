@@ -158,8 +158,9 @@ func _run() -> void:
 	_check("she does not walk while crouching", absf(p.global_position.x - cx) < 1.0, "moved %.1f px" % (p.global_position.x - cx))
 	await _tap("attack", 2)
 	await _frames(6)
-	_check("crouch attack is a low swing with its own animation", p.state == "attack" and p._spr.animation == "crouchatk" and p.attack_rect().position.y > p.global_position.y - 30.0,
-		"anim=%s" % p._spr.animation)
+	_check("crouch attack is a low swing with its own animation", p.state == "attack" and p._spr.animation == "crouchatk" and p.attack_rect().position.y > p.global_position.y - 30.0
+			and p._weps["weapon-dirge"].visible and p._weps["weapon-dirge"].animation == "low",
+		"anim=%s weapon=%s" % [p._spr.animation, p._weps["weapon-dirge"].animation])
 	await _shot("9_crouch_attack")
 	await _frames(swing_n)
 	_check("she stays crouched after the low swing", p.state == "crouch", "state=%s" % p.state)
@@ -241,8 +242,16 @@ func _run() -> void:
 	for k in ["weapon", "elegy_time", "elegy_damage", "elegy_reach", "elegy_energy", "elegy_chain", "orb_hang"]:
 		if not T.data.has(k):
 			wmissing.append(k)
-	_check("the WEAPONS page has its picker and sliders", wmissing.is_empty() and not T.data["weapon"].get("options", []).is_empty(),
-		"missing: %s" % str(wmissing))
+	var wsets: Array = []
+	for s in ["weapon-dirge", "weapon-elegy"]:
+		if not G.frames.has(s):
+			wsets.append(s)
+			continue
+		for a in ["j", "i", "low"]:
+			if not G.frames[s]["anims"].has(a):
+				wsets.append(s + "/" + a)
+	_check("the WEAPONS page has its picker and sliders", wmissing.is_empty() and not T.data["weapon"].get("options", []).is_empty() and wsets.is_empty(),
+		"missing: %s %s" % [str(wmissing), str(wsets)])
 	var loud: Array = []
 	for n in ["special", "pickup", "no_energy", "swing_heavy"]:
 		if not Sfx.ev.has(n) or Sfx.ev[n]["options"].size() < 2:
@@ -293,7 +302,8 @@ func _run() -> void:
 		var wen0: float = p.energy
 		await _tap("attack", 2)
 		await _frames(2)
-		_check("Elegy: J is its own two-handed swing", p.state == "attack" and p._spr.animation == "eattack", "anim=%s" % p._spr.animation)
+		_check("Elegy: J swings the two-handed blade over the body", p.state == "attack" and p._weps["weapon-elegy"].visible and p._weps["weapon-elegy"].animation == "j" and p._spr.animation == "attack",
+			"body=%s weapon=%s" % [p._spr.animation, p._weps["weapon-elegy"].animation])
 		_check("one Elegy swing spends more Energy", is_equal_approx(wen0 - p.energy, T.v("elegy_energy")), "%.0f -> %.0f" % [wen0, p.energy])
 		await _shot("12_elegy_j")
 		await _frames(int(T.v("elegy_time") * 0.7 * 60.0))
@@ -308,11 +318,11 @@ func _run() -> void:
 		await _tap("attack", 2)
 		await _tap("attack2", 2)
 		var wframes := 0
-		while p._spr.animation != "eattack2" and wframes < 240:
+		while p._weps["weapon-elegy"].animation != "i" and wframes < 240:
 			await get_tree().physics_frame
 			wframes += 1
 		var wgate := int(T.v("elegy_chain") * 60.0)
-		_check("Elegy chains J into I at its own pace", p._spr.animation == "eattack2" and wframes >= 5 and wframes <= wgate + 10,
+		_check("Elegy chains J into I at its own pace", p._weps["weapon-elegy"].animation == "i" and wframes >= 5 and wframes <= wgate + 10,
 			"switched after %d frames (chain %d frames)" % [wframes, wgate])
 		await _frames(int(T.v("elegy_time") * 60.0) + 4)
 		# back to the short sword
@@ -320,8 +330,11 @@ func _run() -> void:
 		p.energy = T.v("energy_max")
 		await _tap("attack", 2)
 		await _frames(2)
-		_check("back to the sword, J is the Dirge swing", p._spr.animation == "attack", "anim=%s" % p._spr.animation)
+		_check("back to the sword, J is the Dirge swing", p._weps["weapon-dirge"].visible and p._weps["weapon-dirge"].animation == "j" and not p._weps["weapon-elegy"].visible,
+			"weapon=%s" % p._weps["weapon-dirge"].animation)
 		await _frames(int(T.v("attack_time") * 60.0) + 4)
+		_check("the blade dematerializes after the swing", not p._weps["weapon-dirge"].visible and not p._weps["weapon-elegy"].visible,
+			"dirge=%s elegy=%s" % [p._weps["weapon-dirge"].visible, p._weps["weapon-elegy"].visible])
 
 	if shots:
 		main.panel._root.visible = true

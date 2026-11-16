@@ -8,9 +8,7 @@
    "attack": 5,
    "attack2": 5,
    "crouch": 1,
-   "crouchatk": 5,
-   "eattack": 5,
-   "eattack2": 5
+   "crouchatk": 5
   },
   "size": [
    128,
@@ -84,5 +82,27 @@
     32
    ]
   }
+ },
+ "weapon-dirge": {
+  "anims": {
+   "j": 5,
+   "i": 5,
+   "low": 5
+  },
+  "size": [
+   128,
+   64
+  ]
+ },
+ "weapon-elegy": {
+  "anims": {
+   "j": 5,
+   "i": 5,
+   "low": 5
+  },
+  "size": [
+   128,
+   64
+  ]
  }
 }

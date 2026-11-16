@@ -43,7 +43,10 @@ A gamepad also works (A jump, X / Y attack, B or left shoulder backdash).
 She carries **one** weapon, equipped in both hands, like the heroine of Order of
 Ecclesia: the blade materializes in the hand that swings it and is gone after.
 `J` is the right hand, `I` the left. She never holds two weapons; chaining `J` and
-`I` is the same blade passing from hand to hand.
+`I` is the same blade passing from hand to hand. Like Order of Ecclesia, the body
+and the weapon are separate sprite sets: her frames carry no weapon, and the blade
+sprite is drawn over the swinging hand, then disappears — that is the materialize
+and dematerialize you see.
 
 - **Dirge-042** (the starting short sword): quick swings, the fast `J`-`I` two-hit
   combo from stage 1.
@@ -98,22 +101,26 @@ playtest, `git diff` on those two files shows exactly what the user chose.
 Stage 2 (more rooms, demons and machines), stage 3 (the boss, with counter as an
 optional bonus) and stage 4 (writing the approved numbers into the design documents).
 Lament (the second two-handed weapon) and the ranged weapons come later.
-The crouch, the low attack and the special are quick edits of the pack heroine's one
-attack strip (`tools/build_stage1b.py`); the two-handed swings are the same strip
-recoloured (`tools/build_weapons.py`); the backdash reuses a jump frame. All of it is
-replaced when Pandora-001 is drawn.
+Her art is baked from the pack frames the user approved: Pandora-001's identity is a
+role-mapped recolour (`tools/bake_pandora.py` — silver-white hair, near-black suit,
+cyan accents, 12 colours), the blades are separate sprite sets cut from the same
+pack arcs (`tools/bake_weapons.py`), and every frame goes through an Aseprite
+correction pass (`tools/aseprite_correct.py`). The crouch and the low attack keep
+the stage-1b thigh edits (`tools/build_stage1b.py`); the backdash reuses a jump frame.
 
 ## For developers
 
 - All feel numbers live in `tuning.json`. Rooms are text grids in `rooms/*.txt`
   (legend at the top of `room.gd`).
 - Self-test: `godot --headless --path prototypes/feel-v3 res://smoke.tscn` prints
-  44 checks and `SMOKE PASS`. Add `-- shots` without `--headless` to save screenshots
+  45 checks and `SMOKE PASS`. Add `-- shots` without `--headless` to save screenshots
   to `shots/`.
 - Art is copied in by `tools/build_assets.py` (sources in `assets/SOURCES.md` and
   `assets/audio/SOURCES.md`). Sprites and sounds load as raw files, so there is no
-  import step. Stage 1b stand-in frames are made by `tools/build_stage1b.py` and the
-  two-handed swings by `tools/build_weapons.py` (run both after `build_assets.py`).
+  import step. The Pandora bake runs in this order after `build_assets.py` (all three
+  idempotent, reading only `tools/pristine/`): `bake_pandora.py` (identity recolour,
+  arcs stripped from the bodies) → `bake_weapons.py` (the weapon sets) →
+  `aseprite_correct.py` (the correction pass).
 - Sounds were chosen by file name and length, not by ear. `backdash` and `door` are
   weak fits; re-pick them after the playtest.
 
@@ -122,3 +129,7 @@ replaced when Pandora-001 is drawn.
 - 2026-11-16, stage 1: the user approved the feel (movement, jump, backdash, attack, chains)
   after tuning six values with the sliders, and rejected the sounds. Details and the saved
   values are in `production/playtests/VERDICTS.md`.
+- 2026-11-16, weapons stage: AI-generated strips were rejected by the user (wrong and too
+  high-res for 16-bit); Pandora and the weapons are baked from the original pack frames
+  instead, weapons as separate sprite layers over the weaponless body, Order of Ecclesia
+  style. The user's words are in `production/playtests/VERDICTS.md`.

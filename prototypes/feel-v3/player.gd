@@ -22,6 +22,7 @@ var mp := 60.0
 var invuln := 0.0
 
 var _spr: AnimatedSprite2D
+var _weps := {}             # "weapon-dirge" / "weapon-elegy" -> the overlay sprite
 var _coyote := 0.0
 var _jump_buf := 0.0
 var _attack_t := 0.0
@@ -54,11 +55,18 @@ func _ready() -> void:
 	shape.position = Vector2(0, -BODY.y / 2.0)
 	add_child(shape)
 	_spr = G.sprite("hero", {"idle": 7.0, "run": 13.0, "jump": 8.0, "attack": 19.0, "attack2": 19.0,
-		"eattack": 19.0, "eattack2": 19.0,
-		"crouch": 1.0, "crouchatk": 19.0}, ["jump", "attack", "attack2", "eattack", "eattack2", "crouch", "crouchatk"])
+		"crouch": 1.0, "crouchatk": 19.0}, ["jump", "attack", "attack2", "crouch", "crouchatk"])
 	_spr.position = Vector2(-64, -64)   # frame is 128x64, feet at the bottom centre
 	add_child(_spr)
 	_spr.play("idle")
+	# the weapon layer, Order of Ecclesia style: the body frames carry no weapon,
+	# the blade sprite is drawn over the hand that swings it and hides after
+	for set_name in ["weapon-dirge", "weapon-elegy"]:
+		var w := G.sprite(set_name, {"j": 19.0, "i": 19.0, "low": 19.0}, ["j", "i", "low"])
+		w.position = Vector2(-64, -64)
+		w.visible = false
+		add_child(w)
+		_weps[set_name] = w
 	floor_snap_length = 4.0
 
 
@@ -264,24 +272,36 @@ func _start_attack(btn: String, kind: String) -> void:
 	_attack_air = not is_on_floor() or velocity.y < 0.0   # a jump started this tick counts as airborne
 	_attack_hit.clear()
 	_wave_thrown = false
-	# the sword materializes in the hand that swings it: J right, I left; the
-	# two-handed weapon has its own pair of swings
+	# the sword materializes in the hand that swings it: J right, I left. The
+	# body swings the same either way; the weapon layer carries the blade
 	var anim := "attack" if btn == "attack" else "attack2"
 	if kind == "crouch":
 		anim = "crouchatk"
 	elif kind == "special":
 		anim = "attack2"
-	elif _is_elegy():
-		anim = "eattack" if btn == "attack" else "eattack2"
 	_spr.sprite_frames.set_animation_speed(anim, 5.0 / _attack_total())
 	_spr.play(anim)
 	_spr.frame = 0
+	if kind == "special":
+		_hide_weapons()
+	else:
+		var set_name := "weapon-elegy" if _is_elegy() else "weapon-dirge"
+		var wa := "low" if kind == "crouch" else ("j" if btn == "attack" else "i")
+		_weps[set_name].sprite_frames.set_animation_speed(wa, 5.0 / _attack_total())
+		_weps[set_name].play(wa)
+		_weps[set_name].frame = 0
+		_weps[set_name].visible = true
 	if kind == "special":
 		Sfx.play("special")
 	elif _is_elegy():
 		Sfx.play("swing_heavy", 1.0 if btn == "attack" else 0.92)
 	else:
 		Sfx.play("swing", 1.0 if btn == "attack" else 1.12)
+
+
+func _hide_weapons() -> void:
+	for w in _weps.values():
+		w.visible = false
 
 
 func _attack_step() -> void:
@@ -349,6 +369,7 @@ func take_hit(damage: float, from_x: float) -> void:
 		hp = 0.0
 		state = "dead"
 		velocity = Vector2.ZERO
+		_hide_weapons()
 		G.main.player_died()
 		return
 	state = "hurt"
@@ -375,6 +396,11 @@ func _animate(on_floor: bool) -> void:
 	_spr.flip_h = facing < 0
 	# blink while she cannot be hurt after a hit
 	_spr.visible = not (invuln > 0.0 and state != "backdash" and int(invuln * 20.0) % 2 == 0)
+	# the weapon overlay follows her facing, and rests hidden outside a swing
+	for w in _weps.values():
+		w.flip_h = _spr.flip_h
+		if state != "attack":
+			w.visible = false
 	if state == "attack":
 		return
 	if state == "crouch":
