@@ -25,9 +25,27 @@ relaxed to maximize iteration speed. The goal is learning, not production qualit
   - How to run the prototype
   - Current status (in-progress / concluded)
   - Findings (updated when prototype concludes)
+- Every playable prototype MUST be tunable by the user while playing (see "Tuning panel" below)
 - No production code may reference or import from `prototypes/`
 - Prototypes must not modify files outside `prototypes/`
 - Prototypes must not be deployed or shipped
+
+## Tuning panel (required for playable prototypes)
+
+The user judges feel by playing, not by reading numbers. So:
+
+- Every number that changes how the game feels (speeds, heights, timings, damage, volumes)
+  lives in one file, `tuning.json`, never in the code. Each entry has `value`, `min`, `max`,
+  `step`, a plain-words `label`, and a one-sentence `help` a non-developer can understand.
+- Pressing `F1` in the game opens sliders for every entry. A change applies at once, while
+  the game keeps running. `Save` writes `tuning.json`; `Reset` returns to the saved values.
+- Choices that cannot be a number (which sound, which music) get a "previous / next" picker
+  in the same panel, saved the same way.
+- After the user plays: run `git diff` on the prototype's `tuning.json` (and other saved
+  choice files), copy the changed values into `production/playtests/VERDICTS.md` with a
+  plain-words meaning for each, then commit the file. Never overwrite values the user saved.
+- Copy the working example instead of writing a new one: `prototypes/feel-v3/tuning.gd`,
+  `tuning_panel.gd` and `tuning.json`.
 
 ## When a Prototype Succeeds
 If a prototype validates a concept and the feature moves to production:
