@@ -1,15 +1,20 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# Runs the prototype: loads a room, the hero and the enemies, resolves hits,
-# moves between rooms through doors, and owns the effects (sparks, dust,
-# numbers, shake, the short hit pause), the special attack's blade wave and the
-# blue MP orbs.
+# Runs the prototype: loads a room, the hero, the enemies and the boss, resolves
+# hits, walks her between rooms through the doors in the room edges, and owns the
+# effects (sparks, dust, numbers, shake, the short hit pause), every flying shot,
+# the special attack's blade wave, the blue MP orbs and the save terminal.
+# The way through: church -> library -> save room -> lab -> (boss door) -> sanctum.
 extends Node2D
 
 const Room := preload("res://room.gd")
 const Player := preload("res://player.gd")
 const Enemy := preload("res://enemy.gd")
+const Boss := preload("res://boss.gd")
 const Hud := preload("res://hud.gd")
 const TuningPanel := preload("res://tuning_panel.gd")
+const ROOMS := ["church", "library", "save", "lab", "boss"]
+const TITLES := {"church": "THE NAVE OF ASH", "library": "THE UNREAD STACKS", "save": "CACHE STATION 002",
+	"lab": "SPECIMEN HALL", "boss": "THE PALLBEARER"}
 
 var world: Node2D
 var room: Node2D
@@ -17,15 +22,18 @@ var player: CharacterBody2D
 var cam: Camera2D
 var hud: CanvasLayer
 var panel: CanvasLayer
+var boss: Node2D
 var room_name := ""
 var enemies: Array = []
 var kills := 0
 var waves: Array = []        # blade waves in flight: {node, dir, left, hit}
 var orbs: Array = []         # blue MP orbs: {node, wait}
+var shots: Array = []        # enemy shots in flight (Shot nodes)
+var saved := false           # she has cached her memory at the terminal
+var boss_beaten := false
 var _shake_t := 0.0
 var _shake_amp := 0.0
 var _busy := false           # a door or death transition is running
-var _door_armed := false
 var _entry := "P"
 
 
@@ -35,8 +43,11 @@ func _ready() -> void:
 	add_child(hud)
 	panel = TuningPanel.new()
 	add_child(panel)
-	enter("room1", "P")
-	Sfx.play_music("music_room")
+	var start := "church"
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("room=") and ROOMS.has(a.substr(5)):
+			start = a.substr(5)
+	enter(start, "P" if start == "church" else "left")
 
 
 func enter(next_room: String, spawn_key: String) -> void:
@@ -45,6 +56,8 @@ func enter(next_room: String, spawn_key: String) -> void:
 	enemies.clear()
 	waves.clear()
 	orbs.clear()
+	shots.clear()
+	boss = null
 	world = Node2D.new()
 	add_child(world)
 	room = Room.new()
@@ -52,19 +65,16 @@ func enter(next_room: String, spawn_key: String) -> void:
 	room.load_room(next_room)
 	room_name = next_room
 	_entry = spawn_key
-	var keep_hp: float = player.hp if player != null and player.hp > 0.0 else T.v("player_hp")
-	var keep_facing: int = player.facing if player != null else 1
-	var keep_mp: float = player.mp if player != null and player.hp > 0.0 else T.v("mp_max")
+	var fresh: bool = player == null or player.hp <= 0.0
+	var keep_hp: float = T.v("player_hp") if fresh else player.hp
+	var keep_mp: float = T.v("mp_max") if fresh else player.mp
 	player = Player.new()
-	player.position = room.spawns.get(spawn_key, room.spawns.get("P", Vector2(64, 64)))
+	var fallback: Vector2 = room.spawns.get("left", room.spawns.get("P", Vector2(64, 64)))
+	player.position = room.spawns.get(spawn_key, fallback)
 	world.add_child(player)
 	player.hp = keep_hp
 	player.mp = keep_mp
-	player.facing = keep_facing if spawn_key != "P" else 1
-	if spawn_key == "D":
-		player.facing = -1
-	elif spawn_key == "B":
-		player.facing = 1
+	player.facing = -1 if spawn_key == "right" else 1
 	cam = Camera2D.new()
 	cam.limit_left = 0
 	cam.limit_top = 0
@@ -78,11 +88,39 @@ func enter(next_room: String, spawn_key: String) -> void:
 	cam.reset_smoothing()
 	for e in room.enemies:
 		var en := Enemy.new()
-		en.position = e[1]
+		en.position = e[1] if not Enemy.KINDS[e[0]]["fly"] else e[1] - Vector2(0, 8)
 		en.setup(e[0])
 		world.add_child(en)
 		enemies.append(en)
-	_door_armed = false
+	if room.spawns.has("O") and not boss_beaten:
+		boss = Boss.new()
+		world.add_child(boss)
+		boss.setup(room.spawns["O"], room.size)
+		enemies.append_array(boss.parts())
+	_motes()
+	Sfx.play_music(room.head.get("music", "music_church"))
+	hud.banner(TITLES.get(next_room, ""))
+	hud.boss_bar("", 0.0)
+	hud.prompt("")
+
+
+func _motes() -> void:
+	# slow drifting specks in the colour of the area: dust in the library, sparks in the lab
+	var m := CPUParticles2D.new()
+	m.position = room.size / 2.0
+	m.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	m.emission_rect_extents = room.size / 2.0
+	m.amount = clampi(int(room.size.x * room.size.y / 2600.0), 16, 140)
+	m.lifetime = 6.0
+	m.preprocess = 6.0
+	m.direction = Vector2(0.3, -1)
+	m.spread = 40.0
+	m.gravity = Vector2.ZERO
+	m.initial_velocity_min = 2.0
+	m.initial_velocity_max = 9.0
+	m.color = room.theme["dust"]
+	m.z_index = 1
+	world.add_child(m)
 
 
 func _physics_process(delta: float) -> void:
@@ -97,22 +135,27 @@ func _physics_process(delta: float) -> void:
 		return      # that hit was the last one: the death fade owns the screen now
 	_move_waves(delta)
 	_move_orbs(delta)
-	# doors: walk into one to go through; it re-arms once you step away
-	var in_door := false
-	for d in room.doors:
-		if d["rect"].intersects(body):
-			in_door = true
-			if _door_armed and d["to"] != "":
-				_through(d["to"], "B" if d["key"] == "D" else "D")
-				return
-	if not in_door:
-		_door_armed = true
+	_move_shots(delta)
+	_terminal()
+	_boss_watch()
+	# the doors are in the room edges: walking off the screen goes through
+	var px := player.global_position.x
+	if px < 5.0 and room.doors.has("left") and room.doors["left"].open > 0.85:
+		_through(room.doors["left"].to, "right")
+	elif px > room.size.x - 5.0 and room.doors.has("right") and room.doors["right"].open > 0.85:
+		_through(room.doors["right"].to, "left")
 
 
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("restart") and not _busy:
-		player.hp = 0.0      # so the new room starts her with full bars
-		enter("room1", "P")
+	if not _busy:
+		if Input.is_action_just_pressed("restart"):
+			player.hp = 0.0      # so the new room starts her with full bars
+			enter("save" if saved else "church", "M" if saved else "P")
+		for i in ROOMS.size():
+			# tester shortcut: number keys jump straight to a room
+			if Input.is_action_just_pressed("room%d" % (i + 1)):
+				player.hp = 0.0
+				enter(ROOMS[i], "P" if i == 0 else "left")
 	if cam != null and is_instance_valid(cam):
 		if _shake_t > 0.0:
 			_shake_t -= delta
@@ -120,6 +163,55 @@ func _process(delta: float) -> void:
 		else:
 			cam.offset = Vector2.ZERO
 	hud.refresh(player, kills)
+	if boss != null and is_instance_valid(boss) and boss.started and boss.alive:
+		hud.boss_bar(TITLES["boss"], boss.hp / maxf(1.0, T.v("boss_hp")))
+
+
+func _terminal() -> void:
+	# the save room: stand at the terminal and press Up
+	if not room.spawns.has("M"):
+		return
+	var near: bool = absf(player.global_position.x - room.spawns["M"].x) < 30.0 and player.is_on_floor()
+	hud.prompt("W: cache memory (heal and save)" if near else "")
+	if near and Input.is_action_just_pressed("up") and player.state == "move":
+		saved = true
+		player.hp = T.v("player_hp")
+		player.mp = T.v("mp_max")
+		Sfx.play("pickup", 0.7)
+		Sfx.play("special", 0.6)
+		ring_fx(room.spawns["M"] + Vector2(0, -40), 70.0, Color(0.5, 1.0, 1.0))
+		hud.toast("MEMORY CACHED")
+
+
+func _boss_watch() -> void:
+	if boss == null or not is_instance_valid(boss) or boss.started:
+		return
+	if player.global_position.x > 72.0:
+		# the way back shuts and the fight starts
+		if room.doors.has("left"):
+			room.doors["left"].locked = true
+		boss.begin()
+		hud.toast("ITS HANDS ARE YOUR STAIRS")
+
+
+func boss_dying() -> void:
+	hud.boss_bar("", 0.0)
+	for s in shots:
+		s.queue_free()
+	shots.clear()
+	shake(4.0, 1.2)
+
+
+func boss_died() -> void:
+	boss_beaten = true
+	kills += 1
+	enemies = enemies.filter(func(e): return is_instance_valid(e) and e.kind != "boss")
+	boss = null
+	if room.doors.has("left"):
+		room.doors["left"].locked = false
+	ring_fx(room.size / 2.0, 160.0, Color(1.0, 0.85, 0.4))
+	hud.toast("LAID TO REST  -  the prototype ends here. R plays again.", 8.0)
+	Sfx.play_music("music_save")
 
 
 func player_swing(rect: Rect2, dmg: float, dir: int, already: Array) -> void:
@@ -163,6 +255,62 @@ func _move_waves(delta: float) -> void:
 			s.queue_free()
 
 
+func shoot(at: Vector2, vel: Vector2, kind: String, dmg: float) -> void:
+	# anything an enemy throws: feather (straight), spit (arcs and splats), shock
+	# (runs along the floor), bolt (the boss: straight and fast)
+	var s := Shot.new()
+	s.kind = kind
+	s.vel = vel
+	s.dmg = dmg
+	s.life = {"feather": 2.2, "spit": 3.0, "shock": 0.75, "bolt": 4.0}[kind]
+	s.global_position = at
+	s.z_index = 4
+	world.add_child(s)
+	shots.append(s)
+
+
+func _move_shots(delta: float) -> void:
+	var body: Rect2 = player.body_rect()
+	for s in shots.duplicate():
+		if s.kind == "spit":
+			s.vel.y += T.v("shot_gravity") * delta
+		s.global_position += s.vel * delta
+		s.life -= delta
+		s.queue_redraw()
+		var p: Vector2 = s.global_position
+		var gone: bool = s.life <= 0.0 or p.x < -20.0 or p.x > room.size.x + 20.0
+		if not gone and (s.kind == "spit" or s.kind == "feather"):
+			if room.cell(int(p.x / 16.0), int(p.y / 16.0)) == "#":
+				gone = true
+				dust(p, 3)
+		if not gone and not G.peace and s.box().intersects(body) and player.invuln <= 0.0:
+			player.take_hit(s.dmg, p.x - signf(s.vel.x) * 4.0)
+			gone = s.kind != "shock"
+			if _busy:
+				return
+		if gone:
+			shots.erase(s)
+			s.queue_free()
+
+
+func ring(at: Vector2, radius: float, dmg: float) -> void:
+	# a burst around a point (the ghost's shriek): hurts her if she is inside it
+	ring_fx(at, radius, Color(0.8, 0.6, 1.0))
+	shake(1.5, 0.12)
+	var c: Vector2 = player.body_rect().get_center()
+	if not G.peace and c.distance_to(at) < radius:
+		player.take_hit(dmg, at.x)
+
+
+func ring_fx(at: Vector2, radius: float, color: Color) -> void:
+	var r := RingFx.new()
+	r.color = color
+	r.radius = radius
+	r.global_position = at
+	r.z_index = 5
+	world.add_child(r)
+
+
 func _drop_orb(at: Vector2) -> void:
 	var o := Polygon2D.new()
 	o.polygon = PackedVector2Array([Vector2(0, -4), Vector2(4, 0), Vector2(0, 4), Vector2(-4, 0)])
@@ -201,16 +349,18 @@ func enemy_died(en: Node2D) -> void:
 
 func player_died() -> void:
 	_busy = true
+	await get_tree().create_timer(0.7).timeout      # let her fall first
 	await hud.fade(1.0, 0.5)
-	player.hp = T.v("player_hp")
-	enter(room_name, _entry)
+	player.hp = 0.0
+	enter(room_name, _entry)      # she wakes at the door she came in by, bars full
 	await hud.fade(0.0, 0.3)
 	_busy = false
 
 
 func _through(to: String, spawn_key: String) -> void:
+	if to == "":
+		return
 	_busy = true
-	Sfx.play("door")
 	await hud.fade(1.0, 0.18)
 	enter(to, spawn_key)
 	await hud.fade(0.0, 0.18)
@@ -218,8 +368,8 @@ func _through(to: String, spawn_key: String) -> void:
 
 
 func shake(amp: float, time: float) -> void:
-	_shake_amp = amp
-	_shake_t = time
+	_shake_amp = maxf(amp, _shake_amp if _shake_t > 0.0 else 0.0)
+	_shake_t = maxf(time, _shake_t)
 
 
 func fx(kind: String, at: Vector2) -> void:
@@ -267,3 +417,58 @@ func number(at: Vector2, value: int, color: Color) -> void:
 	tw.tween_property(l, "position:y", l.position.y - 18.0, 0.6)
 	tw.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(0.25)
 	tw.chain().tween_callback(l.queue_free)
+
+
+# One enemy shot. It draws itself by kind and points the way it flies.
+class Shot extends Node2D:
+	var kind := "spit"
+	var vel := Vector2.ZERO
+	var dmg := 5.0
+	var life := 2.0
+
+	func box() -> Rect2:
+		if kind == "shock":
+			return Rect2(global_position + Vector2(-6, -10), Vector2(12, 16))
+		if kind == "bolt":
+			return Rect2(global_position + Vector2(-6, -3), Vector2(12, 6))
+		return Rect2(global_position + Vector2(-3, -3), Vector2(6, 6))
+
+	func _draw() -> void:
+		var d := vel.normalized()
+		match kind:
+			"feather":
+				draw_line(-d * 5.0, d * 4.0, Color(1.0, 0.85, 0.9), 2.0)
+				draw_line(-d * 2.0, d * 4.0, Color.WHITE, 1.0)
+				draw_line(-d * 9.0, -d * 5.0, Color(0.9, 0.3, 0.4, 0.7), 1.0)
+			"spit":
+				draw_circle(Vector2.ZERO, 4.0, Color(0.25, 0.1, 0.3))
+				draw_circle(Vector2.ZERO, 3.0, Color(0.85, 0.9, 0.3))
+				draw_rect(Rect2(-2, -2, 2, 1), Color(1, 1, 0.8))
+			"shock":
+				var up := 8.0 + sin(life * 40.0) * 3.0
+				draw_colored_polygon(PackedVector2Array([Vector2(-6, 6), Vector2(6, 6), Vector2(d.x * 3.0, -up)]), Color(0.5, 0.95, 1.0, 0.9))
+				draw_colored_polygon(PackedVector2Array([Vector2(-3, 6), Vector2(3, 6), Vector2(d.x * 2.0, -up + 5.0)]), Color.WHITE)
+			"bolt":
+				draw_rect(Rect2(-d.x * 16.0 - 4.0, -1, 12, 2), Color(1.0, 0.6, 0.1, 0.6))
+				draw_colored_polygon(PackedVector2Array([Vector2(-7, 0), Vector2(0, -4), Vector2(7, 0), Vector2(0, 4)]), Color(1.0, 0.8, 0.2))
+				draw_colored_polygon(PackedVector2Array([Vector2(-4, 0), Vector2(0, -2), Vector2(4, 0), Vector2(0, 2)]), Color(1.0, 1.0, 0.8))
+
+
+# A ring that grows and fades: the ghost's shriek, the save, the boss breaking.
+class RingFx extends Node2D:
+	var color := Color.WHITE
+	var radius := 40.0
+	var _t := 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta / 0.35
+		queue_redraw()
+		if _t >= 1.0:
+			queue_free()
+
+	func _draw() -> void:
+		var c := color
+		c.a = 1.0 - _t
+		draw_arc(Vector2.ZERO, radius * (0.3 + 0.7 * _t), 0.0, TAU, 28, c, 2.0)
+		c.a *= 0.25
+		draw_circle(Vector2.ZERO, radius * (0.3 + 0.7 * _t), c)

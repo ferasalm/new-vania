@@ -2,10 +2,12 @@
 # The hero's body: run, jump (hold = high, tap = hop), crouch, backdash, two
 # attacks that look different, a low attack while crouching, a special attack
 # on Up + Attack, a short flinch when hit. No knockdown, no counter.
-# Weapons: ONE weapon, equipped in both hands (the user's plan, like Order of
-# Ecclesia). J swings the right hand, I the left; the blade materializes in
-# the swinging hand and is gone after. Two-handed weapons swing slower, hit
-# harder, reach further; pick the weapon in the F1 WEAPONS page.
+# Weapons: ONE weapon, equipped in both hands (the plan agreed with the user, like
+# Order of Ecclesia). J swings the right hand, I the left; the weapon itself appears
+# in the swinging hand, sweeps through the cut, is held out at the end of the arc
+# and then fades. E swaps between the two weapons (Dirge-042 and Elegy-013).
+# Her frames come from tools/build_pandora.py; the weapon is its own sprite,
+# turned around her shoulder by code, so no attack frame can be cropped.
 # Three bars: HP; Energy (attacks and backdashes spend it, it refills by itself);
 # MP (the special spends it, blue orbs refill it).
 # Every number comes from tuning.json through T.v().
@@ -13,6 +15,20 @@ extends CharacterBody2D
 
 const BODY := Vector2(12, 36)
 const STEP_EVERY := 0.27
+const WEAPONS := [
+	{"name": "DIRGE-042", "tex": "weapon/dirge.png", "grip": Vector2(6, 5)},
+	{"name": "ELEGY-013", "tex": "weapon/elegy.png", "grip": Vector2(10, 10)},
+]
+# one swing: where her shoulder is, the angle the weapon starts and ends at
+# (degrees, 0 = straight ahead, minus = up), and how far the hand is from the shoulder
+const SWINGS := {
+	"stand_j": {"at": Vector2(3, -35), "a0": -150.0, "a1": 8.0, "r0": 9.0, "r1": 22.0},
+	"stand_i": {"at": Vector2(1, -34), "a0": 115.0, "a1": -14.0, "r0": 8.0, "r1": 13.0},
+	"crouch_j": {"at": Vector2(3, -17), "a0": -120.0, "a1": 4.0, "r0": 9.0, "r1": 22.0},
+	"crouch_i": {"at": Vector2(1, -17), "a0": 60.0, "a1": -8.0, "r0": 8.0, "r1": 13.0},
+	"air_j": {"at": Vector2(3, -35), "a0": -150.0, "a1": 24.0, "r0": 9.0, "r1": 22.0},
+	"air_i": {"at": Vector2(1, -34), "a0": 120.0, "a1": -10.0, "r0": 8.0, "r1": 13.0},
+}
 
 var facing := 1
 var state := "move"   # move | crouch | attack | backdash | hurt | dead
@@ -22,7 +38,11 @@ var mp := 60.0
 var invuln := 0.0
 
 var _spr: AnimatedSprite2D
-var _weps := {}             # "weapon-dirge" / "weapon-elegy" -> the overlay sprite
+var _arm: Node2D            # sits on her shoulder; the weapon turns around it
+var _blade: Sprite2D
+var _trail: Swoosh
+var _swing := {}
+var _blade_len := 40.0
 var _coyote := 0.0
 var _jump_buf := 0.0
 var _attack_t := 0.0
@@ -54,19 +74,24 @@ func _ready() -> void:
 	shape.shape = rect
 	shape.position = Vector2(0, -BODY.y / 2.0)
 	add_child(shape)
-	_spr = G.sprite("hero", {"idle": 7.0, "run": 13.0, "jump": 8.0, "attack": 19.0, "attack2": 19.0,
-		"crouch": 1.0, "crouchatk": 19.0}, ["jump", "attack", "attack2", "crouch", "crouchatk"])
-	_spr.position = Vector2(-64, -64)   # frame is 128x64, feet at the bottom centre
+	_spr = G.sprite("hero", {"idle": 7.0, "run": 20.0, "crouch": 18.0, "backdash": 16.0, "hurt": 8.0,
+		"cast": 12.0, "dead": 7.0}, ["jump", "land", "crouch", "attack", "attack2", "crouchatk", "crouchatk2",
+		"airatk", "airatk2", "backdash", "hurt", "cast", "dead"])
+	var feet: Array = G.frames["hero"]["feet"]
+	_spr.position = -Vector2(feet[0], feet[1])   # her feet sit on this node
 	add_child(_spr)
 	_spr.play("idle")
-	# the weapon layer, Order of Ecclesia style: the body frames carry no weapon,
-	# the blade sprite is drawn over the hand that swings it and hides after
-	for set_name in ["weapon-dirge", "weapon-elegy"]:
-		var w := G.sprite(set_name, {"j": 19.0, "i": 19.0, "low": 19.0}, ["j", "i", "low"])
-		w.position = Vector2(-64, -64)
-		w.visible = false
-		add_child(w)
-		_weps[set_name] = w
+	# the weapon layer, Order of Ecclesia style: the body frames carry no weapon;
+	# the weapon sprite appears in the swinging hand and fades after the cut
+	_arm = Node2D.new()
+	_arm.z_index = 1
+	add_child(_arm)
+	_trail = Swoosh.new()
+	_arm.add_child(_trail)
+	_blade = Sprite2D.new()
+	_blade.centered = false
+	_arm.add_child(_blade)
+	_arm.visible = false
 	floor_snap_length = 4.0
 
 
@@ -85,12 +110,16 @@ func _is_elegy() -> bool:
 	return int(T.v("weapon")) == 1
 
 
+func weapon_name() -> String:
+	return WEAPONS[1 if _is_elegy() else 0]["name"]
+
+
 func attack_rect() -> Rect2:
 	var reach := T.v("elegy_reach") if _is_elegy() else T.v("attack_reach")
 	var x := global_position.x + (4.0 if facing > 0 else -4.0 - reach)
 	if _attack_kind == "crouch":
-		return Rect2(x, global_position.y - 26.0, reach, 24.0)
-	return Rect2(x, global_position.y - 42.0, reach, 38.0)
+		return Rect2(x, global_position.y - 30.0, reach, 28.0)
+	return Rect2(x, global_position.y - 54.0, reach, 48.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -122,6 +151,8 @@ func _physics_process(delta: float) -> void:
 			if dir != 0.0:
 				facing = int(dir)
 			_try_jump()
+			if Input.is_action_just_pressed("swap"):
+				swap_weapon()
 			if _pressed_attack() != "" and _begin_attack(_pressed_attack()):
 				pass
 			elif Input.is_action_just_pressed("backdash") and on_floor:
@@ -129,6 +160,7 @@ func _physics_process(delta: float) -> void:
 			elif on_floor and velocity.y >= 0.0 and Input.is_action_pressed("down"):
 				state = "crouch"
 				velocity.x = 0.0
+				_spr.play("crouch")      # she folds down over a few frames, then holds
 		"crouch":
 			velocity.x = 0.0
 			if dir != 0.0:
@@ -272,42 +304,77 @@ func _start_attack(btn: String, kind: String) -> void:
 	_attack_air = not is_on_floor() or velocity.y < 0.0   # a jump started this tick counts as airborne
 	_attack_hit.clear()
 	_wave_thrown = false
-	# the sword materializes in the hand that swings it: J right, I left. The
-	# body swings the same either way; the weapon layer carries the blade
-	var anim := "attack" if btn == "attack" else "attack2"
-	if kind == "crouch":
-		anim = "crouchatk"
-	elif kind == "special":
-		anim = "attack2"
+	# the weapon appears in the hand that swings it: J right, I left
+	var hand := "j" if btn == "attack" else "i"
+	var pose := "air" if _attack_air else ("crouch" if kind == "crouch" else "stand")
+	var anim: String = {"stand": "attack", "crouch": "crouchatk", "air": "airatk"}[pose] + ("" if hand == "j" else "2")
+	if kind == "special":
+		anim = "cast"
 	_spr.sprite_frames.set_animation_speed(anim, 5.0 / _attack_total())
 	_spr.play(anim)
 	_spr.frame = 0
 	if kind == "special":
-		_hide_weapons()
-	else:
-		var set_name := "weapon-elegy" if _is_elegy() else "weapon-dirge"
-		var wa := "low" if kind == "crouch" else ("j" if btn == "attack" else "i")
-		# a weapon picked mid-swing in the panel must not stack two blades
-		_hide_weapons()
-		_weps[set_name].sprite_frames.set_animation_speed(wa, 5.0 / _attack_total())
-		_weps[set_name].play(wa)
-		_weps[set_name].frame = 0
-		_weps[set_name].visible = true
-	if kind == "special":
+		_arm.visible = false
 		Sfx.play("special")
-	elif _is_elegy():
+		return
+	var w: Dictionary = WEAPONS[1 if _is_elegy() else 0]
+	_blade.texture = G.tex(w["tex"])
+	_blade.offset = -w["grip"]
+	_blade_len = _blade.texture.get_width() - w["grip"].x
+	_swing = SWINGS[pose + "_" + hand].duplicate()
+	if _is_elegy():
+		# the two-handed scythe takes a wider arc
+		var down: bool = _swing["a0"] < 0.0
+		_swing["a0"] += -25.0 if down else 25.0
+		_swing["a1"] += 22.0 if down else -18.0
+	_arm.visible = true
+	_pose_weapon()
+	if _is_elegy():
 		Sfx.play("swing_heavy", 1.0 if btn == "attack" else 0.92)
 	else:
 		Sfx.play("swing", 1.0 if btn == "attack" else 1.12)
 
 
+func _pose_weapon() -> void:
+	# materialize -> sweep through the cut -> hold at the end of the arc -> fade
+	var u := clampf(_attack_t / _attack_total(), 0.0, 1.0)
+	var s := clampf((u - 0.1) / 0.3, 0.0, 1.0)
+	s = 1.0 - (1.0 - s) * (1.0 - s)
+	var ang := deg_to_rad(lerpf(_swing["a0"], _swing["a1"], s))
+	var r := lerpf(_swing["r0"], _swing["r1"], s)
+	_arm.position = Vector2(_swing["at"].x * facing, _swing["at"].y)
+	_arm.scale.x = facing
+	_blade.position = Vector2(cos(ang), sin(ang)) * r
+	_blade.rotation = ang
+	var alpha := clampf(u / 0.1, 0.0, 1.0) if u < 0.8 else clampf((1.0 - u) / 0.2, 0.0, 1.0)
+	_blade.modulate = Color(1, 1, 1, alpha) if u < 0.8 else Color(0.5, 1.0, 1.0, alpha)
+	var back := deg_to_rad(95.0) * signf(_swing["a1"] - _swing["a0"])
+	var a0 := deg_to_rad(_swing["a0"])
+	var from := ang - back
+	if (back > 0.0 and from < a0) or (back < 0.0 and from > a0):
+		from = a0
+	var glow := clampf(1.0 - (u - 0.4) / 0.25, 0.0, 1.0) if s > 0.0 else 0.0
+	_trail.set_arc(from, ang, r + _blade_len * 0.3, r + _blade_len, glow)
+
+
 func _hide_weapons() -> void:
-	for w in _weps.values():
-		w.visible = false
+	_arm.visible = false
+
+
+func weapon_showing() -> bool:
+	return _arm.visible and _blade.modulate.a > 0.5
+
+
+func swap_weapon() -> void:
+	T.set_v("weapon", 0.0 if _is_elegy() else 1.0)
+	Sfx.play("pickup", 0.8)
+	G.main.hud.toast(weapon_name())
 
 
 func _attack_step() -> void:
 	var total := _attack_total()
+	if _attack_kind != "special":
+		_pose_weapon()
 	var pressed := _pressed_attack()
 	if pressed != "":
 		_attack_queued = pressed
@@ -339,7 +406,10 @@ func _attack_step() -> void:
 
 
 func _end_attack() -> void:
-	state = "crouch" if (_attack_kind == "crouch" and Input.is_action_pressed("down") and is_on_floor()) else "move"
+	var stay_low := _attack_kind == "crouch" and Input.is_action_pressed("down") and is_on_floor()
+	state = "crouch" if stay_low else "move"
+	if stay_low:
+		_show("crouch", 4)
 	_attack_queued = ""
 
 
@@ -347,6 +417,8 @@ func _try_backdash() -> bool:
 	if _dash_cd > 0.0 or not _spend_energy(T.v("backdash_energy")):
 		return false
 	state = "backdash"
+	_spr.sprite_frames.set_animation_speed("backdash", 4.0 / maxf(0.05, T.v("backdash_time")))
+	_spr.play("backdash")
 	_dash_t = 0.0
 	_ghost_t = 0.0
 	invuln = maxf(invuln, T.v("backdash_safe"))
@@ -367,14 +439,17 @@ func take_hit(damage: float, from_x: float) -> void:
 	Sfx.play("hurt")
 	G.main.number(global_position + Vector2(0, -44), int(damage), Color("#E8A94A"))
 	G.main.shake(T.v("shake") * 1.5, 0.16)
+	_hide_weapons()
 	if hp <= 0.0:
 		hp = 0.0
 		state = "dead"
 		velocity = Vector2.ZERO
-		_hide_weapons()
+		_spr.visible = true
+		_spr.play("dead")
 		G.main.player_died()
 		return
 	state = "hurt"
+	_spr.play("hurt")
 	_hurt_t = T.v("hurt_time")
 	velocity.x = T.v("hurt_push") * signf(global_position.x - from_x)
 	velocity.y = minf(velocity.y, -T.v("hurt_push"))
@@ -398,18 +473,12 @@ func _animate(on_floor: bool) -> void:
 	_spr.flip_h = facing < 0
 	# blink while she cannot be hurt after a hit
 	_spr.visible = not (invuln > 0.0 and state != "backdash" and int(invuln * 20.0) % 2 == 0)
-	# the weapon overlay follows her facing, and rests hidden outside a swing
-	for w in _weps.values():
-		w.flip_h = _spr.flip_h
-		if state != "attack":
-			w.visible = false
-	if state == "attack":
+	if state != "attack":
+		_arm.visible = false
+	# these states started their own animation when they began
+	if state == "attack" or state == "backdash" or state == "hurt" or state == "crouch":
 		return
-	if state == "crouch":
-		_show("crouch", 0)
-	elif state == "backdash" or state == "hurt":
-		_show("jump", 3)
-	elif not on_floor:
+	if not on_floor:
 		var f := 0
 		if velocity.y > 120.0:
 			f = 3
@@ -431,3 +500,35 @@ func _show(anim: String, frame: int) -> void:
 		_spr.animation = anim
 	_spr.stop()
 	_spr.frame = frame
+
+
+# The streak the weapon leaves behind: a curved band that is bright at the blade
+# and fades to nothing behind it.
+class Swoosh extends Node2D:
+	var _from := 0.0
+	var _to := 0.0
+	var _r0 := 10.0
+	var _r1 := 40.0
+	var _alpha := 0.0
+
+	func set_arc(from: float, to: float, r0: float, r1: float, alpha: float) -> void:
+		_from = from
+		_to = to
+		_r0 = r0
+		_r1 = r1
+		_alpha = alpha
+		queue_redraw()
+
+	func _draw() -> void:
+		if _alpha <= 0.01 or absf(_to - _from) < 0.05:
+			return
+		var n := 10
+		for i in n:
+			var a := lerpf(_from, _to, float(i) / n)
+			var b := lerpf(_from, _to, float(i + 1) / n)
+			var k := float(i + 1) / n
+			var inner := lerpf(_r1 - 3.0, _r0, k * k)
+			var pts := PackedVector2Array([Vector2(cos(a), sin(a)) * inner, Vector2(cos(a), sin(a)) * _r1,
+				Vector2(cos(b), sin(b)) * _r1, Vector2(cos(b), sin(b)) * inner])
+			draw_colored_polygon(pts, Color(0.45, 0.95, 1.0, _alpha * k * 0.75))
+			draw_line(pts[1], pts[2], Color(0.9, 1.0, 1.0, _alpha * k), 1.0)

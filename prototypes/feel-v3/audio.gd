@@ -8,7 +8,8 @@ const BASE := "res://assets/audio/"
 const LABELS := {"footstep": "Footstep", "jump": "Jump", "land": "Landing", "swing": "Attack swing",
 	"swing_heavy": "Heavy swing", "hit": "Hit connects", "hurt": "She gets hit", "enemy_die": "Enemy dies",
 	"backdash": "Backdash", "door": "Door", "special": "Special attack", "pickup": "Orb pickup",
-	"no_energy": "No energy", "music_room": "Music"}
+	"no_energy": "No energy", "music_church": "Music: church", "music_library": "Music: library",
+	"music_lab": "Music: lab", "music_save": "Music: save room", "music_boss": "Music: boss"}
 
 var raw := {}      # events.json as loaded
 var ev := {}       # name -> {group, options: [{file, gain_db, stream}], index, volume_db, pitch_random}

@@ -250,3 +250,28 @@ words:
 
 > "So you should understand that you should NOT rely on images as is for the
 > prototype. You should always correct them using aseprite."
+
+## Weapons stage (PR #100) - played 2026-11-16 - verdict: rejected, rebuilt as the mini game
+
+The user's words on the previous build, tidied:
+
+1. The Elegy attack animation looks cropped; attacks in general look cropped and bad while crouching.
+2. "The crouch is stupid": it looks like the sprite's torso got cropped off.
+3. The weapon does not appear at the end of the slash arc, only the arc. It should appear, as in
+   Order of Ecclesia.
+4. "The sprite drawing was actually very stupid." The user supplied the Order of Ecclesia heroine's
+   sprite sheet and Pandora's base sprite, to make Pandora's sheet from it. Later the same day:
+   "we should make a complete sprite sheet for pandora, similar to shanoa".
+5. Wanted next: a boss fight that feels good and challenging with a creative idea, behind a door that
+   looks special; two new rooms that look entirely different (library, lab) plus the save room
+   (terminal); more enemy types with more than one attack and movement type; doors at the very edge
+   of the room that open with an animation; different music per area; all sprites at roughly the same
+   level of detail.
+6. The target, in the user's words: "as close as a mini-version of our game (4 rooms + save room +
+   multiple enemies + two weapons + special abilities + good sprites + good motion + creative and
+   challenging boss fight + variety of music + platform jumping + doors + special door leading to a
+   boss)".
+7. During the build the user sent a second save-room picture: "use this for the save room instead."
+
+What was built in answer (branch `feat/proto-v3-mini`): see `prototypes/feel-v3/README.md`.
+Status: waiting on user (not yet played).

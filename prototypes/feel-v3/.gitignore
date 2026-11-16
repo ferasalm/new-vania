@@ -4,3 +4,8 @@
 *.import
 *.uid
 shots/
+# Pandora's frames are traced from a commercial game's sprite sheet (placeholder
+# poses): they stay on this machine and are rebuilt by tools/build_pandora.py
+assets/hero/
+assets/references/
+__pycache__/
