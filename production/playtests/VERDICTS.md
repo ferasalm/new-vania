@@ -112,13 +112,14 @@ In the user's words, tidied:
 | Stage | What you get to play | Status |
 |---|---|---|
 | 1 The body | Movement, jump, backdash, attack, two enemies, two rooms, sounds | done (approved) |
-| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | in progress (played 2026-11-16; one bug fixed; ask the user for the verdict in words) |
-| Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | planned (questions first) |
+| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | done (approved 2026-11-16) |
+| Weapons and hands | J and I are her right and left hand, one weapon each; two-handed weapons; the fast two-hit combo; Pandora-001 redrawn with weapons | in progress (plan agreed 2026-11-16) |
+| Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | done (the user's answers are recorded below) |
 | 2 The place | Four or five connected rooms with doors, demons and machines | planned |
 | 3 The boss | Arnetria rebuilt; counter as an optional bonus | planned |
 | 4 Write it down | The approved numbers go into the design documents, in plain words | planned |
 
-## Prototype v3 stage 1b — played 2026-11-16 — verdict: played; values saved; full verdict in words still waiting on user
+## Prototype v3 stage 1b — played 2026-11-16 — verdict: approved (all five good)
 
 What was built, for the user to judge by playing. Every value below has a slider in the F1 panel.
 
@@ -129,7 +130,7 @@ What was built, for the user to judge by playing. Every value below has a slider
 | Two attack looks | `J` is a blue cut, `I` is a pink cut that runs the other way | stand-in art, edited from the pack |
 | Energy bar | Attacks and backdashes spend it; it refills after a short rest | 100; attack 12, backdash 10; refills in about 2 seconds |
 | MP bar | Only the special spends it; blue orbs from defeated enemies refill it | 60; special 15 (4 uses); orb gives 8, drops about 6 times in 10 |
-| Special (Up + Attack) | A blade wave flies forward and cuts through enemies | damage 30 (one hit kills a hound), flies 150 px |
+| Special (Up + Attack) | A blade wave flies forward and cuts through enemies | damage 30 (one hit kills a hound), flies 150 px (under half the screen) |
 | New sounds | Special, orb pickup, "no energy" click: three options each in the SOUNDS page | quiet (-18) |
 
 Also fixed from the review of stage 1: a tap pressed just before landing is now a short hop; an
@@ -141,8 +142,9 @@ fades; Reset also restores the sound choices; the remaining enemy and jump timin
 
 - "I noticed a problem where the character faces the opposite side when crouching." Fixed: the
   crouch picture is now made from the standing pose, which faces forward. Status: done.
-- No other complaint was given yet. Ask for the verdict in words on crouch, the low attack, the
-  two attack looks, the three bars and the special before stage 2.
+- The verdict, asked point by point on 2026-11-16: the crouch "Good, keep it"; the low attack
+  "Good, keep it"; the two attack looks "Good, keep both"; the three bars "Good, keep them";
+  the special "Good, keep it". All five are approved; nothing was asked to change.
 
 **The values the user saved with the F1 panel**
 
@@ -159,9 +161,10 @@ fades; Reset also restores the sound choices; the remaining enemy and jump timin
 | No energy | "dull click", -18 | "soft denied", +5 | Different sound, much louder |
 | Music | -15 | +2 | Much louder |
 
-Every sound went up by about 10 to 20. This reverses the earlier "everything much quieter"
-pattern, so the earlier rule (start at -18) is now in doubt: ask the user whether the game was
-too quiet, or their speakers were turned down, before choosing a starting loudness for new sounds.
+Every sound went up by about 10 to 20. We asked the user: were the sounds too quiet, or were
+the speakers turned down? Their answer on 2026-11-16: "Sounds were too quiet." So the earlier
+rule (start quiet, around -18) is dropped. Rule for later sounds: start at about the loudness
+the user saved (small sounds around -4 to 0, music around +2) and let them tune from there.
 
 ## Art direction — the user's answers, 2026-11-16
 
@@ -192,5 +195,58 @@ In the user's words, tidied. This is the brief for every redraw.
    Amythia (the depression boss). Everything else is unsure and may be redrawn.
 
 What this changes: the stage 1b "J blue cut, I pink cut" becomes "right hand, left hand" with a
-weapon per hand. That is a new stage of work (weapons and hands) to plan with the user before
-stage 2. Status: planned.
+weapon per hand. That is a new stage of work (weapons and hands), agreed with the user before
+stage 2. Status: agreed (see below).
+
+## Weapons and hands — the plan agreed with the user, 2026-11-16
+
+The user's answers to the four plan questions, in their words, tidied:
+
+1. **One Dirge, equipped in both hands.** The user's exact answer: "One dirge, but can be
+   equipped twice; meaning that when she attacks with her right hand, the weapon materializes
+   as she attacks with her right hand and then dematerializes; same thing when she attacks with
+   her left hand. So she can equip it in both hands, attacking with either hand using the
+   weapon, but she is not holding two weapons at the same time, but rather chaining attacks and
+   swapping between right and left hand using the same weapon, similar to Castlevania Order of
+   Ecclesia."
+2. **Elegy first.** Of the two two-handed weapons, Elegy-013 is built first (the design book
+   already holds its swing numbers); Lament comes after.
+3. **Two-handed feel: yes, slower but stronger**, with a longer reach; one swing hits harder
+   than one short-sword swing.
+4. **Pandora-001 is redrawn now**, from her concept art, holding the weapons, with the paid
+   generation tool; the user's yes covers this redraw. Poses like the Order of Ecclesia heroine.
+
+**Bake, not generate (the user's direction, same day).** The user checked the generated
+Pandora strips and rejected the whole approach, in their words:
+
+> "You should use the technical artist agent to create sprites instead of relying on
+> img generation tool. If you must use the image generation tool, then you must look
+> at the generated images with a very critical (VERY EXTREMELY CRITICAL) eye because
+> there will be mistakes, (THERE WILL ALWAYS BE MISTAKES). For example, I just checked
+> the generated images and most of the pandora-src sprites are wrong, plus they have a
+> much higher quality compared to the 16-bit game we are trying to make. You should
+> take the original sprite as reference in order to create sprites (or bake as you say)
+> using aseprite."
+
+And:
+
+> "Moreover, I suggest separating weapon and attack animation sprites from character
+> sprites animation, this way it will be easier for everyone; let's do it similar to
+> how Castlevania Order of Ecclesia did it."
+
+What this changes:
+- The paid-generation redraw is dropped. Pandora-001 is baked onto the original pack
+  heroine frames (recolour by colour role: hair to silver-white, suit to near-black,
+  accents to cyan), so the poses the user already approved stay and the 16-bit feel
+  stays. The technical artist agent does the baking.
+- Weapons become their own sprite sets drawn over the weaponless body, Order of
+  Ecclesia style: one Dirge in both hands means the same cyan blade set plays on
+  J (right hand) and I (left hand); Elegy gets its own heavier, longer set.
+- The generated pandora-src images are deleted; nothing generated ships.
+
+**Standing rule for all sprite work (the user, 2026-11-16):** never use an image
+as-is in the prototype; every frame is corrected through Aseprite first. In their
+words:
+
+> "So you should understand that you should NOT rely on images as is for the
+> prototype. You should always correct them using aseprite."

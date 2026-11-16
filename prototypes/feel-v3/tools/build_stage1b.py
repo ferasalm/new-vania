@@ -81,4 +81,5 @@ def main():
     print("stage 1b frames written")
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -170,7 +170,7 @@ func _drop_orb(at: Vector2) -> void:
 	o.global_position = at
 	o.z_index = 6
 	world.add_child(o)
-	orbs.append({"node": o, "wait": 0.35})
+	orbs.append({"node": o, "wait": T.v("orb_hang")})
 
 
 func _move_orbs(delta: float) -> void:

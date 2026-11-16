@@ -76,6 +76,25 @@
         }
       ]
     },
+    "swing_heavy": {
+      "file": "sfx/swing/made_low_swish.wav",
+      "volume_db": -4.0,
+      "pitch_random": 0.05,
+      "options": [
+        {
+          "file": "sfx/swing/made_low_swish.wav",
+          "gain_db": -9.0
+        },
+        {
+          "file": "sfx/swing/attack_swish.ogg",
+          "gain_db": -9.0
+        },
+        {
+          "file": "sfx/swing/made_light_swish.wav",
+          "gain_db": -12.0
+        }
+      ]
+    },
     "hit": {
       "file": "sfx/hit/shock_hit.wav",
       "volume_db": -4.0,
