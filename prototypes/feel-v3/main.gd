@@ -448,7 +448,7 @@ func reconstruct(from_offline: bool = false) -> void:
 	await tw.finished
 	if room.spawns.has("K") and saved_room != "":
 		# she steps out of the capsule
-		player._spr.play("run")
+		player._spr.play("rise" if player._spr.sprite_frames.has_animation("rise") else "run")
 		var step := create_tween()
 		step.tween_property(player, "position:x", player.position.x + 30.0, 0.45)
 		await step.finished

@@ -15,6 +15,7 @@ extends CharacterBody2D
 
 const BODY := Vector2(12, 36)
 const STEP_EVERY := 0.27
+const KICK_SHOW := 0.3      # seconds the kick-off picture stays after a wall jump
 const WEAPONS := [
 	{"name": "DIRGE-042", "tex": "weapon/dirge.png", "grip": Vector2(6, 5)},
 	{"name": "ELEGY-013", "tex": "weapon/elegy.png", "grip": Vector2(10, 10)},
@@ -64,6 +65,8 @@ var _wall_t := 0.0          # seconds left of the wall latch
 var _wall_dir := 0          # which side the wall is on: -1 left, 1 right
 var _latch_cd := 0.0
 var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
+var _kick_t := 0.0          # seconds left of the kick-off picture after a wall jump
+var _swings := {}           # SWINGS, with shoulder and hand distance read from the hero frames
 var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
 var _spin_hits := 0
 var hit_pts := PackedVector2Array()   # where the blade cut this tick (shown by "show hit areas")
@@ -82,8 +85,10 @@ func _ready() -> void:
 	shape.position = Vector2(0, -BODY.y / 2.0)
 	add_child(shape)
 	_spr = G.sprite("hero", {"idle": 7.0, "run": 20.0, "crouch": 18.0, "backdash": 16.0, "hurt": 8.0,
-		"cast": 12.0, "dead": 7.0}, ["jump", "land", "crouch", "attack", "attack2", "crouchatk", "crouchatk2",
-		"airatk", "airatk2", "backdash", "hurt", "cast", "dead"])
+		"cast": 12.0, "dead": 7.0, "rise": 8.0, "turn": 16.0, "dash": 16.0},
+		["jump", "land", "crouch", "attack", "attack2", "crouchatk", "crouchatk2",
+		"airatk", "airatk2", "backdash", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"])
+	_fit_swings()
 	var feet: Array = G.frames["hero"]["feet"]
 	_spr.position = -Vector2(feet[0], feet[1])   # her feet sit on this node
 	add_child(_spr)
@@ -148,6 +153,7 @@ func _physics_process(delta: float) -> void:
 	_dash_cd = maxf(0.0, _dash_cd - delta)
 	_latch_cd = maxf(0.0, _latch_cd - delta)
 	_steer_lock = maxf(0.0, _steer_lock - delta)
+	_kick_t = maxf(0.0, _kick_t - delta)
 	hit_pts = PackedVector2Array()
 	var hold_y := false
 	_jump_buf = maxf(0.0, _jump_buf - delta)
@@ -204,6 +210,7 @@ func _physics_process(delta: float) -> void:
 				facing = -_wall_dir
 				velocity = Vector2(-_wall_dir * T.v("wall_jump_push"), -T.v("wall_jump_velocity"))
 				_steer_lock = T.v("wall_jump_lock")
+				_kick_t = KICK_SHOW
 				_latch_cd = 0.12
 				hold_y = false
 				Sfx.play("jump", 1.15)
@@ -404,7 +411,7 @@ func _start_attack(btn: String, kind: String) -> void:
 	_blade.texture = G.tex(w["tex"])
 	_blade.offset = -w["grip"]
 	_blade_len = _blade.texture.get_width() - w["grip"].x
-	_swing = SWINGS[pose + "_" + hand].duplicate()
+	_swing = _swings[pose + "_" + hand].duplicate()
 	if kind == "special":
 		# Elegy's special, the Requiem: the scythe turns twice all the way round her
 		_swing = {"at": Vector2(0, -26), "a0": -90.0, "a1": 630.0, "r0": 8.0, "r1": 8.0}
@@ -594,9 +601,13 @@ func _animate(on_floor: bool) -> void:
 		_arm.visible = false
 	if state == "wall":
 		if _spr.sprite_frames.has_animation("wall"):
-			_show("wall", 0)
+			# she grabs on (frame 0), then hangs (frame 1)
+			_show("wall", 0 if _wall_t > T.v("wall_latch_time") - 0.1 else 1)
 		else:
 			_show("jump", 2)
+		return
+	if _kick_t > 0.0 and not on_floor and state == "move" and _spr.sprite_frames.has_animation("walljump"):
+		_show("walljump", clampi(int((1.0 - _kick_t / KICK_SHOW) * 3.0), 0, 2))
 		return
 	# these states started their own animation when they began
 	if state == "attack" or state == "backdash" or state == "hurt" or state == "crouch":
@@ -616,6 +627,33 @@ func _animate(on_floor: bool) -> void:
 	else:
 		if _spr.animation != "idle" or not _spr.is_playing():
 			_spr.play("idle")
+
+
+func _fit_swings() -> void:
+	# The swing table says where her shoulder is and how far the hand is from it.
+	# A hero set that lists "shoulders" and "hands" per frame (frames.json) overrides
+	# those two, so the weapon sits in the hand she actually raises. The angles stay
+	# as tuned: they decide where a cut lands.
+	_swings = SWINGS.duplicate(true)
+	var meta: Dictionary = G.frames["hero"]
+	if not (meta.has("hands") and meta.has("shoulders")):
+		return
+	var feet := Vector2(meta["feet"][0], meta["feet"][1])
+	var anim_of := {"stand_j": "attack", "stand_i": "attack2", "crouch_j": "crouchatk",
+		"crouch_i": "crouchatk2", "air_j": "airatk", "air_i": "airatk2"}
+	for key in anim_of:
+		var hands: Array = meta["hands"].get(anim_of[key], [])
+		var shoulders: Array = meta["shoulders"].get(anim_of[key], [])
+		if hands.size() < 4 or shoulders.size() < 4:
+			continue
+		var sh := Vector2.ZERO
+		for p in shoulders:
+			sh += Vector2(p[0], p[1])
+		sh /= float(shoulders.size())
+		_swings[key]["at"] = sh - feet
+		# frame 1 is the wind-up, frame 3 the end of the cut
+		_swings[key]["r0"] = clampf(Vector2(hands[1][0], hands[1][1]).distance_to(Vector2(shoulders[1][0], shoulders[1][1])), 4.0, 26.0)
+		_swings[key]["r1"] = clampf(Vector2(hands[3][0], hands[3][1]).distance_to(Vector2(shoulders[3][0], shoulders[3][1])), 4.0, 26.0)
 
 
 func _show(anim: String, frame: int) -> void:

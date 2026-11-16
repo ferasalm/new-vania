@@ -94,12 +94,14 @@ func sprite(set_name: String, fps: Dictionary, no_loop: Array = []) -> AnimatedS
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
 	var anims: Dictionary = frames[set_name]["anims"]
+	# "dir" lets a set live in another folder (the hero set is chosen by tools/use_hero_set.py)
+	var dir: String = frames[set_name].get("dir", set_name)
 	for anim in anims:
 		sf.add_animation(anim)
 		sf.set_animation_speed(anim, float(fps.get(anim, 10.0)))
 		sf.set_animation_loop(anim, not no_loop.has(anim))
 		for i in int(anims[anim]):
-			sf.add_frame(anim, tex("%s/%s_%02d.png" % [set_name, anim, i]))
+			sf.add_frame(anim, tex("%s/%s_%02d.png" % [dir, anim, i]))
 	s.sprite_frames = sf
 	s.centered = false
 	return s
