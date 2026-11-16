@@ -2,23 +2,29 @@
 
 ## Status
 
-**Proposed** — drafted 2026-11-15 by the ADR-DRAFT lane (support), pass 2.
-**Acceptance awaits the technical-director's TD-ADR verdict (D-ORCH-06)**: the
-`/architecture-review` gate and this lane's gate trail (CD · creative · technical ·
-QA · qa-lead spot-check · micro-check · `/architecture-review`) are recorded in
-`docs/architecture/adr-draft-review-log.md` **§9 — this pass's record**, which lands
-in the same PR as this document. An advisory review verdict does
-not replace the TD-ADR gate, and `Status: Accepted` would let story-readiness start
-stories against this decision early. **The status is never self-assigned by the lane
-that drafts the document.** The engine-probe register in §12 is an **implementation
-gate**, not an ADR-status gate. Carried obligations (not status gates): the six
-SYS-16 riders (O-HD-1…6), the DEF retirement (O-HD-2), the AC-HD-13 DEFLECT fixture
-(CR-HD-01), the energy/mana round-trip (O-HD-7), the superseded four-system
-envelope (O-HD-8), the body-state persistence contradiction (O-HD-9), the
-tier/strike ordering coverage gap (O-HD-10) and the System Offline publisher's split
-(O-HD-11); plus **CR-HD-02** (the late-event sort's one-clause rider). If a later
-architecture review finds a contradiction with a newer Accepted ADR, this ADR
-reverts to `Proposed` and is superseded explicitly.
+**Accepted** — accepted 2026-11-16 by the technical-director's TD-ADR verdict
+(**D-ORCH-23**: ACCEPT WITH CONDITIONS), drafted 2026-11-15 by the ADR-DRAFT lane
+(support), pass 2. The three conditions are applied in the same PR as the flip:
+**C1** (§4d — the producer's door, the event ring as the batch, the pooled
+`HealthEvent`), **C2** (§8b — the heal admission/drain split), **C3** (§4/§4d —
+the freeze-onset assert re-owned by the composition root). The verdict, the
+O-HD-1…11 dispositions, and the six new story-gate obligations **O-HD-12…17**
+are recorded in `docs/architecture/adr-draft-review-log.md` **§10 — the TD-ADR
+verdict**; the lane's gate trail is its §9. The engine-probe register in §12 is
+an **implementation gate**, not an ADR-status gate: the first SYS-07 story is
+gated on the register's ranked head (**#6, #4, #5**), on O-HD-12…17, and on
+**ADR-0005** (the composition root / tick director — the integration story's
+gate, queued as the next ADR-DRAFT candidate). Carried obligations (not status
+gates): the six SYS-16 riders (O-HD-1…6), the DEF retirement (O-HD-2), the
+AC-HD-13 DEFLECT fixture (CR-HD-01), the energy/mana round-trip (O-HD-7), the
+superseded four-system envelope (O-HD-8), the body-state persistence
+contradiction (O-HD-9, recommended resolution (i) — batched to the user), the
+tier/strike ordering coverage gap (O-HD-10) and the System Offline publisher's
+split (O-HD-11); plus **CR-HD-02** (the late-event sort's one-clause rider). If
+a later architecture review finds a contradiction with a newer Accepted ADR, the
+conflict is recorded and this ADR is **superseded explicitly** (`Superseded`,
+per the docs lifecycle — never reverted to `Proposed`, which would auto-block
+its stories).
 
 ## Date
 
@@ -78,7 +84,7 @@ obligation, never a silent change to frozen text):
 |---|---|
 | technical-director | Acceptance chair (TD-ADR, D-ORCH-06); the resolver/reducer split, the tick position, the carried-rider ruling |
 | lead-programmer | The pure `DamageResolver`, the `HealthCore` reducer, the port set, the ladder transaction |
-| godot-gdscript-specialist | Engine-API verdicts: integer division, `Callable` ports on the hot path, the RNG mixer, the label pool, the verification register |
+| godot-gdscript-specialist | Engine-API verdicts: integer division, virtual-call-per-event port cost on the hot path, the RNG mixer, the label pool, the verification register |
 | game-designer | The six-stage order, the ladder's identity-at-default, the damage-number law |
 | qa-lead | The fixture set, the soak's allocation bar, the AC→gate partition, the device gate |
 | user | Scope authority; the D-ORCH-03 baseline (2026-11-15) and D-1's MVP gear (2026-11-14) |
@@ -109,11 +115,11 @@ unit with its knobs, and one ordered six-stage pipeline with no branch ambiguity
 | Field | Value |
 |-------|-------|
 | **Engine** | Godot 4.7.2 (pinned; GDScript) |
-| **Domain** | Core + Gameplay (pure `RefCounted` reducer, typed containers, `Callable` ports, `Resource`-backed config, `Label` pooling) |
-| **Knowledge Risk** | **MEDIUM** — the *gameplay* APIs this ADR uses are 4.0-era and stable in training data; the risk is concentrated in three places: GDScript's **integer division semantics** (truncation toward zero, not floor) against a floor law written for non-negative numerators, `Callable`-per-event cost inside a 0.25 ms p99.9 budget, and the **portability of `hash()`** if it were used for the VS roll |
+| **Domain** | Core + Gameplay (pure `RefCounted` reducer, typed containers, subclassed-`RefCounted` virtual-method ports, `Resource`-backed config, `Label` pooling) |
+| **Knowledge Risk** | **MEDIUM** — the *gameplay* APIs this ADR uses are 4.0-era and stable in training data; the risk is concentrated in three places: GDScript's **integer division semantics** (truncation toward zero, not floor) against a floor law written for non-negative numerators, virtual-call-per-event cost (subclass dispatch, not `Callable` binding) inside a 0.25 ms p99.9 budget, and the **portability of `hash()`** if it were used for the VS roll |
 | **References Consulted** | `docs/engine-reference/godot/VERSION.md`; `breaking-changes.md` (4.6→4.7 table: typed-return overrides, packed-array element setters); `docs/framework/technical-preferences.md` (naming, GUT, the 16.6 ms budget); **ADR-0001 §5** (the phase pipeline this ADR's damage phase follows); **ADR-0002 §5/§6** (the tick-boundary service drain and the `restore_complete`→`load_complete` ordering) |
-| **Post-Cutoff APIs Used** | `RefCounted` + static typing (pre-cutoff); `Callable` binding (pre-cutoff); `Resource` + `@export` (pre-cutoff); `Label`/`CanvasLayer` (pre-cutoff); `Node.process_physics_priority` **[unverified for 4.7.2 — register item 8, the fallback ordering only]**; **no** post-cutoff API is load-bearing in this decision, which is why the risk is MEDIUM and not HIGH |
-| **Verification Required** | The 9-item register in §12, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate; **item 1 is `DOCUMENTED`** (GDScript's `/` on two ints yields an int, truncating toward zero — the reason §3's floor law uses `floori()` on a float division or an explicit non-negative integer form); **item 2 is `DOCUMENTED`** by the language reference (`floori`). On the TD-ADR verdict this ADR becomes **Accepted as architecture**; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
+| **Post-Cutoff APIs Used** | `RefCounted` + static typing (pre-cutoff); subclass virtual-method dispatch (pre-cutoff); `Resource` + `@export` (pre-cutoff); `Label`/`CanvasLayer` (pre-cutoff); `Node.process_physics_priority` **[unverified for 4.7.2 — register item 8, the fallback ordering only]**; **no** post-cutoff API is load-bearing in this decision, which is why the risk is MEDIUM and not HIGH |
+| **Verification Required** | The 9-item register in §12, each with a Method and an Owner. **7 are `PROBE-PENDING`** and block their named gate; **item 1 is `DOCUMENTED`** (GDScript's `/` on two ints yields an int, truncating toward zero — the reason §3's floor law uses `floori()` on a float division or an explicit non-negative integer form); **item 2 is `DOCUMENTED`** by the language reference (`floori`). The TD-ADR verdict (D-ORCH-23, 2026-11-16) accepted this ADR as architecture, with conditions C1–C3 applied; the register is the implementation gate, and no story may consume a `PROBE-PENDING` item as settled fact. |
 
 > **Knowledge-gap warning (MEDIUM).** One failure mode is specific to this decision
 > and is load-bearing: the GDD's damage law is written with **floor** semantics
@@ -370,7 +376,8 @@ The order is TR-HD-005's and V-HD-15's: **raw → ladder/percent (dealt) or F-HD
 (taken) → module → crit → floor → cap**. The resolver is one function with one entry
 and **seven content branches plus an else-reject** (the registry's `damage_event` note
 calls the content set "seven-branch"; the else is the eighth arm and carries no law);
-every branch produces the same six-stage walk, and no branch re-enters a stage.
+every branch reaches each stage at most once; the zero branch short-circuits to the
+value the floor stage would produce, and no branch re-enters a stage.
 
 | # | Stage | What it does | Branches that reach it | Forbidden here |
 |---|---|---|---|---|
@@ -481,12 +488,12 @@ and says the ADR pins the node position. The pin is:
 
 | Field | Value |
 |---|---|
-| **Entry point** | `HealthCore.damage_phase(t: int, events: Array[DamageEvent]) -> void` — one call per tick, events in the tick's arrival batch |
+| **Entry point** | `HealthCore.damage_phase(t: int) -> void` — one call per tick; the event ring's contents are the tick's events (§4d) |
 | **Position** | **after** ADR-0001's phases 0–6 and **after** Combat's contact detection, **before** the freeze publication. It is a **service phase**, the same shape as ADR-0002's save drain |
 | **Clock** | runs on `physics_tick`; every event's `contact_tick` is a `logic_tick` (TR-INP-076); `now_tick()` returns `logic_tick` (§4a) |
 | **Freeze onset** | **next tick's phase 0.** ADR-0001 §5's phase 0 is "apply pending freeze/unfreeze", so a freeze requested in `T` is applied in `T+1`. The damage phase in `T` therefore precedes the onset **by construction**, not by node ordering |
 | **Frozen ticks** | the phase **still runs** (TR-HD-028: "freeze blocks producers … not the reducer"); a scripted `ENVIRONMENT` event during a freeze applies |
-| **The dev assert** | `assert(not freeze_onset_applied_for(t))` — a hit-stop requested in `T` must not be readable as "applied" when the damage phase for `T` runs |
+| **The dev assert** | the **composition root's, not the reducer's** (§4d/C3): the tick director holds `freeze_published_for_t: bool`, sets it at the freeze publication, and asserts `not freeze_published_for_t` immediately **before** the damage-phase call, and `freeze_published_for_t` immediately **after the freeze publication**; `HealthCore` gains no port method. (`assert()` is stripped from release exports — the shipped build's guarantee is the fails-closed boot check, never an assert.) |
 | **Composition root** | the tick director (its own story) calls, in order: input pipeline (ADR-0001) → Combat contact detection → **damage phase (this ADR)** → freeze publication (SYS-29) → save drain (ADR-0002) |
 | **Fallback ordering** | if the director ever defers to the scene tree, `Node.process_physics_priority` pins the three gameplay services **[register item 8]**; the explicit call is the primary and the priority is the documented fallback |
 
@@ -554,6 +561,54 @@ the gate's entry is ADR-0001's **phase 3**, and the drop is the same
 `clear_intents_at_entry` shape applied to SYS-07's event ring: the ring is cleared
 **at phase 3, in the same phase ADR-0001 clears the intents**, not before phase 0 and
 not after the gate has opened.
+
+**§4d · The producer's door, and the ring as the batch** (D-ORCH-23 C1). Combat does
+not hand the phase an array; it calls the reducer's single-event door, which is
+TR-CMB-031's `CombatBodyPort.apply_damage`:
+
+```gdscript
+func apply_damage(event: DamageEvent) -> void   # the producer's only door; appends to the event ring
+```
+
+`damage_phase(t: int)` therefore takes **only the tick** and drains the ring. The
+ring *is* the batch: a preallocated 32-slot typed array, reused, never re-created,
+never handed out. There is no `damage_phase(t, events)` overload — two doors is
+the second-writer defect in input form, and the ring's contents are the only
+events a phase may apply.
+
+**Overflow is a named refusal, not a drop.** The number ring may overwrite-oldest
+because a lost number is a lost *display*; the event ring may not, because a lost
+event is a lost *hit*. A 33rd event in one tick is **rejected with `EVENT_RING_FULL`
+telemetry and a dev assert**, and the first story must supply the **reachability
+argument** for 32 (at MVP the i-frame lock admits one player hit per tick; the
+multiplier is a multi-target arc, so the reachable maximum is "one arc into a
+cluster"). If the reachable maximum exceeds 32, the ring grows — the bar is the
+AC-HD-40 allocation, not the literal 32.
+
+**The published records are pooled too.** `publish(event: HealthEvent)` takes a
+record from a preallocated pool. The `HealthEvent` union — `DamageNumber`,
+`DeathEdge` (with its `DeathRecord`), `HealEdge`, `DefeatEvent` — is the pooled
+publication record; a `HealthEvent` constructed per event would pass AC-HD-40's
+*average* churn bar while failing it in the one frame that matters.
+
+**The dev assert is the composition root's, not the reducer's** (D-ORCH-23 C3). The
+tick director is the only object that owns the call order, so it is the only object
+that can assert it: it holds `freeze_published_for_t: bool`, sets it at the freeze
+publication, and asserts `not freeze_published_for_t` immediately **before** the
+damage-phase call, and `freeze_published_for_t` immediately **after the freeze
+publication** (the phase that follows the damage phase in the same tick). **The
+flag is per-tick**: cleared at the start of every `physics_tick` (phase 0), so
+`freeze_published_for_t` reads "the freeze publication happened earlier in THIS
+tick". Because the publication follows the damage phase by construction, the
+before-call assert holds on every legal order — **including a frozen tick** (the
+onset applied at phase 0 is an application, not a publication; TR-HD-028's
+frozen-tick damage phase is unaffected) — and fails only on the reordering (the
+negative control).
+`HealthCore` gains no port method — TR-HD-037's `HealthPort` is a five-method
+contract, and a sixth read for a debug-only check would be a SYS-07 rider this ADR
+does not need. Register item 6 is therefore a **director** probe, owned by the
+tick-director story; if the director ever falls back to
+`process_physics_priority`, the assert is replaced by item 8's priority log.
 
 ### 5 · The `StatBlock`, the revision discipline, and identity at default
 
@@ -783,6 +838,24 @@ and application (same tick). A pickup adds **+1 charge** through the same entry
 and never auto-applies — the Interact bubble is SYS-01's and the item is SYS-17's.
 `CACHE_REFILL` and the revive's `ceil(hp_max × 50%)` are the two other writers, and
 both are F-HD-06's.
+
+**§8b amendment (D-ORCH-23 C2) — `heal()` is the admission; `heal_phase()` is the
+application.**
+
+```gdscript
+func heal(amount: int, source: StringName) -> int   # 0 = refused at admission; 1 = queued
+```
+
+Admission decides the three refusals the GDD places at the press — a full pool, no
+charge, a target already `DEAD` — because the reducer knows all three then. The
+drain decides the one refusal only the batch can know: the target reached `DEAD`
+**in this tick's damage phase** (TR-HD-020), where the charge is preserved. A
+queued heal has no applied amount at admission time, so the applied amount is
+reported on the `HealEdge` and **never** as `heal()`'s return. `heal_phase()` drains
+a preallocated 8-slot pending-heal queue and runs strictly after `damage_phase()`
+in the same tick. The charge is spent at the commit (TR-HD-030), which is why the
+admission/application split is legal: the spend and the application are already
+two different moments in the GDD.
 
 **The off-switch's injection path.** TR-HD-036's damage-number off-switch is a
 **readability/a11y setting**, and it is injected into the reducer at construction as a
@@ -1019,9 +1092,10 @@ static func resolve(ctx: AttackContext, snap: DefenderSnapshot,
 # ---- the stateful reducer ----------------------------------------------------
 class_name HealthCore extends RefCounted
 
-func damage_phase(t: int, events: Array[DamageEvent]) -> void   # §4's entry point
-func heal_phase(t: int) -> void                                 # strictly after damage
-func heal(amount: int, source: StringName) -> int               # 0 = refused
+func apply_damage(event: DamageEvent) -> void                   # the producer's ONLY door (§4d); appends to the event ring
+func damage_phase(t: int) -> void                               # §4's entry point; drains the event ring (§4d)
+func heal_phase(t: int) -> void                                 # strictly after damage; drains the 8-slot heal queue (§8b C2)
+func heal(amount: int, source: StringName) -> int               # admission: 0 = refused, 1 = queued (§8b C2)
 func add_charge() -> bool                                       # the pickup; false = full
 func apply_stat_revision(rev: StatRevision, source: StatDeltaSource) -> void
 func release_hp_floor(target_id: int) -> void                    # SYS-14's phase release (§8b)
@@ -1058,6 +1132,9 @@ func roll(attacker_id: int, defender_id: int, contact_tick: int) -> float   # [0
 #               overkill, hp_before, hp_max, level}
 # HealEdge {target, amount, source, tick} · DefeatEvent {target, soul_class,
 #               killer_id, contact_tick} · StatRevision
+# HealthEvent — the pooled publication union (§4d): DamageNumber | DeathEdge
+#               (+DeathRecord) | HealEdge | DefeatEvent; a record is taken from a
+#               preallocated pool, never constructed per event
 ```
 
 ### 12 · The engine verification register
@@ -1072,7 +1149,7 @@ and an **Owner**, so a probe can be closed or failed rather than narrated.
 | 3 | The **four port calls per event** (`profile`, `invulnerable`, `anchor`, `publish`, all on `HealthPort`; `now_tick()` is a **per-phase** call, not per event) stay inside the damage phase's 0.25 ms p99.9 / 0.75 ms max allocation | **PROBE-PENDING** | the W13 workload (2,000 events, 100 death→reconstruct cycles, 200 heals, 500 i-frame rejections, 500 duplicates, 50 boss events) on the reference SKU: nearest-rank p99.9 ≤ 0.25 ms, max ≤ 0.75 ms. **A miss is a design finding, not a rounding difference**: the fallback is a per-phase port cache (the port reference read once per `damage_phase`) | performance-analyst | The first story; AC-HD-41 |
 | 4 | A preallocated typed `Array` of `RefCounted` records + an overwrite-oldest head performs **zero allocation** across 10,000 ticks | **PROBE-PENDING** | the soak with `Performance.MONITOR_OBJECT_COUNT`/`MEMORY_STATIC` sampled at the warm-up and at the end: net object delta 0, net resource delta 0, heap growth ≤ 256 KB, churn ≤ 16 KB / 1,000 ticks | lead-programmer | The first story; AC-HD-40 |
 | 5 | An explicit 64-bit integer mixer gives a **platform-stable, stateless** roll, with unsigned shifts, **keyed through `bind_phase`** | **PROBE-PENDING** | the same `(bound logic_tick, attacker_id, defender_id, contact_tick)` key yields the identical 64-bit value on iOS, Android and desktop builds of the same revision, 10,000 keys per platform, zero mismatches; the roll lands in `[0,1)` with no value at 1.0; **a negative intermediate must not fold toward −1** (the unsigned-mask fixture); **and a late event's key uses the bound (resolution) tick, not its `contact_tick`** — a *different* delivery tick is a different key **by design** (TR-HD-037's `logic_tick`), so the fixture asserts replay agreement for the **same** delivery timing, never lateness-invariance | godot-gdscript-specialist | The VS crit; AC-HD-39's two-key fixture |
-| 6 | `HealthCore.damage_phase()` can assert "the freeze onset has not been applied for `t`" from the publication SYS-29 actually offers | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the damage phase for `T` observes the onset as *pending*, not *applied*, 100/100 runs; the same assertion fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer | §4's dev assert; AC-HD-30 |
+| 6 | The **composition root** can assert "the freeze onset has not been applied for `t`": the director holds `freeze_published_for_t` — **cleared at every tick's phase 0**, set only at the freeze publication — and asserts not-set before the damage-phase call / set after the freeze publication (§4d/C3). **The property measured**: within any tick the damage phase precedes the freeze publication (§4's pin); the pair holds on the request tick **and** on the frozen tick (the phase-0 onset application is not a publication) | **PROBE-PENDING** | in a scene where a hit-stop is requested in `T`, the director's assert pair holds 100/100 runs on tick `T` and on the frozen tick `T+1` alike (the flag is per-tick; TR-HD-028's frozen-tick damage phase is unaffected); the **before-call** assert fails if the damage phase is moved after the freeze publication (the negative control) | lead-programmer (the tick-director story; if the director falls back to `process_physics_priority`, item 8's priority log replaces the assert) | §4's dev assert; AC-HD-30 |
 | 7 | A `Label` pool of 32 with a slot→node map shows a number on the **contact tick** with no `queue_free` and no instantiation | **PROBE-PENDING** | **the headless half first** (it is what AC-HD-38/40's GUT halves need): a 32-record burst in one tick fills the ring 32/32 with the head wrapped, a 33rd overwrites slot 0, and 10,000 ticks show zero ring growth; **then the render half**: all 32 nodes render on the frame, a re-lease resets the node's lifetime and animation, and no `Label` is instantiated after boot | ui-programmer (SYS-24's story) | AC-HD-38/40; the render side's churn bar |
 | 8 | `Node.process_physics_priority` (the documented fallback ordering) exists in 4.7.2 and orders the three gameplay services as §4 names | **PROBE-PENDING** | three probe nodes at priorities `-10/0/+10` log their `_physics_process` order: the log is stable across 1,000 ticks and matches the assigned order. **Only needed if the tick director defers to the scene tree**; the explicit call is the primary | godot-specialist | The fallback ordering only |
 | 9 | `ceil`/`floor` on the ms→tick conversion reproduce the GDD's tick fixtures at 60 tps | **PROBE-PENDING** | `ceil(DAMAGE_NUMBER_LIFETIME_MS × tps ÷ 1000)` = 42 ticks at 700 ms/60 tps; `REVIVE_IFRAME_MS` 1000 ms = 60 ticks; `GETUP_IFRAME_MS` 300 ms = 18 ticks; the backdash's 140 ms = **9 protected ticks** (`t…t+8`) with the exposure at `t+9…t+16` (**8 ticks**), matching F-CMB-08's 140/9/8 fixture (protect `4000–4008`, expose `4009–4016`) — the fixture asserts both numbers so the off-by-one is pinned rather than implied | qa-lead | AC-HD-20/38's tick fixtures |
@@ -1460,7 +1537,7 @@ on, because three of them are qualified below (CR-HD-01, O-HD-2, O-HD-7).
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-023 — no auto-respawn; the options contract | §9e: SYS-15 publishes the rows and options (registered); SYS-07 publishes `DeathOptions {revive_available}` and the `DeathRecord` (O-HD-11) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-024 — the reconstruct reset | §9's regime 2 and F-HD-08's reset list, **plus §9d's archive** (the record survives the reset) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-025 — the restore module | §8b's revive window + §9's revive row; the record is archived by §9d |
-| `design/gdd/health-damage.md` | SYS-07 | TR-HD-026/027 — the non-ack gate request; terminality | The edge queues through ADR-0001 §6; no damage on the transition frame (§4) |
+| `design/gdd/health-damage.md` | SYS-07 | TR-HD-026/027 — the non-ack gate request; terminality | The edge queues through ADR-0001 §6; no damage on the transition frame (§4c non-Gameplay + the DEAD term) |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-028 — freeze; the damage phase's position | §4's pin: the entry point, the position, the clock, the freeze onset, the assert |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-029 — the heal API | §8b's heal law: clamp, refuse at full, refuse a `DEAD` target, publish `HealEdge` |
 | `design/gdd/health-damage.md` | SYS-07 | TR-HD-030 — the Suture and the quick slot | The charge is spent on the commit tick (§8b); the chip is SYS-01's pull (§11) |

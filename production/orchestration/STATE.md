@@ -1,8 +1,8 @@
 # Orchestration State — the single live state/log
 
-> **Updated**: 2026-11-15 (orchestrator handoff chat)
-> **Main**: `3fcedc6` — `docs(sys07): the IP-17 low-stat baseline rework, applied (D-ORCH-03) (#75)`
-> **Mode**: parallel GDD/pre-production lanes; nested topology; WIP-limited.
+> **Updated**: 2026-11-16 (the era-closing receipt)
+> **Main**: `5026612` — `feat(proto): the sandbox suite v2 - real art, one button, Arnetria's stored lie (#93)` (at this receipt's branch point)
+> **Mode**: **the prototype era (D-ORCH-15)** — the GDD queue is PAUSED until the playtest verdicts.
 > **Source of truth**: `manifest.yaml`. **Paste source**: `prompts/NEXT.md`.
 > **Operating manual**: `README.md`. **Tooling**: `TOOLING.md`.
 > **Context budget**: `CONTEXT-POLICY.md` (soft 250k / hard 350k).
@@ -37,54 +37,39 @@
 
 | ID | Branch | Worktree | Phase | Owner | Prompt |
 |---|---|---|---|---|---|
-| ART-BIBLE | `docs/art-bible` | `../new-vania-art-bible` | **MERGED `ee08e63` (PR #67)** — the bible + palette + style anchor landed; D-ORCH-01 executed, D-ORCH-02 pinned; asset-spec handoff open | art-director + creative-director | `prompts/lanes/ART-BIBLE.md` v1.0.0 |
-| SYS-03 | `docs/sys03-save-serialization` | `../new-vania-sys03-save-serialization` | **MERGED** `66ae957` (PR #45); twin 34/34 | lead-programmer + systems-designer | `prompts/lanes/SYS-03.md` v1.0.0 |
-| SYS-04 | `docs/sys04-audio-core` | `../new-vania-sys04-audio-core` | **MERGED** `ba07158` (PR #46); header still "In Review" (countersign pending) | sound-designer + audio-director | `prompts/lanes/SYS-04.md` v1.0.0 |
-| SYS-15 | `docs/sys15-cache-stations-death` | `../new-vania-sys15-cache-stations-death` | **MERGED** `24efd09` (PR #59); sync PR #63 (`1e9e524`) | game-designer + systems-designer | `prompts/lanes/SYS-15.md` v1.0.0 |
-| SYS-28 | `docs/sys28-narrative-presentation` | `../new-vania-sys28-narrative-presentation` | **MERGED** `2ff3096` (PR #58); sync PR #69 (`a5a1f81`) | narrative-director + writer | `prompts/lanes/SYS-28.md` v1.0.0 |
-| SYS-07-REWORK | `docs/sys07-baseline-rework` | `../new-vania-sys07-baseline-rework` | **MERGED** `3fcedc6` (PR #75) — D-ORCH-03 option A applied (SYS-07 + SYS-08); the riders PR + the mini sync in flight | systems-designer + lead-programmer | `prompts/lanes/SYS-07-REWORK.md` v1.0.0 |
+| SYS-16 | `docs/sys16-progression` | `../new-vania-sys16-progression` | **MERGED `6db8c38` (PR #81)**; sync `fac409f` (#84); D-ORCH-13 recorded | game-designer + systems-designer | `prompts/lanes/SYS-16.md` v1.0.0 |
+| SYS-14 | `docs/sys14-grief-boss-framework` | `../new-vania-sys14-grief-boss-framework` | **MERGED `016bbbe` (PR #82)**; sync `27aa989` (#85) | game-designer + narrative-director | `prompts/lanes/SYS-14.md` v1.0.0 |
+| SYS-05 | `docs/sys05-game-flow-session` | `../new-vania-sys05-game-flow-session` | **MERGED `2164181` (PR #87)**; sync `9365b56` (#92) | lead-programmer + game-designer | `prompts/lanes/SYS-05.md` v1.0.0 |
+| SYS-24 | `docs/sys24-hud` | `../new-vania-sys24-hud` | **MERGED `40aaf78` (PR #86)**; sync `bdc8380` (#89) | ui-programmer + ux-designer | `prompts/lanes/SYS-24.md` v1.0.0 |
+| ADR-DRAFT | `docs/adr-draft` | `../new-vania-adr-draft` | **Pass 2 MERGED `81d836c` (PR #90)**; ADR-0004 → **ACCEPTED (D-ORCH-23)**; ADR-0002/0003 → **ACCEPTED (D-ORCH-06)**; next pass: **ADR-0005** (the tick director) | lead-programmer + technical-director | `prompts/lanes/ADR-DRAFT.md` v1.0.0 |
+| PROTO-SANDBOX | `feat/proto-sandbox-suite` | `../new-vania-proto-sandbox-suite` | **v2 MERGED `5026612` (PR #93)** — awaits the user's playtest; the SFX package `2bff2df` (#95), the Aseprite canonical pass `a6697cd` (#96), and the room-language spec `8d5a7cb` (#94) stand ready for v3 | prototyper + technical-artist + sound-designer + level-designer | — |
 
 The hashes are in `manifest.yaml` (the lane prompts' headers must match). The
 lane runners write their reports to `production/session-state/lane-<ID>-report.md`
 inside their own worktree.
 
+**The GDD queue is PAUSED (D-ORCH-15, the hybrid-prototyping pivot)**: the queued
+lanes (SYS-17, SYS-12, SYS-20, SYS-25 + the ADR-0005 pass) resume on the user's
+playtest verdicts. The prototype track is this era's primary lane.
+
 ## 3. Review queue (WIP ledger)
 
-- **Three-seat review**: 0 of 2 slots in use (both SYS lanes' gates are closed;
-  ART-BIBLE is at PR #67, gates complete).
-- **CodeRabbit**: the lane passes are done — PR #59 triaged + merged (8+4
-  threads dispositioned), PR #58's confirm resolved; PR #67's pass clean. NEW
-  passes (the sync PRs) queue behind recorded dispositions.
-- **Shared-file writer**: **SYS-16 holds it** — the sync is applied on
-  `chore/sync-sys16` and its PR is open (§4; order 1 in `review-queue.md` §5);
-  the SYS-14 sync follows serially. Prior: the ART-BIBLE sync landed (PR #72,
-  `bc8c6be`; 0 threads) and the lock released; the SYS-28 sync landed (PR #69,
-  `a5a1f81`) and the lock released; the SYS-15 sync landed (PR #63, `1e9e524`).
+- **Three-seat review**: 0 of 2 slots in use — the GDD queue is paused
+  (D-ORCH-15).
+- **CodeRabbit**: 0 of 1 in flight — the prototype-era PRs (#93–#96) are all
+  triaged and merged.
+- **Shared-file writer**: idle; the lock is free (see §4).
 - **Authored-queued**: 0 of 3.
 
 ## 4. Shared-file lock
 
-`shared_file_lock: SYNC-LANE` — **transferred 2026-11-16 to the SYS-05 sync**
-(branch `chore/sync-sys05`, worktree `../new-vania-sync-shared-files`, based on
-`origin/Main` `40aaf78`). Writer: the sync lane only. Scope:
-`design/registry/entities.yaml` + `design/gdd/systems-index.md`. **The lock is
-released only after the sync PR merges** (`prompts/sync-lane.md` §6) — a blocked
-or failed PR keeps the lock and the request in `review-queue.md` §5 for retry.
-
-**The transfer (dated 2026-11-16)**: the SYS-24 sync **landed** — PR #89
-squash-merged as `bdc8380` — and, like the SYS-16/SYS-14 syncs before it, its
-release edit did not land with the merge. This sync therefore **releases the
-SYS-24 hold and re-acquires the lock in one edit** (a landed sync may not keep
-the lock nominally). **The release to `shared_file_lock: none` is recorded with
-the orchestrator's receipt for this sync's merge** — together with this sync's
-landing hash. **PR #87 (the SYS-05 GDD) does not gate the release**: it merges
-after this sync by review-queue §7 rule 4, and its landing is recorded separately
-in its own receipt.
-
-The request being applied:
-`../new-vania-sys05-game-flow-session/production/session-state/lane-SYS-05-report.md`
-"Sync request" §A–§C (order 1 in `review-queue.md` §5 — the SYS-24 sync that
-held it landed as `bdc8380` and is out of the active queue).
+`shared_file_lock: none` — **released 2026-11-16 by this receipt**: the SYS-05
+sync — the last queued request — landed as **PR #92, squash-merged `9365b56`**
+(registry 122 → 130 entries; the index's 17 corrections), and its GDD followed
+per review-queue §7 rule 4 as **PR #87, `2164181`**. Both shared files
+(`design/registry/entities.yaml` and `design/gdd/systems-index.md`) are free.
+The next lane to reach `SYNC` queues its request in `review-queue.md` §5 and
+re-acquires the lock here before any edit.
 
 **Landed receipt 2026-11-15 (order 1, the SYS-16 sync)** — **PR #84**
 (`chore/sync-sys16` → `Main`), squash-merged as **`fac409f`**:
@@ -168,21 +153,35 @@ SYS-04 at `dd33658` (PR #48).
 
 ## 5. Blockers
 
-None hard. Soft: SYS-15 landed (PR #59 merged at `24efd09`); SYS-28 is at PR
-#58 (its sync queued, order 1); ART-BIBLE is at PR #67 (its sync queued, order
-2).
+None. The GDD queue is PAUSED by user decision (D-ORCH-15) until the v2 playtest
+verdicts; the prototype era carries no blockers — v2 (`5026612`) is ready for
+the user's cold playtest.
 
 ## 6. Decisions (batched — see `decisions.md`)
 
-- **D-ORCH-01** — **RESOLVED (2026-11-15): B.** The SYS-02 line-36 amendment
-  executed by the ART-BIBLE lane (commit `5cc1377` names D-ORCH-01); the
-  SYS-11 index-row qualification rides the sync (order 2). See `decisions.md`.
-- **D-ORCH-02** — **RESOLVED (2026-11-15): approved as proposed.** The
-  `PROV_LIM_*` pins and the grief tint are in the bible §4. See `decisions.md`.
-- **D-ORCH-03** — SYS-07-REWORK: the IP-17 baseline contract revision. Owner:
-  systems-designer + lead-programmer. **ROUND 2 REQUESTED** (2026-11-15) — the
-  lane prepares the revised package; the user approves before any edit to the
-  frozen SYS-07 GDD.
+- **D-ORCH-01/02/05** — RESOLVED and executed (the SYS-02 line-36 amendment, the
+  palette pins, the SYS-04 countersign).
+- **D-ORCH-03** — RESOLVED: option A applied (PR #75/#76) + the riders (#78/#80).
+- **D-ORCH-06** — RESOLVED: ADR-0002/0003 ACCEPTED; the flips execute in this
+  receipt.
+- **D-ORCH-07/08/09** — RESOLVED: CR-SAV-01/CR-AUD-03/CR-AUD-04 approved as
+  riders to SYS-03/SYS-04's next doc touches.
+- **D-ORCH-10/11/12** — RESOLVED: (i) re-author; the deflect accepted; keep 500.
+- **D-ORCH-13/14** — decided autonomously under the away-directive (the ruler
+  reading; the SYS-14 brief A); revisit-on-return noted.
+- **D-ORCH-15..22** — RESOLVED (2026-11-16): the hybrid-prototyping pivot; the
+  SYS-05/24 briefs; one-button combat (D-ORCH-18 — the frozen SYS-01/SYS-08
+  contract revision executes at the resume); **Arnetria the Mirror Queen**
+  (D-ORCH-19 — the stored-damage mirror fight replaces SYS-14's crack route);
+  no fall damage (D-ORCH-20); the longer multi-part scope + the Twine tree
+  (D-ORCH-21); the asset authorization (D-ORCH-22 — amended: the Ansimuz
+  recall, **all assets usable, no exception**).
+- **D-ORCH-23** — RESOLVED: the TD-ADR verdict on ADR-0004 — ACCEPT WITH
+  CONDITIONS; C1–C3 applied and the status flipped in this receipt.
+- **Open for the user**: the O-HD-9 recommendation (resolution (i) — the body is
+  session-only at MVP), the CR-HD-01/02 ratification nod, the license-text
+  capture for the 7 user-recalled packs (at promotion time), and the playtest
+  verdicts themselves.
 
 ## 7. SYS-11 OQ handoff (OQ-1..7)
 
@@ -204,6 +203,16 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 | Date | System | Main | PR | Notes |
 |---|---|---|---|---|
+| 2026-11-16 | Prototype v2 — real art, one button, Arnetria's stored lie | `5026612` | #93 | the user playtests; 71-check smoke ALL GREEN; CodeRabbit caught the 150 px mirror-height fight-breaker |
+| 2026-11-16 | The Aseprite canonical pass (Pandora, Arnetria, the shards) | `a6697cd` | #96 | 184 files in `assets/processed/`; the `.aseprite` sources are the MVP art base; the 37k green-pinhole inpaint verified |
+| 2026-11-16 | The prototype SFX package | `2bff2df` | #95 | 21 files, 17/17 events wired; the bus/gain map per ADR-0003; 5 CR threads all applied |
+| 2026-11-16 | The room-language spec | `8d5a7cb` | #94 | the boss-door grammar, the mini-boss rules, the changed-place pattern; the SYS-11 OQ-6 fixtures |
+| 2026-11-16 | The license verification sweep | `953edb2` | #91 | 35 rows, per-pack LICENSEs, CREDITS.md; the 7 user-recalled rows re-attributed in this receipt (D-ORCH-22) |
+| 2026-11-16 | ADR-0004 Health & Damage (pass 2) | `81d836c` | #90 | landed Proposed; **ACCEPTED via D-ORCH-23 in this receipt** (C1–C3 applied) |
+| 2026-11-16 | SYS-05 Game Flow & Session Structure | `2164181` | #87 | sync PR #92 `9365b56`; the nine-context machine; OQ-DR-1/OQ-SAV-7 ratified |
+| 2026-11-16 | SYS-05 sync (registry 122→130) | `9365b56` | #92 | the last queued sync; the lock released in this receipt |
+| 2026-11-16 | SYS-24 HUD | `40aaf78` | #86 | sync PR #89 `bdc8380`; OQ-CSD-2 answered; the envelope is eight systems |
+| 2026-11-16 | SYS-24 sync (registry 119→122) | `bdc8380` | #89 | hud_caps/settings/registration contracts; the CR-1/CR-2 dependency fixes |
 | 2026-11-15 | ADR-0002 + ADR-0003 (the ADR-DRAFT lane) | `b991714` | #79 | verified this chat; both `Proposed`; 29 CR threads resolved; the TD-ADR verdict batched (D-ORCH-06) |
 | 2026-11-15 | The D-ORCH-03 riders mini sync | `fe38c4c` | #80 | verified this chat; the orb 8→2, `power_band` 1→2, the Suture 5; 0 threads |
 | 2026-11-15 | The D-ORCH-03 riders (SYS-13 + four mechanical) | `b4ec55b` | #78 | verified this chat; the deflect-weight + stagger-floor questions recorded (D-ORCH-11/12) |
@@ -226,49 +235,45 @@ fall between lanes. OQ-5/OQ-6 are gate-2 / room-data items.
 
 ## 9. Next actions
 
-1. **The SYS-16 sync** (order 1) — the lane report's §4a–4e (7 pending SYS-07
-   constants + 11 new SYS-16 constants + 4 published contracts +
-   `progression_namespace` + 2 formulas + the `damage_ladder_mvp` note; the
-   index row/design-order 23/dependency bullet + the 8 corrections; riders
-   (a)–(f) recorded, (d) decided). Fresh subagent on DS, branch
-   `chore/sync-sys16` from a fresh `origin/Main`, lock re-acquired in §4.
-   Then merge **PR #81** head-pinned → **SYS-17 unblocks**.
-2. **The SYS-14 sync** (order 2, serial) — 6 new registry entries +
-   `boss_kill_award` + 4 referenced_by/note updates; the index dependency
-   cell + bullet (the stale 300-HP → 60) + design order + tracker row + 6
-   neighbor notes. Then merge **PR #82** head-pinned.
-3. **The user decision batch on return**: D-ORCH-06 (the TD-ADR verdict),
-   D-ORCH-07/08/09 (CR-SAV-01, CR-AUD-03, CR-AUD-04), D-ORCH-10 (OQ-AUD-9,
-   the audio-director default branch (i)), D-ORCH-11/12 (the SYS-13 deflect
-   weight — default accept; the stagger floor — default keep 500).
-   D-ORCH-13/14 were decided autonomously under the away-directive.
-4. **Next GDD launches** (WIP permitting, after the syncs drain): SYS-05
-   (GLM — the highest-value unblock: SYS-03's `load_complete` ordering, the
-   `restored_epoch` payload, ADR-0002/0003's named seams), then SYS-24,
-   SYS-12, SYS-20, SYS-25. Fresh `lane-runner` sessions only.
-5. At any lane boundary: refresh `NEXT.md`
+1. **The user playtests prototype v2** — cmd/bash: `"C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --path prototypes/sandbox`;
+   PowerShell: `& "C:/dev/game/Godot_v4.7.2-stable_win64_console.exe" --path prototypes/sandbox`.
+   Cold start. The verdicts feed v3: the canonical `.aseprite` sources
+   (`assets/processed/`), the SFX package (`assets/audio/selected/` + WIRING.md),
+   and the room-language spec wire in on the next prototype pass.
+2. **The queued agents (spawn on the verdicts)**: analytics-engineer (telemetry
+   before v3), performance-analyst (the sandbox vs the 2.55/6.85 envelope),
+   accessibility-specialist + economy-designer (at the GDD resume), world-builder
+   (the mirror-world change rules + the Twine structure), tools-programmer (the
+   OKLCH harness + Twine tooling).
+3. **On the GDD resume (the user's word)**: the queue (SYS-17, SYS-12, SYS-20,
+   SYS-25), the **ADR-0005 lane** (the composition root / tick director —
+   candidate #1, it gates the first SYS-07 integration story), the
+   **D-ORCH-18/19/20 contract revisions** into the frozen GDDs (one-button
+   combat, Arnetria's stored-damage fight, the fall-damage removal), the
+   CR-SAV-01/CR-AUD-03/04 + O-HD-1..11 riders, and the TD-ADR story gates
+   (probes #6/#4/#5 first, O-HD-12..17, `tr-registry.yaml` via
+   `/architecture-review`).
+4. At any lane boundary: refresh `NEXT.md`
    (`node tools/orchestration/render-prompts.mjs --next`).
 
 ## 10. Handoff — what is running, queued, and decided
 
-**Running**: none — **SYS-16 (PR #81, CLEAN `18d8e75`) and SYS-14 (PR #82,
-CLEAN `9b172a8`) are at their PRs**, each awaiting its sync.
-**Landed**: SYS-03 `66ae957` (#45), SYS-04 `ba07158` (#46), SYS-15 `24efd09`
-(#59), SYS-28 `2ff3096` (#58), ART-BIBLE `ee08e63` (#67), SYS-07-REWORK
-`3fcedc6` (#75) + sync `6dd4651` (#76) + receipt `50ccd95` (#77) + riders
-`b4ec55b` (#78) + mini sync `fe38c4c` (#80), ADR-0002/0003 `b991714` (#79).
-**Queued**: the SYS-16 sync (order 1) → merge #81 (SYS-17 unblocks); the
-SYS-14 sync (order 2) → merge #82; then SYS-05, SYS-24, SYS-12, SYS-20,
-SYS-25.
-**Support**: ADR-DRAFT landed (the next pass: SYS-07's ADR); QA-PLAN standby;
-SYNC-LANE per-request.
-**User must decide (on return)**: D-ORCH-06–12 (the TD-ADR verdict, the three
-CR contract revisions, OQ-AUD-9, the SYS-13 deflect weight + stagger floor).
-D-ORCH-13/14 were decided autonomously under the away-directive.
-**Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml`
-+ the lane reports; do not author; run the two syncs serially → merge #81 →
-#82; keep launching within the WIP limits; batch decisions; stop only on a
-hard blocker or the 350k hard trigger.
+**Running**: nothing — all streams landed (the last: prototype v2 `5026612`,
+PR #93). **The user playtests next.**
+**Landed this era**: SYS-16 `6db8c38` (#81) + sync `fac409f` (#84) · SYS-14
+`016bbbe` (#82) + sync `27aa989` (#85) · SYS-24 `40aaf78` (#86) + sync
+`bdc8380` (#89) · ADR pass 2 `81d836c` (#90) · the license sweep `953edb2`
+(#91) · SYS-05 sync `9365b56` (#92) · SYS-05 `2164181` (#87) · prototype v2
+`5026612` (#93) · the room language `8d5a7cb` (#94) · the SFX package
+`2bff2df` (#95) · the Aseprite canonical pass `a6697cd` (#96).
+**Decided**: D-ORCH-01..23 (see §6 + `decisions.md`); the GDD queue is PAUSED
+(D-ORCH-15) until the playtest verdicts.
+**Open for the user**: the O-HD-9 recommendation (resolution (i)); the
+CR-HD-01/02 nod; the playtest verdicts themselves.
+**Next orchestrator chat**: paste `NEXT.md`; read this file + `manifest.yaml` +
+`production/session-state/active.md` (the handover); **the prototype loop is the
+primary lane — do not launch GDD lanes until the user's verdicts**; batch the
+open decisions; stop only on a hard blocker or the 350k hard trigger.
 
 ## 11. Sync receipt — SYS-03 Save & Serialization (landed 2026-11-14 — PR #47, `50a9a93`)
 
@@ -430,4 +435,26 @@ hard blocker or the 350k hard trigger.
   review-queue § 7 rule 4; `036ae9c`: SYS-17 keeps its own SYS-16 dependency — the
   sync removes only the SYS-07-REWORK blocker). 0 rebutted, 0 deferred.
 - **Merge order**: the sync PR first, then PR #75 (review-queue § 7 rule 4).
+
+## 16. The 2026-11-16 receipt — the era closes (D-ORCH-15..23)
+
+- **This receipt lands**: the decisions ledger (D-ORCH-06..23) · the TD-ADR
+  acceptance flips — ADR-0002/0003 per D-ORCH-06 and **ADR-0004 per D-ORCH-23
+  with C1–C3 + the editorial batch applied** (the producer's door §4d, the heal
+  admission/drain split §8b, the director-owned freeze assert; the §10 verdict
+  record in the review log) · the `technical-preferences.md` rows · the
+  license-ledger re-attribution (D-ORCH-22's amendment: the Ansimuz recall,
+  all assets usable, no exception) · the manifest receipt sweep (the MERGED
+  rows, the PAUSED queue notes, the ADR-DRAFT next pass) · this STATE rewrite ·
+  the `NEXT.md` re-render (v2.0.7 — the orchestrator loop's §1 rewritten for
+  the prototype era).
+- **The GDD machine's in-flight tail is complete**: every lane that was running
+  or queued for this era has landed or is PAUSED by user decision. The
+  shared-file lock is free; the review queue is empty.
+- **The prototype era is live**: v2 `5026612` awaits the user's cold playtest;
+  the canonical art sources (`assets/processed/`), the SFX package
+  (`assets/audio/selected/` + `WIRING.md`), and the room-language spec
+  (`design/level/proto-room-language.md`) stand ready for v3.
+- **The fresh session** starts by pasting `NEXT.md` and reading
+  `production/session-state/active.md` (the handover).
 

@@ -1,4 +1,4 @@
-# Orchestration Manifest — the single source of truth for lanes and prompts.
+﻿# Orchestration Manifest — the single source of truth for lanes and prompts.
 #
 # RULES
 #   - Every lane row carries the same prompt_hash as the lane prompt's header.
@@ -18,8 +18,8 @@ prompt_schema: 1
 next:
   kind: orchestrator
   path: production/orchestration/prompts/orchestrator-loop.md
-  version: "2.0.6"
-  hash: "d376aa2b057a"
+  version: "2.0.7"
+  hash: "8200091aada7"
 
 support_prompts:
   - id: handoff
@@ -37,7 +37,7 @@ support_prompts:
   - id: orchestrator-loop
     path: production/orchestration/prompts/orchestrator-loop.md
     version: "1.0.0"
-    hash: "d376aa2b057a"
+    hash: "8200091aada7"
   - id: cd-gate
     path: production/orchestration/prompts/seat-briefs/cd-gate.md
     version: "1.0.0"
@@ -83,10 +83,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "8fbc08eec5c0"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: SYNC
+    status: MERGED
     dependencies: [SYS-02, SYS-09, SYS-10]
     review_state: "GDD APPROVED (2026-11-14; the real-file twin 32/32 PASS; 26 TR-SAV / 4 F-SAV / 9 V-SAV / 26 ACs). SYNC LANDED — the sync PR #47 merged at 50a9a93; the GDD row, the registry entries and the 10 corrections are on Main."
-    next_action: "The orchestrator re-verifies PR #45's head (it has moved past the report's 08a0a12 — e61f6af at the last check) and squash-merges at that verified head, then records the landing hash."
+    next_action: "MERGED — done (PR #45 at 66ae957; sync PR #47 at 50a9a93)."
 
   - id: SYS-04
     title: "Audio Core — flip contract, ambient_shift, no-duck"
@@ -97,10 +97,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "4e689924ac17"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: SYNC
+    status: MERGED
     dependencies: [SYS-09, SYS-10, SYS-29, SYS-11]
     review_state: "GDD APPROVED (2026-11-14 — the GLM creative rerun's trail; 39 TR-AUD / 7 F-AUD / 7 V-AUD / 32 ACs). The header's Status line still reads In Review — the audio-director countersign is the recorded pending item; the lane flips it at the merge. SYNC LANDED — PR #48 merged at dd33658; the row, the four registry entries and the SYS-02 reciprocal are on Main."
-    next_action: "The lane flips the GDD header's In Review -> APPROVED on PR #46 (a new commit), then the orchestrator re-verifies the head and squash-merges at the NEW head — the 391dd18 pin no longer applies once the header commit lands."
+    next_action: "MERGED — done (PR #46 at ba07158; sync PR #48 at dd33658; the header flip + countersign landed in PR #66)."
 
   - id: SYS-15
     title: "Cache Stations & Death-as-Story"
@@ -143,10 +143,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "a6ae5fbdfe32"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: SYNC
+    status: MERGED
     dependencies: [SYS-13, SYS-08, SYS-32]
     review_state: "GATES CLOSED (2026-11-15): CD CONCERNS(3) repaired → APPROVED · creative NR(2) · technical NR(5) · QA NR(6) — all repaired · spot-check PASS (round 4) · micro-check PASS · CodeRabbit 11 threads resolved. D-ORCH-14 decided A. Counts 24 TR / 6 F / 11 V / 30 AC; OQ-ENM-8/OQ-HD-10/OQ-CAM-3/OQ-RWS-8/IP-10 closed."
-    next_action: "PR #82 open (CLEAN, head 9b172a8; 11 CodeRabbit threads resolved; all gates closed — 24 TR / 6 F / 11 V / 30 AC; OQ-ENM-8/OQ-HD-10/OQ-CAM-3/OQ-RWS-8/IP-10 closed). D-ORCH-14 decided A. The sync is order 2 (serial after SYS-16's); the orchestrator merges after it lands."
+    next_action: "MERGED — done (PR #82 at 016bbbe; sync PR #85 at 27aa989; the 300-HP -> 60 correction; the A12 rider recorded)."
 
   - id: SYS-05
     title: "Game Flow & Session Structure — linear stub"
@@ -157,10 +157,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "ae2a122951f7"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: QUEUED
+    status: MERGED
     dependencies: [SYS-03]
-    review_state: "not-started"
-    next_action: "Starts after SYS-03's context machine input is authored."
+    review_state: "GDD APPROVED (2026-11-16, lane SYS-05): 24 TR-GFS / 3 F-GFS / 7 V-GFS / 30 ACs; the nine-context machine, the load-complete gate, OQ-DR-1/OQ-SAV-7 ratified."
+    next_action: "MERGED — done (PR #87 at 2164181; sync PR #92 at 9365b56; the registry is 130 entries; OQ-DR-1/OQ-SAV-7 ratified)."
 
   - id: SYS-24
     title: "HUD — minimal, 9-field publication consumer"
@@ -171,10 +171,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "491dcc7c2b7a"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: QUEUED
+    status: MERGED
     dependencies: [SYS-08, SYS-07, SYS-01, SYS-32]
-    review_state: "not-started"
-    next_action: "Starts when a review slot frees."
+    review_state: "GDD APPROVED (2026-11-15, lane SYS-24): 25 TR-HUD / 7 F-HUD / 8 V-HUD / 37 ACs; OQ-CSD-2 answered; the envelope is eight systems."
+    next_action: "MERGED — done (PR #86 at 40aaf78; sync PR #89 at bdc8380; OQ-CSD-2 answered; the envelope is eight systems)."
 
   - id: SYS-12
     title: "Motion Input / Stinger Gesture — demon-granted"
@@ -188,7 +188,7 @@ lanes:
     status: QUEUED
     dependencies: [SYS-01, SYS-08, SYS-05]
     review_state: "not-started"
-    next_action: "Starts with the SYS-01 gesture-reservation amendment as its first obligation."
+    next_action: "PAUSED with the GDD queue (D-ORCH-15) — resumes on the playtest verdicts; starts with the SYS-01 gesture-reservation amendment as its first obligation."
 
   - id: SYS-20
     title: "Memory Fragments — 3–4 pickups + counter"
@@ -204,7 +204,7 @@ lanes:
     dependencies_waived: [SYS-03, SYS-05]
     dependency_note: "SYS-03/SYS-05 are pre-shaped contracts; ratify at authoring."
     review_state: "not-started"
-    next_action: "Starts when a review slot frees; consume SYS-03/SYS-05 as pre-shaped and ratify at authoring."
+    next_action: "PAUSED with the GDD queue (D-ORCH-15) — resumes on the playtest verdicts; consume SYS-03/SYS-05 as pre-shaped and ratify at authoring."
 
   - id: SYS-25
     title: "Map / Minimap / Fog-of-War — pause room-grid"
@@ -218,7 +218,7 @@ lanes:
     status: QUEUED
     dependencies: [SYS-02, SYS-10, SYS-03]
     review_state: "not-started"
-    next_action: "Starts after SYS-03's save round-trip; diff-scoped first pass."
+    next_action: "PAUSED with the GDD queue (D-ORCH-15) — resumes on the playtest verdicts; diff-scoped first pass after SYS-03's save round-trip."
 
   - id: SYS-07-REWORK
     title: "SYS-07 baseline rework — IP-17 contract-revision package"
@@ -244,10 +244,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: SYNC
+    status: MERGED
     dependencies: [SYS-07-REWORK, SYS-08, SYS-13]
     review_state: "GATES CLOSED (2026-11-15): CD APPROVED · creative NR(3) repaired · technical NR(10): 9 repaired + 1 rebutted-with-rider · QA NR(10) repaired · spot-check PASS (round 4) · micro-check PASS · CodeRabbit 12 threads resolved. D-ORCH-13 decided (i). Counts 28 TR / 10 F / 12 V / 36 AC."
-    next_action: "PR #81 open (CLEAN, head 18d8e75; 12 CodeRabbit threads resolved; all gates closed — 28 TR / 10 F / 12 V / 36 AC). D-ORCH-13 decided (i): the gear layer ships as authored, rider (d) to SYS-07's next touch. The sync (the lane report's §4a–4e) is order 1; the orchestrator merges after it lands; SYS-17 unblocks on the merge."
+    next_action: "MERGED — done (PR #81 at 6db8c38; sync PR #84 at fac409f; D-ORCH-13 recorded: F-HD-10 is a ruler, rider (d) to SYS-07's next touch; SYS-17 unblocked)."
 
   - id: SYS-17
     title: "Inventory & Items — MVP carve-out + gear loadout"
@@ -258,10 +258,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "pending"
     model: "cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash"
-    status: BLOCKED
+    status: QUEUED
     dependencies: [SYS-07-REWORK, SYS-16]
     review_state: "not-started"
-    next_action: "Blocked on SYS-16 (its SYS-07-REWORK blocker was removed by D-ORCH-03's landing)."
+    next_action: "PAUSED with the GDD queue (D-ORCH-15) — unblocked (SYS-07-REWORK and SYS-16 both landed); resumes on the user's playtest verdicts."
 
   - id: ADR-DRAFT
     title: "Parallel ADR drafting — landed and in-flight GDDs"
@@ -272,10 +272,10 @@ lanes:
     prompt_version: "1.0.0"
     prompt_hash: "9c08ed965d14"
     model: "cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017"
-    status: MERGED
+    status: STANDBY
     dependencies: []
     review_state: "architecture-review gate per ADR — LANDED: PR #79 merged at b991714 (ADR-0002 Save & Serialization + ADR-0003 Audio Core, both Status: Proposed; 29 CodeRabbit threads across five waves all applied + resolved; the TD-ADR acceptance verdict is a batched user decision, not a merge blocker)"
-    next_action: "LANDED. Follow-ups: the TD-ADR verdict (D-ORCH-06) flips the two status lines + the two technical-preferences rows; the next ADR candidate is SYS-07's Health/Damage ADR; SYS-05's ADR queues behind its GDD (recorded gap)."
+    next_action: "Pass 2 LANDED (PR #90 at 81d836c; ADR-0004 ACCEPTED via D-ORCH-23 with C1–C3 applied; ADR-0002/0003 ACCEPTED via D-ORCH-06). Next pass: ADR-0005 (the composition root / tick director) as candidate #1, ahead of SYS-05's ADR; tr-registry.yaml is the S5 gap /architecture-review owns."
 
   - id: QA-PLAN
     title: "QA plan support — probe registers and AC→gate ledgers"
