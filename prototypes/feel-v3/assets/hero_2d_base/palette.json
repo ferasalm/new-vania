@@ -1,0 +1,31 @@
+{
+  "name": "pandora_idle_base candidate palette (SPIKE — not production approved)",
+  "status": "candidate_for_approval",
+  "note": "Visual-spike palette; derives from art-bible value inversion (dark body / light head) and PROV_GLITCH_ACCENT family. Not a bible table amendment. Hexes live only here.",
+  "palette": {
+    "hair_light": "#F4F3EF",
+    "hair_mid": "#CFD1D4",
+    "hair_shade": "#9A9CA2",
+    "hair_deep": "#6E7078",
+    "skin_light": "#F2D3BC",
+    "skin_base": "#DDB08F",
+    "skin_shade": "#B9856A",
+    "suit_base": "#232A30",
+    "suit_shade": "#151A1F",
+    "scarf_base": "#2C2C31",
+    "scarf_shade": "#1B1B20",
+    "cape_base": "#26262B",
+    "cape_shade": "#17171B",
+    "cape_edge": "#3A3A40",
+    "boot_base": "#1B2026",
+    "boot_shade": "#101418",
+    "boot_hi": "#2C343C",
+    "suit_hi": "#2E3A44",
+    "gauntlet_base": "#20262C",
+    "gauntlet_shade": "#131820",
+    "cyan_glow": "#4FC8DC",
+    "cyan_deep": "#1E6E7E",
+    "rim_cyan": "#7DF0FF",
+    "eye_cyan": "#7DF0FF"
+  }
+}

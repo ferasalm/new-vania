@@ -55,7 +55,11 @@ spec only at this stage; author only when mechanics exist or B04 requires them.
 
 ## 4. First practical task (worker)
 
-1. **The proportion study is REJECTED. Create ONE actual 2D idle base first.**
+1. **The proportion study is REJECTED. Latest user request: IMAGE FIRST.**
+   One generated visual is saved as `assets/hero_2d_base/pandora_idle_visual_concept.png`.
+   It is 2048x2048, NOT a native sprite. Obtain appearance approval, then make the
+   actual 112x80 idle. User asked Sol to handle the art personally; helper stopped.
+   Aseprite is in Docker: use container/mounted paths, not the host C: path.
    New direction: the two JPGs in `assets/pandora_proportion_study/reference/`:
    exposed skin upper arms, a more defined mature face, flowing silver ponytail.
    Keep the ponytail intentionally large; do not substitute more leg stretching.

@@ -4,7 +4,7 @@
 - Worktree: `C:/Users/AUC/opencode-workspace/workspace/new-vania-proto-v3-patch`, branch `feat/proto-v3-patch`; no merge authorized.
 - Goal: credible demo, not endless prototypes. This session banked sources and verified the baseline; it did NOT finish a demo or integrate new art.
 - User REJECTED the 3D proportion study. New direction is the TWO images in `assets/pandora_proportion_study/reference/` (all asset paths below relative to `prototypes/feel-v3/`): exposed upper arms, defined mature face, flowing silver ponytail; not simply longer legs/smaller hair.
-- Current task: ONE native 112x80 standing idle sprite under `assets/hero_2d_base/`, show at 1x/enlarged, then wait for user approval. Local 2D authoring only; no image-generation charge, no Rodin, no runtime switch.
+- LATEST task: user redirected to IMAGE FIRST after coded drafts. ONE requested generation is saved at `assets/hero_2d_base/pandora_idle_visual_concept.png` (2048x2048; Seedream 5.5; job `image_1e67442b30012QM6VL7Rgm1YKk`). Show/approve this look BEFORE native conversion. This is NOT yet a 112x80 game sprite; image fee not verified by LLM meter. No Rodin/runtime switch.
 - Budget decision: user authorized up to $2 ADDITIONAL for the base test/review/documentation. Conservative main-session baseline $3.947934 plus new helper costs. Original total was $4.50; earlier $0.30 study window overran (~$0.574 incl. checkpoint/docs), disclosed. Check real costs, not estimates.
 - User's SESSION GOAL is the FULL sprite sheet before handoff. They selected QUOTE AFTER BASE: approve the base first, quote/agree the full-set budget HERE, do not silently hand the sheet to a new session. No full-sheet funding or appearance approval is implied yet.
 - Rodin generation STOPPED. Latest user report: ~10 credits, four more days of access; preserve for targeted fixes under fresh approval.
@@ -19,7 +19,7 @@
 - Runtime metadata: 77 frames, 15 animations, 112x80, pivot [56,76], faces right. Fable's 92 hero_v2 cutouts are a DIFFERENT unwired, unapproved set.
 
 ## Next steps
-1. Finish/show the ONE 2D idle base; obtain explicit user approval before multiplying the look. The old proportion study is REJECTED, not awaiting approval. Source the new two reference images, not that rejected result.
+1. Obtain a verdict on the generated visual concept, then author/verify the actual 112x80 idle. User requested Sol personally handle art; helper stopped, no process running. Coded PNG/native Aseprite in the same folder are earlier unapproved drafts, NOT conversions of the generated image. Read that folder's README. Aseprite is IN DOCKER: resolve its container/mounted path, not a host executable search.
 2. After base approval, quote the complete 77-frame / 15-animation sheet and agree its budget in THIS session. Use a motion pilot before full expansion; native Aseprite cleanup allowed. Strips/GIFs at 1x, both directions, fixed pivot, anticipation/contact/recovery; no duplicated padding. 3D rig/cloth repair is OPTIONAL support, not a required detour for a 2D-first route.
 3. Recover remaining 23 already-paid jobs from ledger using Hyper3D MCP result links; prefer packed `base_basic_pbr.glb` (rig clips are inside it). Validate glTF/header/hash; keep signed URLs out of repo. No need to hurry or pay again.
 4. Review proposed `DEMO-TARGET.md` with user: intro → hound/moth lesson → relic BEFORE shaft → return loop → Mourning Bell climax. Two enemies, one boss; not all bank content. Validate existing progression gates before designing around them.
@@ -47,4 +47,4 @@ From the PATCH worktree, run `git status --short`, then read this handoff and `.
 
 ## Final checkpoint / preview verdict
 - Final CI 5/5; all 30 source hashes verified. Bank `e7e76f4` and previews/handoff `429eedb` both PUSHED (remote confirmed after timeout retry), no merge. Rejected first-pass and identical authoring.blend duplicate deliberately retained untracked.
-- Independent GLM reviewed the old study with concerns; user subsequently REJECTED it. Connection interrupted the 2D task before any output folder existed; resumed the SAME worker session on DeepSeek max, no duplicate writer. New 2D base remains in progress, no user appearance approval. Other demo work and remaining 23 downloads are outside this $2 base allowance.
+- Old 3D study REJECTED. First helper 2D draft failed main visual/proof review; helper stopped on user request. Sol authored a separate coded draft (6-layer ASE independently parsed and pixel-matched, NOT app-roundtripped). User then requested one generated picture first: completed, pending appearance approval. Last base-phase LLM increment ~$1.3404 against $2, before final docs/checkpoint; separate image fee unknown. Other demo work/remaining 23 downloads outside this allowance.
