@@ -1,0 +1,100 @@
+{
+  "study": "pandora_proportion_study",
+  "production_ready": false,
+  "approved": false,
+  "source": "C:/Users/AUC/opencode-workspace/workspace/new-vania-proto-v3-patch/prototypes/feel-v3/tools/models/pandora_rigged.glb",
+  "source_sha256_before": "1b5361569c2212b17e1bf430f0b02b05ab0e4b10f3833bb29361d8e30b2e8c27",
+  "source_sha256_after": "1b5361569c2212b17e1bf430f0b02b05ab0e4b10f3833bb29361d8e30b2e8c27",
+  "engine": "Blender 5.2.3 LTS",
+  "params": {
+    "leg_scale": 1.16,
+    "torso_scale": 1.06,
+    "head_scale_isotropic": 0.895,
+    "blend_band_m": 0.06,
+    "deform": "continuous piecewise world-Z, feet anchored at floor"
+  },
+  "anchors": {
+    "hips_head_z": 0.0608,
+    "head_head_z": 0.5128,
+    "head_head_z_new": 0.7013,
+    "hips_head_z_new": 0.2218,
+    "arm_bones": [
+      "RightHandIndex3",
+      "RightHandThumb3"
+    ]
+  },
+  "measurements": {
+    "height_old_m": 1.9027,
+    "height_new_m": 2.0631,
+    "height_gain_pct": 8.43,
+    "head_hair_height_old_m": 0.4379,
+    "head_hair_height_new_m": 0.4098,
+    "head_reduction_pct": 6.41,
+    "heads_tall_old": 4.35,
+    "heads_tall_new": 5.03,
+    "leg_len_old_m": 1.0128,
+    "leg_len_new_m": 1.1737,
+    "leg_gain_pct": 15.89,
+    "torso_len_old_m": 0.452,
+    "torso_len_new_m": 0.4796,
+    "torso_gain_pct": 6.1,
+    "floor_z": -0.9519,
+    "min_z_new": -0.9519,
+    "head_weight_z_range_old": [
+      0.334,
+      0.951
+    ]
+  },
+  "verification": {
+    "vertex_counts_unchanged": true,
+    "bone_count_52": true,
+    "uv_layers_preserved": true,
+    "finite_coords": true,
+    "object_scale_untouched": true,
+    "geometry_height_changed": true,
+    "feet_on_floor": true,
+    "bones_with_weights": 52,
+    "head_weighted_verts": 34311,
+    "source_sha_unchanged": true
+  },
+  "mesh_objects": {
+    "model_mod": {
+      "verts": 67022,
+      "uv_layers": [
+        "UVMap"
+      ]
+    }
+  },
+  "ignored_objects": [
+    {
+      "name": "Icosphere",
+      "verts": 42
+    }
+  ],
+  "bone_count": 52,
+  "object_scale_mod": {
+    "model_mod": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "camera": {
+    "ortho": true,
+    "view_height_m": 2.3231,
+    "center_z": 0.1646,
+    "res": [
+      360,
+      480
+    ],
+    "sensor_fit": "VERTICAL"
+  },
+  "limits": [
+    "Cape/skirt weighting issues in the source rig are NOT fixed by this study.",
+    "Bone rest lengths changed (legs/torso/head); animation retarget test required before runtime use.",
+    "No animation, no sprite/sheet, no gameplay or asset integration performed.",
+    "Arm vertices preserve length (anchored at LeftArm/RightArm head); arms were not re-proportioned.",
+    "Face identity preserved only via isotropic head scale + Head weight blend; no re-sculpt, no re-UV.",
+    "Adult proportions NOT approved; art-director sign-off pending."
+  ]
+}
