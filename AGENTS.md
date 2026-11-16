@@ -34,7 +34,7 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 │   ├── agents/                  # 52 agent definitions
 │   ├── skills/                  # 78 skill workflows
 │   ├── commands/                # 78 slash commands
-│   ├── rules/                   # 11 path-scoped coding standards
+│   ├── rules/                   # 12 path-scoped coding standards
 │   └── modules/                 # 22 module sources (non-OpenCode targets)
 ├── .opencode/                   # OpenCode-specific
 │   ├── plugins/                 # TypeScript plugins (ccgs-hooks, drift-detector, changelog-generator)

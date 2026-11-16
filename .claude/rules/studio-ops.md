@@ -15,8 +15,13 @@ Keep it short: it is loaded in every session.
 
 ## Routing
 
-- Opus plans and reviews. Sonnet executes from a written brief. Haiku reads and searches.
-  Set `model` on every `Agent` call.
+- This chat plans, briefs and reviews, and writes code only where feel or judgement decides the result.
+  Routine execution goes to non-Claude workers first:
+  `node ~/.claude/skills/lean-orchestrator/tools/worker.mjs run <kind> <brief> [--write --dir <worktree>]`
+  (kinds and models live in `routing.json` beside it).
+- Claude subagents (`builder`, `scout`, `test-writer`) are the fallback when the worker exits 3.
+  Set `model` on every `Agent` call; never Opus.
+- Workers write only inside a task worktree. Review the diff and run the tests before any PR.
 - Hermes is an optional builder: `hermes chat -Q --oneshot` (see `setup/HARNESS-MAP.md`).
   Limit it with `-t` toolsets or the Docker backend, never with prompt text.
 

@@ -60,6 +60,7 @@
     ".claude/rules/gameplay-code.md": ".agents/rules/gameplay-code.md",
     ".claude/rules/narrative.md": ".agents/rules/narrative.md",
     ".claude/rules/network-code.md": ".agents/rules/network-code.md",
+    ".claude/rules/plain-language.md": ".agents/rules/plain-language.md",
     ".claude/rules/prototype-code.md": ".agents/rules/prototype-code.md",
     ".claude/rules/shader-code.md": ".agents/rules/shader-code.md",
     ".claude/rules/test-standards.md": ".agents/rules/test-standards.md",

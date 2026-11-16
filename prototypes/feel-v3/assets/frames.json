@@ -1,0 +1,83 @@
+{
+ "hero": {
+  "faces": "right",
+  "anims": {
+   "idle": 4,
+   "run": 7,
+   "jump": 4,
+   "attack": 5
+  },
+  "size": [
+   128,
+   64
+  ],
+  "body_box": [
+   54,
+   23,
+   74,
+   64
+  ]
+ },
+ "hound": {
+  "faces": "left",
+  "anims": {
+   "idle": 11,
+   "walk": 12,
+   "run": 5,
+   "jump": 6
+  },
+  "size": [
+   64,
+   48
+  ],
+  "body_box": [
+   9,
+   24,
+   51,
+   48
+  ]
+ },
+ "ghost": {
+  "faces": "left",
+  "anims": {
+   "idle": 7,
+   "chase": 4,
+   "shriek": 4,
+   "appear": 6,
+   "vanish": 7
+  },
+  "size": [
+   64,
+   80
+  ],
+  "body_box": [
+   18,
+   19,
+   46,
+   66
+  ]
+ },
+ "fx": {
+  "burst": {
+   "n": 8,
+   "size": [
+    32,
+    32
+   ]
+  },
+  "slash": {
+   "n": 3,
+   "size": [
+    58,
+    58
+   ]
+  },
+  "spark": {
+   "n": 8,
+   "size": [
+    32,
+    32
+   ]
+  }
+ }
+}

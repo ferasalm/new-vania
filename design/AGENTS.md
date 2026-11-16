@@ -3,6 +3,17 @@
 
 When authoring or editing files in this directory, follow these standards.
 
+## Concept Art Is Reference Only (`design/art/`, `assets/processed/`)
+
+The pictures and sprite strips in `design/art/` and `assets/processed/` are **concept**: they
+show what the user wants, they are not game-ready. Never put them in a game build as they are.
+Game art is either redrawn, or reused from the asset packs we own and edited to fit.
+
+**Ask before you make art.** The user directs the look but must be asked. Before drawing,
+choosing or generating any character, enemy, room or effect, ask the user in plain words what
+they want to see (who or what it is, its mood, its colours, a reference they like), and ask
+for more concept art if what exists does not cover it. Do not guess from the documents.
+
 ## GDD Files (`design/gdd/`)
 
 Every GDD must include all **8 required sections** in this order:

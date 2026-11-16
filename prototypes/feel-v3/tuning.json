@@ -1,0 +1,178 @@
+{
+  "run_speed": {
+    "value": 125.0,
+    "min": 60.0,
+    "max": 260.0,
+    "step": 5.0,
+    "label": "Run speed",
+    "help": "How fast she runs. 125 crosses the screen in about 3 seconds."
+  },
+  "jump_velocity": {
+    "value": 325.0,
+    "min": 180.0,
+    "max": 420.0,
+    "step": 5.0,
+    "label": "Jump power",
+    "help": "Higher = jumps higher. 325 clears a bit over one and a half times her height."
+  },
+  "gravity": {
+    "value": 780.0,
+    "min": 400.0,
+    "max": 1400.0,
+    "step": 20.0,
+    "label": "Gravity",
+    "help": "Higher = rises and falls faster (snappier). Lower = floatier."
+  },
+  "max_fall": {
+    "value": 330.0,
+    "min": 150.0,
+    "max": 600.0,
+    "step": 10.0,
+    "label": "Top falling speed",
+    "help": "The fastest she can fall."
+  },
+  "jump_cut": {
+    "value": 0.4,
+    "min": 0.1,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Short hop",
+    "help": "How much of the jump is kept when you let go early. Lower = smaller taps. 1 = always a full jump."
+  },
+  "air_control": {
+    "value": 1.0,
+    "min": 0.2,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Air steering",
+    "help": "1 = steer in the air as freely as on the ground."
+  },
+  "backdash_speed": {
+    "value": 270.0,
+    "min": 120.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Backdash speed",
+    "help": "How fast the backdash moves her."
+  },
+  "backdash_time": {
+    "value": 0.25,
+    "min": 0.1,
+    "max": 0.5,
+    "step": 0.01,
+    "label": "Backdash length",
+    "help": "How long the backdash lasts, in seconds."
+  },
+  "backdash_cooldown": {
+    "value": 0.15,
+    "min": 0.0,
+    "max": 0.6,
+    "step": 0.01,
+    "label": "Backdash wait",
+    "help": "Wait before the next backdash. 0 = chain them freely."
+  },
+  "backdash_safe": {
+    "value": 0.14,
+    "min": 0.0,
+    "max": 0.4,
+    "step": 0.01,
+    "label": "Backdash safety",
+    "help": "Seconds at the start of a backdash where nothing can hurt her."
+  },
+  "attack_time": {
+    "value": 0.4,
+    "min": 0.12,
+    "max": 0.6,
+    "step": 0.01,
+    "label": "Attack length",
+    "help": "How long one swing takes, in seconds. Lower = faster attacks."
+  },
+  "attack_chain": {
+    "value": 0.2,
+    "min": 0.06,
+    "max": 0.5,
+    "step": 0.01,
+    "label": "Chain speed (J then I)",
+    "help": "How soon the next swing can start when you alternate the two attack buttons."
+  },
+  "attack_reach": {
+    "value": 52.0,
+    "min": 24.0,
+    "max": 90.0,
+    "step": 2.0,
+    "label": "Attack reach",
+    "help": "How far in front of her the swing hits."
+  },
+  "attack_damage": {
+    "value": 10.0,
+    "min": 2.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Attack damage",
+    "help": "Damage per hit. The hound has 30 health, the ghost 20."
+  },
+  "hitstop": {
+    "value": 0.05,
+    "min": 0.0,
+    "max": 0.2,
+    "step": 0.01,
+    "label": "Hit pause",
+    "help": "The tiny freeze when a hit lands. It makes hits feel heavy. 0 = off."
+  },
+  "shake": {
+    "value": 2.0,
+    "min": 0.0,
+    "max": 6.0,
+    "step": 0.5,
+    "label": "Screen shake",
+    "help": "How much the screen shakes on a hit. 0 = off."
+  },
+  "player_hp": {
+    "value": 100.0,
+    "min": 20.0,
+    "max": 300.0,
+    "step": 10.0,
+    "label": "Her health",
+    "help": "How much damage she can take."
+  },
+  "hurt_time": {
+    "value": 0.22,
+    "min": 0.05,
+    "max": 0.6,
+    "step": 0.01,
+    "label": "Flinch length",
+    "help": "How long she loses control when hit. There is no knockdown."
+  },
+  "hurt_safe": {
+    "value": 1.0,
+    "min": 0.2,
+    "max": 2.5,
+    "step": 0.1,
+    "label": "Safety after a hit",
+    "help": "Seconds she cannot be hit again after taking damage."
+  },
+  "hound_speed": {
+    "value": 190.0,
+    "min": 80.0,
+    "max": 320.0,
+    "step": 10.0,
+    "label": "Hound charge speed",
+    "help": "How fast the hell-hound charges."
+  },
+  "hound_warning": {
+    "value": 0.4,
+    "min": 0.1,
+    "max": 1.2,
+    "step": 0.05,
+    "label": "Hound warning",
+    "help": "How long the hound flashes before it charges."
+  },
+  "ghost_speed": {
+    "value": 38.0,
+    "min": 10.0,
+    "max": 120.0,
+    "step": 2.0,
+    "label": "Ghost speed",
+    "help": "How fast the ghost drifts toward her."
+  }
+}

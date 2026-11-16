@@ -259,3 +259,26 @@
 3. When the user decides, move the row to "Resolved decisions" with the date and
    the record path; update the lane's manifest `next_action`.
 4. A contract revision is never applied before the decision is recorded here.
+
+### D-ORCH-24 — feel first: prototype v3 is tuned by playing; the verdict log outranks the documents (DECIDED by the user, 2026-11-16)
+
+- **The change**: **Feel first.** The user rejected prototype v2 after playing
+  it. Prototype v3 (`prototypes/feel-v3/`) is tuned by playing, not by copying
+  numbers from the documents. The playtest verdict log
+  (`production/playtests/VERDICTS.md`) outranks the design documents. The
+  frozen movement and combat documents will be revised after the user approves
+  the feel (stage 4). The design-document queue stays paused until then.
+  Everything put to the user for approval follows
+  `.agents/rules/plain-language.md`.
+- **Status**: **DECIDED — standing direction.**
+
+### D-ORCH-25 — concept art is reference only; ask the user before making art; Pandora-001 and three bars (DECIDED by the user, 2026-11-16)
+
+- **The change**: Everything under `design/art/` and `assets/processed/` is **concept**, not
+  game-ready art. Game art is redrawn, or reused from the owned asset packs and edited to fit.
+  Before drawing or choosing art, an agent **asks the user** what they want to see; the
+  current concept art is not enough and the user will supply more when asked. The protagonist
+  is **Pandora-001**. The player has three bars: **HP**, **Energy** (attacks and backdashes),
+  and **MP** (special attacks such as Up + Attack). The record is
+  `production/playtests/VERDICTS.md`.
+- **Status**: **DECIDED — standing direction.**

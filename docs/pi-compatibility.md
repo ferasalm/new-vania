@@ -20,7 +20,7 @@ Tested baseline: Pi 0.85.1. Autopilot MCP wiring was separately verified on Pi 1
   agents/                    ← 52 agent definitions
   skills/                    ← 78 skill workflows
   commands/                  ← 78 slash commands
-  rules/                     ← 11 path-scoped rules
+  rules/                     ← 12 path-scoped rules
   modules/                   ← 22 installable modules
 .opencode/                   ← OpenCode-specific plugins & config
 .pi/                         ← Pi-specific extensions & settings
