@@ -5,7 +5,10 @@
    "idle": 4,
    "run": 7,
    "jump": 4,
-   "attack": 5
+   "attack": 5,
+   "attack2": 5,
+   "crouch": 1,
+   "crouchatk": 5
   },
   "size": [
    128,

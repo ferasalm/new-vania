@@ -7,7 +7,8 @@ extends Node
 const BASE := "res://assets/audio/"
 const LABELS := {"footstep": "Footstep", "jump": "Jump", "land": "Landing", "swing": "Attack swing",
 	"hit": "Hit connects", "hurt": "She gets hit", "enemy_die": "Enemy dies", "backdash": "Backdash",
-	"door": "Door", "music_room": "Music"}
+	"door": "Door", "special": "Special attack", "pickup": "Orb pickup", "no_energy": "No energy",
+	"music_room": "Music"}
 
 var raw := {}      # events.json as loaded
 var ev := {}       # name -> {group, options: [{file, gain_db, stream}], index, volume_db, pitch_random}
@@ -129,6 +130,19 @@ func preview(name: String) -> void:
 		play_music(name, true)
 	else:
 		play(name)
+
+
+func reset() -> void:
+	# back to what is in events.json (the last saved choices)
+	for name in ev:
+		var e: Dictionary = ev[name]
+		var saved: Dictionary = raw[e["group"]][name]
+		e["volume_db"] = float(saved.get("volume_db", -8.0))
+		for i in e["options"].size():
+			if String(e["options"][i]["file"]) == String(saved["file"]):
+				e["index"] = i
+	if _music_name != "":
+		play_music(_music_name, true)
 
 
 func save() -> bool:

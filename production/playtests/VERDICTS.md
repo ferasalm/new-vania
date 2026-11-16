@@ -112,8 +112,27 @@ In the user's words, tidied:
 | Stage | What you get to play | Status |
 |---|---|---|
 | 1 The body | Movement, jump, backdash, attack, two enemies, two rooms, sounds | done (approved) |
-| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | planned (next) |
+| 1b The full body | Crouch and crouch attack; two different attack animations; HP, Energy and MP bars; one special attack on Up + Attack; all with sliders | in progress (built 2026-11-16; waiting on user to play) |
 | Art direction | The user is asked what the game should look like (hero, enemies, places, mood); then Pandora-001 and the rooms are redrawn or re-edited from our packs to match | planned (questions first) |
 | 2 The place | Four or five connected rooms with doors, demons and machines | planned |
 | 3 The boss | Arnetria rebuilt; counter as an optional bonus | planned |
 | 4 Write it down | The approved numbers go into the design documents, in plain words | planned |
+
+## Prototype v3 stage 1b — built 2026-11-16 — verdict: waiting on user
+
+What was built, for the user to judge by playing. Every value below has a slider in the F1 panel.
+
+| What | How it works now | Starting value |
+|---|---|---|
+| Crouch | Hold Down: she ducks and cannot be hit as high | 22 tall (standing is 36) |
+| Crouch attack | Attack while crouching: a low swing | same damage and length as a normal swing |
+| Two attack looks | `J` is a blue cut, `I` is a pink cut that runs the other way | stand-in art, edited from the pack |
+| Energy bar | Attacks and backdashes spend it; it refills after a short rest | 100; attack 12, backdash 10; refills in about 2 seconds |
+| MP bar | Only the special spends it; blue orbs from defeated enemies refill it | 60; special 15 (4 uses); orb gives 8, drops about 6 times in 10 |
+| Special (Up + Attack) | A blade wave flies forward and cuts through enemies | damage 30 (one hit kills a hound), flies 150 px |
+| New sounds | Special, orb pickup, "no energy" click: three options each in the SOUNDS page | quiet (-18) |
+
+Also fixed from the review of stage 1: a tap pressed just before landing is now a short hop; an
+attack pressed together with a jump keeps air steering; the hound no longer jitters against a
+wall; two enemies hit by one swing both take the hit; dying inside a door no longer starts two
+fades; Reset also restores the sound choices; the remaining enemy and jump timings have sliders.

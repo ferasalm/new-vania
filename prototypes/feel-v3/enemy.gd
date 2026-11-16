@@ -88,10 +88,13 @@ func _hound(delta: float, to: Vector2) -> void:
 	_t += delta
 	match state:
 		"patrol":
-			velocity.x = facing * 28.0
-			if is_on_wall() or absf(global_position.x - _home.x) > 56.0:
-				facing = -facing if is_on_wall() else int(signf(_home.x - global_position.x))
-			if not G.peace and absf(to.x) < 130.0 and absf(to.y) < 44.0:
+			# turn first, so the walk speed below already points away from the wall
+			if is_on_wall():
+				facing = int(signf(get_wall_normal().x)) if get_wall_normal().x != 0.0 else -facing
+			elif absf(global_position.x - _home.x) > 56.0:
+				facing = int(signf(_home.x - global_position.x))
+			velocity.x = facing * T.v("hound_patrol_speed")
+			if not G.peace and absf(to.x) < T.v("hound_notice") and absf(to.y) < 44.0:
 				facing = int(signf(to.x)) if to.x != 0.0 else facing
 				_go("warn", "idle")
 		"warn":
@@ -100,11 +103,11 @@ func _hound(delta: float, to: Vector2) -> void:
 				_go("charge", "run")
 		"charge":
 			velocity.x = facing * T.v("hound_speed")
-			if _t >= 0.7 or is_on_wall():
+			if _t >= T.v("hound_charge_time") or is_on_wall():
 				_go("rest", "idle")
 		"rest":
 			velocity.x = move_toward(velocity.x, 0.0, 600.0 * delta)
-			if _t >= 0.6:
+			if _t >= T.v("hound_rest"):
 				_go("patrol", "walk")
 	velocity.y += T.v("gravity") * delta
 	move_and_slide()
@@ -117,16 +120,16 @@ func _ghost(delta: float, to: Vector2) -> void:
 	match state:
 		"idle":
 			velocity = Vector2(0, sin(_bob) * 6.0)
-			if not G.peace and aim.length() < 170.0:
+			if not G.peace and aim.length() < T.v("ghost_notice"):
 				_go("chase", "chase")
 		"chase":
 			facing = int(signf(aim.x)) if aim.x != 0.0 else facing
 			velocity = aim.normalized() * T.v("ghost_speed") + Vector2(0, sin(_bob) * 8.0)
-			if aim.length() > 240.0:
+			if aim.length() > T.v("ghost_notice") + 70.0:
 				_go("idle", "idle")
 		"retreat":
 			velocity = -aim.normalized() * T.v("ghost_speed") * 1.4
-			if _t >= 0.9:
+			if _t >= T.v("ghost_retreat"):
 				_go("chase", "chase")
 	global_position += velocity * delta
 
@@ -155,7 +158,7 @@ func damage() -> float:
 func take_hit(amount: float, dir: int) -> void:
 	hp -= amount
 	_flash = 0.1
-	_stun = 0.22
+	_stun = T.v("enemy_stun")
 	velocity = Vector2(dir * 70.0, -40.0 if kind == "hound" else 0.0)
 	if kind == "hound":
 		_go("rest", "idle")

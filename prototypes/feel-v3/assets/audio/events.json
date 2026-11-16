@@ -179,6 +179,63 @@
         }
       ]
     },
+    "special": {
+      "file": "sfx/special/magic_shot.wav",
+      "volume_db": -18.0,
+      "pitch_random": 0.05,
+      "options": [
+        {
+          "file": "sfx/special/magic_shot.wav",
+          "gain_db": -11.6
+        },
+        {
+          "file": "sfx/special/magic_rise.ogg",
+          "gain_db": -10.0
+        },
+        {
+          "file": "sfx/special/magic_charge.wav",
+          "gain_db": -11.9
+        }
+      ]
+    },
+    "pickup": {
+      "file": "sfx/pickup/coin_chime.wav",
+      "volume_db": -18.0,
+      "pitch_random": 0.05,
+      "options": [
+        {
+          "file": "sfx/pickup/coin_chime.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/pickup/bright_blip.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/pickup/soft_chime.wav",
+          "gain_db": -12.0
+        }
+      ]
+    },
+    "no_energy": {
+      "file": "sfx/no_energy/dull_click.wav",
+      "volume_db": -18.0,
+      "pitch_random": 0.05,
+      "options": [
+        {
+          "file": "sfx/no_energy/dull_click.wav",
+          "gain_db": -12.0
+        },
+        {
+          "file": "sfx/no_energy/tiny_tick.wav",
+          "gain_db": -8.1
+        },
+        {
+          "file": "sfx/no_energy/soft_denied.wav",
+          "gain_db": -10.4
+        }
+      ]
+    },
     "ui_move": {
       "file": "sfx/ui_move.wav",
       "volume_db": -6.0,
