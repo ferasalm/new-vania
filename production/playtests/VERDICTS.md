@@ -215,3 +215,38 @@ The user's answers to the four plan questions, in their words, tidied:
    than one short-sword swing.
 4. **Pandora-001 is redrawn now**, from her concept art, holding the weapons, with the paid
    generation tool; the user's yes covers this redraw. Poses like the Order of Ecclesia heroine.
+
+**Bake, not generate (the user's direction, same day).** The user checked the generated
+Pandora strips and rejected the whole approach, in their words:
+
+> "You should use the technical artist agent to create sprites instead of relying on
+> img generation tool. If you must use the image generation tool, then you must look
+> at the generated images with a very critical (VERY EXTREMELY CRITICAL) eye because
+> there will be mistakes, (THERE WILL ALWAYS BE MISTAKES). For example, I just checked
+> the generated images and most of the pandora-src sprites are wrong, plus they have a
+> much higher quality compared to the 16-bit game we are trying to make. You should
+> take the original sprite as reference in order to create sprites (or bake as you say)
+> using aseprite."
+
+And:
+
+> "Moreover, I suggest separating weapon and attack animation sprites from character
+> sprites animation, this way it will be easier for everyone; let's do it similar to
+> how Castlevania Order of Ecclesia did it."
+
+What this changes:
+- The paid-generation redraw is dropped. Pandora-001 is baked onto the original pack
+  heroine frames (recolour by colour role: hair to silver-white, suit to near-black,
+  accents to cyan), so the poses the user already approved stay and the 16-bit feel
+  stays. The technical artist agent does the baking.
+- Weapons become their own sprite sets drawn over the weaponless body, Order of
+  Ecclesia style: one Dirge in both hands means the same cyan blade set plays on
+  J (right hand) and I (left hand); Elegy gets its own heavier, longer set.
+- The generated pandora-src images are deleted; nothing generated ships.
+
+**Standing rule for all sprite work (the user, 2026-11-16):** never use an image
+as-is in the prototype; every frame is corrected through Aseprite first. In their
+words:
+
+> "So you should understand that you should NOT rely on images as is for the
+> prototype. You should always correct them using aseprite."
