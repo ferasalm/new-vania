@@ -10,7 +10,7 @@ keyboard uses.
 `build/android/new-vania-feel-v3.apk`
 
 - Debug-signed, `arm64-v8a`, package `com.ferasalm.newvania.feelv3`.
-- Android 6.0 or newer. The game locks to sensor landscape.
+- Android 7.0 or newer (minSdk 24). The game locks to sensor landscape.
 - **Do not publish this APK.** It contains the placeholder hero frames traced from the
   Order of Ecclesia reference sheet (`assets/hero/` is git-ignored for that reason) and
   music whose licence is not confirmed. Share it by hand with people playtesting the
