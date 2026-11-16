@@ -111,6 +111,55 @@
     "label": "Attack damage",
     "help": "Damage per hit. The hound has 30 health, the ghost 20."
   },
+  "weapon": {
+    "value": 0,
+    "min": 0,
+    "max": 1,
+    "step": 1,
+    "options": ["Dirge-042 (one sword, both hands)", "Elegy-013 (two-handed)"],
+    "label": "Weapon in hand",
+    "help": "What she swings with. J swings her right hand, I her left. < and > switch."
+  },
+  "elegy_time": {
+    "value": 0.55,
+    "min": 0.12,
+    "max": 1.2,
+    "step": 0.01,
+    "label": "Elegy swing length",
+    "help": "How long one two-handed swing takes. The short sword takes 0.4; slower means heavier."
+  },
+  "elegy_damage": {
+    "value": 18.0,
+    "min": 2.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Elegy damage",
+    "help": "Damage of one two-handed swing. The short sword does 10; the hound has 30 health."
+  },
+  "elegy_reach": {
+    "value": 68.0,
+    "min": 24.0,
+    "max": 120.0,
+    "step": 2.0,
+    "label": "Elegy reach",
+    "help": "How far the two-handed blade hits in front of her. The short sword reaches 52."
+  },
+  "elegy_energy": {
+    "value": 18.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "Energy per Elegy swing",
+    "help": "Energy one two-handed swing costs, out of the green bar. The short sword costs 12."
+  },
+  "elegy_chain": {
+    "value": 0.28,
+    "min": 0.06,
+    "max": 0.7,
+    "step": 0.01,
+    "label": "Elegy chain speed (J then I)",
+    "help": "How soon the next two-handed swing can start when you alternate J and I."
+  },
   "hitstop": {
     "value": 0.03,
     "min": 0.0,
@@ -294,6 +343,14 @@
     "step": 10.0,
     "label": "Orb speed",
     "help": "How fast a blue orb flies to her."
+  },
+  "orb_hang": {
+    "value": 0.35,
+    "min": 0.0,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Orb hang",
+    "help": "Seconds a blue orb hangs in the air before it flies to her."
   },
   "coyote_time": {
     "value": 0.09,

@@ -237,8 +237,14 @@ func _run() -> void:
 			bad.append(key)
 	_check("every number has a slider with a label and a help line", bad.is_empty() and T.data.has("energy_max") and T.data.has("special_cost") and T.data.has("crouch_height"),
 		"%d sliders, bad: %s" % [T.data.size(), str(bad)])
+	var wmissing: Array = []
+	for k in ["weapon", "elegy_time", "elegy_damage", "elegy_reach", "elegy_energy", "elegy_chain", "orb_hang"]:
+		if not T.data.has(k):
+			wmissing.append(k)
+	_check("the WEAPONS page has its picker and sliders", wmissing.is_empty() and not T.data["weapon"].get("options", []).is_empty(),
+		"missing: %s" % str(wmissing))
 	var loud: Array = []
-	for n in ["special", "pickup", "no_energy"]:
+	for n in ["special", "pickup", "no_energy", "swing_heavy"]:
 		if not Sfx.ev.has(n) or Sfx.ev[n]["options"].size() < 2:
 			loud.append(n)
 	_check("the new sounds have options to pick", loud.is_empty(), "problems: %s" % str(loud))
@@ -265,10 +271,65 @@ func _run() -> void:
 	await _frames(20)
 	await _shot("5_room2")
 	_check("room 2 has enemies", main.enemies.size() >= 3, "count=%d" % main.enemies.size())
+
+	# ---- weapons stage: one Dirge in both hands, Elegy two-handed ----
+	var whound: Node2D = null
+	for en in main.enemies:
+		if en.kind == "hound":
+			whound = en
+			break
+	_check("room 2 has a hound for the weapon checks", whound != null, "")
+	if whound != null:
+		p = main.player      # the room change freed the room-1 heroine
+		# Elegy, the two-handed one: pick it and swing J
+		T.set_v("weapon", 1.0)
+		p.energy = T.v("energy_max")
+		p.global_position = whound.global_position + Vector2(-45, 0)
+		p.facing = 1
+		await _frames(4)
+		_check("Elegy reaches further than the short sword", is_equal_approx(p.attack_rect().size.x, T.v("elegy_reach")) and p.attack_rect().size.x > T.v("attack_reach"),
+			"reach %.0f vs short sword %.0f" % [p.attack_rect().size.x, T.v("attack_reach")])
+		var whp0: float = whound.hp
+		var wen0: float = p.energy
+		await _tap("attack", 2)
+		await _frames(2)
+		_check("Elegy: J is its own two-handed swing", p.state == "attack" and p._spr.animation == "eattack", "anim=%s" % p._spr.animation)
+		_check("one Elegy swing spends more Energy", is_equal_approx(wen0 - p.energy, T.v("elegy_energy")), "%.0f -> %.0f" % [wen0, p.energy])
+		await _shot("12_elegy_j")
+		await _frames(int(T.v("elegy_time") * 0.7 * 60.0))
+		var whp1: float = whound.hp if is_instance_valid(whound) else 0.0
+		_check("the two-handed swing hits harder than the sword", whp0 - whp1 > T.v("attack_damage"), "hp %.0f -> %.0f" % [whp0, whp1])
+		# chain J into I: the two-hander recovers at its own pace
+		await _frames(int(T.v("elegy_time") * 60.0))
+		p.global_position = whound.global_position + Vector2(-45, 0)
+		p.facing = 1
+		p.energy = T.v("energy_max")
+		await _frames(2)
+		await _tap("attack", 2)
+		await _tap("attack2", 2)
+		var wframes := 0
+		while p._spr.animation != "eattack2" and wframes < 240:
+			await get_tree().physics_frame
+			wframes += 1
+		var wgate := int(T.v("elegy_chain") * 60.0)
+		_check("Elegy chains J into I at its own pace", p._spr.animation == "eattack2" and wframes >= 5 and wframes <= wgate + 10,
+			"switched after %d frames (chain %d frames)" % [wframes, wgate])
+		await _frames(int(T.v("elegy_time") * 60.0) + 4)
+		# back to the short sword
+		T.set_v("weapon", 0.0)
+		p.energy = T.v("energy_max")
+		await _tap("attack", 2)
+		await _frames(2)
+		_check("back to the sword, J is the Dirge swing", p._spr.animation == "attack", "anim=%s" % p._spr.animation)
+		await _frames(int(T.v("attack_time") * 60.0) + 4)
+
 	if shots:
 		main.panel._root.visible = true
 		await _frames(3)
 		await _shot("6_panel_feel")
 		main.panel._page(1)
+		await _frames(3)
+		await _shot("7_panel_weapons")
+		main.panel._page(2)
 		await _frames(3)
 		await _shot("7_panel_sounds")

@@ -130,7 +130,7 @@ What was built, for the user to judge by playing. Every value below has a slider
 | Two attack looks | `J` is a blue cut, `I` is a pink cut that runs the other way | stand-in art, edited from the pack |
 | Energy bar | Attacks and backdashes spend it; it refills after a short rest | 100; attack 12, backdash 10; refills in about 2 seconds |
 | MP bar | Only the special spends it; blue orbs from defeated enemies refill it | 60; special 15 (4 uses); orb gives 8, drops about 6 times in 10 |
-| Special (Up + Attack) | A blade wave flies forward and cuts through enemies | damage 30 (one hit kills a hound), flies 150 px |
+| Special (Up + Attack) | A blade wave flies forward and cuts through enemies | damage 30 (one hit kills a hound), flies 150 px (under half the screen) |
 | New sounds | Special, orb pickup, "no energy" click: three options each in the SOUNDS page | quiet (-18) |
 
 Also fixed from the review of stage 1: a tap pressed just before landing is now a short hop; an

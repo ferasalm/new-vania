@@ -6,9 +6,9 @@ extends Node
 
 const BASE := "res://assets/audio/"
 const LABELS := {"footstep": "Footstep", "jump": "Jump", "land": "Landing", "swing": "Attack swing",
-	"hit": "Hit connects", "hurt": "She gets hit", "enemy_die": "Enemy dies", "backdash": "Backdash",
-	"door": "Door", "special": "Special attack", "pickup": "Orb pickup", "no_energy": "No energy",
-	"music_room": "Music"}
+	"swing_heavy": "Heavy swing", "hit": "Hit connects", "hurt": "She gets hit", "enemy_die": "Enemy dies",
+	"backdash": "Backdash", "door": "Door", "special": "Special attack", "pickup": "Orb pickup",
+	"no_energy": "No energy", "music_room": "Music"}
 
 var raw := {}      # events.json as loaded
 var ev := {}       # name -> {group, options: [{file, gain_db, stream}], index, volume_db, pitch_random}
@@ -125,6 +125,10 @@ func set_volume(name: String, db: float) -> void:
 		_music.volume_db = db + float(ev[name]["options"][ev[name]["index"]]["gain_db"])
 
 
+func set_pitch(name: String, amount: float) -> void:
+	ev[name]["pitch_random"] = amount
+
+
 func preview(name: String) -> void:
 	if ev[name]["group"] == "music":
 		play_music(name, true)
@@ -138,6 +142,7 @@ func reset() -> void:
 		var e: Dictionary = ev[name]
 		var saved: Dictionary = raw[e["group"]][name]
 		e["volume_db"] = float(saved.get("volume_db", -8.0))
+		e["pitch_random"] = float(saved.get("pitch_random", 0.0))
 		for i in e["options"].size():
 			if String(e["options"][i]["file"]) == String(saved["file"]):
 				e["index"] = i
@@ -146,13 +151,18 @@ func reset() -> void:
 
 
 func save() -> bool:
+	# the saved baseline is backed up first: if the file cannot be written, Reset
+	# must still go back to the last saved choices, not to these unsaved ones
+	var backup: Dictionary = raw.duplicate(true)
 	for name in ev:
 		var e: Dictionary = ev[name]
 		var target: Dictionary = raw[e["group"]][name]
 		target["file"] = e["options"][e["index"]]["file"]
 		target["volume_db"] = e["volume_db"]
+		target["pitch_random"] = e["pitch_random"]
 	var f := FileAccess.open(ProjectSettings.globalize_path(BASE + "events.json"), FileAccess.WRITE)
 	if f == null:
+		raw = backup
 		return false
 	f.store_string(JSON.stringify(raw, "  ", false) + "\n")
 	f.close()
