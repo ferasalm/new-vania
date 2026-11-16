@@ -1,0 +1,6 @@
+# prototype artifacts - never committed
+*.log
+.godot/
+*.import
+*.uid
+shots/

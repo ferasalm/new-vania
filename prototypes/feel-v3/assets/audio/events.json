@@ -1,0 +1,19 @@
+{
+  "sfx": {
+    "footstep": { "file": "sfx/footstep.wav", "volume_db": -10.0, "pitch_random": 0.08 },
+    "jump": { "file": "sfx/jump.ogg", "volume_db": -7.0, "pitch_random": 0.06 },
+    "land": { "file": "sfx/land.wav", "volume_db": -6.0, "pitch_random": 0.05 },
+    "swing": { "file": "sfx/swing.ogg", "volume_db": -6.0, "pitch_random": 0.07 },
+    "hit": { "file": "sfx/hit.wav", "volume_db": -4.0, "pitch_random": 0.06 },
+    "hurt": { "file": "sfx/hurt.ogg", "volume_db": -5.0, "pitch_random": 0.05 },
+    "enemy_die": { "file": "sfx/enemy_die.ogg", "volume_db": -4.0, "pitch_random": 0.05 },
+    "backdash": { "file": "sfx/backdash.ogg", "volume_db": -8.0, "pitch_random": 0.05 },
+    "door": { "file": "sfx/door.wav", "volume_db": -7.0, "pitch_random": 0.0 },
+    "ui_move": { "file": "sfx/ui_move.wav", "volume_db": -12.0, "pitch_random": 0.0 },
+    "ui_confirm": { "file": "sfx/ui_confirm.ogg", "volume_db": -10.0, "pitch_random": 0.0 }
+  },
+  "music": {
+    "music_room": { "file": "music/room.ogg", "volume_db": -12.0 },
+    "music_boss": { "file": "music/boss.ogg", "volume_db": -12.0 }
+  }
+}
