@@ -1,7 +1,7 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # The Aseprite correction pass (the user's rule: frames are always corrected in
 # Aseprite, never shipped straight out of PIL). For every frame the two bake
-# scripts produced, this drives the Aseprite MCP server (the same docker exec
+# scripts (build_pandora.py, build_world.py) produced, this drives the Aseprite MCP server (the same docker exec
 # command opencode.json uses) to: import the PNG, report jagged-edge
 # suggestions (report only - applying them would add the half-alpha smoothing
 # that breaks 16-bit density), remove stray single pixels that have no
@@ -28,18 +28,15 @@ ASSETS = os.path.join(HERE, "..", "assets")
 # this checkout's assets when running from another worktree
 CONT_ASSETS = os.environ.get(
     "ASEPRITE_CONT_ASSETS",
-    "/workspace/new-vania-proto-v3-weapons/prototypes/feel-v3/assets",
+    "/workspace/new-vania-proto-v3-mini/prototypes/feel-v3/assets",
 )
 CONTAINER = "opencode-workspace-opencode-1"
 SERVER = "/workspace/setup/pixel-mcp/bin/pixel-mcp"
 
-HERO = {"idle": 4, "run": 7, "jump": 4, "attack": 5, "attack2": 5, "crouch": 1, "crouchatk": 5}
-FILES = [("hero", "%s_%02d" % (anim, i)) for anim, n in HERO.items() for i in range(n)]
-FILES += [(s, "%s_%02d" % (a, i)) for s in ("weapon-dirge", "weapon-elegy")
-          for a in ("j", "i", "low") for i in range(5)]
-
-FLASH_OFFS = [(0, 0), (1, 0), (-1, 0), (0, -1), (0, 1), (1, -1)]
-ANCHORS = {"j": (60, 42), "i": (60, 42), "low": (60, 53)}   # the hand, and the crouched hand
+# every hand-made or baked sprite the game shows: her frames, both weapons, the boss
+_META = json.load(open(os.path.join(ASSETS, "frames.json")))
+FILES = [("hero", "%s_%02d" % (anim, i)) for anim, n in _META["hero"]["anims"].items() for i in range(n)]
+FILES += [("weapon", "dirge"), ("weapon", "elegy"), ("boss", "body"), ("boss", "hand")]
 
 
 class PixelMcp:
@@ -121,19 +118,6 @@ def orphans(img):
     return out
 
 
-def expected_decor(sub, strip, idx):
-    # the flash pixels on frame 0 and the dissolve dots on frame 4 are meant to
-    # sit alone; everything else with no neighbour is noise
-    if not sub.startswith("weapon-") or idx not in (0, 4):
-        return set()
-    if idx == 0:
-        ax, ay = ANCHORS[strip]
-        return {(ax + dx, ay + dy) for dx, dy in FLASH_OFFS}
-    f3 = Image.open(os.path.join(ASSETS, sub, "%s_%02d.png" % (strip, 3))).convert("RGBA")
-    tips = sorted(points(f3), key=lambda p: (p[0], -p[1]))[-3:]
-    return set(tips)
-
-
 class Session:
     def __init__(self):
         self.mcp = None
@@ -158,7 +142,8 @@ def main():
     for sub, name in FILES:
         win = os.path.join(ASSETS, sub, name + ".png")
         cont = "%s/%s/%s.png" % (CONT_ASSETS, sub, name)
-        sprite = s.tool("aseprite_create_canvas", width=128, height=64, color_mode="rgb")["file_path"]
+        img = Image.open(win).convert("RGBA")
+        sprite = s.tool("aseprite_create_canvas", width=img.width, height=img.height, color_mode="rgb")["file_path"]
         s.tool("aseprite_import_image", sprite_path=sprite, image_path=cont,
                layer_name="bake", frame_number=1)
         # the colour census is done by the bake scripts (an RGB sprite's palette
@@ -172,9 +157,7 @@ def main():
             # a few frames make the server answer in a shape that fails its own
             # output schema; the edge report is informational, so carry on
             edges = -1
-        img = Image.open(win).convert("RGBA")
-        strip, idx = name.split("_")
-        stray = orphans(img) - expected_decor(sub, strip, int(idx))
+        stray = orphans(img)
         if stray:
             # single-pixel noise: erase it in Aseprite, not in PIL
             s.tool("aseprite_draw_pixels", sprite_path=sprite, layer_name="bake", frame_number=1,

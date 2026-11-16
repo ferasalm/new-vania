@@ -116,7 +116,10 @@
     "min": 0,
     "max": 1,
     "step": 1,
-    "options": ["Dirge-042 (one sword, both hands)", "Elegy-013 (two-handed)"],
+    "options": [
+      "Dirge-042 (one sword, both hands)",
+      "Elegy-013 (two-handed)"
+    ],
     "label": "Weapon in hand",
     "help": "What she swings with. J swings her right hand, I her left. < and > switch."
   },
@@ -439,5 +442,373 @@
     "step": 0.02,
     "label": "Enemy stagger",
     "help": "Seconds an enemy is stopped after you hit it."
+  },
+  "door_open_distance": {
+    "value": 56.0,
+    "min": 24.0,
+    "max": 120.0,
+    "step": 4.0,
+    "label": "Door: opens when this near",
+    "help": "How close she must be before a door slides open. 56 is three and a half floor tiles."
+  },
+  "door_time": {
+    "value": 0.35,
+    "min": 0.1,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Door: opening time",
+    "help": "Seconds a normal door takes to slide open."
+  },
+  "boss_door_time": {
+    "value": 1.6,
+    "min": 0.4,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Boss door: opening time",
+    "help": "Seconds the big boss door takes to grind open."
+  },
+  "shot_gravity": {
+    "value": 420.0,
+    "min": 100.0,
+    "max": 900.0,
+    "step": 10.0,
+    "label": "Enemy shots: how fast they drop",
+    "help": "How hard arcing shots (the spitter) fall. Lower = slower, floatier arcs."
+  },
+  "hound_hp": {
+    "value": 30.0,
+    "min": 5.0,
+    "max": 120.0,
+    "step": 1.0,
+    "label": "Hound health",
+    "help": "Hits needed = this / attack damage. 30 is three Dirge cuts."
+  },
+  "hound_damage": {
+    "value": 8.0,
+    "min": 1.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Hound damage",
+    "help": "HP she loses when the hound hits her."
+  },
+  "hound_pounce": {
+    "value": 255.0,
+    "min": 120.0,
+    "max": 400.0,
+    "step": 5.0,
+    "label": "Hound pounce height",
+    "help": "How hard the hound jumps at her. 255 clears about two and a half tiles."
+  },
+  "ghost_hp": {
+    "value": 22.0,
+    "min": 5.0,
+    "max": 120.0,
+    "step": 1.0,
+    "label": "Ghost health",
+    "help": "Hits needed = this / attack damage."
+  },
+  "ghost_damage": {
+    "value": 7.0,
+    "min": 1.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Ghost damage",
+    "help": "HP she loses to the ghost's touch or shriek."
+  },
+  "ghost_blink_every": {
+    "value": 5.0,
+    "min": 2.0,
+    "max": 12.0,
+    "step": 0.5,
+    "label": "Ghost: seconds between blinks",
+    "help": "How often the ghost vanishes and reappears behind her."
+  },
+  "ghost_shriek_warning": {
+    "value": 1.0,
+    "min": 0.5,
+    "max": 2.0,
+    "step": 0.05,
+    "label": "Ghost: shriek warning",
+    "help": "Seconds between it reappearing and the shriek going off. Longer = easier to step away."
+  },
+  "ghost_shriek_radius": {
+    "value": 42.0,
+    "min": 20.0,
+    "max": 90.0,
+    "step": 2.0,
+    "label": "Ghost: shriek size",
+    "help": "How far the shriek reaches around the ghost. 42 is about two and a half tiles."
+  },
+  "choir_hp": {
+    "value": 34.0,
+    "min": 5.0,
+    "max": 150.0,
+    "step": 1.0,
+    "label": "Choir health",
+    "help": "Hits needed = this / attack damage."
+  },
+  "choir_damage": {
+    "value": 9.0,
+    "min": 1.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Choir damage",
+    "help": "HP she loses to a feather or the dive."
+  },
+  "choir_notice": {
+    "value": 190.0,
+    "min": 80.0,
+    "max": 320.0,
+    "step": 10.0,
+    "label": "Choir: notices her from",
+    "help": "How far away the winged enemy wakes up."
+  },
+  "choir_speed": {
+    "value": 70.0,
+    "min": 20.0,
+    "max": 160.0,
+    "step": 5.0,
+    "label": "Choir: hover speed",
+    "help": "How fast it follows her around, up out of reach."
+  },
+  "choir_wait": {
+    "value": 2.4,
+    "min": 0.8,
+    "max": 6.0,
+    "step": 0.1,
+    "label": "Choir: rest between attacks",
+    "help": "Seconds it hovers between attacks. This is when you can jump up and cut it."
+  },
+  "choir_feather_speed": {
+    "value": 135.0,
+    "min": 60.0,
+    "max": 260.0,
+    "step": 5.0,
+    "label": "Choir: feather speed",
+    "help": "How fast the three feathers fly."
+  },
+  "choir_dive_warning": {
+    "value": 0.6,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Choir: dive warning",
+    "help": "Seconds it blinks before it dives through you."
+  },
+  "choir_dive_speed": {
+    "value": 235.0,
+    "min": 120.0,
+    "max": 400.0,
+    "step": 5.0,
+    "label": "Choir: dive speed",
+    "help": "How fast it dives."
+  },
+  "spitter_hp": {
+    "value": 26.0,
+    "min": 5.0,
+    "max": 120.0,
+    "step": 1.0,
+    "label": "Spitter health",
+    "help": "Hits needed = this / attack damage."
+  },
+  "spitter_damage": {
+    "value": 7.0,
+    "min": 1.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Spitter damage",
+    "help": "HP she loses to one of its shots, or to touching it."
+  },
+  "spitter_range": {
+    "value": 210.0,
+    "min": 80.0,
+    "max": 340.0,
+    "step": 10.0,
+    "label": "Spitter: how far it can lob",
+    "help": "It starts lobbing shots when she is this near."
+  },
+  "spitter_burst_range": {
+    "value": 52.0,
+    "min": 24.0,
+    "max": 100.0,
+    "step": 2.0,
+    "label": "Spitter: burst when this near",
+    "help": "Closer than this and it sprays a fan of shots instead."
+  },
+  "spitter_wait": {
+    "value": 1.7,
+    "min": 0.6,
+    "max": 5.0,
+    "step": 0.1,
+    "label": "Spitter: rest between shots",
+    "help": "Seconds between its shots."
+  },
+  "warden_hp": {
+    "value": 130.0,
+    "min": 40.0,
+    "max": 400.0,
+    "step": 5.0,
+    "label": "Warden health",
+    "help": "The big brute. 130 is thirteen Dirge cuts or about seven Elegy cuts."
+  },
+  "warden_damage": {
+    "value": 14.0,
+    "min": 2.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "Warden damage",
+    "help": "HP she loses to its claws, its landing or the floor waves."
+  },
+  "warden_notice": {
+    "value": 200.0,
+    "min": 80.0,
+    "max": 340.0,
+    "step": 10.0,
+    "label": "Warden: notices her from",
+    "help": "How far away it wakes and starts walking at her."
+  },
+  "warden_speed": {
+    "value": 42.0,
+    "min": 10.0,
+    "max": 120.0,
+    "step": 2.0,
+    "label": "Warden: walk speed",
+    "help": "How fast it walks her down. She runs at 125."
+  },
+  "warden_warning": {
+    "value": 0.5,
+    "min": 0.2,
+    "max": 1.2,
+    "step": 0.05,
+    "label": "Warden: warning",
+    "help": "Seconds it blinks before a lunge or a leap."
+  },
+  "warden_lunge_speed": {
+    "value": 250.0,
+    "min": 120.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Warden: lunge speed",
+    "help": "How fast the claw lunge travels. Backdash or jump it."
+  },
+  "warden_leap": {
+    "value": 300.0,
+    "min": 180.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Warden: leap height",
+    "help": "How hard it jumps before it slams down."
+  },
+  "warden_wave_speed": {
+    "value": 150.0,
+    "min": 60.0,
+    "max": 300.0,
+    "step": 10.0,
+    "label": "Warden: floor wave speed",
+    "help": "How fast the two waves run along the floor after it lands. Jump them."
+  },
+  "warden_wait": {
+    "value": 1.5,
+    "min": 0.5,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Warden: rest between attacks",
+    "help": "Seconds before it may attack again. This is your opening."
+  },
+  "boss_hp": {
+    "value": 220.0,
+    "min": 60.0,
+    "max": 800.0,
+    "step": 10.0,
+    "label": "Boss health",
+    "help": "Body hits take full damage; hand hits only a share."
+  },
+  "boss_damage": {
+    "value": 16.0,
+    "min": 2.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Boss damage",
+    "help": "HP she loses to a hand or a bolt."
+  },
+  "boss_hand_share": {
+    "value": 0.3,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Boss: damage from hitting a hand",
+    "help": "Share of a hit that counts when you cut a hand instead of the body. 0.3 = three tenths."
+  },
+  "boss_gap": {
+    "value": 1.5,
+    "min": 0.5,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Boss: rest between attacks",
+    "help": "Seconds between its attacks. Lower = harder."
+  },
+  "boss_hand_speed": {
+    "value": 190.0,
+    "min": 80.0,
+    "max": 360.0,
+    "step": 10.0,
+    "label": "Boss: hand follow speed",
+    "help": "How fast a hand follows you before it slams."
+  },
+  "boss_slam_track": {
+    "value": 1.1,
+    "min": 0.4,
+    "max": 2.5,
+    "step": 0.05,
+    "label": "Boss: slam follow time",
+    "help": "Seconds the hand follows you before it stops to drop."
+  },
+  "boss_slam_hang": {
+    "value": 0.4,
+    "min": 0.15,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Boss: slam warning",
+    "help": "Seconds the hand hangs still before it drops. This is your time to step aside."
+  },
+  "boss_slam_speed": {
+    "value": 520.0,
+    "min": 240.0,
+    "max": 900.0,
+    "step": 20.0,
+    "label": "Boss: slam drop speed",
+    "help": "How fast the hand falls."
+  },
+  "boss_stuck": {
+    "value": 3.4,
+    "min": 1.5,
+    "max": 7.0,
+    "step": 0.1,
+    "label": "Boss: hand stuck time",
+    "help": "Seconds a slammed hand stays in the floor as a step. Longer = easier."
+  },
+  "boss_sweep_warning": {
+    "value": 0.6,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Boss: sweep warning",
+    "help": "Seconds a hand waits at the wall before it slides across."
+  },
+  "boss_sweep_speed": {
+    "value": 230.0,
+    "min": 100.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Boss: sweep speed",
+    "help": "How fast a hand slides across the floor."
+  },
+  "boss_bolt_speed": {
+    "value": 170.0,
+    "min": 80.0,
+    "max": 320.0,
+    "step": 10.0,
+    "label": "Boss: bolt speed",
+    "help": "How fast the golden bolts fly."
   }
 }

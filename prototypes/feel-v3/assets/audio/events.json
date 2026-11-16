@@ -279,20 +279,24 @@
     }
   },
   "music": {
-    "music_room": {
+    "music_church": {
       "file": "music/cyberpunk_city_2.ogg",
       "volume_db": 2.0,
       "options": [
         {
-          "file": "music/cavern_loop.ogg",
+          "file": "music/battle_encounter.ogg",
           "gain_db": -12.0
         },
         {
-          "file": "music/room.ogg",
+          "file": "music/battle_encounter_2.ogg",
           "gain_db": -12.0
         },
         {
-          "file": "music/cyberpunk_city_2.ogg",
+          "file": "music/boss.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle.ogg",
           "gain_db": -12.0
         },
         {
@@ -300,17 +304,207 @@
           "gain_db": -12.0
         },
         {
+          "file": "music/cavern_loop.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cyberpunk_city_2.ogg",
+          "gain_db": -12.0
+        },
+        {
           "file": "music/magic_cliffs.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/save_room.ogg",
+          "gain_db": -12.0
+        }
+      ]
+    },
+    "music_library": {
+      "file": "music/battle_encounter.ogg",
+      "volume_db": 2.0,
+      "options": [
+        {
+          "file": "music/battle_encounter.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/battle_encounter_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle_room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cavern_loop.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cyberpunk_city_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/magic_cliffs.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/save_room.ogg",
+          "gain_db": -12.0
+        }
+      ]
+    },
+    "music_lab": {
+      "file": "music/battle_encounter_2.ogg",
+      "volume_db": 2.0,
+      "options": [
+        {
+          "file": "music/battle_encounter.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/battle_encounter_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle_room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cavern_loop.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cyberpunk_city_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/magic_cliffs.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/save_room.ogg",
+          "gain_db": -12.0
+        }
+      ]
+    },
+    "music_save": {
+      "file": "music/save_room.ogg",
+      "volume_db": 2.0,
+      "options": [
+        {
+          "file": "music/battle_encounter.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/battle_encounter_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle_room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cavern_loop.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cyberpunk_city_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/magic_cliffs.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/save_room.ogg",
           "gain_db": -12.0
         }
       ]
     },
     "music_boss": {
-      "file": "music/boss.ogg",
-      "volume_db": -8.0,
+      "file": "music/boss_battle.ogg",
+      "volume_db": 2.0,
       "options": [
         {
+          "file": "music/battle_encounter.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/battle_encounter_2.ogg",
+          "gain_db": -12.0
+        },
+        {
           "file": "music/boss.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/boss_battle_room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cavern_loop.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/cyberpunk_city_2.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/magic_cliffs.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/room.ogg",
+          "gain_db": -12.0
+        },
+        {
+          "file": "music/save_room.ogg",
           "gain_db": -12.0
         }
       ]
