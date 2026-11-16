@@ -55,22 +55,34 @@ spec only at this stage; author only when mechanics exist or B04 requires them.
 
 ## 4. First practical task (worker)
 
-1. **Show the proportion study and obtain user approval first.** All four Pandora jobs
+1. **The proportion study is REJECTED. Create ONE actual 2D idle base first.**
+   New direction: the two JPGs in `assets/pandora_proportion_study/reference/`:
+   exposed skin upper arms, a more defined mature face, flowing silver ponytail.
+   Keep the ponytail intentionally large; do not substitute more leg stretching.
+   Output `assets/hero_2d_base/`, native 112x80, shared pivot [56,76], faces right,
+   transparent, also shown enlarged. Human approval BEFORE any sheet expansion.
+   All four Pandora jobs
    (cape-free `86c636c1…`, core rig `f08e54b8…`, original core library `109ca55a…`,
    parts `ad6a0c64…`) are now downloaded under `tools/models/bank/`; hashes are in
    `HERO-DOWNLOADS.json`. Inspect local files; do not pay to regenerate them.
-   The approved next step is a reversible original-costume proportion study, not a
-   costume switch. User must see it before deciding whether to adopt it.
-2. **4-action polished pilot: idle, run, jump, wall** — wall from B04 handling only
+   These are optional pose/volume aids, not approved final sprites or compulsory
+   3D repair work. The 2D look is the deliverable, not the model's close-up fidelity.
+2. **After base approval, quote and agree the full-sheet budget in THIS session.**
+   User wants the full sheet before handoff, but approved only a $2 additional base
+   test allowance so far. Do not claim a full sheet is funded or approved.
+   Then **4-action polished pilot: idle, run, jump, wall** — wall from B04 handling only
    (pose support; runtime wiring is not this task). Do **not** extrapolate the full
    matrix from the pilot; the full set is a separate pass.
-3. Proportion-study approval is **not** full-animation-set approval. Complete the
+3. Base-sprite approval is **not** full-animation-set approval. Complete the
    full quality matrix and obtain implementation approval before a runtime switch.
    Cape-free costume: **human-approved before it becomes anything canonical** —
    a silent costume change from the cape reference is forbidden.
 4. Pipeline: native Aseprite, layers body/hair/cape(conditional)/weapon/VFX-guide;
-   tags + durations locked; builder→review = **DeepSeek then GLM, different families,
-   pinned model IDs recorded per run; 2 failures → stop; honest statuses only.**
+   tags + durations locked. **Latest user routing overrides the previous pairing:**
+   all well-scoped helper work uses Cloudflare DeepSeek V4.1 Flash 1017 **max**;
+   GLM 5.3 Flash **default** only for open-ended creative writing/ideation without
+   instructions. Main lead provides independent visual review. Record exact model
+   IDs per run; 2 failures → stop; honest statuses only.
 
 ## 5. Explicit prohibitions
 

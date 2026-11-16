@@ -3,9 +3,10 @@
 ## Now
 - Worktree: `C:/Users/AUC/opencode-workspace/workspace/new-vania-proto-v3-patch`, branch `feat/proto-v3-patch`; no merge authorized.
 - Goal: credible demo, not endless prototypes. This session banked sources and verified the baseline; it did NOT finish a demo or integrate new art.
-- User explicitly requires: LOOK at Pandora's adult-proportion preview first; only if they approve, proceed toward implementation. Full polished animation set remains a separate gate.
-- Study: `prototypes/feel-v3/assets/pandora_proportion_study/`; rendered/viewed, original costume, zero Rodin credits. TOP row old, BOTTOM new, same camera scale. Height +8.43%, legs +15.89%; arms unchanged, still stylized. NOT approved or integrated.
-- Total LLM ceiling $4.50. Study window overran its $0.30 cap: measured ~$0.574 since approval including checkpoint/handoff work; user told, art iterations stopped. Last measured aggregate ~$3.77; costs accrue after that reading. Do not mistake main-only cost for aggregate.
+- User REJECTED the 3D proportion study. New direction is the TWO images in `assets/pandora_proportion_study/reference/` (all asset paths below relative to `prototypes/feel-v3/`): exposed upper arms, defined mature face, flowing silver ponytail; not simply longer legs/smaller hair.
+- Current task: ONE native 112x80 standing idle sprite under `assets/hero_2d_base/`, show at 1x/enlarged, then wait for user approval. Local 2D authoring only; no image-generation charge, no Rodin, no runtime switch.
+- Budget decision: user authorized up to $2 ADDITIONAL for the base test/review/documentation. Conservative main-session baseline $3.947934 plus new helper costs. Original total was $4.50; earlier $0.30 study window overran (~$0.574 incl. checkpoint/docs), disclosed. Check real costs, not estimates.
+- User's SESSION GOAL is the FULL sprite sheet before handoff. They selected QUOTE AFTER BASE: approve the base first, quote/agree the full-set budget HERE, do not silently hand the sheet to a new session. No full-sheet funding or appearance approval is implied yet.
 - Rodin generation STOPPED. Latest user report: ~10 credits, four more days of access; preserve for targeted fixes under fresh approval.
 
 ## Verified
@@ -18,8 +19,8 @@
 - Runtime metadata: 77 frames, 15 animations, 112x80, pivot [56,76], faces right. Fable's 92 hero_v2 cutouts are a DIFFERENT unwired, unapproved set.
 
 ## Next steps
-1. Show `pandora_proportion_study/before_after.png`; obtain an explicit user verdict. Study approval does NOT mean finished sprite-set approval. No runtime art switch without the full legal set and implementation approval.
-2. Follow `PANDORA-QUALITY.md`: resolve cloth weights, retest the changed rig under motion, author a four-action polished pilot, then ALL runtime animations. Native Aseprite cleanup allowed. Strips/GIFs at 1x, both directions, fixed pivot, anticipation/contact/recovery; no duplicated padding, no stock-clip-as-final claim.
+1. Finish/show the ONE 2D idle base; obtain explicit user approval before multiplying the look. The old proportion study is REJECTED, not awaiting approval. Source the new two reference images, not that rejected result.
+2. After base approval, quote the complete 77-frame / 15-animation sheet and agree its budget in THIS session. Use a motion pilot before full expansion; native Aseprite cleanup allowed. Strips/GIFs at 1x, both directions, fixed pivot, anticipation/contact/recovery; no duplicated padding. 3D rig/cloth repair is OPTIONAL support, not a required detour for a 2D-first route.
 3. Recover remaining 23 already-paid jobs from ledger using Hyper3D MCP result links; prefer packed `base_basic_pbr.glb` (rig clips are inside it). Validate glTF/header/hash; keep signed URLs out of repo. No need to hurry or pay again.
 4. Review proposed `DEMO-TARGET.md` with user: intro → hound/moth lesson → relic BEFORE shaft → return loop → Mourning Bell climax. Two enemies, one boss; not all bank content. Validate existing progression gates before designing around them.
 5. Only after design + art approvals, implement small test-first stories; fresh SMOKE + CLIMB + screenshots, then user playtest B02. No demo claim while prohibited legacy hero remains in runtime. APK has NOT been rebuilt after Fable's latest fixes.
@@ -27,8 +28,8 @@
 ## Open decisions / worker rules
 - Status vocabulary: done / in progress / planned / not planned / waiting on user. A queued job, four poses, or passing unit tests is NOT a finished demo.
 - Read `.agents/skills/pogr/SKILL.md`, this file, `PANDORA-QUALITY.md`, `DEMO-TARGET.md`, then only files needed for the next approved slice. Two failures: stop and report; do not loop or expand scope.
-- Builder: `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017#low`; independent review: `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash#low`. Pin every helper. Do not silently inherit an expensive model.
-- Preserve identity/silver ponytail/black-cyan costume. Cape-free alternative is NOT approved canonical art. Proportion study is not a general vertical stretch; face redesign and cloth repair are not automatically complete.
+- LATEST USER ROUTING: ALL well-scoped subagents use `cloudflare-workers-ai/@cf/deepseek-ai/deepseek-v4.1-flash-1017#max`. ONLY open-ended creative writing/ideation without supplied instructions uses `cloudflare-workers-ai/@cf/zai-org/glm-5.3-flash` at default (no variant suffix). Main lead retains the independent visual gate. This overrides earlier low-variant/different-family-helper guidance; pin every helper.
+- New references retain silver ponytail/black-cyan torso/cape and CHANGE the upper arms to exposed skin. Face needs construction/value changes, not just scale. Large ponytail remains intentional. Cape-free alternative is NOT approved. Base approval is not full-sheet/runtime approval.
 - Study caveats: `heads_tall` uses hair-inclusive height, NOT anatomical heads. `head_weighted_verts` and `arm_bones` metadata have reporting defects; do not use as rig-correctness proof. Source SHA independently unchanged: `1b5361569c2212b17e1bf430f0b02b05ab0e4b10f3833bb29361d8e30b2e8c27`. Animation validation remains required.
 - No merge, gameplay tuning, hero switch, new generation, API purchases or APK rebuild without approval. Verify publication rights before distribution.
 - Never open/view traced `prototypes/feel-v3/assets/hero/*`, Shanoa sheet, `tools/build_pandora.py`, `bake_pandora.py`, `shanoa_cells.py`, `tools/pristine/`. Owned `pandora-001-sprite.jpg`, `pandora-001-concept.jpg` and generated GLBs are allowed. Do not run `play.cmd` blindly.
@@ -42,8 +43,8 @@
 - Blender may emit harmless deprecation text on stderr; capture `2>&1 | Out-File -Encoding utf8` and check `$LASTEXITCODE` plus PASS line. PowerShell's default redirect can make UTF16 logs look binary.
 
 ## Exact fresh-session start
-From the PATCH worktree, first run `git status --short`, then read this handoff and `.agents/skills/pogr/SKILL.md`. Ask for the pending visual verdict, not for permission already given to make the study. Do NOT implement before that verdict.
+From the PATCH worktree, run `git status --short`, then read this handoff and `.agents/skills/pogr/SKILL.md`. Determine whether the 2D base has a user verdict and whether the full-sheet budget was agreed; do not reopen the rejected 3D study. Future demo integration is separate from the current base-test allowance.
 
 ## Final checkpoint / preview verdict
-- Final CI 5/5; all 30 source hashes verified. Bank commit `e7e76f4`. Initial push timed out at 120s; checkpoint retry must confirm remote. Use `git log -3 --oneline` and `git status --short --branch` for final checkpoint IDs/sync; never infer a push from a local commit.
-- Independent GLM gate: SAFE TO SHOW, CONCERNS; not natural-adult/full-sprite quality. Read the study README for metadata/authoring-scene limitations. The user has not approved the revision.
+- Final CI 5/5; all 30 source hashes verified. Bank `e7e76f4` and previews/handoff `429eedb` both PUSHED (remote confirmed after timeout retry), no merge. Rejected first-pass and identical authoring.blend duplicate deliberately retained untracked.
+- Independent GLM reviewed the old study with concerns; user subsequently REJECTED it. Connection interrupted the 2D task before any output folder existed; resumed the SAME worker session on DeepSeek max, no duplicate writer. New 2D base remains in progress, no user appearance approval. Other demo work and remaining 23 downloads are outside this $2 base allowance.
