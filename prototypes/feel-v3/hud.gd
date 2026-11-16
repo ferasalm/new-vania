@@ -22,6 +22,8 @@ var _boss_fill: ColorRect
 var _fade: ColorRect
 var _banner_t := 0.0
 var _toast_t := 0.0
+var _hint: Label
+var touch_mode := false
 
 
 func _ready() -> void:
@@ -47,8 +49,8 @@ func _ready() -> void:
 	_kills = _label("", Vector2(110, 2))
 	_weapon = _label("", Vector2(110, 11))
 	_weapon.modulate = Color("#7BE6F2")
-	var hint := _label("A/D move  S crouch  K jump  J/I attack  W+J special  L backdash  E weapon  F1 tune", Vector2(6, 203))
-	hint.modulate = Color(1, 1, 1, 0.55)
+	_hint = _label("A/D move  S crouch  K jump  J/I attack  W+J special  L backdash  E weapon  F1 tune", Vector2(6, 203))
+	_hint.modulate = Color(1, 1, 1, 0.55)
 	_banner = _centered(Vector2(0, 60), 16)
 	_toast = _centered(Vector2(0, 84), 8)
 	_toast.modulate = Color("#F2E3A0")
@@ -107,6 +109,7 @@ func refresh(player: Node, kills: int) -> void:
 	_banner.modulate.a = clampf(_banner_t, 0.0, 1.0)
 	_toast_t = maxf(0.0, _toast_t - delta)
 	_toast.modulate.a = clampf(_toast_t * 2.0, 0.0, 1.0)
+	_hint.visible = not touch_mode
 
 
 func flash(name: String) -> void:

@@ -1,7 +1,7 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # Feel v3 - the mini game (4 rooms, a save room, a boss)
 
-Date: 2026-11-16 - Status: **waiting on user** (built, self-test 40/40, not yet played by the user)
+Date: 2026-11-16 - Status: **merged; Android build added** (self-test 40/40, touch controls, debug APK)
 
 ## In plain words
 
@@ -29,6 +29,28 @@ sheet in `assets/references/` (they are not stored in the repository, see "Art")
 | `1`-`5` | tester shortcut: jump to church, library, save room, lab, boss |
 | `F1` | tuning panel (every number, every sound, each area's music) |
 | `R` | restart (from the save room once you have saved) |
+
+## On an Android phone
+
+The shareable build is `build/android/new-vania-feel-v3.apk` (debug-signed, arm64). Copy it
+to the phone, open it, allow "install unknown apps" for the app you opened it from, and
+install. The game locks to landscape. Full install/build notes: `ANDROID.md`.
+
+Touch controls (the prototype's take on `design/gdd/input-control-mapping.md`):
+
+- **Left 42% - floating stick.** It appears where your thumb lands. Push down and hold
+  90 ms to crouch. Flick back, release, flick back again to backdash.
+- **ATTACK** - one button; it alternates the hands, so the fast two-hand chain is still
+  there. Largest and innermost, as the GDD asks.
+- **JUMP** - hold for a high jump, tap for a hop.
+- **SPEC** - the blade wave (keyboard's Up + Attack).
+- **SWAP** - Dirge-042 / Elegy-013.
+- **BACK** - the accessibility direct backdash press.
+- **CACHE bubble** - appears at the save terminal; tap it to heal and save.
+- **Pause** (top right) - resume, restart, or jump straight to a room.
+
+The keyboard and gamepad still work; the touch layer only appears on a phone, a
+touchscreen, or when launched with `--touch`.
 
 ## The rooms
 

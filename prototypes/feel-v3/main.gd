@@ -12,6 +12,7 @@ const Enemy := preload("res://enemy.gd")
 const Boss := preload("res://boss.gd")
 const Hud := preload("res://hud.gd")
 const TuningPanel := preload("res://tuning_panel.gd")
+const Touch := preload("res://touch.gd")
 const ROOMS := ["church", "library", "save", "lab", "boss"]
 const TITLES := {"church": "THE NAVE OF ASH", "library": "THE UNREAD STACKS", "save": "CACHE STATION 002",
 	"lab": "SPECIMEN HALL", "boss": "THE PALLBEARER"}
@@ -22,6 +23,7 @@ var player: CharacterBody2D
 var cam: Camera2D
 var hud: CanvasLayer
 var panel: CanvasLayer
+var touch: Control
 var boss: Node2D
 var room_name := ""
 var enemies: Array = []
@@ -43,6 +45,11 @@ func _ready() -> void:
 	add_child(hud)
 	panel = TuningPanel.new()
 	add_child(panel)
+	var touch_layer := CanvasLayer.new()
+	touch_layer.layer = 30
+	add_child(touch_layer)
+	touch = Touch.new()
+	touch_layer.add_child(touch)
 	var start := "church"
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("room=") and ROOMS.has(a.substr(5)):
@@ -172,7 +179,8 @@ func _terminal() -> void:
 	if not room.spawns.has("M"):
 		return
 	var near: bool = absf(player.global_position.x - room.spawns["M"].x) < 30.0 and player.is_on_floor()
-	hud.prompt("W: cache memory (heal and save)" if near else "")
+	var touch_on: bool = touch != null and touch.active
+	hud.prompt("" if touch_on else ("W: cache memory (heal and save)" if near else ""))
 	if near and Input.is_action_just_pressed("up") and player.state == "move":
 		saved = true
 		player.hp = T.v("player_hp")
@@ -210,7 +218,8 @@ func boss_died() -> void:
 	if room.doors.has("left"):
 		room.doors["left"].locked = false
 	ring_fx(room.size / 2.0, 160.0, Color(1.0, 0.85, 0.4))
-	hud.toast("LAID TO REST  -  the prototype ends here. R plays again.", 8.0)
+	var again := "pause > restart" if touch != null and touch.active else "R plays again"
+	hud.toast("LAID TO REST  -  the prototype ends here. %s." % again, 8.0)
 	Sfx.play_music("music_save")
 
 

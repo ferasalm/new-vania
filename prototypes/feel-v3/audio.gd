@@ -56,14 +56,21 @@ func _ready() -> void:
 
 
 func _load(rel: String) -> AudioStream:
-	var path := ProjectSettings.globalize_path(BASE + rel)
-	if not FileAccess.file_exists(path):
-		return null
-	if rel.to_lower().ends_with(".ogg"):
-		return AudioStreamOggVorbis.load_from_file(path)
-	if rel.to_lower().ends_with(".wav"):
-		return AudioStreamWAV.load_from_file(path)
-	return null
+	# imported projects and exported builds: use the imported stream
+	var path := BASE + rel
+	var st: AudioStream = null
+	if ResourceLoader.exists(path):
+		st = load(path) as AudioStream
+	# cold clone with no import step: read the raw file through FileAccess
+	if st == null:
+		var bytes := FileAccess.get_file_as_bytes(path)
+		if bytes.is_empty():
+			return null
+		if rel.to_lower().ends_with(".ogg"):
+			st = AudioStreamOggVorbis.load_from_buffer(bytes)
+		elif rel.to_lower().ends_with(".wav"):
+			st = AudioStreamWAV.load_from_buffer(bytes)
+	return st
 
 
 func count(group: String) -> int:

@@ -61,15 +61,22 @@ func frozen() -> bool:
 
 
 func tex(rel: String) -> Texture2D:
-	# Raw PNG loading (same trick as v2): runs from a cold clone with no import step.
+	# imported projects and exported builds use the imported texture; a cold clone
+	# with no import step falls back to the raw PNG.
 	if _tex.has(rel):
 		return _tex[rel]
-	var path := ProjectSettings.globalize_path("res://assets/" + rel)
+	# imported projects and exported builds: use the imported texture
+	var res_path := "res://assets/" + rel
 	var t: Texture2D = null
-	if FileAccess.file_exists(path):
-		var img := Image.load_from_file(path)
-		if img != null:
-			t = ImageTexture.create_from_image(img)
+	if ResourceLoader.exists(res_path):
+		t = load(res_path) as Texture2D
+	# cold clone with no import step: read the raw PNG through FileAccess
+	if t == null:
+		var bytes := FileAccess.get_file_as_bytes(res_path)
+		if not bytes.is_empty():
+			var img := Image.new()
+			if img.load_png_from_buffer(bytes) == OK:
+				t = ImageTexture.create_from_image(img)
 	if t == null:
 		push_error("missing texture " + rel)
 	_tex[rel] = t
