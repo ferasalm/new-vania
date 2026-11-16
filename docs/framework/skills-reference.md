@@ -1,6 +1,6 @@
 # Available Skills (Slash Commands)
 
-78 slash commands organized by phase. Each skill belongs to a **module** under
+80 slash commands organized by phase. Each skill belongs to a **module** under
 `.agents/modules/<name>/skills/`. Install only the modules you need:
 `node .opencode/modules/install.mjs add <name>`. Type `/` in OpenCode to access
 any available command.
@@ -117,6 +117,8 @@ any available command.
 | `/changelog` | Auto-generate changelog from git commits and sprint data |
 | `/patch-notes` | Generate player-facing patch notes from git history and internal data |
 | `/hotfix` | Emergency fix workflow with audit trail, bypassing normal sprint process |
+| `/ci-pr` | Run the CI checks locally, then ship a change through a worktree, pull request, CodeRabbit review, and merge |
+| `/pogr` | Plan, Orchestrate, Gate, Review: run any job with more than one step as checked, non-overlapping slices |
 | `/day-one-patch` | Prepare a scoped, QA-gated day-one patch for post-launch issues |
 
 ## Creative & Content

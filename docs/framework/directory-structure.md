@@ -7,8 +7,8 @@
 ├── .githooks/                   # Tracked commit-msg and pre-commit hooks
 ├── .agents/                     # Canonical content (harness-agnostic)
 │   ├── agents/                  # 52 agent definitions
-│   ├── skills/                  # 78 skill workflows
-│   ├── commands/                # 78 slash commands
+│   ├── skills/                  # 80 skill workflows
+│   ├── commands/                # 80 slash commands
 │   ├── rules/                   # 11 path-scoped coding standards
 │   └── modules/                 # 22 module sources for non-OpenCode targets
 │       ├── installed.json       # Manifest of installed modules

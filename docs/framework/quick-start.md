@@ -363,8 +363,8 @@ AGENTS.md                          -- Master config (read this first)
 opencode.json                      -- OpenCode V2 config (plugins, MCP, permissions)
 .agents/                           -- Canonical, harness-agnostic content
   agents/                          -- 52 agent definitions (YAML frontmatter)
-  skills/                          -- 78 skill workflows
-  commands/                        -- 78 slash commands
+  skills/                          -- 80 skill workflows
+  commands/                        -- 80 slash commands
   rules/                           -- 11 path-scoped rule files
   modules/                         -- Module sources for non-OpenCode targets
 .opencode/                         -- OpenCode-specific

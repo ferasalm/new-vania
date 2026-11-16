@@ -32,8 +32,8 @@ Each agent owns a specific domain, enforcing separation of concerns and quality.
 ├── .githooks/                   # Tracked git hooks (commit-msg, pre-commit)
 ├── .agents/                     # Canonical content (harness-agnostic)
 │   ├── agents/                  # 52 agent definitions
-│   ├── skills/                  # 78 skill workflows
-│   ├── commands/                # 78 slash commands
+│   ├── skills/                  # 80 skill workflows
+│   ├── commands/                # 80 slash commands
 │   ├── rules/                   # 12 path-scoped coding standards
 │   └── modules/                 # 22 module sources (non-OpenCode targets)
 ├── .opencode/                   # OpenCode-specific
@@ -264,7 +264,7 @@ Module sources live in `.opencode/modules/` (OpenCode target) and
 
 ## Available Commands
 
-Type `/` in OpenCode to see all available commands. All 78 commands route to
+Type `/` in OpenCode to see all available commands. All 80 commands route to
 corresponding skills in `.agents/skills/`.
 
 | Category | Commands |
@@ -277,7 +277,7 @@ corresponding skills in `.agents/skills/`.
 | **Prototyping** | `/prototype`, `/hybrid-prototype`, `/explore`, `/reverse-document` |
 | **Team** | `/team-combat`, `/team-narrative`, `/team-ui`, `/team-level`, `/team-audio`, `/team-polish`, `/team-qa`, `/team-release`, `/team-live-ops` |
 | **Release** | `/sprint-plan`, `/sprint-status`, `/milestone-review`, `/release-checklist`, `/launch-checklist`, `/retrospective` |
-| **Ops** | `/hotfix`, `/day-one-patch`, `/bug-report`, `/bug-triage`, `/security-audit` |
+| **Ops** | `/hotfix`, `/day-one-patch`, `/bug-report`, `/bug-triage`, `/security-audit`, `/ci-pr`, `/pogr` |
 | **Other** | `/balance-check`, `/consistency-check`, `/content-audit`, `/asset-audit`, `/perf-profile`, `/scope-check`, `/gate-check`, `/changelog`, `/patch-notes`, `/localize`, `/onboard`, `/tech-debt`, `/propagate-design-change`, `/estimate`, `/art-bible`, `/asset-spec`, `/art-generate`, `/playtest-report`, `/automated-smoke-test`, `/skill-improve`, `/skill-test` |
 
 ## Studio Hierarchy
@@ -341,7 +341,7 @@ Before merging to `Main`, the CI must pass:
 ## Notes
 
 This is a port of [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios)
-to OpenCode. The 78 skills are in `.agents/skills/`, the 52 agents are in
+to OpenCode. The 80 skills are in `.agents/skills/`, the 52 agents are in
 `.agents/agents/`, and the 12 original bash hooks are implemented as a
 TypeScript plugin in `.opencode/plugins/ccgs-hooks.ts`.
 

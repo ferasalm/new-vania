@@ -8,8 +8,8 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Agents](https://img.shields.io/badge/agents-52-blueviolet)](.agents/agents/)
-[![Skills](https://img.shields.io/badge/skills-78-brightgreen)](.agents/skills/)
-[![Commands](https://img.shields.io/badge/commands-78-blue)](.agents/commands/)
+[![Skills](https://img.shields.io/badge/skills-80-brightgreen)](.agents/skills/)
+[![Commands](https://img.shields.io/badge/commands-80-blue)](.agents/commands/)
 [![Hooks](https://img.shields.io/badge/plugins-3-orange)](.opencode/plugins/)
 [![Tests](https://img.shields.io/badge/tests-231-success)](tests/)
 [![Built for OpenCode](https://img.shields.io/badge/built%20for-OpenCode-5f5f5f)](https://opencode.ai)
@@ -51,7 +51,7 @@ for the full game lifecycle:
   maturity
 - **52 coordinated agents** — From creative director to engine specialists, each
   with defined responsibilities, delegation maps, and strict domain boundaries
-- **78 slash commands** — Route through the right skill every time, from
+- **80 slash commands** — Route through the right skill every time, from
   `/concept-brainstorm` to `/launch-checklist`
 
 This project evolved from [CCGS](https://github.com/Donchitos/Claude-Code-Game-Studios)
@@ -71,8 +71,8 @@ and [oh-my-pi](https://omp.sh/).
 | Component | CCGS (Claude Code) | OpenCode | Pi | omp | Status |
 |-----------|-------------------|----------|-----|-----|--------|
 | 🤖 **Agents** | 49 agents (`.claude/agents/`) | 52 agents (`.agents/agents/`) | 52 agents (`.agents/agents/`) | Generated into `.omp/agents/` by the installer | ✅ |
-| ⌨️ **Skills** | 72 skills (`.claude/skills/`) | 78 skills (`.agents/skills/`) | 78 skills (`.agents/skills/`) | 78 skills (`/skill:<name>`) | ✅ +6 |
-| ⌨️ **Commands** | — | 78 commands (`.agents/commands/`) | → prompt templates | → slash commands | ✅ New |
+| ⌨️ **Skills** | 72 skills (`.claude/skills/`) | 80 skills (`.agents/skills/`) | 80 skills (`.agents/skills/`) | 80 skills (`/skill:<name>`) | ✅ +8 |
+| ⌨️ **Commands** | — | 80 commands (`.agents/commands/`) | → prompt templates | → slash commands | ✅ New |
 | 🔗 **Plugins** | 12 bash hooks (`.claude/hooks/`) | 3 TS plugins (`.opencode/plugins/`) | 9 Pi extensions (`.pi/extensions/`) | 8 shared via config | ✅ **177 plugin + 60 hook tests** |
 | 📏 **Rules** | 11 rule files (`.claude/rules/`) | 11 rule files (`.agents/rules/`) | 11 rule files (`.agents/rules/`) | 11 rule files (`.agents/rules/`) | ✅ |
 | ⚙️ **Config** | `CLAUDE.md` + `.claude/settings.json` | `AGENTS.md` + `opencode.json` | `AGENTS.md` + `.pi/settings.json` | `AGENTS.md` + `.omp/config.yml` | ✅ |
@@ -87,7 +87,7 @@ opencode
 ```
 > **Windows users:** `.opencode/{agents,commands,skills,rules}` are git symlinks and require `core.symlinks=true` (+ Developer Mode) to check out correctly — see [Known Issues](#-known-issues) if `/` shows no commands.
 
-Type `/` to browse all 78 skills and 78 commands, or `/start` for onboarding.
+Type `/` to browse all 80 skills and 80 commands, or `/start` for onboarding.
 
 ### Pi
 ```bash
@@ -240,8 +240,8 @@ on startup. See [docs/pi-extensions.md](docs/pi-extensions.md) for details.
 ├── .codex/                    ⚙️ Codex target (agents, MCP config)
 ├── .agents/                   📦 Canonical content (harness-agnostic)
 │   ├── agents/                🤖 52 agent definitions
-│   ├── skills/                🛠️ 78 skill workflows
-│   ├── commands/              ⌨️ 78 slash commands
+│   ├── skills/                🛠️ 80 skill workflows
+│   ├── commands/              ⌨️ 80 slash commands
 │   ├── rules/                 📏 11 coding standards
 │   └── modules/               🧩 22 module sources (non-OpenCode targets)
 │       ├── ...                22 modules total

@@ -3,7 +3,7 @@
 > **How to go from zero to a shipped game using the Agent Architecture.**
 >
 > This guide walks you through every phase of game development using the
-> 52-agent system, 78 slash commands, and 3 TypeScript plugins. It assumes you
+> 52-agent system, 80 slash commands, and 3 TypeScript plugins. It assumes you
 > have OpenCode installed and are working from the project root.
 >
 > > **Pi users:** See [`docs/pi-workflow.md`](pi-workflow.md) for harness-specific differences and
@@ -1430,7 +1430,7 @@ conflicts go to `producer`.
 
 ## Appendix B: Slash Command Quick-Reference
 
-### All 78 Commands by Category
+### All 80 Commands by Category
 
 #### Onboarding and Navigation (9)
 
@@ -1544,14 +1544,16 @@ conflicts go to `producer`.
 | `/sprint-plan` | Generate or update sprint plan |
 | `/sprint-status` | Quick sprint progress snapshot |
 
-#### Operations (6)
+#### Operations (8)
 
 | Command | Purpose |
 |---------|---------|
 | `/bug-report` | Create structured bug report |
 | `/bug-triage` | Re-evaluate open bugs and surface trends |
+| `/ci-pr` | Run CI locally and ship through PR, CodeRabbit, and merge |
 | `/day-one-patch` | Prepare day-one patch for launch |
 | `/hotfix` | Emergency fix workflow with audit trail |
+| `/pogr` | Plan, Orchestrate, Gate, Review any job with more than one step |
 | `/security-audit` | Audit for security vulnerabilities |
 | `/tech-debt` | Track and prioritize technical debt |
 

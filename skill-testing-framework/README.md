@@ -15,7 +15,7 @@ Tests the skills and agents themselves — not any game built with them.
 skill-testing-framework/
 ├── README.md              ← you are here
 ├── AGENTS.md              ← tells the agent how to use this framework
-├── catalog.yaml           ← master registry: all 78 skills + 52 agents, coverage tracking
+├── catalog.yaml           ← master registry: all 80 skills + 52 agents, coverage tracking
 ├── quality-rubric.md      ← category-specific pass/fail metrics for /skill-test category
 │
 ├── skills/                ← behavioral spec files for skills (one per skill)
@@ -56,7 +56,7 @@ All testing is driven by two skills already in the framework:
 
 ```
 /skill-test static [skill-name]     # Check one skill (7 checks)
-/skill-test static all              # Check all 78 skills
+/skill-test static all              # Check all 80 skills
 ```
 
 ### Run a behavioral spec test

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/pogr` skill** — Plan, Orchestrate, Gate, Review: the house way to run a job
+  with more than one step (slices that do not overlap, a brief template, a role
+  tier table per harness, gates, review and handoff). Skill and command counts
+  in the docs now read 80 and include `/ci-pr`, which had not been counted.
+
 ### Changed
 
 - **Pi delegation retired** — `.pi/extensions/ocgs-delegation/` was removed. Pi's
