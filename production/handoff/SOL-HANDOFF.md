@@ -3,11 +3,11 @@
 ## Now
 - Worktree: `C:/Users/AUC/opencode-workspace/workspace/new-vania-proto-v3-patch`, branch `feat/proto-v3-patch`; no merge authorized.
 - Goal: credible demo, not endless prototypes. This session banked sources and verified the baseline; it did NOT finish a demo or integrate new art.
-- User REJECTED the 3D proportion study. New direction is the TWO images in `assets/pandora_proportion_study/reference/` (all asset paths below relative to `prototypes/feel-v3/`): exposed upper arms, defined mature face, flowing silver ponytail; not simply longer legs/smaller hair.
-- LATEST task: user redirected to IMAGE FIRST after coded drafts. ONE requested generation is saved at `assets/hero_2d_base/pandora_idle_visual_concept.png` (2048x2048; Seedream 5.5; job `image_1e67442b30012QM6VL7Rgm1YKk`). Show/approve this look BEFORE native conversion. This is NOT yet a 112x80 game sprite; image fee not verified by LLM meter. No Rodin/runtime switch.
-- Budget decision: user authorized up to $2 ADDITIONAL for the base test/review/documentation. Conservative main-session baseline $3.947934 plus new helper costs. Original total was $4.50; earlier $0.30 study window overran (~$0.574 incl. checkpoint/docs), disclosed. Check real costs, not estimates.
-- User's SESSION GOAL is the FULL sprite sheet before handoff. They selected QUOTE AFTER BASE: approve the base first, quote/agree the full-set budget HERE, do not silently hand the sheet to a new session. No full-sheet funding or appearance approval is implied yet.
-- Rodin generation STOPPED. Latest user report: ~10 credits, four more days of access; preserve for targeted fixes under fresh approval.
+- User REJECTED the 3D proportion study, the helper's coded idle, Sol's hand-coded idle, and the one generated concept. Approved design basis is `assets/hero_2d_base/pandora-base-sprite.png` (magenta turnaround, 5 views). All asset paths below relative to `prototypes/feel-v3/`.
+- LATEST task: user said the hand-drawn sprites are bad and asked for a FREE online tool to generate them. Research done: PixelLab (40 free generations, ~$0.03/8 frames) and Retro Diffusion ($0.50 free, ~$0.14/animation). WAITING ON USER'S TOOL CHOICE; no key, no generation.
+- Aseprite: MCP works with container paths (`/workspace/new-vania-proto-v3-patch/...`; Docker `/workspace` = host `C:\Users\AUC\opencode-workspace\workspace`). Native Windows Aseprite built from official source: `C:/Users/AUC/opencode-workspace/tools/aseprite-src/build/bin/aseprite.exe` (`1.x-eccf4ec-dev`), Desktop shortcut; free personal use, do not redistribute.
+- Animation input ready: `assets/hero_2d_base/pandora_sheet/anim_input/pandora_base_112x80.png` (feet row 75, centre x=56), 64x64 variant, `pixellab_animate.py` (key from env only, compiles).
+- Budget restriction lifted by user; still record actual spend, never invent $0. Full sprite sheet remains the session goal; agree its budget after the base is approved. Rodin STOPPED (~10 credits, four days; no spend without fresh approval).
 
 ## Verified
 - `7cd4894` pushed: POGR runtime + Claude mirror + skill catalog/spec; fresh final `npm run ci` passed 5/5 (`C:/Users/AUC/AppData/Local/Temp/opencode/sol-final-ci.log`).
@@ -17,9 +17,11 @@
 - Pandora libraries `pandora_motion_library.glb` and `pandora_clean_motion_library.glb`: each 1 skin / 10 stock clips. `pandora_parts.glb`: 8 meshes / no skin. Clean raw model: no skin. Already paid: inspect locally, do NOT regenerate.
 - `assets/hero_3d_preview/`: original four-pose spike, NOT production-ready (cape stretches). Packed `.blend`, PNGs, metadata; `tools/render_pandora_preview.py` reproduces it. `first-pass/` is a rejected cropped pass, not intended for commit.
 - Runtime metadata: 77 frames, 15 animations, 112x80, pivot [56,76], faces right. Fable's 92 hero_v2 cutouts are a DIFFERENT unwired, unapproved set.
+- Aseprite MCP round-trip verified: opened the custom 112x80 6-layer ASE, added a layer, re-read 7 layers. Native Aseprite `1.x-eccf4ec-dev` GUI launch tested; `build/bin/data` present.
+- Animation input bbox 40,6,66,76 at 112x80; alpha binary; 64x64 variant bbox 22,5,43,61.
 
 ## Next steps
-1. Obtain a verdict on the generated visual concept, then author/verify the actual 112x80 idle. User requested Sol personally handle art; helper stopped, no process running. Coded PNG/native Aseprite in the same folder are earlier unapproved drafts, NOT conversions of the generated image. Read that folder's README. Aseprite is IN DOCKER: resolve its container/mounted path, not a host executable search.
+1. Get the user's tool choice and API key (PixelLab or Retro Diffusion). Generate ONE idle motion test from `anim_input/pandora_base_112x80.png`, review frames at 1x and enlarged, then expand only after approval. The hand-coded/generated drafts are rejected, not conversions. No Rodin/runtime switch.
 2. After base approval, quote the complete 77-frame / 15-animation sheet and agree its budget in THIS session. Use a motion pilot before full expansion; native Aseprite cleanup allowed. Strips/GIFs at 1x, both directions, fixed pivot, anticipation/contact/recovery; no duplicated padding. 3D rig/cloth repair is OPTIONAL support, not a required detour for a 2D-first route.
 3. Recover remaining 23 already-paid jobs from ledger using Hyper3D MCP result links; prefer packed `base_basic_pbr.glb` (rig clips are inside it). Validate glTF/header/hash; keep signed URLs out of repo. No need to hurry or pay again.
 4. Review proposed `DEMO-TARGET.md` with user: intro → hound/moth lesson → relic BEFORE shaft → return loop → Mourning Bell climax. Two enemies, one boss; not all bank content. Validate existing progression gates before designing around them.
@@ -47,4 +49,4 @@ From the PATCH worktree, run `git status --short`, then read this handoff and `.
 
 ## Final checkpoint / preview verdict
 - Final CI 5/5; all 30 source hashes verified. Bank `e7e76f4` and previews/handoff `429eedb` both PUSHED (remote confirmed after timeout retry), no merge. Rejected first-pass and identical authoring.blend duplicate deliberately retained untracked.
-- Old 3D study REJECTED. First helper 2D draft failed main visual/proof review; helper stopped on user request. Sol authored a separate coded draft (6-layer ASE independently parsed and pixel-matched, NOT app-roundtripped). User then requested one generated picture first: completed, pending appearance approval. Last base-phase LLM increment ~$1.3404 against $2, before final docs/checkpoint; separate image fee unknown. Other demo work/remaining 23 downloads outside this allowance.
+- Old 3D study and all hand-coded/generated 2D attempts rejected. Aseprite MCP + native Windows Aseprite fixed; animation input and PixelLab client ready. Waiting on user's tool choice; no full-sheet work started. Historical base-phase LLM increment ~$1.3404; image fee separate/unknown.
