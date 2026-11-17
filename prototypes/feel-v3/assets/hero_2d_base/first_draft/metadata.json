@@ -1,0 +1,32 @@
+{
+  "asset": "pandora_idle_base",
+  "production_ready": false,
+  "approved": false,
+  "one_frame_only": true,
+  "dimensions": [
+    112,
+    80
+  ],
+  "logical_pivot": [
+    56,
+    76
+  ],
+  "sole_row": 75,
+  "facing": "right_3_4",
+  "source_reference_filenames": [
+    "Modify_woman_upper_arms_skin_580f0e04.jpg",
+    "image.png_cbe4f7e4.jpg"
+  ],
+  "source_reference_dir": "prototypes/feel-v3/assets/pandora_proportion_study/reference/",
+  "palette_file": "palette.json",
+  "palette_note": "candidate visual-spike palette, NOT a bible table amendment; needs art-director approval",
+  "generator": "draw_hero_idle.py (PIL, native pixel geometry)",
+  "layers": [
+    "hair_back",
+    "cape",
+    "body",
+    "arms",
+    "head_hair_front",
+    "details"
+  ]
+}

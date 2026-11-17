@@ -1,0 +1,27 @@
+{
+  "status": "appearance_spike_candidate_not_canonical",
+  "colors": {
+    "outline": "#11171D",
+    "suit_shadow": "#202D34",
+    "suit": "#2D3D43",
+    "suit_light": "#40565B",
+    "metal": "#60767B",
+    "metal_hi": "#91A5A6",
+    "cyan_dark": "#1B626B",
+    "cyan": "#3299A3",
+    "cyan_hi": "#78D6D5",
+    "skin_shadow": "#987C70",
+    "skin": "#C3A68F",
+    "skin_light": "#E3CEB4",
+    "skin_hi": "#F0E3CF",
+    "skin_ink": "#5B5050",
+    "hair_shadow": "#58656F",
+    "hair_dark": "#7E8B92",
+    "hair": "#A9B5B9",
+    "hair_light": "#D1DADB",
+    "hair_hi": "#EEF0E6",
+    "cloth_dark": "#131D24",
+    "cloth": "#22313A",
+    "cloth_light": "#354854"
+  }
+}

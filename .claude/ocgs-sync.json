@@ -111,6 +111,7 @@
     ".claude/skills/patch-notes/SKILL.md": ".agents/skills/patch-notes/SKILL.md",
     ".claude/skills/perf-profile/SKILL.md": ".agents/skills/perf-profile/SKILL.md",
     ".claude/skills/playtest-report/SKILL.md": ".agents/skills/playtest-report/SKILL.md",
+    ".claude/skills/pogr/SKILL.md": ".agents/skills/pogr/SKILL.md",
     ".claude/skills/project-management-studio-operations/SKILL.md": ".agents/skills/project-management-studio-operations/SKILL.md",
     ".claude/skills/project-stage-detect/SKILL.md": ".agents/skills/project-stage-detect/SKILL.md",
     ".claude/skills/propagate-design-change/SKILL.md": ".agents/skills/propagate-design-change/SKILL.md",

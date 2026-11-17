@@ -4,8 +4,14 @@
 *.import
 *.uid
 shots/
+# Android build output - the APK is shared by hand, never committed
+build/
+*.apk
 # Pandora's frames are traced from a commercial game's sprite sheet (placeholder
 # poses): they stay on this machine and are rebuilt by tools/build_pandora.py
 assets/hero/
 assets/references/
 __pycache__/
+# scratch renders and helper scratch files
+tools/models/_probe/
+tools/_v2_scratch/

@@ -79,6 +79,38 @@
     "label": "Backdash safety",
     "help": "Seconds at the start of a backdash where nothing can hurt her."
   },
+  "slide_speed": {
+    "value": 260.0,
+    "min": 120.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Slide speed",
+    "help": "How fast she starts a slide. She slows to half of this by the end."
+  },
+  "slide_time": {
+    "value": 0.4,
+    "min": 0.15,
+    "max": 0.9,
+    "step": 0.05,
+    "label": "Slide length",
+    "help": "How long one slide lasts, in seconds."
+  },
+  "slide_height": {
+    "value": 16.0,
+    "min": 10.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Slide height",
+    "help": "How tall she is while sliding. Gaps lower than her standing height but taller than this can be slid under."
+  },
+  "slide_cooldown": {
+    "value": 0.15,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Slide wait",
+    "help": "Wait before the next slide. 0 = chain them freely."
+  },
   "attack_time": {
     "value": 0.4,
     "min": 0.12,
@@ -94,14 +126,6 @@
     "step": 0.01,
     "label": "Chain speed (J then I)",
     "help": "How soon the next swing can start when you alternate the two attack buttons."
-  },
-  "attack_reach": {
-    "value": 52.0,
-    "min": 24.0,
-    "max": 90.0,
-    "step": 2.0,
-    "label": "Attack reach",
-    "help": "How far in front of her the swing hits."
   },
   "attack_damage": {
     "value": 10.0,
@@ -130,38 +154,6 @@
     "step": 0.01,
     "label": "Elegy swing length",
     "help": "How long one two-handed swing takes. The short sword takes 0.4; slower means heavier."
-  },
-  "elegy_damage": {
-    "value": 18.0,
-    "min": 2.0,
-    "max": 60.0,
-    "step": 1.0,
-    "label": "Elegy damage",
-    "help": "Damage of one two-handed swing. The short sword does 10; the hound has 30 health."
-  },
-  "elegy_reach": {
-    "value": 68.0,
-    "min": 24.0,
-    "max": 120.0,
-    "step": 2.0,
-    "label": "Elegy reach",
-    "help": "How far the two-handed blade hits in front of her. The short sword reaches 52."
-  },
-  "elegy_energy": {
-    "value": 18.0,
-    "min": 0.0,
-    "max": 50.0,
-    "step": 1.0,
-    "label": "Energy per Elegy swing",
-    "help": "Energy one two-handed swing costs, out of the green bar. The short sword costs 12."
-  },
-  "elegy_chain": {
-    "value": 0.28,
-    "min": 0.06,
-    "max": 0.7,
-    "step": 0.01,
-    "label": "Elegy chain speed (J then I)",
-    "help": "How soon the next two-handed swing can start when you alternate J and I."
   },
   "hitstop": {
     "value": 0.03,
@@ -289,7 +281,7 @@
     "max": 60.0,
     "step": 1.0,
     "label": "MP per special",
-    "help": "MP one special attack (Up + Attack) costs. 15 out of 60 = 4 specials."
+    "help": "MP one special attack (Up + Attack) costs. 15 out of 60 = 4 specials. It is only taken when the wave really leaves her hand."
   },
   "special_damage": {
     "value": 30.0,
@@ -810,5 +802,149 @@
     "step": 10.0,
     "label": "Boss: bolt speed",
     "help": "How fast the golden bolts fly."
+  },
+  "hit_reach": {
+    "value": 1.0,
+    "min": 0.6,
+    "max": 1.6,
+    "step": 0.05,
+    "label": "Weapon reach vs. the picture",
+    "help": "1.0 = a cut lands exactly where you see the weapon. Higher = it reaches a bit past the tip. Lower = shorter than it looks."
+  },
+  "hit_thickness": {
+    "value": 4.0,
+    "min": 0.0,
+    "max": 14.0,
+    "step": 1.0,
+    "label": "Hit forgiveness",
+    "help": "How many pixels a near miss is forgiven by. 0 = the blade must really touch the enemy. 4 = about a quarter of a floor tile of help."
+  },
+  "show_hitboxes": {
+    "value": 0.0,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 1.0,
+    "label": "Show hit areas (0 off, 1 on)",
+    "help": "Draws where the blade cuts (yellow), what can be hit (red) and her own box (green), so you can see why a cut landed or missed."
+  },
+  "elegy_damage_mult": {
+    "value": 2.0,
+    "min": 1.0,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Elegy: damage x Dirge",
+    "help": "How much harder the two-handed scythe hits than one Dirge cut. 2 = double."
+  },
+  "elegy_energy_mult": {
+    "value": 1.5,
+    "min": 1.0,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Elegy: energy x Dirge",
+    "help": "How much more energy one scythe cut costs than one Dirge cut. 1.5 = half as much again."
+  },
+  "elegy_special_cost": {
+    "value": 25.0,
+    "min": 5.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Elegy special (Requiem): MP cost",
+    "help": "MP the scythe's spinning special costs. It is only taken when the spin really starts."
+  },
+  "elegy_special_damage": {
+    "value": 24.0,
+    "min": 5.0,
+    "max": 80.0,
+    "step": 1.0,
+    "label": "Elegy special: damage per pass",
+    "help": "The scythe turns round her twice; each half turn can cut every enemy near her once (up to 4 cuts)."
+  },
+  "elegy_special_time": {
+    "value": 0.9,
+    "min": 0.4,
+    "max": 2.0,
+    "step": 0.05,
+    "label": "Elegy special: how long it lasts",
+    "help": "Seconds the scythe spins. She cannot be knocked out of it."
+  },
+  "elegy_special_radius": {
+    "value": 22.0,
+    "min": 4.0,
+    "max": 48.0,
+    "step": 1.0,
+    "label": "Elegy special: reach",
+    "help": "How far from her the scythe turns. The old value was 8."
+  },
+  "elegy_special_size": {
+    "value": 1.4,
+    "min": 1.0,
+    "max": 2.5,
+    "step": 0.05,
+    "label": "Elegy special: scythe size",
+    "help": "How much bigger the scythe is drawn during the spin; the cut follows the picture."
+  },
+  "wall_latch_time": {
+    "value": 1.2,
+    "min": 0.3,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Wall latch: how long she holds",
+    "help": "Seconds she can cling to a wall before her grip gives out."
+  },
+  "wall_latches_per_air": {
+    "value": 1.0,
+    "min": 1.0,
+    "max": 5.0,
+    "step": 1.0,
+    "label": "Wall latch: latches per jump",
+    "help": "How many times she can grab a wall before she has to land again. 1 = one latch and one wall jump."
+  },
+  "wall_slide_speed": {
+    "value": 22.0,
+    "min": 0.0,
+    "max": 120.0,
+    "step": 2.0,
+    "label": "Wall latch: slide speed",
+    "help": "How fast she slips down while clinging. 0 = she does not slip at all."
+  },
+  "wall_jump_velocity": {
+    "value": 300.0,
+    "min": 150.0,
+    "max": 420.0,
+    "step": 5.0,
+    "label": "Wall jump: height",
+    "help": "How hard she kicks upward off a wall. 300 is a little lower than a normal jump."
+  },
+  "wall_jump_push": {
+    "value": 150.0,
+    "min": 60.0,
+    "max": 300.0,
+    "step": 5.0,
+    "label": "Wall jump: push away",
+    "help": "How hard the kick throws her away from the wall."
+  },
+  "wall_jump_lock": {
+    "value": 0.16,
+    "min": 0.0,
+    "max": 0.5,
+    "step": 0.02,
+    "label": "Wall jump: no-steer time",
+    "help": "Seconds after the kick before you can steer back. Shorter = easier to climb one wall."
+  },
+  "fx_amount": {
+    "value": 1.0,
+    "min": 0.0,
+    "max": 2.0,
+    "step": 0.1,
+    "label": "Effects amount",
+    "help": "How many sparks, streaks and glowing bits the backdash, slide and specials throw. 0 = none, 2 = twice as many."
+  },
+  "fx_flash": {
+    "value": 1.0,
+    "min": 0.0,
+    "max": 1.5,
+    "step": 0.1,
+    "label": "Screen flash",
+    "help": "How bright the short screen flash of the specials is. 0 turns flashes off (for players bothered by flashing light)."
   }
 }

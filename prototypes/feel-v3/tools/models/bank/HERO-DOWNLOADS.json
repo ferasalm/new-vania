@@ -1,0 +1,64 @@
+[
+  {
+    "name": "pandora_clean_motion_library",
+    "id": "f08e54b8-35d9-413d-ab9f-57907765adfe",
+    "bytes": 12093992,
+    "sha256": "5333c07955937b6c1fcccee9c637b9e5048b8419e5f35e467cd564509d226e18",
+    "skins": 1,
+    "animations": [
+      "human_000003",
+      "human_000004",
+      "human_000011",
+      "human_000019",
+      "human_000029",
+      "human_000038",
+      "human_000041",
+      "human_000073",
+      "human_000089",
+      "human_000093"
+    ],
+    "meshes": 1,
+    "result_page": "https://hyper3d.ai/workspace/rodin/f08e54b8-35d9-413d-ab9f-57907765adfe"
+  },
+  {
+    "name": "pandora_motion_library",
+    "id": "109ca55a-51bd-444c-9677-182d830601f7",
+    "bytes": 14936644,
+    "sha256": "d110b32cd617b79dabf404faec159e9912b8781588dc94ce4f5253f5af423464",
+    "skins": 1,
+    "animations": [
+      "human_000003",
+      "human_000011",
+      "human_000019",
+      "human_000029",
+      "human_000041",
+      "human_000042",
+      "human_000068",
+      "human_000073",
+      "human_000089",
+      "human_000093"
+    ],
+    "meshes": 1,
+    "result_page": "https://hyper3d.ai/workspace/rodin/109ca55a-51bd-444c-9677-182d830601f7"
+  },
+  {
+    "name": "pandora_animation_clean",
+    "id": "86c636c1-9042-4efa-b23f-f8bd3aa3f952",
+    "bytes": 9112732,
+    "sha256": "964242806408661934f7de463405e520de2a72d4c2cfe982add45df84932148d",
+    "skins": 0,
+    "animations": [],
+    "meshes": 1,
+    "result_page": "https://hyper3d.ai/workspace/rodin/86c636c1-9042-4efa-b23f-f8bd3aa3f952"
+  },
+  {
+    "name": "pandora_parts",
+    "id": "ad6a0c64-72e7-4ef7-b50c-d781025a9033",
+    "bytes": 10336012,
+    "sha256": "45ac781a76311d445c173cc7fd7497da107fb53be736829688c76b8a6cd8ffad",
+    "skins": 0,
+    "animations": [],
+    "meshes": 8,
+    "result_page": "https://hyper3d.ai/workspace/rodin/ad6a0c64-72e7-4ef7-b50c-d781025a9033"
+  }
+]

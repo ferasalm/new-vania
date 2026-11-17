@@ -1,0 +1,35 @@
+{
+  "source": "tools/models/pandora_rigged.glb",
+  "original_poses": true,
+  "production_ready": false,
+  "size": [
+    112,
+    80
+  ],
+  "feet_target": [
+    56,
+    76
+  ],
+  "poses": [
+    {
+      "pose": "idle",
+      "frame": 1,
+      "sha256": "a550ec125a29536f8eaad1fffb09e89c811c0a6a708eb3cb94cfce2fedf13611"
+    },
+    {
+      "pose": "run",
+      "frame": 2,
+      "sha256": "5b02e5176193b7b14cba5389213698ce592312476976448b621ac0cdf51eea01"
+    },
+    {
+      "pose": "wall",
+      "frame": 3,
+      "sha256": "ff6afcdf2b3dbe2e1db2f300fc5d4df434ec0d6fb8c1e9d0f5d5c2e159a9aff8"
+    },
+    {
+      "pose": "cast",
+      "frame": 4,
+      "sha256": "b8234ac93294d98a8bbf816931dc5aa3544ac08bae227ee2ef7b4dfdc2a90975"
+    }
+  ]
+}

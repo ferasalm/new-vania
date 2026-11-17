@@ -18,6 +18,7 @@ var _pool: Array = []
 var _next := 0
 var _music: AudioStreamPlayer
 var _music_name := ""
+var _music_held := false
 
 
 func _ready() -> void:
@@ -56,14 +57,21 @@ func _ready() -> void:
 
 
 func _load(rel: String) -> AudioStream:
-	var path := ProjectSettings.globalize_path(BASE + rel)
-	if not FileAccess.file_exists(path):
-		return null
-	if rel.to_lower().ends_with(".ogg"):
-		return AudioStreamOggVorbis.load_from_file(path)
-	if rel.to_lower().ends_with(".wav"):
-		return AudioStreamWAV.load_from_file(path)
-	return null
+	# imported projects and exported builds: use the imported stream
+	var path := BASE + rel
+	var st: AudioStream = null
+	if ResourceLoader.exists(path):
+		st = load(path) as AudioStream
+	# cold clone with no import step: read the raw file through FileAccess
+	if st == null:
+		var bytes := FileAccess.get_file_as_bytes(path)
+		if bytes.is_empty():
+			return null
+		if rel.to_lower().ends_with(".ogg"):
+			st = AudioStreamOggVorbis.load_from_buffer(bytes)
+		elif rel.to_lower().ends_with(".wav"):
+			st = AudioStreamWAV.load_from_buffer(bytes)
+	return st
 
 
 func count(group: String) -> int:
@@ -96,6 +104,13 @@ func play_music(name: String, restart: bool = false) -> void:
 	_music.stream = o["stream"]
 	_music.volume_db = float(e["volume_db"]) + float(o["gain_db"])
 	_music.play()
+	_music.stream_paused = _music_held
+
+
+func pause_music(on: bool) -> void:
+	# the pause menu and the SYSTEM OFFLINE screen hold the music; it picks up where it stopped
+	_music_held = on
+	_music.stream_paused = on
 
 
 # ---- used by the F1 panel ----

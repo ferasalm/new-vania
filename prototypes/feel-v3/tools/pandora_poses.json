@@ -1,0 +1,698 @@
+{
+ "_help": "Angles say where each bone points: 0 = down, 90 = forward (where she faces), -90 = back, 180 = up. _base names a pose below or mixes two: [a, b, t]. _air = keep the hip at standing height (jumps, wall); _lift = game pixels higher; _dx = game pixels forward. hair_bend / scarf_bend = extra turn of the tips. scarf = both tails, scarf_spread apart.",
+ "idle_breath": [
+  0,
+  1,
+  2,
+  2,
+  1,
+  0
+ ],
+ "idle_breath_row": 104,
+ "idle_hip_x": 112,
+ "run_hip_x": 127,
+ "run_ground": 191,
+ "poses": {
+  "stand": {
+   "torso": 176,
+   "head": 172,
+   "hair": -32,
+   "hair_bend": 10,
+   "scarf": -28,
+   "scarf_bend": 10,
+   "scarf_spread": 10,
+   "arm_b_up": -8,
+   "arm_f_up": 8,
+   "arm_f_lo": 15,
+   "leg_f_th": 10,
+   "leg_f_sh": 3,
+   "leg_b_th": -10,
+   "leg_b_sh": -5
+  },
+  "stance": {
+   "_base": "stand",
+   "torso": 172,
+   "leg_f_th": 35,
+   "leg_f_sh": 5,
+   "leg_b_th": -30,
+   "leg_b_sh": -12
+  },
+  "stance2": {
+   "_base": "stand",
+   "torso": 174,
+   "leg_f_th": 22,
+   "leg_f_sh": 0,
+   "leg_b_th": -22,
+   "leg_b_sh": -8
+  },
+  "kneel": {
+   "torso": 152,
+   "head": 162,
+   "hair": -48,
+   "hair_bend": 15,
+   "scarf": -48,
+   "scarf_bend": 15,
+   "arm_b_up": -10,
+   "arm_f_up": 30,
+   "arm_f_lo": 70,
+   "leg_f_th": 95,
+   "leg_f_sh": -5,
+   "leg_b_th": 15,
+   "leg_b_sh": -95
+  },
+  "tuck": {
+   "torso": 165,
+   "head": 163,
+   "hair": -100,
+   "hair_bend": 15,
+   "scarf": -95,
+   "scarf_bend": 10,
+   "arm_b_up": -60,
+   "arm_f_up": 60,
+   "arm_f_lo": 110,
+   "leg_f_th": 100,
+   "leg_f_sh": -15,
+   "leg_b_th": 72,
+   "leg_b_sh": -45,
+   "_air": true
+  },
+  "airatk_base": {
+   "_base": "tuck",
+   "torso": 168,
+   "leg_f_th": 85,
+   "leg_f_sh": -5,
+   "leg_b_th": 45,
+   "leg_b_sh": -50,
+   "hair": -80,
+   "scarf": -75,
+   "_air": true
+  }
+ },
+ "clips": {
+  "jump": [
+   {
+    "_base": "stand",
+    "torso": 172,
+    "head": 168,
+    "hair": -20,
+    "hair_bend": 5,
+    "scarf": -15,
+    "leg_f_th": 15,
+    "leg_f_sh": 0,
+    "leg_b_th": -20,
+    "leg_b_sh": -30,
+    "arm_f_up": 140,
+    "arm_f_lo": 150,
+    "arm_b_up": -40,
+    "_air": true
+   },
+   {
+    "_base": "tuck",
+    "leg_f_th": 70,
+    "leg_f_sh": -10,
+    "leg_b_th": 30,
+    "leg_b_sh": -40,
+    "arm_f_up": 100,
+    "arm_f_lo": 120,
+    "hair": -50,
+    "scarf": -45,
+    "_air": true
+   },
+   {
+    "_base": "tuck"
+   },
+   {
+    "_base": "stand",
+    "torso": 175,
+    "head": 172,
+    "leg_f_th": 30,
+    "leg_f_sh": -5,
+    "leg_b_th": -5,
+    "leg_b_sh": -25,
+    "arm_f_up": 120,
+    "arm_f_lo": 140,
+    "arm_b_up": -120,
+    "hair": -150,
+    "hair_bend": 15,
+    "scarf": -140,
+    "scarf_bend": 10,
+    "_air": true
+   }
+  ],
+  "land": [
+   {
+    "torso": 158,
+    "head": 165,
+    "hair": -60,
+    "hair_bend": 15,
+    "scarf": -55,
+    "arm_b_up": -20,
+    "arm_f_up": 40,
+    "arm_f_lo": 60,
+    "leg_f_th": 70,
+    "leg_f_sh": -15,
+    "leg_b_th": 20,
+    "leg_b_sh": -55
+   }
+  ],
+  "crouch": [
+   {
+    "_base": [
+     "stand",
+     "kneel",
+     0.35
+    ]
+   },
+   {
+    "_base": [
+     "stand",
+     "kneel",
+     0.65
+    ]
+   },
+   {
+    "_base": [
+     "stand",
+     "kneel",
+     0.88
+    ]
+   },
+   {
+    "_base": "kneel",
+    "hair": -52,
+    "scarf": -52
+   },
+   {
+    "_base": "kneel"
+   }
+  ],
+  "attack": [
+   {
+    "_base": "stance",
+    "arm_f_up": -20,
+    "arm_f_lo": 10
+   },
+   {
+    "_base": "stance",
+    "torso": 182,
+    "arm_f_up": -140,
+    "arm_f_lo": -125,
+    "hair": -40
+   },
+   {
+    "_base": "stance",
+    "torso": 166,
+    "arm_f_up": 100,
+    "arm_f_lo": 95,
+    "hair": -70,
+    "scarf": -65
+   },
+   {
+    "_base": "stance",
+    "torso": 162,
+    "arm_f_up": 75,
+    "arm_f_lo": 60,
+    "hair": -80,
+    "scarf": -75
+   },
+   {
+    "_base": "stance",
+    "torso": 170,
+    "arm_f_up": 40,
+    "arm_f_lo": 70,
+    "hair": -45,
+    "scarf": -40
+   }
+  ],
+  "attack2": [
+   {
+    "_base": "stance2",
+    "arm_f_up": 20,
+    "arm_f_lo": 30
+   },
+   {
+    "_base": "stance2",
+    "torso": 186,
+    "arm_f_up": -30,
+    "arm_f_lo": -20,
+    "hair": -30
+   },
+   {
+    "_base": "stance2",
+    "torso": 168,
+    "arm_f_up": 95,
+    "arm_f_lo": 105,
+    "hair": -70,
+    "scarf": -60
+   },
+   {
+    "_base": "stance2",
+    "torso": 166,
+    "arm_f_up": 108,
+    "arm_f_lo": 112,
+    "hair": -75,
+    "scarf": -68
+   },
+   {
+    "_base": "stance2",
+    "torso": 172,
+    "arm_f_up": 50,
+    "arm_f_lo": 70,
+    "hair": -45,
+    "scarf": -40
+   }
+  ],
+  "crouchatk": [
+   {
+    "_base": "kneel",
+    "arm_f_up": -10,
+    "arm_f_lo": 20
+   },
+   {
+    "_base": "kneel",
+    "torso": 160,
+    "arm_f_up": -140,
+    "arm_f_lo": -130
+   },
+   {
+    "_base": "kneel",
+    "torso": 145,
+    "arm_f_up": 100,
+    "arm_f_lo": 92,
+    "hair": -70,
+    "scarf": -65
+   },
+   {
+    "_base": "kneel",
+    "torso": 145,
+    "arm_f_up": 90,
+    "arm_f_lo": 82,
+    "hair": -75,
+    "scarf": -70
+   },
+   {
+    "_base": "kneel",
+    "arm_f_up": 45,
+    "arm_f_lo": 70
+   }
+  ],
+  "crouchatk2": [
+   {
+    "_base": "kneel",
+    "arm_f_up": 20,
+    "arm_f_lo": 40
+   },
+   {
+    "_base": "kneel",
+    "torso": 160,
+    "arm_f_up": -20,
+    "arm_f_lo": -10
+   },
+   {
+    "_base": "kneel",
+    "torso": 145,
+    "arm_f_up": 92,
+    "arm_f_lo": 98,
+    "hair": -70,
+    "scarf": -65
+   },
+   {
+    "_base": "kneel",
+    "torso": 145,
+    "arm_f_up": 98,
+    "arm_f_lo": 104,
+    "hair": -75,
+    "scarf": -70
+   },
+   {
+    "_base": "kneel",
+    "arm_f_up": 45,
+    "arm_f_lo": 70
+   }
+  ],
+  "airatk": [
+   {
+    "_base": "airatk_base",
+    "arm_f_up": -20,
+    "arm_f_lo": 10
+   },
+   {
+    "_base": "airatk_base",
+    "torso": 178,
+    "arm_f_up": -140,
+    "arm_f_lo": -125,
+    "hair": -60
+   },
+   {
+    "_base": "airatk_base",
+    "torso": 162,
+    "arm_f_up": 100,
+    "arm_f_lo": 95,
+    "hair": -95,
+    "scarf": -90
+   },
+   {
+    "_base": "airatk_base",
+    "torso": 160,
+    "arm_f_up": 75,
+    "arm_f_lo": 62,
+    "hair": -100,
+    "scarf": -95
+   },
+   {
+    "_base": "airatk_base",
+    "arm_f_up": 40,
+    "arm_f_lo": 70
+   }
+  ],
+  "airatk2": [
+   {
+    "_base": "airatk_base",
+    "arm_f_up": 20,
+    "arm_f_lo": 30
+   },
+   {
+    "_base": "airatk_base",
+    "torso": 180,
+    "arm_f_up": -30,
+    "arm_f_lo": -20,
+    "hair": -60
+   },
+   {
+    "_base": "airatk_base",
+    "torso": 164,
+    "arm_f_up": 95,
+    "arm_f_lo": 105,
+    "hair": -95,
+    "scarf": -90
+   },
+   {
+    "_base": "airatk_base",
+    "torso": 162,
+    "arm_f_up": 105,
+    "arm_f_lo": 112,
+    "hair": -100,
+    "scarf": -95
+   },
+   {
+    "_base": "airatk_base",
+    "arm_f_up": 45,
+    "arm_f_lo": 70
+   }
+  ],
+  "cast": [
+   {
+    "_base": "stance",
+    "torso": 160,
+    "leg_f_th": 40,
+    "leg_f_sh": -10,
+    "leg_b_th": -25,
+    "leg_b_sh": -30,
+    "arm_f_up": -40,
+    "arm_f_lo": -60,
+    "hair": -40
+   },
+   {
+    "_base": "stance",
+    "torso": 180,
+    "arm_f_up": 175,
+    "arm_f_lo": 178,
+    "hair": -20,
+    "scarf": -20
+   },
+   {
+    "_base": "stance",
+    "torso": 176,
+    "arm_f_up": 140,
+    "arm_f_lo": 130,
+    "hair": -35,
+    "scarf": -35
+   },
+   {
+    "_base": "stance",
+    "torso": 165,
+    "arm_f_up": 92,
+    "arm_f_lo": 90,
+    "hair": -80,
+    "scarf": -80
+   },
+   {
+    "_base": "stance",
+    "torso": 167,
+    "arm_f_up": 90,
+    "arm_f_lo": 88,
+    "hair": -70,
+    "scarf": -70
+   }
+  ],
+  "backdash": [
+   {
+    "_base": "stand",
+    "torso": 186,
+    "leg_f_th": 40,
+    "leg_f_sh": 10,
+    "leg_b_th": -30,
+    "leg_b_sh": -20,
+    "arm_f_up": 50,
+    "arm_f_lo": 80,
+    "arm_b_up": -60,
+    "hair": -12,
+    "hair_bend": 22,
+    "scarf": -5,
+    "scarf_bend": 20
+   },
+   {
+    "_base": "stand",
+    "torso": 195,
+    "leg_f_th": 25,
+    "leg_f_sh": 15,
+    "leg_b_th": -15,
+    "leg_b_sh": -5,
+    "arm_f_up": 70,
+    "arm_f_lo": 90,
+    "arm_b_up": -80,
+    "hair": 0,
+    "hair_bend": 28,
+    "scarf": 10,
+    "scarf_bend": 25,
+    "_lift": 1
+   },
+   {
+    "_base": "stand",
+    "torso": 193,
+    "leg_f_th": 28,
+    "leg_f_sh": 18,
+    "leg_b_th": -12,
+    "leg_b_sh": 0,
+    "arm_f_up": 65,
+    "arm_f_lo": 85,
+    "arm_b_up": -75,
+    "hair": 3,
+    "hair_bend": 32,
+    "scarf": 18,
+    "scarf_bend": 22,
+    "_lift": 1
+   },
+   {
+    "_base": "stand",
+    "torso": 178,
+    "leg_f_th": 30,
+    "leg_f_sh": 0,
+    "leg_b_th": -35,
+    "leg_b_sh": -10,
+    "arm_f_up": 30,
+    "arm_f_lo": 50,
+    "hair": -10,
+    "hair_bend": 15,
+    "scarf": -5
+   }
+  ],
+  "hurt": [
+   {
+    "_base": "stand",
+    "torso": 200,
+    "head": 210,
+    "arm_f_up": 140,
+    "arm_f_lo": 160,
+    "arm_b_up": -140,
+    "leg_f_th": 30,
+    "leg_f_sh": 10,
+    "leg_b_th": -25,
+    "leg_b_sh": -15,
+    "hair": -2,
+    "hair_bend": 22,
+    "scarf": 8
+   },
+   {
+    "_base": "stand",
+    "torso": 188,
+    "head": 185,
+    "arm_f_up": 60,
+    "arm_f_lo": 80,
+    "leg_f_th": 25,
+    "leg_f_sh": 5,
+    "leg_b_th": -20,
+    "leg_b_sh": -10,
+    "hair": -20,
+    "scarf": -10
+   }
+  ],
+  "dead": [
+   {
+    "_base": "kneel",
+    "torso": 138,
+    "head": 120,
+    "arm_f_up": 5,
+    "arm_f_lo": 10,
+    "hair": -15
+   },
+   {
+    "_base": "kneel",
+    "torso": 118,
+    "head": 105,
+    "arm_f_up": 0,
+    "arm_f_lo": 5,
+    "hair": 5,
+    "scarf": -30
+   },
+   {
+    "torso": 102,
+    "head": 98,
+    "leg_f_th": -60,
+    "leg_f_sh": -70,
+    "leg_b_th": -75,
+    "leg_b_sh": -82,
+    "arm_f_up": 80,
+    "arm_f_lo": 90,
+    "arm_b_up": -60,
+    "hair": -60,
+    "hair_bend": 10,
+    "scarf": -70
+   },
+   {
+    "torso": 92,
+    "head": 90,
+    "leg_f_th": -88,
+    "leg_f_sh": -88,
+    "leg_b_th": -90,
+    "leg_b_sh": -90,
+    "arm_f_up": 88,
+    "arm_f_lo": 92,
+    "arm_b_up": -85,
+    "hair": -82,
+    "hair_bend": 4,
+    "scarf": -86,
+    "scarf_bend": 2
+   }
+  ],
+  "slide": [
+   {
+    "torso": 205,
+    "head": 192,
+    "leg_f_th": 75,
+    "leg_f_sh": 80,
+    "leg_b_th": 65,
+    "leg_b_sh": -100,
+    "arm_f_up": -30,
+    "arm_f_lo": -40,
+    "arm_b_up": -50,
+    "hair": -100,
+    "hair_bend": 10,
+    "scarf": -95
+   },
+   {
+    "torso": 222,
+    "head": 205,
+    "leg_f_th": 86,
+    "leg_f_sh": 88,
+    "leg_b_th": 65,
+    "leg_b_sh": -100,
+    "arm_f_up": -22,
+    "arm_f_lo": -30,
+    "arm_b_up": -45,
+    "hair": -105,
+    "hair_bend": 8,
+    "scarf": -100,
+    "scarf_spread": 20
+   },
+   {
+    "torso": 222,
+    "head": 205,
+    "leg_f_th": 86,
+    "leg_f_sh": 88,
+    "leg_b_th": 65,
+    "leg_b_sh": -100,
+    "arm_f_up": -22,
+    "arm_f_lo": -30,
+    "arm_b_up": -45,
+    "hair": -96,
+    "hair_bend": 14,
+    "scarf": -90,
+    "scarf_spread": 26
+   }
+  ],
+  "wall": [
+   {
+    "_base": "stand",
+    "torso": 182,
+    "head": 175,
+    "leg_b_th": -60,
+    "leg_b_sh": -10,
+    "leg_f_th": 60,
+    "leg_f_sh": -10,
+    "arm_b_up": -100,
+    "arm_f_up": 30,
+    "arm_f_lo": 60,
+    "hair": -12,
+    "scarf": -6,
+    "_air": true
+   },
+   {
+    "_base": "stand",
+    "torso": 178,
+    "head": 172,
+    "leg_b_th": -55,
+    "leg_b_sh": -5,
+    "leg_f_th": 75,
+    "leg_f_sh": -5,
+    "arm_b_up": -95,
+    "arm_f_up": 25,
+    "arm_f_lo": 50,
+    "hair": -15,
+    "scarf": -10,
+    "_air": true
+   }
+  ],
+  "walljump": [
+   {
+    "_base": "stand",
+    "torso": 160,
+    "head": 160,
+    "leg_b_th": -70,
+    "leg_b_sh": -80,
+    "leg_f_th": 60,
+    "leg_f_sh": -10,
+    "arm_f_up": 120,
+    "arm_f_lo": 140,
+    "arm_b_up": -100,
+    "hair": -60,
+    "scarf": -70,
+    "_air": true
+   },
+   {
+    "_base": "tuck",
+    "leg_f_th": 70,
+    "leg_f_sh": -10,
+    "leg_b_th": 30,
+    "leg_b_sh": -40,
+    "arm_f_up": 100,
+    "arm_f_lo": 120,
+    "hair": -50,
+    "scarf": -45
+   },
+   {
+    "_base": "tuck"
+   }
+  ]
+ }
+}
