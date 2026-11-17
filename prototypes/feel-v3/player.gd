@@ -445,16 +445,19 @@ func _spend_energy(cost: float) -> bool:
 func _begin_attack(btn: String) -> bool:
 	# Up + Attack = the special, if there is MP for it; otherwise a normal swing.
 	# The MP is only taken when the special actually goes off (_attack_step).
+	# Decide with the weapon this NEW attack will use (a chained attack may follow a swap;
+	# _is_elegy() still answers for the attack in progress).
+	var elegy := int(T.v("weapon")) == 1
 	if Input.is_action_pressed("up"):
-		if mp >= special_cost():
+		if mp >= (T.v("elegy_special_cost") if elegy else T.v("special_cost")):
 			_start_attack(btn, "special")
 			return true
 		Sfx.play("no_energy")
 		G.main.hud.flash("mp")
 	# Elegy is two-handed: J and I are the same one heavy cut
-	if _is_elegy():
+	if elegy:
 		btn = "attack"
-	if not _spend_energy(T.v("attack_energy") * (T.v("elegy_energy_mult") if _is_elegy() else 1.0)):
+	if not _spend_energy(T.v("attack_energy") * (T.v("elegy_energy_mult") if elegy else 1.0)):
 		return false
 	var airborne := not is_on_floor() or velocity.y < 0.0
 	var low := not airborne and Input.is_action_pressed("down")
