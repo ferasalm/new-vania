@@ -22,10 +22,12 @@ const THEMES := {
 		"clear": Color("#1a0a0e"), "door": "library", "dust": Color(1.0, 0.85, 0.55, 0.55)},
 	"lab": {"tiles": "lab", "wall": "env/lab_wall.png", "tint": Color.WHITE, "tile_tint": Color.WHITE,
 		"clear": Color("#03080f"), "door": "lab", "dust": Color(0.5, 1.0, 1.0, 0.55)},
-	"save": {"tiles": "", "wall": "env/save_room.png", "tint": Color.WHITE, "tile_tint": Color.WHITE,
-		"clear": Color("#020608"), "door": "save", "dust": Color(0.6, 1.0, 0.95, 0.5)},
-	"save2": {"tiles": "", "wall": "env/save_room2.png", "tint": Color.WHITE, "tile_tint": Color.WHITE,
-		"clear": Color("#070310"), "door": "save", "dust": Color(0.85, 0.7, 1.0, 0.5)},
+	# a save room is an ordinary room; the save point (capsules, brain, terminal) stands in it.
+	# "point" is drawn so its empty capsule (POINT_K px from its left edge) stands on K.
+	"save": {"tiles": "lab", "wall": "env/save_wall.png", "tint": Color.WHITE, "tile_tint": Color(0.8, 0.95, 1.0),
+		"clear": Color("#020608"), "door": "save", "dust": Color(0.6, 1.0, 0.95, 0.5), "point": "env/save_point.png"},
+	"save2": {"tiles": "lab", "wall": "env/save_wall2.png", "tint": Color.WHITE, "tile_tint": Color(0.85, 0.7, 1.0),
+		"clear": Color("#070310"), "door": "save", "dust": Color(0.85, 0.7, 1.0, 0.5), "point": "env/save_point2.png"},
 	"sanctum": {"tiles": "church", "wall": "panels", "tint": Color(0.62, 0.3, 0.85), "tile_tint": Color(0.75, 0.5, 1.0),
 		"clear": Color("#0c0416"), "door": "boss", "dust": Color(1.0, 0.8, 0.3, 0.6)},
 }
@@ -40,6 +42,8 @@ var doors := {}               # "left"/"right" -> Door
 var _tiles: Texture2D
 var _ledge: Texture2D
 var _wall: Texture2D
+var _point: Texture2D
+const POINT_K := 39.0     # tools/build_save_point.py prints it: the empty capsule's centre
 
 
 func load_room(room_name: String) -> bool:
@@ -63,8 +67,8 @@ func load_room(room_name: String) -> bool:
 		_tiles = G.tex("env/%s_tiles.png" % theme["tiles"])
 		_ledge = G.tex("env/%s_ledge.png" % theme["tiles"])
 	_wall = G.tex("env/church_backgrounds.png" if theme["wall"] == "panels" else theme["wall"])
-	if theme["tiles"] == "":
-		size.y = minf(size.y, 216.0)     # the save room is one painted screen
+	if theme.has("point"):
+		_point = G.tex(theme["point"])
 	_build()
 	queue_redraw()
 	return true
@@ -149,6 +153,9 @@ func _draw() -> void:
 				draw_texture(_wall, Vector2(x, y), tint)
 				x += ws.x
 			y -= ws.y
+	if _point != null and spawns.has("K"):
+		var k: Vector2 = spawns["K"]
+		draw_texture(_point, Vector2(round(k.x - POINT_K), k.y - _point.get_size().y))
 	if _tiles == null:
 		return
 	var tt: Color = theme["tile_tint"]
