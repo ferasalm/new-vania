@@ -68,6 +68,7 @@ var _latch_cd := 0.0
 var _air_latches := 0       # latches used since her feet last touched the floor
 var _slide_t := 0.0         # seconds spent sliding
 var _slide_cd := 0.0
+var _fx_t := 0.0            # time to the next spark/afterimage of a slide or Requiem
 var _shape: CollisionShape2D
 var _rect: RectangleShape2D
 var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
@@ -283,8 +284,15 @@ func _physics_process(delta: float) -> void:
 			if _dash_t >= total:
 				state = "move"
 				_dash_cd = T.v("backdash_cooldown")
+				Vfx.backdash_end(global_position, -facing)
 		"slide":
 			_slide_t += delta
+			_fx_t -= delta
+			if _fx_t <= 0.0:
+				_fx_t = 0.045
+				Vfx.slide_tick(global_position, facing)
+				if int(_slide_t / 0.045) % 2 == 0:
+					Vfx.ghost(_spr, Color(Vfx.CYAN.r, Vfx.CYAN.g, Vfx.CYAN.b, 0.45), 0.22)
 			var total := T.v("slide_time")
 			velocity.x = facing * T.v("slide_speed") * (1.0 - 0.5 * minf(_slide_t, total) / total)
 			if _slide_t >= 0.08 and _jump_buf > 0.0 and on_floor and _room_to_stand():
@@ -488,6 +496,7 @@ func _start_attack(btn: String, kind: String) -> void:
 	if kind == "special" and not _is_elegy():
 		_arm.visible = false
 		Sfx.play("special")
+		Vfx.cast_gather(global_position + Vector2(facing * 14.0, -22.0), _attack_total() * 0.3)
 		return
 	var w: Dictionary = WEAPONS[1 if _is_elegy() else 0]
 	_blade.texture = G.tex(w["tex"])
@@ -505,6 +514,8 @@ func _start_attack(btn: String, kind: String) -> void:
 		_arm.visible = true
 		_prev_ang = deg_to_rad(-90.0)
 		_pose_weapon()
+		_fx_t = 0.0
+		Vfx.requiem_start(global_position, _attack_total(), _spr)
 		Sfx.play("special", 0.8)
 		return
 	if _is_elegy():
@@ -573,6 +584,7 @@ func _attack_step() -> void:
 			_wave_thrown = true
 			mp -= T.v("special_cost")      # paid only now, when the wave really leaves
 			G.main.throw_wave(global_position + Vector2(facing * 14.0, -22.0), facing)
+			Vfx.cast_release(global_position + Vector2(facing * 14.0, -22.0), facing)
 	elif _attack_kind == "special":
 		# the Requiem: every half turn of the scythe can cut each enemy once more
 		if _attack_t >= total * 0.12 and _attack_t <= total * 0.82:
@@ -586,6 +598,12 @@ func _attack_step() -> void:
 				Sfx.play("swing_heavy", 1.1)
 			hit_pts = blade_points(_prev_ang, ang)
 			G.main.player_cut(hit_pts, T.v("elegy_special_damage"), facing, _attack_hit)
+			_fx_t -= get_physics_process_delta_time()
+			if _fx_t <= 0.0:
+				_fx_t = 0.035
+				var d := Vector2(cos(ang) * facing, sin(ang))
+				var tip := global_position + Vector2(_swing["at"].x * facing, _swing["at"].y) + d * (_blade.position.length() + _blade_len)
+				Vfx.requiem_tick(tip, atan2(cos(ang), -sin(ang) * facing))
 	# the cut hurts exactly where the weapon is: through the sweep, then held out
 	elif _attack_t >= total * 0.1 and _attack_t <= total * 0.65:
 		var dmg := T.v("attack_damage") * (T.v("elegy_damage_mult") if _is_elegy() else 1.0)
@@ -613,6 +631,8 @@ func _attack_step() -> void:
 
 
 func _end_attack() -> void:
+	if _attack_kind == "special" and _is_elegy():
+		Vfx.requiem_end(global_position)
 	var stay_low := _attack_kind == "crouch" and Input.is_action_pressed("down") and is_on_floor()
 	state = "crouch" if stay_low else "move"
 	if stay_low:
@@ -625,6 +645,7 @@ func _try_backdash(dash_dir: int) -> bool:
 		return false
 	state = "backdash"
 	facing = -dash_dir      # her back points where she dashes
+	Vfx.backdash_start(global_position, dash_dir, _spr)
 	_spr.sprite_frames.set_animation_speed("backdash", 4.0 / maxf(0.05, T.v("backdash_time")))
 	_spr.play("backdash")
 	_dash_t = 0.0
@@ -641,6 +662,8 @@ func _start_slide() -> void:
 	_jump_buf = 0.0
 	velocity.x = facing * T.v("slide_speed")
 	_set_body_height(T.v("slide_height"))
+	_fx_t = 0.0
+	Vfx.slide_start(global_position, facing, _spr)
 	Sfx.play("backdash", 0.8)
 	G.main.dust(global_position, 2)
 
@@ -678,17 +701,11 @@ func take_hit(damage: float, from_x: float) -> void:
 
 
 func _afterimage() -> void:
-	var g := Sprite2D.new()
-	g.texture = _spr.sprite_frames.get_frame_texture(_spr.animation, _spr.frame)
-	g.centered = false
-	g.flip_h = _spr.flip_h
-	g.global_position = _spr.global_position
-	g.modulate = Color(0.45, 0.8, 1.0, 0.55)
-	g.z_index = -1
-	G.main.world.add_child(g)
-	var tw := g.create_tween()
-	tw.tween_property(g, "modulate:a", 0.0, 0.22)
-	tw.tween_callback(g.queue_free)
+	# glowing copies left along the dash, cyan at the start turning violet
+	var k := clampf(_dash_t / maxf(0.05, T.v("backdash_time")), 0.0, 1.0)
+	var c := Vfx.CYAN.lerp(Vfx.VIOLET, k)
+	c.a = 0.8
+	Vfx.ghost(_spr, c, 0.3)
 
 
 func _animate(on_floor: bool) -> void:

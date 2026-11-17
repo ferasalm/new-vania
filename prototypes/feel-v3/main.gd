@@ -298,6 +298,9 @@ func throw_wave(at: Vector2, dir: int) -> void:
 	s.flip_h = dir < 0
 	s.global_position = at
 	s.z_index = 4
+	var glow := CanvasItemMaterial.new()
+	glow.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD   # the wave is light
+	s.material = glow
 	world.add_child(s)
 	waves.append({"node": s, "dir": dir, "left": T.v("special_range"), "hit": []})
 
@@ -307,6 +310,7 @@ func _move_waves(delta: float) -> void:
 		var s: Sprite2D = w["node"]
 		var step: float = T.v("special_speed") * delta
 		s.global_position.x += w["dir"] * step
+		Vfx.wave_trail(s.global_position, w["dir"])
 		w["left"] -= step
 		s.modulate.a = clampf(w["left"] / 30.0, 0.0, 1.0)
 		var size: Vector2 = s.texture.get_size()

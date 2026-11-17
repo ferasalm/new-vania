@@ -18,7 +18,8 @@ func _ready() -> void:
 	main = load("res://main.tscn").instantiate()
 	add_child(main)
 	await _run()
-	print("SMOKE %s  passed=%d failed=%d" % ["PASS" if failed == 0 else "FAIL", passed, failed])
+	# no checks at all means the game did not even load: that is a failure, not a pass
+	print("SMOKE %s  passed=%d failed=%d" % ["PASS" if failed == 0 and passed > 0 else "FAIL", passed, failed])
 	get_tree().quit(0 if failed == 0 else 1)
 
 
@@ -136,7 +137,9 @@ func _run() -> void:
 	await _frames(10)
 	var x_bd: float = p.global_position.x
 	await _tap("backdash_left", 2)
-	await _frames(int(T.v("backdash_time") * 60.0) + 6)
+	await _frames(5)
+	await _shot("fx_backdash")
+	await _frames(int(T.v("backdash_time") * 60.0) + 1)
 	_check("backdash left moves her left and she faces right", p.global_position.x < x_bd - 20.0 and p.facing == 1,
 		"x %.0f -> %.0f facing=%d" % [x_bd, p.global_position.x, p.facing])
 	p.global_position = Vector2(main.room.size.x * 0.5, main.room.spawns["P"].y)
@@ -163,6 +166,8 @@ func _run() -> void:
 	await _frames(4)
 	var slide_state: String = p.state
 	var slide_h: float = p.body_rect().size.y
+	await _frames(6)
+	await _shot("fx_slide")
 	await _frames(int(T.v("slide_time") * 60.0) + 10)
 	_check("Down + Jump on solid floor slides", slide_state == "slide" and slide_h <= T.v("slide_height") and x_sl - p.global_position.x > 30.0,
 		"state=%s height=%.0f moved=%.0f" % [slide_state, slide_h, x_sl - p.global_position.x])
@@ -192,7 +197,9 @@ func _run() -> void:
 	await _frames(2)
 	Input.action_release("attack")
 	Input.action_release("up")
-	await _frames(12)
+	await _frames(4)
+	await _shot("fx_cast_gather")
+	await _frames(8)
 	_check("Up + Attack throws the blade wave", main.waves.size() == 1 and p._spr.animation == "cast", "waves=%d anim=%s" % [main.waves.size(), p._spr.animation])
 	await _shot("6_special")
 	await _frames(60)
