@@ -1,0 +1,90 @@
+{
+  "hero": {
+    "faces": "right",
+    "size": [
+      112,
+      80
+    ],
+    "feet": [
+      56,
+      76
+    ],
+    "anims": {
+      "idle": 6,
+      "run": 16,
+      "jump": 4,
+      "land": 1,
+      "crouch": 5,
+      "attack": 5,
+      "attack2": 5,
+      "crouchatk": 5,
+      "crouchatk2": 5,
+      "airatk": 5,
+      "airatk2": 5,
+      "backdash": 4,
+      "hurt": 2,
+      "cast": 5,
+      "dead": 4
+    },
+    "sheet": {
+      "file": "pandora_sheet.png",
+      "cell": [
+        112,
+        80
+      ],
+      "columns": 16,
+      "rows": 15,
+      "row_order": [
+        "idle",
+        "run",
+        "jump",
+        "land",
+        "crouch",
+        "attack",
+        "attack2",
+        "crouchatk",
+        "crouchatk2",
+        "airatk",
+        "airatk2",
+        "backdash",
+        "hurt",
+        "cast",
+        "dead"
+      ],
+      "row_start": {
+        "idle": 0,
+        "run": 1,
+        "jump": 2,
+        "land": 3,
+        "crouch": 4,
+        "attack": 5,
+        "attack2": 6,
+        "crouchatk": 7,
+        "crouchatk2": 8,
+        "airatk": 9,
+        "airatk2": 10,
+        "backdash": 11,
+        "hurt": 12,
+        "cast": 13,
+        "dead": 14
+      },
+      "frame_counts": {
+        "idle": 6,
+        "run": 16,
+        "jump": 4,
+        "land": 1,
+        "crouch": 5,
+        "attack": 5,
+        "attack2": 5,
+        "crouchatk": 5,
+        "crouchatk2": 5,
+        "airatk": 5,
+        "airatk2": 5,
+        "backdash": 4,
+        "hurt": 2,
+        "cast": 5,
+        "dead": 4
+      }
+    }
+  }
+}

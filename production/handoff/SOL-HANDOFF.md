@@ -3,8 +3,8 @@
 ## Now
 - Worktree: `C:/Users/AUC/opencode-workspace/workspace/new-vania-proto-v3-patch`, branch `feat/proto-v3-patch`; no merge authorized.
 - Goal: credible demo, not endless prototypes. This session banked sources and verified the baseline; it did NOT finish a demo or integrate new art.
-- User REJECTED the 3D proportion study, the helper's coded idle, Sol's hand-coded idle, and the one generated concept. Approved design basis is `assets/hero_2d_base/pandora-base-sprite.png` (magenta turnaround, 5 views). All asset paths below relative to `prototypes/feel-v3/`.
-- LATEST task: user said the hand-drawn sprites are bad and asked for a FREE online tool to generate them. Research done: PixelLab (40 free generations, ~$0.03/8 frames) and Retro Diffusion ($0.50 free, ~$0.14/animation). WAITING ON USER'S TOOL CHOICE; no key, no generation.
+- User's 8 directional idle sprites in `assets/hero_2d_base/pandora-idle-sprites-32-bit/` are the appearance authority; the right-east sprite is the runtime-facing base. Rejected: 3D study, coded drafts, generated concept, PixelLab output.
+- LATEST task: user chose the **cutout rig**. Full sheet generated at `assets/hero_2d_base/pandora_sheet/rig/sheet/` (77 frames, 15 clips, 112x80, pivot [56,76]). Retro Diffusion API test failed `insufficient_balance` (free credits are website-only; refunded, no charge).
 - Aseprite: MCP works with container paths (`/workspace/new-vania-proto-v3-patch/...`; Docker `/workspace` = host `C:\Users\AUC\opencode-workspace\workspace`). Native Windows Aseprite built from official source: `C:/Users/AUC/opencode-workspace/tools/aseprite-src/build/bin/aseprite.exe` (`1.x-eccf4ec-dev`), Desktop shortcut; free personal use, do not redistribute.
 - Animation input ready: `assets/hero_2d_base/pandora_sheet/anim_input/pandora_base_112x80.png` (feet row 75, centre x=56), 64x64 variant, `pixellab_animate.py` (key from env only, compiles).
 - Budget restriction lifted by user; still record actual spend, never invent $0. Full sprite sheet remains the session goal; agree its budget after the base is approved. Rodin STOPPED (~10 credits, four days; no spend without fresh approval).
@@ -19,9 +19,10 @@
 - Runtime metadata: 77 frames, 15 animations, 112x80, pivot [56,76], faces right. Fable's 92 hero_v2 cutouts are a DIFFERENT unwired, unapproved set.
 - Aseprite MCP round-trip verified: opened the custom 112x80 6-layer ASE, added a layer, re-read 7 layers. Native Aseprite `1.x-eccf4ec-dev` GUI launch tested; `build/bin/data` present.
 - Animation input bbox 40,6,66,76 at 112x80; alpha binary; 64x64 variant bbox 22,5,43,61.
+- `pandora_sheet/rig/sheet/`: 77 frames, counts match runtime, every frame 112x80, sheet 1792x1200, meta `sheet_meta.json`; segmentation composite has 0 missing pixels.
 
 ## Next steps
-1. Get the user's tool choice and API key (PixelLab or Retro Diffusion). Generate ONE idle motion test from `anim_input/pandora_base_112x80.png`, review frames at 1x and enlarged, then expand only after approval. The hand-coded/generated drafts are rejected, not conversions. No Rodin/runtime switch.
+1. Review `pandora_sheet/rig/sheet/pandora_sheet.png` with the user. If approved, refine the weakest clips (attack reach, dead heap, foot contact) and then wire the sheet only under a separate runtime approval. The sheet is cutout-style, not hand-drawn.
 2. After base approval, quote the complete 77-frame / 15-animation sheet and agree its budget in THIS session. Use a motion pilot before full expansion; native Aseprite cleanup allowed. Strips/GIFs at 1x, both directions, fixed pivot, anticipation/contact/recovery; no duplicated padding. 3D rig/cloth repair is OPTIONAL support, not a required detour for a 2D-first route.
 3. Recover remaining 23 already-paid jobs from ledger using Hyper3D MCP result links; prefer packed `base_basic_pbr.glb` (rig clips are inside it). Validate glTF/header/hash; keep signed URLs out of repo. No need to hurry or pay again.
 4. Review proposed `DEMO-TARGET.md` with user: intro → hound/moth lesson → relic BEFORE shaft → return loop → Mourning Bell climax. Two enemies, one boss; not all bank content. Validate existing progression gates before designing around them.
@@ -49,4 +50,4 @@ From the PATCH worktree, run `git status --short`, then read this handoff and `.
 
 ## Final checkpoint / preview verdict
 - Final CI 5/5; all 30 source hashes verified. Bank `e7e76f4` and previews/handoff `429eedb` both PUSHED (remote confirmed after timeout retry), no merge. Rejected first-pass and identical authoring.blend duplicate deliberately retained untracked.
-- Old 3D study and all hand-coded/generated 2D attempts rejected. Aseprite MCP + native Windows Aseprite fixed; animation input and PixelLab client ready. Waiting on user's tool choice; no full-sheet work started. Historical base-phase LLM increment ~$1.3404; image fee separate/unknown.
+- Cutout sheet generated from the user's sprite: 77 frames/15 clips, validated against the runtime contract. Aseprite MCP + native build fixed. RD API test failed insufficient_balance (refunded); user chose cutout. User visual approval and any runtime wiring remain separate.
