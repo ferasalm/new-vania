@@ -99,6 +99,10 @@ func _label(text: String, y: float, font: int, color: Color) -> Label:
 	return l
 
 
+var _nav_was := true     # start "held" so a button already down at death needs a fresh press
+var _ok_was := true
+
+
 func ask() -> String:
 	# shows the screen and waits for the choice: "reconstruct" or "quit"
 	active = true
@@ -106,6 +110,8 @@ func ask() -> String:
 	_pick = 0
 	_t = 0.0
 	_ready_t = 0.9      # a held attack button must not pick at once
+	_nav_was = true
+	_ok_was = true
 	_box.modulate.a = 0.0
 	_mat.set_shader_parameter("amount", 0.0)
 	var tw := create_tween()
@@ -143,10 +149,18 @@ func _process(delta: float) -> void:
 	for i in _btns.size():
 		_btns[i].modulate = Color(1, 1, 1, 1) if i == _pick else Color(0.6, 0.6, 0.6, 0.85)
 		_btns[i].text = ("> %s <" if i == _pick else "%s") % ["RECONSTRUCT", "QUIT"][i]
+	# own edge check (up -> down) instead of is_action_just_pressed: a press made during a
+	# physics step can fall between two drawn frames and be missed in a window
+	var nav := Input.is_action_pressed("up") or Input.is_action_pressed("down")
+	var ok := Input.is_action_pressed("attack") or Input.is_action_pressed("jump")
+	var nav_edge := nav and not _nav_was
+	var ok_edge := ok and not _ok_was
+	_nav_was = nav
+	_ok_was = ok
 	if not active:
 		return
-	if Input.is_action_just_pressed("up") or Input.is_action_just_pressed("down"):
+	if nav_edge:
 		_pick = 1 - _pick
 		Sfx.play("no_energy", 1.4)
-	if Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("jump"):
+	if ok_edge:
 		_choose(_pick)

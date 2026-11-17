@@ -376,6 +376,9 @@ func _run() -> void:
 	await _frames(130)
 	_check("death shows SYSTEM OFFLINE", main.offline.active and main.offline.visible, "")
 	await _shot("15_offline")
+	# the screen ignores presses for its first 0.9 s (real time); a windowed run gets here sooner
+	while main.offline._ready_t > 0.0:
+		await _frames(1)
 	await _tap("attack", 2)
 	await _frames(200)
 	G.peace = true
