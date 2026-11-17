@@ -40,7 +40,7 @@ The buttons sit in a diamond under the right thumb, like Bloodstained: Ritual of
 | JUMP | hold = high jump, tap = hop. At a wall, with the stick held toward it, JUMP makes her cling (needs the GRIP SERVOS relic); JUMP again kicks her away |
 | SPEC | the special (the keyboard's Up + Attack): blade wave with Dirge-042, the Requiem with Elegy-013 |
 | SWAP | Dirge-042 / Elegy-013 |
-| BACK | backdash (the accessibility direct press; the double-tap-back stick gesture also works) |
+| <BD / BD> | backdash to the left / to the right (the double-tap-back stick gesture also works) |
 | CACHE bubble | heal and save at the brain cache station; it appears next to it when she is close |
 | Pause (top-right corner) | resume, restart, jump to one of the six rooms, RECONSTRUCT, or QUIT |
 | Pause > CONTROLS | drag buttons and the stick; SMALLER / BIGGER and FAINTER / SOLID for a tapped button; stick "floats" or "fixed"; RESET; DONE saves. Remembered on the phone |

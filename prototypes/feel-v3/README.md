@@ -23,7 +23,8 @@ sheet in `assets/references/` (they are not stored in the repository, see "Art")
 | `J` and `I` | attack - right hand, left hand; alternate for faster chains with Dirge-042 (with Elegy-013 both keys do the same heavy cut); works in the air |
 | `S` | crouch; `J` or `I` while crouching is a low attack |
 | `W` + `J` | the special (Up + Attack): a blade wave with Dirge-042 (costs MP); the Requiem with Elegy-013 |
-| `L` (or `Q`, Shift) | backdash |
+| `Q` (or `U`) / `L` (or `O`) | backdash to the left / to the right (she faces away from where she dashes) |
+| `S` + `K` (Down + Jump) | slide; on a thin platform it drops through instead |
 | `E` (or Tab) | swap weapon: Dirge-042 (fast short sword) / Elegy-013 (slow, strong, two-handed scythe) |
 | `W` at the brain cache station (middle of a save room) | heal fully and save |
 | `S` + `K` | drop through a thin ledge |
@@ -47,7 +48,7 @@ Touch controls (the prototype's take on `design/gdd/input-control-mapping.md`). 
 - **JUMP** - hold for a high jump, tap for a hop. At a wall, with the stick held toward it, JUMP makes her cling (needs the GRIP SERVOS relic); JUMP again kicks her away.
 - **SPEC** - the special (keyboard's Up + Attack): a blade wave with Dirge-042, the Requiem with Elegy-013.
 - **SWAP** - Dirge-042 / Elegy-013.
-- **BACK** - the accessibility direct backdash press.
+- **<BD / BD>** - backdash to the left / to the right.
 - **CACHE bubble** - appears at the brain cache station; tap it to heal and save.
 - **Pause** (top-right corner) - resume, restart, or jump straight to one of the six rooms. It also has RECONSTRUCT and QUIT.
 - **Pause > CONTROLS** - drag any button or the stick to a new place. Tap a button, then SMALLER / BIGGER sets its size and FAINTER / SOLID how see-through it is. Switch the stick between "floats" (appears under the thumb) and "fixed". RESET goes back; DONE saves. The layout is remembered on the phone.

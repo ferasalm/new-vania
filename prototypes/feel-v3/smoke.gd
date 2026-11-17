@@ -130,6 +130,46 @@ func _run() -> void:
 	Input.action_release("down")
 	await _frames(40)
 
+	# backdash: two buttons, one per direction; her back points where she dashes
+	p.global_position = Vector2(main.room.size.x * 0.5, main.room.spawns["P"].y)
+	p.velocity = Vector2.ZERO
+	await _frames(10)
+	var x_bd: float = p.global_position.x
+	await _tap("backdash_left", 2)
+	await _frames(int(T.v("backdash_time") * 60.0) + 6)
+	_check("backdash left moves her left and she faces right", p.global_position.x < x_bd - 20.0 and p.facing == 1,
+		"x %.0f -> %.0f facing=%d" % [x_bd, p.global_position.x, p.facing])
+	p.global_position = Vector2(main.room.size.x * 0.5, main.room.spawns["P"].y)
+	p.velocity = Vector2.ZERO
+	p.facing = 1
+	await _frames(10)
+	x_bd = p.global_position.x
+	await _tap("backdash_right", 2)
+	await _frames(int(T.v("backdash_time") * 60.0) + 6)
+	_check("backdash right moves her right and she faces left", p.global_position.x > x_bd + 20.0 and p.facing == -1,
+		"x %.0f -> %.0f facing=%d" % [x_bd, p.global_position.x, p.facing])
+
+	# slide: Down + Jump on solid floor, a low box while it lasts, then she stands up
+	p.global_position = Vector2(main.room.size.x * 0.5, main.room.spawns["P"].y)
+	p.velocity = Vector2.ZERO
+	p.facing = -1
+	await _frames(10)
+	var x_sl: float = p.global_position.x
+	Input.action_press("down")
+	await _frames(8)
+	Input.action_press("jump")
+	await _frames(2)
+	Input.action_release("jump")
+	await _frames(4)
+	var slide_state: String = p.state
+	var slide_h: float = p.body_rect().size.y
+	await _frames(int(T.v("slide_time") * 60.0) + 10)
+	_check("Down + Jump on solid floor slides", slide_state == "slide" and slide_h <= T.v("slide_height") and x_sl - p.global_position.x > 30.0,
+		"state=%s height=%.0f moved=%.0f" % [slide_state, slide_h, x_sl - p.global_position.x])
+	_check("the slide ends standing when there is room", p._rect.size.y == p.BODY.y, "shape height=%.0f" % p._rect.size.y)
+	Input.action_release("down")
+	await _frames(10)
+
 	# the weapon is on screen at the end of the cut, for both weapons
 	for w in 2:
 		T.set_v("weapon", float(w))
@@ -201,6 +241,9 @@ func _run() -> void:
 	Input.action_release("up")
 	await _frames(int(T.v("elegy_special_time") * 60.0 * 0.4))
 	_check("Elegy special spins the scythe and costs its own MP", p.state == "attack" and p._arm.visible and p.mp == T.v("mp_max") - T.v("elegy_special_cost"), "mp=%.0f" % p.mp)
+	_check("the Requiem reaches farther", absf(p._blade.position.length() - T.v("elegy_special_radius")) < 1.0
+		and is_equal_approx(p._blade.scale.x, T.v("elegy_special_size")),
+		"reach=%.1f scale=%.2f" % [p._blade.position.length(), p._blade.scale.x])
 	await _shot("6_requiem")
 	await _frames(int(T.v("elegy_special_time") * 60.0) + 10)
 	T.set_v("weapon", 0.0)
@@ -295,6 +338,15 @@ func _run() -> void:
 	_check("jump kicks her off the wall, up and away", p.velocity.x < -50.0 and p.velocity.y < 0.0, "vel=%s" % str(p.velocity))
 	await _frames(40)
 	Input.action_release("right")
+	# one latch per jump: back at the same wall in the air, she cannot grab again
+	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
+	p.velocity = Vector2(0, 20.0)
+	Input.action_press("right")
+	await _frames(6)
+	_check("only one wall latch per jump", p.state != "wall", "state=%s latches=%d" % [p.state, p._air_latches])
+	Input.action_release("right")
+	await _frames(90)
+	_check("landing gives the wall latch back", p._air_latches == 0, "latches=%d on_floor=%s" % [p._air_latches, str(p.is_on_floor())])
 	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
 	p.velocity = Vector2.ZERO
 	Input.action_press("right")

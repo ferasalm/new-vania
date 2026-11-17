@@ -11,7 +11,8 @@ const KEYS := {
 	"jump": [KEY_K, KEY_SPACE],
 	"attack": [KEY_J],
 	"attack2": [KEY_I],
-	"backdash": [KEY_L, KEY_Q, KEY_SHIFT],
+	"backdash_left": [KEY_Q, KEY_U],
+	"backdash_right": [KEY_L, KEY_O],
 	"swap": [KEY_E, KEY_TAB],
 	"tuning": [KEY_F1],
 	"restart": [KEY_R],
@@ -22,8 +23,8 @@ const PAD := {
 	"left": [JOY_BUTTON_DPAD_LEFT], "right": [JOY_BUTTON_DPAD_RIGHT],
 	"up": [JOY_BUTTON_DPAD_UP], "down": [JOY_BUTTON_DPAD_DOWN],
 	"jump": [JOY_BUTTON_A], "attack": [JOY_BUTTON_X], "attack2": [JOY_BUTTON_Y],
-	"backdash": [JOY_BUTTON_B, JOY_BUTTON_LEFT_SHOULDER],
-	"swap": [JOY_BUTTON_RIGHT_SHOULDER],
+	"backdash_left": [JOY_BUTTON_LEFT_SHOULDER], "backdash_right": [JOY_BUTTON_RIGHT_SHOULDER],
+	"swap": [JOY_BUTTON_B],
 	"pause": [JOY_BUTTON_START],
 }
 

@@ -331,8 +331,8 @@ func _phase1() -> void:
 	_check("editor: with the stick picked, BIGGER changes nothing (the stick has one size)", is_equal_approx(_btn(t, "jump")["r"], r_before), "")
 	await _drag(Vector2(366, 14), Vector2(300, 60))
 	_check("editor: the pause button can be dragged too", _btn(t, "pause")["pos"].distance_to(Vector2(300, 60)) < 1.0, "pos=%s" % str(_btn(t, "pause")["pos"]))
-	await _drag(Vector2(358, 152), Vector2(500, 300))
-	_check("editor: a control dragged past the corner stays whole on the screen", _btn(t, "backdash")["pos"] == Vector2(366, 198), "pos=%s" % str(_btn(t, "backdash")["pos"]))
+	await _drag(Vector2(366, 172), Vector2(500, 300))
+	_check("editor: a control dragged past the corner stays whole on the screen", _btn(t, "backdash_right")["pos"] == Vector2(369, 201), "pos=%s" % str(_btn(t, "backdash_right")["pos"]))
 	await _press(t._edit_bar, "FAINTER")
 	await _press(t._edit_bar, "FAINTER")
 	_check("editor: FAINTER twice fades 1.00 -> 0.70", is_equal_approx(t.see, 0.7), "see=%.2f" % t.see)
@@ -375,7 +375,7 @@ func _phase2() -> void:
 	var t = main.touch
 	_check("restart: the saved layout file is read back", _btn(t, "attack")["pos"] == Vector2(200, 100) and is_equal_approx(_btn(t, "attack")["r"], 22.0)
 		and is_equal_approx(_btn(t, "jump")["r"], 18.0) and t.rest == Vector2(100, 120) and t.fixed_stick and is_equal_approx(t.see, 0.7)
-		and _btn(t, "pause")["pos"] == Vector2(300, 60) and _btn(t, "backdash")["pos"] == Vector2(366, 198),
+		and _btn(t, "pause")["pos"] == Vector2(300, 60) and _btn(t, "backdash_right")["pos"] == Vector2(369, 201),
 		"ATK %s r=%.0f  stick %s fixed=%s see=%.2f" % [str(_btn(t, "attack")["pos"]), _btn(t, "attack")["r"], str(t.rest), str(t.fixed_stick), t.see])
 	await _shot("restart_play")
 	if t.active:

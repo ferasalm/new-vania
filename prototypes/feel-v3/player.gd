@@ -1,7 +1,8 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# The hero's body: run, jump (hold = high, tap = hop), crouch, backdash, two
-# attacks that look different, a low attack while crouching, a special attack
-# on Up + Attack, a short flinch when hit. No knockdown, no counter.
+# The hero's body: run, jump (hold = high, tap = hop), crouch, slide, two
+# backdashes (one per direction), two attacks that look different, a low attack
+# while crouching, a special attack on Up + Attack, a short flinch when hit.
+# No knockdown, no counter.
 # Weapons: ONE weapon, equipped in both hands (the plan agreed with the user, like
 # Order of Ecclesia). J swings the right hand, I the left; the weapon itself appears
 # in the swinging hand, sweeps through the cut, is held out at the end of the arc
@@ -32,7 +33,7 @@ const SWINGS := {
 }
 
 var facing := 1
-var state := "move"   # move | crouch | attack | backdash | hurt | wall | dead
+var state := "move"   # move | crouch | slide | attack | backdash | hurt | wall | dead
 var hp := 100.0
 var energy := 100.0
 var mp := 60.0
@@ -64,6 +65,11 @@ var _was_floor := true
 var _wall_t := 0.0          # seconds left of the wall latch
 var _wall_dir := 0          # which side the wall is on: -1 left, 1 right
 var _latch_cd := 0.0
+var _air_latches := 0       # latches used since her feet last touched the floor
+var _slide_t := 0.0         # seconds spent sliding
+var _slide_cd := 0.0
+var _shape: CollisionShape2D
+var _rect: RectangleShape2D
 var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
 var _kick_t := 0.0          # seconds left of the kick-off picture after a wall jump
 var _kicked := false        # rising from a wall jump: letting go of jump does not cut it short
@@ -85,10 +91,12 @@ func _ready() -> void:
 	shape.shape = rect
 	shape.position = Vector2(0, -BODY.y / 2.0)
 	add_child(shape)
-	_spr = G.sprite("hero", {"idle": 7.0, "run": 20.0, "crouch": 18.0, "backdash": 16.0, "hurt": 8.0,
+	_shape = shape
+	_rect = rect
+	_spr = G.sprite("hero", {"idle": 7.0, "run": 10.0, "crouch": 18.0, "backdash": 16.0, "slide": 14.0, "hurt": 8.0,
 		"cast": 12.0, "dead": 7.0, "rise": 8.0, "turn": 16.0, "dash": 16.0},
 		["jump", "land", "crouch", "attack", "attack2", "crouchatk", "crouchatk2",
-		"airatk", "airatk2", "backdash", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"])
+		"airatk", "airatk2", "backdash", "slide", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"])
 	_fit_swings()
 	var feet: Array = G.frames["hero"]["feet"]
 	_spr.position = -Vector2(feet[0], feet[1])   # her feet sit on this node
@@ -109,12 +117,12 @@ func _ready() -> void:
 
 
 func is_low() -> bool:
-	return state == "crouch" or (state == "attack" and _attack_kind == "crouch")
+	return state == "slide" or state == "crouch" or (state == "attack" and _attack_kind == "crouch")
 
 
 func body_rect() -> Rect2:
-	# the box enemies can hit; it is shorter while she crouches
-	var h := minf(BODY.y, T.v("crouch_height")) if is_low() else BODY.y
+	# the box enemies can hit; it is shorter while she crouches or slides
+	var h := minf(BODY.y, minf(T.v("crouch_height"), _rect.size.y)) if is_low() else BODY.y
 	return Rect2(global_position + Vector2(-BODY.x / 2.0, -h), Vector2(BODY.x, h))
 
 
@@ -152,6 +160,7 @@ func _physics_process(delta: float) -> void:
 		return
 	invuln = maxf(0.0, invuln - delta)
 	_dash_cd = maxf(0.0, _dash_cd - delta)
+	_slide_cd = maxf(0.0, _slide_cd - delta)
 	_latch_cd = maxf(0.0, _latch_cd - delta)
 	_steer_lock = maxf(0.0, _steer_lock - delta)
 	_kick_t = maxf(0.0, _kick_t - delta)
@@ -172,6 +181,10 @@ func _physics_process(delta: float) -> void:
 	_coyote = T.v("coyote_time") if on_floor else maxf(0.0, _coyote - delta)
 	if on_floor:
 		_kicked = false
+		_air_latches = 0
+	# she stands back up as soon as there is room, wherever the small box came from
+	if state != "slide" and state != "crouch" and _rect.size.y < BODY.y and _room_to_stand():
+		_set_body_height(BODY.y)
 	var dir := signf(Input.get_axis("left", "right")) if absf(Input.get_axis("left", "right")) > 0.3 else 0.0
 	if Input.is_action_just_pressed("jump"):
 		_jump_buf = maxf(T.v("jump_buffer"), 0.02)
@@ -182,25 +195,30 @@ func _physics_process(delta: float) -> void:
 			_steer(dir, run, on_floor)
 			if dir != 0.0:
 				facing = int(dir)
-			_try_jump()
-			if Input.is_action_just_pressed("swap"):
-				swap_weapon()
-			if _pressed_attack() != "" and _begin_attack(_pressed_attack()):
-				pass
-			elif Input.is_action_just_pressed("backdash") and on_floor:
-				_try_backdash()
-			elif on_floor and velocity.y >= 0.0 and Input.is_action_pressed("down"):
-				state = "crouch"
-				velocity.x = 0.0
-				_spr.play("crouch")      # she folds down over a few frames, then holds
-			elif _can_latch(dir, on_floor):
-				state = "wall"
-				_wall_dir = int(dir)
-				_wall_t = T.v("wall_latch_time")
-				facing = -_wall_dir      # she looks away from the wall, ready to kick off
-				velocity = Vector2(_wall_dir * 30.0, 0.0)
-				Sfx.play("land", 1.3)
-				G.main.dust(global_position + Vector2(_wall_dir * 6.0, -20.0), 2)
+			if _slide_ready(on_floor):
+				_start_slide()
+			else:
+				_try_jump()
+				var dash := _dash_pressed()
+				if Input.is_action_just_pressed("swap"):
+					swap_weapon()
+				if _pressed_attack() != "" and _begin_attack(_pressed_attack()):
+					pass
+				elif dash != 0 and on_floor:
+					_try_backdash(dash)
+				elif on_floor and velocity.y >= 0.0 and Input.is_action_pressed("down"):
+					state = "crouch"
+					velocity.x = 0.0
+					_spr.play("crouch")      # she folds down over a few frames, then holds
+				elif _can_latch(dir, on_floor):
+					state = "wall"
+					_wall_dir = int(dir)
+					_wall_t = T.v("wall_latch_time")
+					_air_latches += 1
+					facing = -_wall_dir      # she looks away from the wall, ready to kick off
+					velocity = Vector2(_wall_dir * 30.0, 0.0)
+					Sfx.play("land", 1.3)
+					G.main.dust(global_position + Vector2(_wall_dir * 6.0, -20.0), 2)
 		"wall":
 			# the latch does not last: she slides slowly, then her grip gives out
 			_wall_t -= delta
@@ -227,12 +245,17 @@ func _physics_process(delta: float) -> void:
 			velocity.x = 0.0
 			if dir != 0.0:
 				facing = int(dir)
+			if _rect.size.y < BODY.y and _room_to_stand():
+				_set_body_height(BODY.y)      # she can stand up again
 			if _jump_buf > 0.0:
-				state = "move"
-				_try_jump()      # Down + Jump on a thin platform drops through it
+				if Input.is_action_pressed("down") and not _on_ledge() and _slide_cd <= 0.0:
+					_start_slide()
+				else:
+					state = "move"
+					_try_jump()      # Down + Jump on a thin platform drops through it
 			elif _pressed_attack() != "" and _begin_attack(_pressed_attack()):
 				pass
-			elif Input.is_action_just_pressed("backdash") and _try_backdash():
+			elif _dash_pressed() != 0 and _try_backdash(_dash_pressed()):
 				pass
 			elif not on_floor or not Input.is_action_pressed("down"):
 				state = "move"
@@ -260,6 +283,35 @@ func _physics_process(delta: float) -> void:
 			if _dash_t >= total:
 				state = "move"
 				_dash_cd = T.v("backdash_cooldown")
+		"slide":
+			_slide_t += delta
+			var total := T.v("slide_time")
+			velocity.x = facing * T.v("slide_speed") * (1.0 - 0.5 * minf(_slide_t, total) / total)
+			if _slide_t >= 0.08 and _jump_buf > 0.0 and on_floor and _room_to_stand():
+				# she can hop out of a slide, but only where she fits standing
+				_jump_buf = 0.0
+				_coyote = 0.0
+				_set_body_height(BODY.y)
+				state = "move"
+				velocity.y = -T.v("jump_velocity")
+				Sfx.play("jump")
+				G.main.dust(global_position, 3)
+			elif not on_floor:
+				# sliding off an edge ends the slide
+				if _room_to_stand():
+					_set_body_height(BODY.y)
+				state = "move"
+				_slide_cd = T.v("slide_cooldown")
+			elif _slide_t >= total:
+				if _room_to_stand():
+					_set_body_height(BODY.y)
+					state = "crouch" if Input.is_action_pressed("down") else "move"
+					_slide_cd = T.v("slide_cooldown")
+				elif is_on_wall():
+					# a wall stops her; she stays low until there is room to stand
+					state = "crouch"
+					velocity.x = 0.0
+					_slide_cd = T.v("slide_cooldown")
 		"hurt":
 			_hurt_t -= delta
 			if _hurt_t <= 0.0:
@@ -300,6 +352,8 @@ func _can_latch(dir: float, on_floor: bool) -> bool:
 	# the wall latch is an ability she finds before the warden (main.has_latch)
 	if on_floor or dir == 0.0 or _latch_cd > 0.0 or not G.main.has_latch:
 		return false
+	if _air_latches >= int(T.v("wall_latches_per_air")):
+		return false
 	if velocity.y < -60.0 or not is_on_wall():
 		return false
 	return signf(get_wall_normal().x) == -dir
@@ -330,12 +384,36 @@ func _on_ledge() -> bool:
 	return false
 
 
+func _slide_ready(on_floor: bool) -> bool:
+	# Down + Jump on solid ground starts a slide; on a thin platform it still drops through
+	return on_floor and _jump_buf > 0.0 and Input.is_action_pressed("down") and _slide_cd <= 0.0 and not _on_ledge()
+
+
+func _set_body_height(h: float) -> void:
+	# keeps her feet where they are and moves the top of the box down
+	_rect.size = Vector2(BODY.x, h)
+	_shape.position = Vector2(0, -h / 2.0)
+
+
+func _room_to_stand() -> bool:
+	return not test_move(global_transform, Vector2(0, -(BODY.y - T.v("slide_height"))))
+
+
 func _pressed_attack() -> String:
 	if Input.is_action_just_pressed("attack"):
 		return "attack"
 	if Input.is_action_just_pressed("attack2"):
 		return "attack2"
 	return ""
+
+
+func _dash_pressed() -> int:
+	# two backdash buttons: left dashes left, right dashes right
+	if Input.is_action_just_pressed("backdash_left"):
+		return -1
+	if Input.is_action_just_pressed("backdash_right"):
+		return 1
+	return 0
 
 
 func _spend_energy(cost: float) -> bool:
@@ -414,11 +492,16 @@ func _start_attack(btn: String, kind: String) -> void:
 	var w: Dictionary = WEAPONS[1 if _is_elegy() else 0]
 	_blade.texture = G.tex(w["tex"])
 	_blade.offset = -w["grip"]
+	_blade.scale = Vector2.ONE
 	_blade_len = _blade.texture.get_width() - w["grip"].x
 	_swing = _swings[pose + "_" + hand].duplicate()
 	if kind == "special":
-		# Elegy's special, the Requiem: the scythe turns twice all the way round her
-		_swing = {"at": Vector2(0, -26), "a0": -90.0, "a1": 630.0, "r0": 8.0, "r1": 8.0}
+		# Elegy's special, the Requiem: the scythe turns twice all the way round her,
+		# drawn bigger so it reaches farther (the cut follows the picture)
+		_swing = {"at": Vector2(0, -26), "a0": -90.0, "a1": 630.0,
+			"r0": T.v("elegy_special_radius"), "r1": T.v("elegy_special_radius")}
+		_blade.scale = Vector2.ONE * T.v("elegy_special_size")
+		_blade_len *= T.v("elegy_special_size")
 		_arm.visible = true
 		_prev_ang = deg_to_rad(-90.0)
 		_pose_weapon()
@@ -519,7 +602,7 @@ func _attack_step() -> void:
 		if _begin_attack(next):
 			return
 	if not _attack_air and _attack_t >= total * 0.5:
-		if Input.is_action_just_pressed("backdash") and _try_backdash():
+		if _dash_pressed() != 0 and _try_backdash(_dash_pressed()):
 			return
 		if _jump_buf > 0.0:
 			state = "move"
@@ -537,10 +620,11 @@ func _end_attack() -> void:
 	_attack_queued = ""
 
 
-func _try_backdash() -> bool:
+func _try_backdash(dash_dir: int) -> bool:
 	if _dash_cd > 0.0 or not _spend_energy(T.v("backdash_energy")):
 		return false
 	state = "backdash"
+	facing = -dash_dir      # her back points where she dashes
 	_spr.sprite_frames.set_animation_speed("backdash", 4.0 / maxf(0.05, T.v("backdash_time")))
 	_spr.play("backdash")
 	_dash_t = 0.0
@@ -549,6 +633,16 @@ func _try_backdash() -> bool:
 	Sfx.play("backdash")
 	G.main.dust(global_position, 3)
 	return true
+
+
+func _start_slide() -> void:
+	state = "slide"
+	_slide_t = 0.0
+	_jump_buf = 0.0
+	velocity.x = facing * T.v("slide_speed")
+	_set_body_height(T.v("slide_height"))
+	Sfx.play("backdash", 0.8)
+	G.main.dust(global_position, 2)
 
 
 func gain_mp(amount: float) -> void:
@@ -612,6 +706,13 @@ func _animate(on_floor: bool) -> void:
 		return
 	if _kick_t > 0.0 and not on_floor and state == "move" and _spr.sprite_frames.has_animation("walljump"):
 		_show("walljump", clampi(int((1.0 - _kick_t / KICK_SHOW) * 3.0), 0, 2))
+		return
+	if state == "slide":
+		if _spr.sprite_frames.has_animation("slide"):
+			if _spr.animation != "slide" or not _spr.is_playing():
+				_spr.play("slide")
+		else:
+			_show("crouch", _spr.sprite_frames.get_frame_count("crouch") - 1)
 		return
 	# these states started their own animation when they began
 	if state == "attack" or state == "backdash" or state == "hurt" or state == "crouch":

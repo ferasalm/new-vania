@@ -5,13 +5,15 @@
 # exists. Follows design/gdd/input-control-mapping.md where the prototype has
 # the verb: stick left 42%, crouch is the stick's down-zone (25 deg entry /
 # 45 deg exit, 90 ms hold guard), attack is the largest and innermost button,
-# jump sits above it, backdash is double-tap-back on the stick, and a small BACK
-# button is the a11y direct press. The save terminal gets a world-anchored bubble.
-# The buttons sit in a diamond under the right thumb (attack left, jump bottom,
-# backdash right, special top), the way Bloodstained: Ritual of the Night lays
-# them out on a phone. Pause > CONTROLS lets the player drag every button and the
-# stick anywhere, resize them, fade them and pick a floating or fixed stick; the
-# layout is kept in user://touch_layout.json.
+# jump sits above it, backdash is double-tap-back on the stick (a flick away
+# from where she looks dashes that way), and two small arrow buttons are the
+# a11y direct press: "<BD" dashes left and "BD>" dashes right. The save terminal
+# gets a world-anchored bubble. The buttons sit in a diamond under the right
+# thumb (attack left, jump bottom, the two backdash arrows right, special top),
+# the way Bloodstained: Ritual of the Night lays them out on a phone. Pause >
+# CONTROLS lets the player drag every button and the stick anywhere, resize
+# them, fade them and pick a floating or fixed stick; the layout is kept in
+# user://touch_layout.json.
 extends Control
 
 const VIEW := Vector2(384, 216)
@@ -32,7 +34,8 @@ const BUBBLE_R := 22.0
 const DEFAULT_BTN := [
 	{"id": "attack", "pos": Vector2(286, 152), "r": 20.0, "label": "ATK", "size": 8},
 	{"id": "jump", "pos": Vector2(322, 184), "r": 20.0, "label": "JUMP", "size": 8},
-	{"id": "backdash", "pos": Vector2(358, 152), "r": 18.0, "label": "BACK", "size": 7},
+	{"id": "backdash_left", "pos": Vector2(355, 133), "r": 15.0, "label": "<BD", "size": 6},
+	{"id": "backdash_right", "pos": Vector2(366, 172), "r": 15.0, "label": "BD>", "size": 6},
 	{"id": "special", "pos": Vector2(322, 120), "r": 18.0, "label": "SPEC", "size": 7},
 	{"id": "swap", "pos": Vector2(250, 196), "r": 13.0, "label": "SWAP", "size": 6},
 	{"id": "pause", "pos": Vector2(366, 14), "r": 10.0, "label": "", "size": 6},
@@ -270,7 +273,8 @@ func _backdash_check() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	if _back_t >= 0.0 and now - _back_t <= BACK_WINDOW:
 		_back_t = -1.0
-		_tap("backdash")
+		# a flick away from where she looks = a dash that way
+		_tap("backdash_left" if float(p.facing) == 1.0 else "backdash_right")
 	else:
 		_back_t = now
 
@@ -294,8 +298,10 @@ func _button_down(id: String) -> void:
 			_release_soon(["up", "attack"])
 		"swap":
 			_tap("swap")
-		"backdash":
-			_tap("backdash")
+		"backdash_left":
+			_tap("backdash_left")
+		"backdash_right":
+			_tap("backdash_right")
 		"pause":
 			_pause()
 
@@ -318,7 +324,7 @@ func _release_soon(actions: Array) -> void:
 
 
 func _release_all() -> void:
-	for a in ["left", "right", "down", "jump", "attack", "attack2", "up", "backdash", "swap"]:
+	for a in ["left", "right", "down", "jump", "attack", "attack2", "up", "backdash_left", "backdash_right", "swap"]:
 		Input.action_release(a)
 	_stick_id = -1
 	_vec = Vector2.ZERO
@@ -377,6 +383,9 @@ func _load_layout() -> void:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return
 	var saved_btn: Dictionary = parsed.get("btn", {})
+	# only ids this build knows are read: an old saved entry for the single
+	# backdash button is ignored, and a button the file does not mention keeps
+	# the default position it has now
 	for b in BTN:
 		var got = saved_btn.get(b["id"], null)
 		if typeof(got) == TYPE_ARRAY and got.size() == 3:

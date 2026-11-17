@@ -79,6 +79,38 @@
     "label": "Backdash safety",
     "help": "Seconds at the start of a backdash where nothing can hurt her."
   },
+  "slide_speed": {
+    "value": 260.0,
+    "min": 120.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Slide speed",
+    "help": "How fast she starts a slide. She slows to half of this by the end."
+  },
+  "slide_time": {
+    "value": 0.4,
+    "min": 0.15,
+    "max": 0.9,
+    "step": 0.05,
+    "label": "Slide length",
+    "help": "How long one slide lasts, in seconds."
+  },
+  "slide_height": {
+    "value": 16.0,
+    "min": 10.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Slide height",
+    "help": "How tall she is while sliding. Gaps lower than her standing height but taller than this can be slid under."
+  },
+  "slide_cooldown": {
+    "value": 0.15,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Slide wait",
+    "help": "Wait before the next slide. 0 = chain them freely."
+  },
   "attack_time": {
     "value": 0.4,
     "min": 0.12,
@@ -835,6 +867,22 @@
     "label": "Elegy special: how long it lasts",
     "help": "Seconds the scythe spins. She cannot be knocked out of it."
   },
+  "elegy_special_radius": {
+    "value": 22.0,
+    "min": 4.0,
+    "max": 48.0,
+    "step": 1.0,
+    "label": "Elegy special: reach",
+    "help": "How far from her the scythe turns. The old value was 8."
+  },
+  "elegy_special_size": {
+    "value": 1.4,
+    "min": 1.0,
+    "max": 2.5,
+    "step": 0.05,
+    "label": "Elegy special: scythe size",
+    "help": "How much bigger the scythe is drawn during the spin; the cut follows the picture."
+  },
   "wall_latch_time": {
     "value": 1.2,
     "min": 0.3,
@@ -842,6 +890,14 @@
     "step": 0.1,
     "label": "Wall latch: how long she holds",
     "help": "Seconds she can cling to a wall before her grip gives out."
+  },
+  "wall_latches_per_air": {
+    "value": 1.0,
+    "min": 1.0,
+    "max": 5.0,
+    "step": 1.0,
+    "label": "Wall latch: latches per jump",
+    "help": "How many times she can grab a wall before she has to land again. 1 = one latch and one wall jump."
   },
   "wall_slide_speed": {
     "value": 22.0,

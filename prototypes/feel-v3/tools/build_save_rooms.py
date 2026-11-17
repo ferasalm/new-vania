@@ -8,9 +8,8 @@ middle, the terminal on the right. The left capsule holds a sleeping body; the
 one next to it is EMPTY - that is where a new Pandora is rebuilt.
 
   env/save_room.png   cache station 002: from save-room-v2.jpg, cold teal
-  env/save_room2.png  cache station 003 (before the boss): from
-                      save-room-cache-station-terminal.jpg, violet light,
-                      amber warning lamps
+  env/save_room2.png  cache station 003 (before the boss): the SAME painting
+                      (save-room-v2.jpg) under a violet filter, amber warning lamps
 """
 import os
 import numpy as np
@@ -113,4 +112,5 @@ def room(ref, name, look):
 
 if __name__ == "__main__":
     room("save-room-v2.jpg", "save_room.png", "teal")
-    room("save-room-cache-station-terminal.jpg", "save_room2.png", "violet")
+    # user 2026-11-17: the second room is the first room's picture under a violet filter
+    room("save-room-v2.jpg", "save_room2.png", "violet")

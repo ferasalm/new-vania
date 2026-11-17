@@ -52,7 +52,7 @@ func _ready() -> void:
 	_kills = _label("", Vector2(110, 9))
 	_weapon = _label("", Vector2(110, 18))
 	_weapon.modulate = Color("#7BE6F2")
-	_hint = _label("A/D move  S crouch  K jump  J/I attack  W+J special  L backdash  E weapon  Esc pause  F1 tune", Vector2(6, 203))
+	_hint = _label("A/D move  S crouch  K jump  J/I attack  W+J special  S+K slide  Q/L backdash left/right  E weapon  Esc pause  F1 tune", Vector2(6, 203))
 	_hint.modulate = Color(1, 1, 1, 0.55)
 	_banner = _centered(Vector2(0, 60), 16)
 	_toast = _centered(Vector2(0, 84), 8)
