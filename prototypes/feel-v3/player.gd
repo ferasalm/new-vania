@@ -68,6 +68,7 @@ var _latch_cd := 0.0
 var _air_latches := 0       # latches used since her feet last touched the floor
 var _slide_t := 0.0         # seconds spent sliding
 var _slide_cd := 0.0
+var _attack_elegy := false   # the weapon the current attack started with
 var _fx_t := 0.0            # time to the next spark/afterimage of a slide or Requiem
 var _shape: CollisionShape2D
 var _rect: RectangleShape2D
@@ -128,7 +129,10 @@ func body_rect() -> Rect2:
 
 
 func _is_elegy() -> bool:
-	# the weapon in hand: 0 = Dirge (one sword, both hands), 1 = Elegy (two-handed)
+	# the weapon in hand: 0 = Dirge (one sword, both hands), 1 = Elegy (two-handed).
+	# During an attack, the weapon it started with.
+	if state == "attack":
+		return _attack_elegy
 	return int(T.v("weapon")) == 1
 
 
@@ -148,7 +152,7 @@ func blade_points(from_ang: float, to_ang: float) -> PackedVector2Array:
 	for i in steps + 1:
 		var a := lerpf(from_ang, to_ang, float(i) / steps)
 		var d := Vector2(cos(a) * facing, sin(a))
-		var x := 0.0
+		var x := r
 		while x < tip:
 			pts.append(base + d * x)
 			x += 4.0
@@ -315,11 +319,14 @@ func _physics_process(delta: float) -> void:
 					_set_body_height(BODY.y)
 					state = "crouch" if Input.is_action_pressed("down") else "move"
 					_slide_cd = T.v("slide_cooldown")
+					if state == "crouch":
+						_show_crouched()
 				elif is_on_wall():
 					# a wall stops her; she stays low until there is room to stand
 					state = "crouch"
 					velocity.x = 0.0
 					_slide_cd = T.v("slide_cooldown")
+					_show_crouched()
 		"hurt":
 			_hurt_t -= delta
 			if _hurt_t <= 0.0:
@@ -404,7 +411,7 @@ func _set_body_height(h: float) -> void:
 
 
 func _room_to_stand() -> bool:
-	return not test_move(global_transform, Vector2(0, -(BODY.y - T.v("slide_height"))))
+	return not test_move(global_transform, Vector2(0, -(BODY.y - _rect.size.y)))
 
 
 func _pressed_attack() -> String:
@@ -475,6 +482,7 @@ func _attack_total() -> float:
 
 
 func _start_attack(btn: String, kind: String) -> void:
+	_attack_elegy = int(T.v("weapon")) == 1
 	state = "attack"
 	_attack_t = 0.0
 	_attack_btn = btn
@@ -749,6 +757,12 @@ func _animate(on_floor: bool) -> void:
 	else:
 		if _spr.animation != "idle" or not _spr.is_playing():
 			_spr.play("idle")
+
+
+func _show_crouched() -> void:
+	# a slide that ends low hands over to the held crouch picture (the crouch state does not
+	# start its own animation, so without this the last slide frame stayed on screen)
+	_show("crouch", _spr.sprite_frames.get_frame_count("crouch") - 1)
 
 
 func _fit_swings() -> void:

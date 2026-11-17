@@ -25,6 +25,14 @@ func _ready() -> void:
 	shots = args.has("shots")
 	tag = "touch" if args.has("touch") else "key"
 	G.peace = true
+	# phase 1 starts from the default layout: drop this test's own file left by an earlier run
+	# (never the player's file; phase 2 keeps what phase 1 saved)
+	if not args.has("phase=2"):
+		for a in args:
+			if a.begins_with("layout=") and a.get_file().length() > 7:
+				var f := "user://" + a.substr(7).get_file()
+				if f != "user://touch_layout.json" and FileAccess.file_exists(f):
+					DirAccess.remove_absolute(ProjectSettings.globalize_path(f))
 	main = load("res://main.tscn").instantiate()
 	add_child(main)
 	await _frames(40)

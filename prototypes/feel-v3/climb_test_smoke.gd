@@ -10,6 +10,11 @@ const Patch := preload("res://climb_test_patch.gd")
 
 
 func _ready() -> void:
+	# RETIRED 2026-11-17: player.gd already has these lines, so the patch no longer applies.
+	# Use smoke.tscn and climb_test.tscn instead.
+	print("climb_test_smoke: retired (its patch is already in player.gd); run smoke.tscn and climb_test.tscn")
+	get_tree().quit(0)
+	return
 	if not OS.get_cmdline_user_args().has("smokeonly"):
 		if not Patch.take_over("res://player.gd", Patch.PLAYER):
 			get_tree().quit(1)

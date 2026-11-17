@@ -19,8 +19,9 @@ func _ready() -> void:
 	add_child(main)
 	await _run()
 	# no checks at all means the game did not even load: that is a failure, not a pass
-	print("SMOKE %s  passed=%d failed=%d" % ["PASS" if failed == 0 and passed > 0 else "FAIL", passed, failed])
-	get_tree().quit(0 if failed == 0 else 1)
+	var ok := failed == 0 and passed > 0
+	print("SMOKE %s  passed=%d failed=%d" % ["PASS" if ok else "FAIL", passed, failed])
+	get_tree().quit(0 if ok else 1)
 
 
 func _check(name: String, ok: bool, detail: String) -> void:
@@ -172,6 +173,8 @@ func _run() -> void:
 	_check("Down + Jump on solid floor slides", slide_state == "slide" and slide_h <= T.v("slide_height") and x_sl - p.global_position.x > 30.0,
 		"state=%s height=%.0f moved=%.0f" % [slide_state, slide_h, x_sl - p.global_position.x])
 	_check("the slide ends standing when there is room", p._rect.size.y == p.BODY.y, "shape height=%.0f" % p._rect.size.y)
+	_check("holding Down, the slide ends in the crouch picture (not stuck on the last slide frame)",
+		p.state == "crouch" and p._spr.animation == "crouch", "state=%s picture=%s" % [p.state, p._spr.animation])
 	Input.action_release("down")
 	await _frames(10)
 

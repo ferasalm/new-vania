@@ -45,6 +45,7 @@ const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "save": "CACHE 1
 
 var active := false
 var paused := false
+var _calm_facing := 1.0      # her facing before the current stick flick
 var blocked := false:        # the SYSTEM OFFLINE screen owns the fingers
 	set(v):
 		blocked = v
@@ -156,6 +157,11 @@ func _input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if not active or paused:
 		return
+	# where she faced before a flick: the flick itself turns her, so read it while the stick
+	# rests and no back-back gesture is half done
+	if G.main != null and G.main.player != null and absf(_vec.x) < BACK_FLICK * 0.5 \
+			and (_back_t < 0.0 or Time.get_ticks_msec() / 1000.0 - _back_t > BACK_WINDOW):
+		_calm_facing = float(G.main.player.facing)
 	if _stick_id >= 0:
 		_update_crouch(delta)
 	var near := _near_terminal()
@@ -268,13 +274,13 @@ func _backdash_check() -> void:
 	var p: Node = G.main.player if G.main != null else null
 	if p == null:
 		return
-	if _vec.x * float(p.facing) > -BACK_FLICK or absf(_vec.x) < absf(_vec.y):
-		return
 	var now := Time.get_ticks_msec() / 1000.0
+	if _vec.x * _calm_facing > -BACK_FLICK or absf(_vec.x) < absf(_vec.y):
+		return
 	if _back_t >= 0.0 and now - _back_t <= BACK_WINDOW:
 		_back_t = -1.0
 		# a flick away from where she looks = a dash that way
-		_tap("backdash_left" if float(p.facing) == 1.0 else "backdash_right")
+		_tap("backdash_left" if _calm_facing == 1.0 else "backdash_right")
 	else:
 		_back_t = now
 

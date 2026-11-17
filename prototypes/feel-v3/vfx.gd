@@ -118,7 +118,7 @@ static func burst(at: Vector2, count: int, col: Color, angle: float, spread: flo
 		speed: Vector2, life: float, grav: float = 0.0, size: float = 1.0,
 		streak: float = 0.0, drag: float = 2.0) -> Vfx:
 	var v := _spawn(at)
-	var n := maxi(1, int(round(count * _amount())))
+	var n := maxi(0, int(round(count * _amount())))
 	for i in n:
 		var a := angle + randf_range(-spread, spread)
 		var sp := randf_range(speed.x, speed.y)
@@ -132,6 +132,8 @@ static func burst(at: Vector2, count: int, col: Color, angle: float, spread: flo
 ## An expanding ring; flat < 1 squashes it onto the floor.
 static func ring(at: Vector2, r0: float, r1: float, life: float, col: Color, flat: float = 1.0, w: float = 2.0) -> Vfx:
 	var v := _spawn(at)
+	if _amount() <= 0.0:
+		return v
 	v.rings.append({"r0": r0, "r1": r1, "life": life, "max": life, "col": col, "flat": flat, "w": w})
 	return v
 
@@ -139,7 +141,7 @@ static func ring(at: Vector2, r0: float, r1: float, life: float, col: Color, fla
 ## Light drawn in toward `at` from a circle round it, arriving after `life` seconds.
 static func gather(at: Vector2, radius: float, count: int, col: Color, life: float) -> Vfx:
 	var v := _spawn(at)
-	var n := maxi(1, int(round(count * _amount())))
+	var n := maxi(0, int(round(count * _amount())))
 	for i in n:
 		var a := randf() * TAU
 		var p := Vector2(cos(a), sin(a)) * radius * randf_range(0.7, 1.0)
@@ -152,7 +154,7 @@ static func gather(at: Vector2, radius: float, count: int, col: Color, life: flo
 ## Horizontal speed lines around a body moving in `dir` (-1 / 1).
 static func streaks(at: Vector2, dir: int, count: int, col: Color, height: float = 30.0) -> Vfx:
 	var v := _spawn(at)
-	var n := maxi(1, int(round(count * _amount())))
+	var n := maxi(0, int(round(count * _amount())))
 	for i in n:
 		var l := randf_range(0.12, 0.22)
 		v.parts.append({"p": Vector2(randf_range(-8, 8), -randf_range(2, height)), "v": Vector2(-dir * randf_range(60, 120), 0),
@@ -163,6 +165,8 @@ static func streaks(at: Vector2, dir: int, count: int, col: Color, height: float
 ## The seal under the Requiem.
 static func rune_circle(at: Vector2, radius: float, life: float, col: Color, spin: float) -> Vfx:
 	var v := _spawn(at)
+	if _amount() <= 0.0:
+		return v
 	v.rune = {"r": radius, "life": life, "max": life, "col": col, "spin": spin}
 	return v
 
@@ -183,7 +187,7 @@ void fragment() {
 
 ## A glowing silhouette of her current picture that fades where it was left.
 static func ghost(spr: AnimatedSprite2D, col: Color, life: float) -> void:
-	if G.main == null or G.main.world == null:
+	if G.main == null or G.main.world == null or _amount() <= 0.0:
 		return
 	var g := Sprite2D.new()
 	g.texture = spr.sprite_frames.get_frame_texture(spr.animation, spr.frame)
@@ -206,6 +210,8 @@ static func ghost(spr: AnimatedSprite2D, col: Color, life: float) -> void:
 
 ## Lights her up for a moment (a bright tint that settles back).
 static func charge(spr: CanvasItem, col: Color, life: float) -> void:
+	if _amount() <= 0.0:
+		return
 	spr.modulate = Color(1.0 + col.r, 1.0 + col.g, 1.0 + col.b)
 	var tw := spr.create_tween()
 	tw.tween_property(spr, "modulate", Color.WHITE, life)
@@ -248,7 +254,7 @@ static func backdash_start(feet: Vector2, dash_dir: int, spr: AnimatedSprite2D) 
 ## A line of light left on the floor behind a fast move.
 static func floor_trail(feet: Vector2, dir: int, col: Color) -> void:
 	var v := _spawn(feet + Vector2(0, -1))
-	var n := maxi(1, int(round(10 * _amount())))
+	var n := maxi(0, int(round(10 * _amount())))
 	for i in n:
 		var l := randf_range(0.25, 0.4)
 		v.parts.append({"p": Vector2(-dir * randf_range(0, 18), randf_range(-1, 0)), "v": Vector2(dir * randf_range(20, 70), 0),
