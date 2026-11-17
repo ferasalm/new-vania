@@ -137,9 +137,9 @@ func _run() -> void:
 	await _frames(10)
 	var x_bd: float = p.global_position.x
 	await _tap("backdash_left", 2)
-	await _frames(5)
+	await _frames(11)
 	await _shot("fx_backdash")
-	await _frames(int(T.v("backdash_time") * 60.0) + 1)
+	await _frames(int(T.v("backdash_time") * 60.0) - 5)
 	_check("backdash left moves her left and she faces right", p.global_position.x < x_bd - 20.0 and p.facing == 1,
 		"x %.0f -> %.0f facing=%d" % [x_bd, p.global_position.x, p.facing])
 	p.global_position = Vector2(main.room.size.x * 0.5, main.room.spawns["P"].y)

@@ -69,10 +69,15 @@ func _draw() -> void:
 		var c: Color = p["col"]
 		c.a = k
 		var s: float = maxf(1.0, round(p["size"] * (k if p["shrink"] else 1.0)))
+		var halo := c
+		halo.a = k * 0.28
 		if p["streak"] > 0.0:
 			var tail: Vector2 = p["v"].normalized() * p["streak"] * (0.4 + 0.6 * k)
+			draw_line(p["p"].round(), (p["p"] - tail).round(), halo, 3.0)
 			draw_line(p["p"].round(), (p["p"] - tail).round(), c, 1.0)
 		else:
+			var hs := s + 2.0
+			draw_rect(Rect2(p["p"].round() - Vector2(hs, hs) * 0.5, Vector2(hs, hs)), halo)
 			draw_rect(Rect2(p["p"].round() - Vector2(s, s) * 0.5, Vector2(s, s)), c)
 	for r in rings:
 		var k: float = 1.0 - r["life"] / r["max"]
@@ -90,7 +95,10 @@ func _draw() -> void:
 		c.a = 0.85 * fade
 		var R: float = rune["r"]
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.32))
-		draw_arc(Vector2.ZERO, R, 0.0, TAU, 48, c, 1.0)
+		var glow := c
+		glow.a *= 0.3
+		draw_arc(Vector2.ZERO, R, 0.0, TAU, 48, glow, 4.0)
+		draw_arc(Vector2.ZERO, R, 0.0, TAU, 48, c, 1.5)
 		var c2 := c
 		c2.a *= 0.6
 		draw_arc(Vector2.ZERO, R * 0.72, 0.0, TAU, 40, c2, 1.0)
@@ -159,7 +167,21 @@ static func rune_circle(at: Vector2, radius: float, life: float, col: Color, spi
 	return v
 
 
-## A glowing copy of her current picture that fades where it was left.
+static var _sil: Shader
+
+static func _silhouette() -> Shader:
+	if _sil == null:
+		_sil = Shader.new()
+		_sil.code = """shader_type canvas_item;
+render_mode blend_add;
+void fragment() {
+	float a = texture(TEXTURE, UV).a;
+	COLOR = vec4(COLOR.rgb * 1.8, a * COLOR.a);
+}"""
+	return _sil
+
+
+## A glowing silhouette of her current picture that fades where it was left.
 static func ghost(spr: AnimatedSprite2D, col: Color, life: float) -> void:
 	if G.main == null or G.main.world == null:
 		return
@@ -168,12 +190,15 @@ static func ghost(spr: AnimatedSprite2D, col: Color, life: float) -> void:
 	g.centered = false
 	g.flip_h = spr.flip_h
 	g.global_position = spr.global_position
-	var m := CanvasItemMaterial.new()
-	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	var m := ShaderMaterial.new()
+	m.shader = _silhouette()
 	g.material = m
-	g.modulate = col
-	g.z_index = -1
+	g.modulate = Color(col.r, col.g, col.b, col.a * 0.75)
 	G.main.world.add_child(g)
+	# on her layer, just behind her (z -1 hid it under the room picture)
+	var body := spr.get_parent()
+	if body != null and body.get_parent() == G.main.world:
+		G.main.world.move_child(g, body.get_index())
 	var tw := g.create_tween()
 	tw.tween_property(g, "modulate:a", 0.0, life).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(g.queue_free)
@@ -215,7 +240,19 @@ static func backdash_start(feet: Vector2, dash_dir: int, spr: AnimatedSprite2D) 
 	ring(feet + Vector2(-dash_dir * 2.0, 0), 2.0, 22.0, 0.3, CYAN, 0.22, 2.0)
 	burst(feet + Vector2(-dash_dir * 3.0, -1), 10, CYAN, PI if dash_dir > 0 else 0.0, 0.5, Vector2(70, 160), 0.3, 120.0, 1.0, 4.0)
 	burst(feet + Vector2(0, -1), 6, ICE, -PI / 2.0, 1.2, Vector2(20, 50), 0.35, 60.0, 2.0)
-	streaks(feet, dash_dir, 7, ICE, 34.0)
+	streaks(feet, dash_dir, 10, ICE, 40.0)
+	floor_trail(feet, dash_dir, CYAN)
+	ghost(spr, Color(ICE.r, ICE.g, ICE.b, 1.0), 0.35)
+
+
+## A line of light left on the floor behind a fast move.
+static func floor_trail(feet: Vector2, dir: int, col: Color) -> void:
+	var v := _spawn(feet + Vector2(0, -1))
+	var n := maxi(1, int(round(10 * _amount())))
+	for i in n:
+		var l := randf_range(0.25, 0.4)
+		v.parts.append({"p": Vector2(-dir * randf_range(0, 18), randf_range(-1, 0)), "v": Vector2(dir * randf_range(20, 70), 0),
+			"life": l, "max": l, "col": col.lerp(ICE, randf() * 0.4), "size": 1.0, "streak": randf_range(10, 22), "drag": 4.0, "grav": 0.0, "shrink": false})
 
 
 ## Backdash end: her heels skid and spit sparks.
@@ -228,20 +265,25 @@ static func backdash_end(feet: Vector2, dash_dir: int) -> void:
 static func slide_start(feet: Vector2, dir: int, spr: AnimatedSprite2D) -> void:
 	charge(spr, ICE * 0.7, 0.12)
 	ring(feet, 4.0, 30.0, 0.28, CYAN, 0.1, 2.0)
-	burst(feet + Vector2(-dir * 4.0, -1), 8, ICE, -PI / 2.0 - dir * 0.9, 0.5, Vector2(40, 90), 0.35, 160.0, 2.0)
+	burst(feet + Vector2(-dir * 4.0, -1), 12, ICE, -PI / 2.0 - dir * 0.9, 0.5, Vector2(40, 110), 0.35, 160.0, 2.0)
+	floor_trail(feet, dir, CYAN)
+	ghost(spr, Color(ICE.r, ICE.g, ICE.b, 1.0), 0.3)
 
 
 ## Every few frames while she slides: sparks off the heel, dust, streaks.
 static func slide_tick(feet: Vector2, dir: int) -> void:
-	burst(feet + Vector2(dir * 10.0, -1), 3, EMBER, -PI / 2.0 - dir * 1.25, 0.3, Vector2(70, 140), 0.25, 380.0, 1.0, 3.0)
+	burst(feet + Vector2(dir * 10.0, -1), 5, EMBER, -PI / 2.0 - dir * 1.25, 0.3, Vector2(70, 140), 0.25, 380.0, 1.0, 3.0)
 	burst(feet + Vector2(-dir * 6.0, -2), 2, Color(0.55, 0.6, 0.75), -PI / 2.0 - dir * 0.6, 0.6, Vector2(10, 30), 0.4, -10.0, 2.0)
-	streaks(feet, dir, 2, CYAN, 14.0)
+	streaks(feet, dir, 3, CYAN, 16.0)
+	floor_trail(feet, -dir, CYAN)
 
 
 ## Dirge special wind-up: light gathers into her hand.
 static func cast_gather(hand: Vector2, life: float) -> void:
-	gather(hand, 26.0, 18, CYAN, life)
-	gather(hand, 16.0, 8, VIOLET, life * 0.8)
+	gather(hand, 30.0, 28, CYAN, life)
+	gather(hand, 18.0, 12, VIOLET, life * 0.8)
+	ring(hand, 30.0, 3.0, life, CYAN, 1.0, 2.0)
+	ring(hand, 18.0, 2.0, life * 0.7, VIOLET, 1.0, 1.0)
 
 
 ## Dirge special release: burst, ring, flash.
