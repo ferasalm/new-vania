@@ -45,7 +45,8 @@ void fragment() {
 	} else if (mode == 2) {
 		vec3 inv = vec3(1.0) - c;
 		float il = dot(inv, vec3(0.299, 0.587, 0.114));
-		o = mix(inv, vec3(il) * vec3(1.3, 0.2, 0.15), 0.6);
+		// a dark blood-red negative: the dark room turns deep red, light things turn black
+		o = vec3(il * il * il) * vec3(0.75, 0.07, 0.06) + vec3(0.02, 0.0, 0.0);
 	} else if (mode == 3) {
 		o = vec3(lum) * vec3(0.55, 1.1, 0.4) + vec3(0.02, 0.07, 0.0);
 	} else if (mode == 4) {
