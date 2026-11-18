@@ -71,6 +71,16 @@ func tex(rel: String) -> Texture2D:
 	# with no import step falls back to the raw PNG.
 	if _tex.has(rel):
 		return _tex[rel]
+	# A double-detail version (assets/2x/<rel>, twice the pixels) wins when it exists.
+	# It keeps its world size: the wrapper reports half its pixel size and draws all of
+	# its pixels into that space, so the screen shows the extra detail.
+	if not rel.begins_with("2x/") and (ResourceLoader.exists("res://assets/2x/" + rel) or FileAccess.file_exists("res://assets/2x/" + rel)):
+		var hi := tex("2x/" + rel)
+		if hi != null:
+			var half := HalfTexture.new()
+			half.inner = hi
+			_tex[rel] = half
+			return half
 	# imported projects and exported builds: use the imported texture
 	var res_path := "res://assets/" + rel
 	var t: Texture2D = null
@@ -106,3 +116,31 @@ func sprite(set_name: String, fps: Dictionary, no_loop: Array = []) -> AnimatedS
 	s.sprite_frames = sf
 	s.centered = false
 	return s
+
+
+# A double-detail picture drawn at its world size: it reports half of its pixel size,
+# and every draw call maps the requested area onto all of its pixels.
+class HalfTexture extends Texture2D:
+	var inner: Texture2D
+
+	func _get_width() -> int:
+		return inner.get_width() / 2
+
+	func _get_height() -> int:
+		return inner.get_height() / 2
+
+	func _has_alpha() -> bool:
+		return true
+
+	func _is_pixel_opaque(x: int, y: int) -> bool:
+		return true
+
+	func _draw(to_canvas_item: RID, pos: Vector2, modulate: Color, transpose: bool) -> void:
+		RenderingServer.canvas_item_add_texture_rect(to_canvas_item, Rect2(pos, get_size()), inner.get_rid(), false, modulate, transpose)
+
+	func _draw_rect(to_canvas_item: RID, rect: Rect2, tile: bool, modulate: Color, transpose: bool) -> void:
+		RenderingServer.canvas_item_add_texture_rect(to_canvas_item, rect, inner.get_rid(), tile, modulate, transpose)
+
+	func _draw_rect_region(to_canvas_item: RID, rect: Rect2, src_rect: Rect2, modulate: Color, transpose: bool, clip_uv: bool) -> void:
+		RenderingServer.canvas_item_add_texture_rect_region(to_canvas_item, rect, inner.get_rid(),
+			Rect2(src_rect.position * 2.0, src_rect.size * 2.0), modulate, transpose, clip_uv)
