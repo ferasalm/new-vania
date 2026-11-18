@@ -8,6 +8,10 @@
 #   sweep  a hand slides along the floor from one wall to the other. Jump it.
 #   bolts  golden bolts fly across: chest height (crouch) then floor height (jump).
 #   clap   (second half) both hands rush together where you stand. Jump out; they stay stuck as a wide step.
+#   reap   a hand takes ELEGY-013 (the scythe it keeps), glows for a moment, and a huge slash crosses the
+#          room at chest height: crouch or slide under it. Every second reap is low: jump it.
+#   throw  a hand takes the scythe, glows, and throws it: it spins across at one height and comes back at
+#          another. Crouch the first pass, hop the second (or the other way round).
 # Under half health everything is quicker and the clap joins in.
 extends Node2D
 
@@ -31,6 +35,9 @@ var _cast := 0.0             # > 0 while the body glows before the bolts
 var _bolts: Array = []       # times left until each queued bolt: [wait, high?, dir]
 var _dying := 0.0
 var _home := Vector2.ZERO
+var _slash := {"on": false}  # the flying scythe or slash: x, dirx, h (height above the floor), kind, leg, spin, box
+var _reaps := 0              # how many reaps so far: every second one is low
+var _throws := 0
 
 
 func setup(feet: Vector2, room_size: Vector2) -> void:
@@ -139,6 +146,7 @@ func _physics_process(delta: float) -> void:
 		_hand(i, delta, player)
 	if started and not G.peace:
 		_think(delta, player)
+	_slash_step(delta, player)
 	_paint()
 	queue_redraw()
 
@@ -167,7 +175,8 @@ func _think(delta: float, player: Node2D) -> void:
 	_gap -= delta
 	if _gap > 0.0:
 		return
-	var plan: Array = ["slam", "bolts", "slam", "sweep"] if _phase == 1 else ["slam", "slam", "clap", "bolts", "sweep"]
+	var plan: Array = ["slam", "reap", "slam", "bolts", "throw", "sweep"] if _phase == 1 \
+		else ["slam", "reap", "clap", "bolts", "throw", "slam", "reap", "sweep"]
 	var act: String = plan[_cycle % plan.size()]
 	var quick := 1.0 if _phase == 1 else 0.7
 	if act == "bolts":
@@ -184,13 +193,30 @@ func _think(delta: float, player: Node2D) -> void:
 		_gap = T.v("boss_gap") * quick + 2.4
 	else:
 		var i := _free_hand()
-		if i < 0:
+		if i < 0 or (act in ["reap", "throw"] and _slash["on"]):
 			_gap = 0.3       # both hands are busy: look again in a moment
 			return
-		_hands[i]["state"] = "sweep_ready" if act == "sweep" else "track"
-		_hands[i]["t"] = 0.0
-		_hands[i]["dir"] = 1.0 if player.global_position.x > (left_x + right_x) / 2.0 else -1.0
-		_gap = T.v("boss_gap") * quick + (0.6 if act == "slam" else 1.2)
+		var h: Dictionary = _hands[i]
+		h["state"] = {"sweep": "sweep_ready", "reap": "reap_ready", "throw": "throw_ready"}.get(act, "track")
+		h["t"] = 0.0
+		h["dir"] = 1.0 if player.global_position.x > (left_x + right_x) / 2.0 else -1.0
+		if act == "reap":
+			# every second reap is low: the first is chest height (duck), the next is near the floor (jump)
+			h["low"] = _reaps % 2 == 1
+			_reaps += 1
+		elif act == "throw":
+			h["low"] = _throws % 2 == 1      # which height it goes out at; it comes back at the other
+			_throws += 1
+		var across := (right_x - left_x) / maxf(1.0, T.v("boss_reap_speed") * (1.0 if _phase == 1 else 1.3))
+		match act:
+			"slam":
+				_gap = T.v("boss_gap") * quick + 0.6
+			"reap":
+				_gap = T.v("boss_gap") * quick + T.v("boss_reap_warn") + across + 0.4
+			"throw":
+				_gap = T.v("boss_gap") * quick + T.v("boss_reap_warn") + 2.0 * (right_x - left_x) / maxf(1.0, T.v("boss_throw_speed") * (1.0 if _phase == 1 else 1.3)) + 0.4
+			_:
+				_gap = T.v("boss_gap") * quick + 1.2
 	_cycle += 1
 
 
@@ -238,6 +264,20 @@ func _hand(i: int, delta: float, player: Node2D) -> void:
 			s.position.x -= h["dir"] * T.v("boss_sweep_speed") * quick * delta
 			if s.position.x < left_x or s.position.x > right_x:
 				h["state"] = "rest"
+		"reap_ready", "throw_ready":
+			# the hand carries the scythe to the wall on her side and holds it up, glowing
+			var low: bool = h.get("low", false)
+			var band: float = T.v("boss_reap_low") if (low and h["state"] == "reap_ready") else T.v("boss_reap_high")
+			var start_h := Vector2(right_x if h["dir"] > 0.0 else left_x, floor_y - band - 14.0)
+			s.position = s.position.move_toward(start_h, 320.0 * delta)
+			if h["t"] >= T.v("boss_reap_warn") / quick + 0.25:
+				_launch(h)
+				h["state"] = "reap" if h["state"] == "reap_ready" else "throw"
+				h["t"] = 0.0
+		"reap", "throw":
+			# the hand lets go; it waits at the wall until the scythe is gone
+			if not _slash["on"]:
+				h["state"] = "rest"
 		"clap_ready":
 			var edge := Vector2(left_x if h["side"] < 0.0 else right_x, ground)
 			s.position = s.position.move_toward(edge, 300.0 * delta)
@@ -254,6 +294,51 @@ func _hand(i: int, delta: float, player: Node2D) -> void:
 	h["danger"] = danger
 	if danger and not G.peace and hand_rect(i).intersects(player.body_rect()):
 		player.take_hit(T.v("boss_damage"), s.position.x)
+
+
+func _launch(h: Dictionary) -> void:
+	# the scythe leaves the hand: a slash for the reap, the spinning scythe itself for the throw
+	var reap: bool = h["state"] == "reap_ready"
+	var low: bool = h.get("low", false)
+	var out_h: float = T.v("boss_reap_low") if low else T.v("boss_reap_high")
+	var back_h: float = T.v("boss_reap_high") if low else T.v("boss_reap_low")
+	_slash = {"on": true, "kind": "reap" if reap else "throw", "x": h["spr"].position.x, "dirx": -h["dir"],
+		"h": out_h, "h_back": back_h, "leg": 0, "spin": 0.0, "start_x": h["spr"].position.x, "box": Rect2()}
+	Sfx.play("special", 0.8)
+	Sfx.play_file("sfx/world/blade_swing.wav", -3.0, 0.8 if reap else 1.0)
+	G.main.shake(2.0, 0.2)
+
+
+func _slash_step(delta: float, player: Node2D) -> void:
+	if not _slash["on"]:
+		return
+	if not alive:
+		_slash["on"] = false
+		return
+	var quick := 1.0 if _phase == 1 else 1.3
+	var reap: bool = _slash["kind"] == "reap"
+	var speed: float = (T.v("boss_reap_speed") if reap else T.v("boss_throw_speed")) * quick
+	_slash["x"] += _slash["dirx"] * speed * delta
+	_slash["spin"] += delta * 16.0
+	var x: float = _slash["x"]
+	var thick: float = T.v("boss_reap_thick")
+	if reap:
+		if x < left_x - 60.0 or x > right_x + 60.0:
+			_slash["on"] = false
+	elif _slash["leg"] == 0:
+		if (_slash["dirx"] < 0.0 and x < left_x - 14.0) or (_slash["dirx"] > 0.0 and x > right_x + 14.0):
+			_slash["leg"] = 1       # at the far wall it turns and comes back at the other height
+			_slash["dirx"] = -_slash["dirx"]
+			_slash["h"] = _slash["h_back"]
+			G.main.shake(1.5, 0.12)
+			Sfx.play_file("sfx/world/blade_swing.wav", -6.0, 1.2)
+	elif (_slash["dirx"] > 0.0 and x > _slash["start_x"] + 40.0) or (_slash["dirx"] < 0.0 and x < _slash["start_x"] - 40.0):
+		_slash["on"] = false
+	var half_w := 38.0 if reap else 13.0
+	var box := Rect2(Vector2(x - half_w, floor_y - float(_slash["h"]) - thick / 2.0), Vector2(half_w * 2.0, thick))
+	_slash["box"] = box
+	if _slash["on"] and not G.peace and box.intersects(player.body_rect()):
+		player.take_hit(T.v("boss_damage"), x)
 
 
 func _stick(h: Dictionary) -> void:
@@ -277,7 +362,7 @@ func _die(delta: float) -> void:
 		Sfx.play("enemy_die", randf_range(0.6, 1.0))
 	queue_redraw()
 	if _dying <= 0.0:
-		G.main.boss_died()
+		G.main.boss_died(_body.position)
 		queue_free()
 
 
@@ -290,7 +375,8 @@ func _paint() -> void:
 	_body.modulate = c
 	for h in _hands:
 		var hc := Color.WHITE
-		var warn: bool = h["state"] == "hang" or h["state"] == "sweep_ready" or h["state"] == "clap_ready"
+		var warn: bool = h["state"] == "hang" or h["state"] == "sweep_ready" or h["state"] == "clap_ready" \
+			or h["state"] == "reap_ready" or h["state"] == "throw_ready"
 		if warn and int(h["t"] * 16.0) % 2 == 0:
 			hc = Color(2.4, 1.3, 0.6)
 		elif h["state"] == "stuck":
@@ -301,6 +387,7 @@ func _paint() -> void:
 func _draw() -> void:
 	if not alive:
 		return
+	_draw_scythe()
 	for h in _hands:
 		if h["state"] == "track" or h["state"] == "hang" or h["state"] == "fall":
 			# the landing mark
@@ -312,6 +399,46 @@ func _draw() -> void:
 			# an arrow: climb here
 			var p: Vector2 = h["spr"].position + Vector2(0, -HAND.y / 2.0 - 8.0 - absf(sin(_t * 5.0)) * 3.0)
 			draw_colored_polygon(PackedVector2Array([p + Vector2(-4, 0), p + Vector2(4, 0), p + Vector2(0, -5)]), Color(0.6, 1.0, 1.0, 0.9))
+
+
+func _draw_scythe() -> void:
+	# the scythe in a hand that is about to use it (scaled up, blinking), the lane it will cross
+	# at, and the flying slash or the spinning scythe
+	var tex := G.tex("weapon/elegy.png")
+	for h in _hands:
+		if h["state"] != "reap_ready" and h["state"] != "throw_ready":
+			continue
+		var reap: bool = h["state"] == "reap_ready"
+		var band: float = T.v("boss_reap_low") if (h.get("low", false) and reap) else T.v("boss_reap_high")
+		var blink := int(h["t"] * 16.0) % 2 == 0
+		var lane_a := 0.12 + (0.25 if blink else 0.0)
+		draw_rect(Rect2(left_x - 20.0, floor_y - band - T.v("boss_reap_thick") / 2.0, right_x - left_x + 40.0, T.v("boss_reap_thick")),
+			Color(1.0, 0.6, 0.2, lane_a))
+		var p: Vector2 = h["spr"].position
+		var face := -float(h["dir"])      # the way it will fly
+		draw_set_transform(p + Vector2(face * 6.0, -4.0), -0.35 * face, Vector2(2.2 * face, 2.2))
+		draw_texture(tex, -Vector2(10, 10), Color(2.4, 1.8, 0.7) if blink else Color(0.8, 1.0, 1.0))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if not _slash["on"]:
+		return
+	var box: Rect2 = _slash["box"]
+	var c := box.get_center()
+	if _slash["kind"] == "reap":
+		var d: float = _slash["dirx"]
+		var f := d * 38.0
+		draw_colored_polygon(PackedVector2Array([c + Vector2(f, 0), c + Vector2(f * 0.45, -box.size.y * 0.5 - 2.0),
+			c + Vector2(-f, -box.size.y * 0.5 - 9.0), c + Vector2(-f * 0.7, 0), c + Vector2(-f, box.size.y * 0.5 + 9.0),
+			c + Vector2(f * 0.45, box.size.y * 0.5 + 2.0)]), Color(1.0, 0.8, 0.35, 0.85))
+		draw_colored_polygon(PackedVector2Array([c + Vector2(f * 0.9, 0), c + Vector2(f * 0.4, -box.size.y * 0.25),
+			c + Vector2(-f * 0.4, 0), c + Vector2(f * 0.4, box.size.y * 0.25)]), Color(1.0, 1.0, 0.9, 0.95))
+		for k in range(1, 4):
+			draw_rect(Rect2(c.x - d * (40.0 + k * 14.0), c.y - 1.0, 12.0, 2.0), Color(1.0, 0.8, 0.4, 0.5 - 0.1 * k))
+	else:
+		draw_circle(c, 15.0, Color(1.0, 0.7, 0.3, 0.18))
+		draw_set_transform(c, _slash["spin"], Vector2(1.1, 1.1))
+		draw_texture(tex, -tex.get_size() / 2.0, Color(1.6, 1.3, 0.8))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		draw_rect(box, Color(1.0, 0.5, 0.2, 0.25), false, 1.0)
 
 
 # One hittable piece of the boss. The main scene treats it like an enemy that never

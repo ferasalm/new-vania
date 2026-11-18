@@ -577,6 +577,8 @@ func weapon_showing() -> bool:
 
 
 func swap_weapon() -> void:
+	if not G.main.has_elegy:
+		return          # she only carries Dirge-042 until the Pallbearer's scythe is hers
 	T.set_v("weapon", 0.0 if _is_elegy() else 1.0)
 	Sfx.play("pickup", 0.8)
 	G.main.hud.toast(weapon_name())
@@ -665,6 +667,12 @@ func _try_backdash(dash_dir: int) -> bool:
 	Sfx.play("backdash")
 	G.main.dust(global_position, 3)
 	return true
+
+
+func force_slide(dir: int) -> void:
+	# she is put into a low tunnel (arriving through an open edge): she starts sliding that way
+	facing = dir
+	_start_slide()
 
 
 func _start_slide() -> void:

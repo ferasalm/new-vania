@@ -8,6 +8,8 @@ var side := "right"
 var boss := false
 var to := ""              # the room behind it ("" = nowhere)
 var locked := false       # a locked door never opens (the boss room, during the fight)
+var sealed_msg := ""      # said (with a sound) once each time she walks into a door that cannot open
+var _said := false
 var open := 0.0           # 0 shut .. 1 fully open
 var _slab: Texture2D
 var _frame: Texture2D
@@ -46,6 +48,15 @@ func _physics_process(delta: float) -> void:
 	var near: bool = absf(p.global_position.x - feet().x) < T.v("door_open_distance") \
 		and absf(p.global_position.y - feet().y) < 40.0
 	var want := 1.0 if (near and not locked and to != "") else 0.0
+	if sealed_msg != "" and (locked or to == ""):
+		var dx: float = absf(p.global_position.x - feet().x)
+		if dx < 20.0 and absf(p.global_position.y - feet().y) < 30.0:
+			if not _said:
+				_said = true
+				Sfx.play_file("sfx/world/locked.wav", -4.0)
+				G.main.hud.toast(sealed_msg, 3.0)
+		elif dx > 44.0:
+			_said = false
 	var time := T.v("boss_door_time") if boss else T.v("door_time")
 	var before := open
 	open = move_toward(open, want, delta / maxf(0.05, time))

@@ -18,6 +18,7 @@ const KEYS := {
 	"restart": [KEY_R],
 	"pause": [KEY_ESCAPE, KEY_P],
 	"room1": [KEY_1], "room2": [KEY_2], "room3": [KEY_3], "room4": [KEY_4], "room5": [KEY_5], "room6": [KEY_6],
+	"room7": [KEY_7], "room8": [KEY_8], "room9": [KEY_9], "room10": [KEY_0],
 }
 const PAD := {
 	"left": [JOY_BUTTON_DPAD_LEFT], "right": [JOY_BUTTON_DPAD_RIGHT],
@@ -31,6 +32,7 @@ const PAD := {
 var hitstop := 0.0
 var main: Node = null
 var peace := false      # the self-test turns enemy aggression off
+var shifted := false    # the reality shift has happened: the world is mirrored and recoloured
 var frames := {}        # assets/frames.json
 var _tex := {}
 

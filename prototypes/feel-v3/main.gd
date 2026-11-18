@@ -4,6 +4,8 @@
 # effects (sparks, dust, numbers, shake, the short hit pause), every flying shot,
 # the special attack's blade wave, the blue MP orbs and the save terminal.
 # The way through: church -> library -> save room -> lab -> (boss door) -> sanctum.
+# Behind the church's lower door (opened by the library lever) lies the marrow well, the vault,
+# the threshing chapel and the time machine, whose switch turns the whole world inside out.
 extends Node2D
 
 const Room := preload("res://room.gd")
@@ -14,9 +16,15 @@ const Hud := preload("res://hud.gd")
 const TuningPanel := preload("res://tuning_panel.gd")
 const Touch := preload("res://touch.gd")
 const Offline := preload("res://offline.gd")
-const ROOMS := ["church", "library", "save", "lab", "save2", "boss"]
+const MachineDialog := preload("res://machine_dialog.gd")
+const ShiftFx := preload("res://shift.gd")
+const Props := preload("res://props.gd")
+const ROOMS := ["church", "library", "save", "lab", "save2", "boss", "shaft", "vault", "hazard", "timemachine"]
 const TITLES := {"church": "THE NAVE OF ASH", "library": "THE UNREAD STACKS", "save": "CACHE STATION 002",
-	"lab": "SPECIMEN HALL", "save2": "CACHE STATION 003", "boss": "THE PALLBEARER"}
+	"lab": "SPECIMEN HALL", "save2": "CACHE STATION 003", "boss": "THE PALLBEARER", "shaft": "THE MARROW WELL",
+	"vault": "CACHE STATION 004", "hazard": "THE THRESHING CHAPEL", "timemachine": "THE ORGAN OF HOURS"}
+# where the number keys (and the pause menu) put her: the door side or marker that makes sense in that room
+const ENTRY := {"church": "P", "shaft": "right", "hazard": "right", "timemachine": "K"}
 
 var world: Node2D
 var room: Node2D
@@ -38,6 +46,14 @@ var has_latch := false       # the wall latch: found in the lab, before the ward
 var unit := 1                # which Pandora this is: 001, then 002 after a reconstruction...
 var hold := false            # she cannot move (she is being rebuilt in the capsule)
 var offline: CanvasLayer     # the SYSTEM OFFLINE screen
+var dialog: CanvasLayer      # the time machine's YES / NO question
+var shift: CanvasLayer       # the after-the-shift picture filter
+var has_elegy := false       # the Pallbearer's scythe is hers (E / SWAP work from then on)
+var lever_library := false   # the library lever is pulled: the church's lower door opens
+var bars_opened := false     # the bars lever is hit: the iron bars are up
+var wall_broken := false     # the cracked wall is gone
+var _scythe: Node2D          # the scythe pickup, floating where the boss fell
+var _whisper_t := 0.0        # seconds to the next voice after the shift
 var _relic: Node2D
 var _marks: Array = []       # recent blade points, for "show hit areas"
 var boss_beaten := false
@@ -60,14 +76,21 @@ func _ready() -> void:
 	touch_layer.add_child(touch)
 	offline = Offline.new()
 	add_child(offline)
+	dialog = MachineDialog.new()
+	add_child(dialog)
+	shift = ShiftFx.new()
+	add_child(shift)
+	T.set_v("weapon", 0.0)      # she starts with Dirge-042 only
 	var start := "church"
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("room=") and ROOMS.has(a.substr(5)):
 			start = a.substr(5)
-	enter(start, "P" if start == "church" else "left")
+	enter(start, ENTRY.get(start, "left"))
 
 
-func enter(next_room: String, spawn_key: String) -> void:
+func enter(next_room: String, spawn_key: String, from_room: String = "", carry: Dictionary = {}) -> void:
+	# from_room: the room she came from. If it is this room's left or right neighbour she appears
+	# on that side, whatever door key was asked for. carry: {"vy": speed, "face": facing} for holes.
 	if world != null:
 		world.queue_free()
 	enemies.clear()
@@ -75,12 +98,18 @@ func enter(next_room: String, spawn_key: String) -> void:
 	orbs.clear()
 	shots.clear()
 	boss = null
+	_scythe = null
 	world = Node2D.new()
 	add_child(world)
 	room = Room.new()
 	world.add_child(room)
-	room.load_room(next_room)
+	room.load_room(next_room, G.shifted)
 	room_name = next_room
+	if from_room != "":
+		if room.head.get("left", "") == from_room:
+			spawn_key = "left"
+		elif room.head.get("right", "") == from_room:
+			spawn_key = "right"
 	_entry = spawn_key
 	var fresh: bool = player == null or player.hp <= 0.0
 	var keep_hp: float = T.v("player_hp") if fresh else player.hp
@@ -91,7 +120,11 @@ func enter(next_room: String, spawn_key: String) -> void:
 	world.add_child(player)
 	player.hp = keep_hp
 	player.mp = keep_mp
-	player.facing = -1 if spawn_key == "right" else 1
+	player.facing = int(carry.get("face", -1 if spawn_key == "right" else 1))
+	if carry.has("vy"):
+		player.velocity.y = float(carry["vy"])
+	if room.tunnels.get(spawn_key, false):
+		player.force_slide(1 if spawn_key == "left" else -1)      # a low tunnel: she crawls out of it
 	cam = Camera2D.new()
 	cam.limit_left = 0
 	cam.limit_top = 0
@@ -104,17 +137,32 @@ func enter(next_room: String, spawn_key: String) -> void:
 	cam.make_current()
 	cam.reset_smoothing()
 	for e in room.enemies:
-		var en := Enemy.new()
-		en.position = e[1] if not Enemy.KINDS[e[0]]["fly"] else e[1] - Vector2(0, 8)
-		en.setup(e[0])
-		world.add_child(en)
-		enemies.append(en)
+		if Enemy.KINDS.has(e[0]):
+			var en := Enemy.new()
+			en.position = e[1] if not Enemy.KINDS[e[0]]["fly"] else e[1] - Vector2(0, 8)
+			en.setup(e[0])
+			world.add_child(en)
+			enemies.append(en)
+		elif ResourceLoader.exists("res://enemy2.gd"):
+			# the marsh enemies (crab, moth, scribe, leech) live in enemy2.gd
+			var en2: Node2D = load("res://enemy2.gd").new()
+			en2.position = e[1]
+			en2.setup(e[0])
+			world.add_child(en2)
+			enemies.append(en2)
+	for h in room.hazards:
+		if ResourceLoader.exists("res://hazard.gd"):
+			var hz: Node2D = load("res://hazard.gd").new()
+			hz.setup(h[0], h[1])
+			world.add_child(hz)
 	if room.spawns.has("O") and not boss_beaten:
 		boss = Boss.new()
 		world.add_child(boss)
 		boss.setup(room.spawns["O"], room.size)
 		enemies.append_array(boss.parts())
 	_relic = null
+	if room.spawns.has("O") and boss_beaten and not has_elegy:
+		_drop_scythe(room.spawns["O"] + Vector2(0, -26))      # she left without it: it waits here
 	if room.spawns.has("A") and not has_latch:
 		_relic = Relic.new()
 		_relic.position = room.spawns["A"] + Vector2(0, -22)
@@ -123,8 +171,17 @@ func enter(next_room: String, spawn_key: String) -> void:
 	var marks := Marks.new()
 	marks.z_index = 50
 	world.add_child(marks)
+	for side in room.doors:
+		# the church's lower door stays shut until the library lever is pulled
+		if room.doors[side].to == "shaft" and not (lever_library or G.shifted):
+			room.doors[side].locked = true
+			room.doors[side].sealed_msg = "SEALED. Something in the library holds it shut."
 	_motes()
-	Sfx.play_music(room.head.get("music", "music_church"))
+	shift.set_room(next_room)
+	if G.shifted:
+		Sfx.stop_music()
+	else:
+		Sfx.play_music(room.head.get("music", "music_church"))
 	hud.banner(TITLES.get(next_room, ""))
 	hud.boss_bar("", 0.0)
 	hud.prompt("")
@@ -163,6 +220,9 @@ func _physics_process(delta: float) -> void:
 	_move_orbs(delta)
 	_move_shots(delta)
 	_terminal()
+	_machine()
+	_levers()
+	_scythe_watch()
 	_boss_watch()
 	if _relic != null and is_instance_valid(_relic) and _relic.position.distance_to(player.global_position + Vector2(0, -18)) < 18.0:
 		_relic.queue_free()
@@ -172,25 +232,34 @@ func _physics_process(delta: float) -> void:
 		Sfx.play("special", 1.3)
 		ring_fx(player.global_position + Vector2(0, -20), 60.0, Color(0.5, 1.0, 1.0))
 		hud.toast("GRIP SERVOS ONLINE  -  jump at a wall and hold toward it to cling, jump again to kick off", 7.0)
-	# the doors are in the room edges: walking off the screen goes through
+	# holes in the top and bottom rows: up and out, or down and through
 	var px := player.global_position.x
-	if px < 5.0 and room.doors.has("left") and room.doors["left"].open > 0.85:
-		_through(room.doors["left"].to, "right")
-	elif px > room.size.x - 5.0 and room.doors.has("right") and room.doors["right"].open > 0.85:
-		_through(room.doors["right"].to, "left")
+	var py := player.global_position.y
+	if room.up_span.x >= 0.0 and py < 2.0 and px >= room.up_span.x and px <= room.up_span.y:
+		_vertical(true)
+		return
+	if room.down_span.x >= 0.0 and py > room.size.y + 8.0 and px >= room.down_span.x and px <= room.down_span.y:
+		_vertical(false)
+		return
+	# the doors (and the open edges) are in the room edges: walking off the screen goes through
+	if px < 5.0 and ((room.doors.has("left") and room.doors["left"].open > 0.85) or room.open_edges.has("left")):
+		_through(room.head.get("left", ""), "right")
+	elif px > room.size.x - 5.0 and ((room.doors.has("right") and room.doors["right"].open > 0.85) or room.open_edges.has("right")):
+		_through(room.head.get("right", ""), "left")
 
 
 func _process(delta: float) -> void:
-	if not _busy:
+	if not _busy and not dialog.active:
 		if Input.is_action_just_pressed("restart"):
 			reconstruct()
 			return
 		for i in ROOMS.size():
-			# tester shortcut: number keys jump straight to a room
+			# tester shortcut: number keys (1-9, 0) jump straight to a room
 			if Input.is_action_just_pressed("room%d" % (i + 1)):
 				player.hp = 0.0
-				enter(ROOMS[i], "P" if i == 0 else "left")
+				enter(ROOMS[i], ENTRY.get(ROOMS[i], "left"))
 				break
+	_voices(delta)
 	if cam != null and is_instance_valid(cam):
 		if _shake_t > 0.0:
 			_shake_t -= delta
@@ -210,7 +279,12 @@ func _terminal() -> void:
 		return
 	var near: bool = absf(player.global_position.x - room.spawns["M"].x) < 30.0 and player.is_on_floor()
 	var touch_on: bool = touch != null and touch.active
-	hud.prompt("" if touch_on else ("W: cache memory (heal and save)" if near else ""))
+	hud.prompt("" if touch_on else (("NO SIGNAL" if G.shifted else "W: cache memory (heal and save)") if near else ""))
+	if near and Input.is_action_just_pressed("up") and player.state == "move" and G.shifted:
+		# after the shift every cache station is dead: no heal, no save
+		Sfx.play_file("sfx/shift/dead_terminal.wav", -4.0)
+		hud.toast("NO SIGNAL")
+		return
 	if near and Input.is_action_just_pressed("up") and player.state == "move":
 		saved = true
 		saved_room = room_name
@@ -220,6 +294,155 @@ func _terminal() -> void:
 		Sfx.play("special", 0.6)
 		ring_fx(room.spawns["M"] + Vector2(0, -40), 70.0, Color(0.5, 1.0, 1.0))
 		hud.toast("MEMORY CACHED")
+
+
+func interact_target() -> Dictionary:
+	# what the touch bubble points at: {"pos": world position, "label": text}, or {} when nothing is near
+	if room == null or player == null:
+		return {}
+	var feet: Vector2 = player.global_position
+	if room.spawns.has("M") and absf(feet.x - room.spawns["M"].x) < 30.0 and player.is_on_floor():
+		return {"pos": room.spawns["M"] + Vector2(0, -44), "label": "NO SIGNAL" if G.shifted else "CACHE"}
+	if room.spawns.has("T") and absf(feet.x - room.spawns["T"].x) < 34.0 and player.is_on_floor() and not G.shifted:
+		return {"pos": room.spawns["T"] + Vector2(0, -80), "label": "MACHINE"}
+	for pr in room.props:
+		if pr is Props.Lever and pr.kind == "library" and not pr.pulled and _near_lever(pr):
+			return {"pos": pr.global_position + Vector2(0, -34), "label": "LEVER"}
+	return {}
+
+
+func _near_lever(pr: Node2D) -> bool:
+	var d: Vector2 = player.global_position - pr.global_position
+	return absf(d.x) < T.v("lever_reach") and absf(d.y) < 26.0
+
+
+func _levers() -> void:
+	# the library lever: stand next to it and press Up (a cut pulls it too, see player_cut)
+	for pr in room.props:
+		if pr is Props.Lever and pr.kind == "library" and not pr.pulled:
+			var near := _near_lever(pr)
+			var touch_on: bool = touch != null and touch.active
+			hud.prompt("W: pull the lever" if near and not touch_on else "")
+			if near and Input.is_action_just_pressed("up") and player.state == "move":
+				pr.pull()
+				hud.prompt("")
+
+
+func open_bars() -> void:
+	# the lever behind the bars was cut with Elegy: the bars rise
+	bars_opened = true
+	if room.bars != null:
+		room.bars.raise()
+	hud.toast("The bars grind upward.", 2.5)
+
+
+func room_opened(r: Rect2) -> void:
+	room.clear_cells(r)
+
+
+func wall_broke(r: Rect2) -> void:
+	wall_broken = true
+	room.clear_cells(r)
+	for pr in room.props.duplicate():
+		if pr is Props.CrackWall and pr.broken:
+			room.props.erase(pr)
+
+
+func _machine() -> void:
+	# the time machine: Up beside it asks "are you sure?"
+	if not room.spawns.has("T") or hold or _busy:
+		return
+	var t: Vector2 = room.spawns["T"]
+	var near: bool = absf(player.global_position.x - t.x) < 34.0 and player.is_on_floor()
+	var touch_on: bool = touch != null and touch.active
+	hud.prompt("" if touch_on else (("W: the organ is silent" if G.shifted else "W: use the machine") if near else ""))
+	if near and Input.is_action_just_pressed("up") and player.state == "move":
+		if G.shifted:
+			Sfx.play_file("sfx/shift/dead_terminal.wav", -4.0)
+			hud.toast("THE ORGAN IS SILENT.")
+		else:
+			_ask_machine()
+
+
+func _ask_machine() -> void:
+	hold = true
+	touch.blocked = true
+	var choice: String = await dialog.ask()
+	dialog.close()
+	touch.blocked = false
+	if choice == "yes":
+		await _activate_machine()
+	else:
+		hold = false
+
+
+func _activate_machine() -> void:
+	# the reality shift: the machine wakes, the picture tears and goes white, and under the white
+	# the world turns inside out. She comes back next to the machine; this is where she wakes now.
+	_busy = true
+	hold = true
+	if room.organ != null:
+		room.organ.charge()
+	Sfx.pause_music(true)
+	Sfx.play_file("sfx/shift/machine_activate.wav", -2.0)
+	shake(1.5, 1.6)
+	await get_tree().create_timer(1.6).timeout
+	var tear_time: float = T.v("shift_tear_time")
+	Sfx.play_file("sfx/shift/shift_tear.wav", -1.0)
+	shift.tear(tear_time)
+	shake(5.0, tear_time)
+	await get_tree().create_timer(tear_time * 0.55).timeout
+	G.shifted = true
+	saved = true
+	saved_room = "timemachine"
+	Sfx.pause_music(false)
+	Sfx.stop_music()
+	Sfx.play_loop("sfx/shift/drone_loop.wav", -8.0)
+	_whisper_t = randf_range(T.v("shift_whisper_min"), T.v("shift_whisper_max"))
+	enter("timemachine", "K")
+	if room.organ != null:
+		room.organ.silence()
+	await get_tree().create_timer(tear_time * 0.45 + 0.3).timeout
+	hud.toast("SOMETHING ANSWERED.", 4.0)
+	hold = false
+	_busy = false
+
+
+func _voices(delta: float) -> void:
+	# after the shift: now and then a whisper or a chant, at a random loudness and pitch
+	if not G.shifted:
+		return
+	_whisper_t -= delta
+	if _whisper_t > 0.0:
+		return
+	_whisper_t = randf_range(T.v("shift_whisper_min"), T.v("shift_whisper_max"))
+	var file := "sfx/shift/incant_%02d.wav" % randi_range(1, 6) if randf() < 0.5 else "sfx/shift/whisper_%02d.wav" % randi_range(1, 5)
+	Sfx.play_file(file, randf_range(-16.0, -4.0), randf_range(0.85, 1.12))
+
+
+func _scythe_watch() -> void:
+	if _scythe == null or not is_instance_valid(_scythe):
+		return
+	if _scythe.global_position.distance_to(player.global_position + Vector2(0, -18)) < 22.0:
+		_scythe.queue_free()
+		_scythe = null
+		has_elegy = true
+		Sfx.play("pickup", 0.6)
+		Sfx.play("special", 1.3)
+		Sfx.play("pickup", 1.0)
+		ring_fx(player.global_position + Vector2(0, -20), 70.0, Color(0.5, 1.0, 1.0))
+		hud.toast("ELEGY-013 - the Pallbearer's scythe is yours. E (or SWAP) to change weapon.", 7.0)
+		if touch != null:
+			touch.queue_redraw()
+
+
+func _drop_scythe(at: Vector2) -> void:
+	# the scythe falls from where the body was and floats a little above the floor
+	var sc := Props.Scythe.new()
+	var floor_y: float = room.spawns["O"].y if room.spawns.has("O") else room.size.y - 32.0
+	sc.setup(at, floor_y - 26.0)
+	world.add_child(sc)
+	_scythe = sc
 
 
 func _boss_watch() -> void:
@@ -241,7 +464,7 @@ func boss_dying() -> void:
 	shake(4.0, 1.2)
 
 
-func boss_died() -> void:
+func boss_died(at: Vector2 = Vector2.ZERO) -> void:
 	boss_beaten = true
 	kills += 1
 	enemies = enemies.filter(func(e): return is_instance_valid(e) and e.kind != "boss")
@@ -249,13 +472,15 @@ func boss_died() -> void:
 	if room.doors.has("left"):
 		room.doors["left"].locked = false
 	ring_fx(room.size / 2.0, 160.0, Color(1.0, 0.85, 0.4))
-	var again := "pause > restart" if touch != null and touch.active else "R plays again"
-	hud.toast("LAID TO REST  -  the prototype ends here. %s." % again, 8.0)
+	hud.toast("LAID TO REST", 4.0)
 	Sfx.play_music("music_save")
+	if not has_elegy:
+		_drop_scythe(at if at != Vector2.ZERO else room.size / 2.0)
 
 
 func player_swing(rect: Rect2, dmg: float, dir: int, already: Array) -> void:
-	# a box-shaped hit (the blade wave)
+	# a box-shaped hit (the blade wave). It only ever hits enemies: levers and cracked walls
+	# (room.props, the ones that answer to a cut) never feel it.
 	# a copy of the list: an enemy that dies here leaves the real list at once
 	for en in enemies.duplicate():
 		if not is_instance_valid(en) or already.has(en):
@@ -277,6 +502,16 @@ func player_cut(pts: PackedVector2Array, dmg: float, dir: int, already: Array) -
 		for p in pts:
 			if box.has_point(p):
 				_land_hit(en, dmg, dir, already)
+				break
+	# levers and the cracked wall: any cut reaches them; the bars lever wants the Elegy cut
+	for pr in room.props.duplicate():
+		if not is_instance_valid(pr) or already.has(pr):
+			continue
+		var pbox: Rect2 = pr.prop_rect().grow(pad)
+		for p in pts:
+			if pbox.has_point(p):
+				already.append(pr)
+				pr.prop_cut(dmg, player._is_elegy())
 				break
 
 
@@ -345,7 +580,7 @@ func _move_shots(delta: float) -> void:
 		var p: Vector2 = s.global_position
 		var gone: bool = s.life <= 0.0 or p.x < -20.0 or p.x > room.size.x + 20.0
 		if not gone and (s.kind == "spit" or s.kind == "feather"):
-			if room.cell(int(p.x / 16.0), int(p.y / 16.0)) == "#":
+			if room.is_solid(int(p.x / 16.0), int(p.y / 16.0)):
 				gone = true
 				dust(p, 3)
 		if not gone and not G.peace and s.box().intersects(body) and player.invuln <= 0.0:
@@ -467,9 +702,22 @@ func _through(to: String, spawn_key: String) -> void:
 		return
 	_busy = true
 	await hud.fade(1.0, 0.18)
-	enter(to, spawn_key)
+	enter(to, spawn_key, room_name)
 	await hud.fade(0.0, 0.18)
 	_busy = false
+
+
+func _vertical(going_up: bool) -> void:
+	# up through a ^ opening: out of the hole of the room above, with a pop. Down through a v
+	# opening: into the top of the room below, at the speed she was falling.
+	var to: String = room.head.get("up" if going_up else "down", "")
+	if to == "":
+		return
+	var vy: float = player.velocity.y
+	var face: int = player.facing
+	enter(to, "hole_down" if going_up else "hole_up", room_name,
+		{"vy": minf(vy, -T.v("hole_pop")) if going_up else vy, "face": face})
+	hud.fade_in_from(0.7, 0.25)
 
 
 func shake(amp: float, time: float) -> void:

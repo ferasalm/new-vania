@@ -99,8 +99,8 @@ func _run() -> void:
 		looks[r.head.get("theme", "")] = true
 		_check("room '%s' loads, doors sit in the room edge" % name, ok, "size=%s doors=%s" % [str(r.size), str(r.doors.keys())])
 		r.queue_free()
-	_check("five enemy kinds are placed in the rooms", kinds.size() == 5, str(kinds.keys()))
-	_check("every room has its own look", looks.size() == 6, str(looks.keys()))
+	_check("nine enemy kinds are placed in the rooms", kinds.size() == 9, str(kinds.keys()))
+	_check("every area has its own look", looks.size() == 8, str(looks.keys()))
 	await _shot("1_church_start")
 
 	var x0 := p.global_position.x
@@ -192,6 +192,7 @@ func _run() -> void:
 		await _frames(int(total * 60.0 * 0.6) + 10)
 		_check("%s is gone after the swing" % p.weapon_name(), not p.weapon_showing(), "")
 	T.set_v("weapon", 0.0)
+	main.has_elegy = true      # the swap needs the Pallbearer's scythe (checked further down)
 	await _tap("swap", 2)
 	_check("E swaps the weapon", int(T.v("weapon")) == 1, "weapon=%d" % int(T.v("weapon")))
 	await _tap("swap", 2)
@@ -467,7 +468,568 @@ func _run() -> void:
 	await _frames(50)
 	boss.hit(boss.hp * 0.6, -1)
 	_check("under half health it changes phase", boss._phase == 2, "phase=%d" % boss._phase)
+	await _boss_attacks()
+	main.has_elegy = false      # she does not have the scythe yet: the boss's death must drop it
 	boss.hit(9999.0, -1)
 	await _frames(200)
 	_check("the boss dies and the door unlocks", main.boss_beaten and not main.room.doors["left"].locked, "")
 	await _shot("20_boss_dead")
+	await _new_area()
+
+
+# ---------------------------------------------------------------------------------------------
+# The Pallbearer's new hand attacks: the reap (a huge slash crossing at chest or floor height)
+# and the throw (the scythe goes out at one height and comes back at the other).
+# ---------------------------------------------------------------------------------------------
+
+func _slash_damage(kind: String, h: float, pose: String) -> float:
+	# puts a slash of the given height in the room, 110 units from her, flying at her; returns the life lost
+	var boss = main.boss
+	var p: CharacterBody2D = main.player
+	boss._gap = 999.0
+	var x0: float = (boss.left_x + boss.right_x) / 2.0
+	p.global_position = Vector2(x0, boss.floor_y)
+	p.velocity = Vector2.ZERO
+	p.invuln = 0.0
+	p.hp = T.v("player_hp")
+	await _frames(20)
+	if pose == "crouch":
+		Input.action_press("down")
+		await _frames(12)
+	boss._slash = {"on": true, "kind": kind, "x": x0 + 110.0, "dirx": -1.0, "h": h, "h_back": h, "leg": 0, "spin": 0.0, "start_x": x0 + 110.0, "box": Rect2()}
+	G.peace = false
+	for i in 90:
+		await get_tree().physics_frame
+		boss._gap = 999.0
+		if pose == "jump" and i == 8:
+			Input.action_press("jump")
+		if p.hp < T.v("player_hp"):
+			break
+	G.peace = true
+	Input.action_release("down")
+	Input.action_release("jump")
+	var lost: float = T.v("player_hp") - p.hp
+	boss._slash = {"on": false}
+	await _frames(40)
+	return lost
+
+
+func _boss_attacks() -> void:
+	var boss = main.boss
+	var p: CharacterBody2D = main.player
+	var high: float = T.v("boss_reap_high")
+	var low: float = T.v("boss_reap_low")
+	_check("the chest-high slash starts above a crouch (22) and inside a standing body (36)", high - T.v("boss_reap_thick") / 2.0 > 22.0 and high < 36.0, "bottom=%.0f" % (high - T.v("boss_reap_thick") / 2.0))
+	var stand_high: float = await _slash_damage("reap", high, "stand")
+	_check("a chest-high reap hurts her standing", stand_high > 0.0, "lost=%.0f" % stand_high)
+	var crouch_high: float = await _slash_damage("reap", high, "crouch")
+	_check("she ducks under a chest-high reap", crouch_high == 0.0, "lost=%.0f" % crouch_high)
+	var crouch_low: float = await _slash_damage("reap", low, "crouch")
+	_check("a low reap hurts her crouching", crouch_low > 0.0, "lost=%.0f" % crouch_low)
+	var jump_low: float = await _slash_damage("reap", low, "jump")
+	_check("she hops over a low reap", jump_low == 0.0, "lost=%.0f" % jump_low)
+	# the real thing: a hand takes the scythe, glows, lets go; the slash crosses and the hand goes back to rest
+	boss._gap = 999.0
+	boss._hands[1]["state"] = "rest"
+	boss._reaps = 0
+	var h: Dictionary = boss._hands[1]
+	h["state"] = "reap_ready"
+	h["t"] = 0.0
+	h["dir"] = 1.0
+	h["low"] = false
+	var seen_on := false
+	var warn_ok := false
+	for i in 900:
+		await get_tree().physics_frame
+		boss._gap = 999.0
+		if not seen_on and h["state"] == "reap_ready" and h["t"] > 0.3:
+			warn_ok = true
+		if boss._slash["on"]:
+			seen_on = true
+		if seen_on and not boss._slash["on"]:
+			break
+	await _frames(30)
+	_check("a hand can reap: it warns, the slash crosses the room, the hand rests again", warn_ok and seen_on and h["state"] == "rest", "state=%s" % h["state"])
+	h["state"] = "throw_ready"
+	h["t"] = 0.0
+	h["dir"] = 1.0
+	h["low"] = false
+	seen_on = false
+	var out_h := -1.0
+	var back_h := -1.0
+	var legs := 0
+	for i in 1500:
+		await get_tree().physics_frame
+		boss._gap = 999.0
+		if boss._slash["on"]:
+			seen_on = true
+			if int(boss._slash["leg"]) == 0:
+				out_h = float(boss._slash["h"])
+			else:
+				back_h = float(boss._slash["h"])
+				legs = 1
+		if seen_on and not boss._slash["on"]:
+			break
+	await _frames(30)
+	_check("a hand can throw: out at one height, back at the other, then the hand rests", seen_on and legs == 1 and out_h == high and back_h == low and h["state"] == "rest",
+		"out=%.0f back=%.0f state=%s" % [out_h, back_h, h["state"]])
+	p.global_position = Vector2(boss.left_x + 60.0, boss.floor_y)
+	await _frames(10)
+
+
+# ---------------------------------------------------------------------------------------------
+# The new area: the sealed church door, the lever, the marrow well, the vault, the threshing
+# chapel (bars, lever, cracked wall, tunnel), the time machine and the reality shift.
+# ---------------------------------------------------------------------------------------------
+
+func _goto_from(room_name: String, key: String, from_room: String) -> void:
+	main.player.hp = 0.0
+	main.enter(room_name, key, from_room)
+	await _frames(30)
+
+
+func _climb_hop(p: CharacterBody2D, target_top: float) -> bool:
+	# jump at the right wall, latch it, kick off up and left onto the next ledge (human timing)
+	Input.action_press("right")
+	Input.action_press("jump")
+	var latched := false
+	for i in 60:
+		await get_tree().physics_frame
+		if p.state == "wall":
+			latched = true
+			break
+	Input.action_release("jump")
+	if not latched:
+		Input.action_release("right")
+		return false
+	await _frames(10)
+	Input.action_release("right")
+	Input.action_press("left")
+	Input.action_press("jump")
+	await _frames(20)
+	Input.action_release("jump")
+	await _frames(55)
+	Input.action_release("left")
+	await _frames(10)
+	var ok: bool = p.is_on_floor() and absf(p.global_position.y - target_top) < 3.0 and p.global_position.x < 180.0
+	print("      hop to y=%.0f: latched=%s now x=%.0f y=%.0f floor=%s" % [target_top, str(latched), p.global_position.x, p.global_position.y, str(p.is_on_floor())])
+	return ok
+
+
+func _until_room(name: String, frames: int) -> void:
+	for i in frames:
+		if main.room_name == name:
+			break
+		await get_tree().physics_frame
+
+
+func _new_area() -> void:
+	var p: CharacterBody2D = main.player
+	# ---- the scythe the boss leaves, and the swap gate ----
+	_check("the boss leaves its scythe floating where it fell", main._scythe != null and is_instance_valid(main._scythe), "")
+	main.has_elegy = false
+	T.set_v("weapon", 0.0)
+	await _tap("swap", 2)
+	_check("E does nothing before the scythe is hers", int(T.v("weapon")) == 0 and not main.has_elegy, "weapon=%d" % int(T.v("weapon")))
+	p.swap_weapon()
+	_check("a direct swap is refused too", int(T.v("weapon")) == 0, "")
+	await _frames(100)
+	p.global_position = Vector2(main._scythe.global_position.x, main.room.spawns["O"].y)
+	await _frames(8)
+	_check("touching the scythe gives ELEGY-013", main.has_elegy and main._scythe == null and main.hud._toast.text.begins_with("ELEGY-013"), main.hud._toast.text.left(30))
+	await _tap("swap", 2)
+	_check("E swaps once the scythe is hers", int(T.v("weapon")) == 1, "")
+	T.set_v("weapon", 0.0)
+
+	# ---- the church's lower door and the library lever ----
+	main.lever_library = false
+	await _goto("church", "P")
+	p = main.player
+	var cd = main.room.doors.get("left")
+	_check("the church has a lower left door to the shaft", cd != null and cd.to == "shaft" and absf(cd.position.x) < 0.1, "")
+	_check("the church door is locked before the lever", cd != null and cd.locked, "")
+	p.global_position = Vector2(60.0, cd.feet().y)
+	await _frames(6)
+	Input.action_press("left")
+	await _frames(70)
+	Input.action_release("left")
+	_check("walking into it says SEALED and the door stays shut", cd.open < 0.1 and main.room_name == "church" and main.hud._toast.text.begins_with("SEALED"),
+		"open=%.2f toast=%s" % [cd.open, main.hud._toast.text.left(20)])
+	await _goto("library", "left")
+	p = main.player
+	var lever: Node2D = null
+	for pr in main.room.props:
+		if pr.kind == "library":
+			lever = pr
+	_check("the library has a lever on the climb", lever != null and not lever.pulled, "")
+	p.global_position = lever.global_position + Vector2(-30.0, 0.0)
+	p.facing = 1
+	await _frames(8)
+	await _tap("attack", 2)
+	await _frames(25)
+	_check("a cut pulls the library lever and says so", lever.pulled and main.lever_library and main.hud._toast.text.begins_with("Far below"), main.hud._toast.text.left(20))
+	main.lever_library = false
+	await _goto("library", "left")
+	p = main.player
+	for pr in main.room.props:
+		if pr.kind == "library":
+			lever = pr
+	p.global_position = lever.global_position + Vector2(-10.0, 0.0)
+	await _frames(6)
+	await _tap("up", 2)
+	await _frames(4)
+	_check("Up beside the lever pulls it too", lever.pulled and main.lever_library, "")
+	await _goto("church", "P")
+	p = main.player
+	cd = main.room.doors["left"]
+	_check("after the lever the church door is not locked", not cd.locked, "")
+	p.global_position = Vector2(60.0, cd.feet().y)
+	await _frames(6)
+	Input.action_press("left")
+	await _until_room("shaft", 300)
+	Input.action_release("left")
+	await _frames(30)
+	p = main.player
+	_check("it opens into the shaft, at its bottom right", main.room_name == "shaft" and p.global_position.x > main.room.size.x - 60.0 and p.is_on_floor(),
+		"room=%s x=%.0f" % [main.room_name, p.global_position.x])
+
+	# ---- up and down between the shaft and the vault ----
+	var up_span: Vector2 = main.room.up_span
+	p.global_position = Vector2((up_span.x + up_span.y) / 2.0, 6.0)
+	p.velocity = Vector2(0.0, -250.0)
+	await _frames(3)
+	p = main.player
+	_check("up through the top opening of the shaft leads to the vault", main.room_name == "vault", main.room_name)
+	await _frames(10)
+	var dn: Vector2 = main.room.down_span
+	_check("she pops out of the vault hole, above its floor", absf(p.global_position.x - (dn.x + dn.y) / 2.0) < 6.0
+		and p.global_position.y < main.room.size.y - 8.0 and p.velocity.y < 0.0, "x=%.0f y=%.0f vy=%.0f" % [p.global_position.x, p.global_position.y, p.velocity.y])
+	await _frames(40)
+	p.global_position = Vector2((dn.x + dn.y) / 2.0, main.room.size.y - 6.0)
+	p.velocity = Vector2.ZERO
+	await _until_room("shaft", 120)
+	await _frames(1)
+	p = main.player
+	_check("falling through the vault hole leads back into the top of the shaft, still falling", main.room_name == "shaft" and p.global_position.y < 80.0 and p.velocity.y > 0.0,
+		"room=%s y=%.0f vy=%.0f" % [main.room_name, p.global_position.y, p.velocity.y])
+
+	# ---- the ledges: 96 apart, so a plain jump cannot do it ----
+	await _goto_from("shaft", "right", "church")
+	main.has_latch = false
+	p = main.player
+	var ledges: Array = []
+	for y in main.room.grid.size():
+		if main.room.cell(9, y) == "#" and main.room.cell(10, y) == "#" and main.room.cell(11, y) == "." and y < 27:
+			ledges.append(float(y * 16))
+	ledges.reverse()
+	var jump_up: float = T.v("jump_velocity") * T.v("jump_velocity") / (2.0 * T.v("gravity"))
+	var spacing_ok := ledges.size() == 4
+	for i in range(ledges.size() - 1):
+		spacing_ok = spacing_ok and absf(ledges[i] - ledges[i + 1] - 96.0) < 0.1
+	_check("four ledges, 96 apart, more than a jump rises (%.0f)" % jump_up, spacing_ok and 96.0 > jump_up + 10.0, str(ledges))
+	var best := 9999.0
+	for variant in ["", "right", "left"]:
+		p.global_position = Vector2(160.0, ledges[0] - 1.0)
+		p.velocity = Vector2.ZERO
+		await _frames(10)
+		if variant != "":
+			Input.action_press(variant)
+		Input.action_press("jump")
+		for i in 70:
+			await get_tree().physics_frame
+			best = minf(best, p.global_position.y)
+		Input.action_release("jump")
+		if variant != "":
+			Input.action_release(variant)
+		await _frames(70)
+	_check("without the grip a plain jump from ledge 1 stays below ledge 2", best > ledges[1] + 20.0, "highest feet y=%.0f, ledge 2 top=%.0f" % [best, ledges[1]])
+	# with the grip: floor -> ledge 1 -> 2 -> 3 -> 4, then out through the top
+	main.has_latch = true
+	p.global_position = Vector2(180.0, 447.0)
+	p.velocity = Vector2.ZERO
+	await _frames(15)
+	var hops: Array = []
+	for k in 4:
+		var hop_ok: bool = await _climb_hop(p, float(ledges[k]))
+		hops.append(hop_ok)
+		if not hop_ok:
+			break
+	_check("with the grip she climbs floor -> 4 ledges (latch the right wall, kick up and left)", hops.size() == 4 and not hops.has(false), str(hops))
+	if hops.size() == 4 and not hops.has(false):
+		Input.action_press("jump")
+		await _until_room("vault", 60)
+		Input.action_release("jump")
+		_check("and out through the top into the vault", main.room_name == "vault", main.room_name)
+	else:
+		_check("and out through the top into the vault", false, "climb failed")
+	main.has_latch = true
+
+	# ---- the threshing chapel: counts and safe floor ----
+	var hz := Room.new()
+	hz.position = Vector2(0, -9000)
+	add_child(hz)
+	hz.load_room("hazard")
+	var cnt := {}
+	for h in hz.hazards:
+		if h[1].position.x >= 48.0 * 16.0:
+			cnt[h[0]] = int(cnt.get(h[0], 0)) + 1
+	for e in hz.enemies:
+		if e[1].x >= 48.0 * 16.0:
+			cnt[e[0]] = int(cnt.get(e[0], 0)) + 1
+	_check("the right half has 2 crabs, 2 moths, 1 scribe, 2 leeches, 2 pendulums, 2 crushers, 3 vents, 2 spike strips",
+		cnt.get("crab", 0) == 2 and cnt.get("moth", 0) == 2 and cnt.get("scribe", 0) == 1 and cnt.get("leech", 0) == 2
+		and cnt.get("pendulum", 0) == 2 and cnt.get("crusher", 0) == 2 and cnt.get("flame", 0) == 3 and cnt.get("spikes", 0) == 2, str(cnt))
+	var floor_h: Array = []
+	for h in hz.hazards:
+		if h[1].end.y >= 14.0 * 16.0 - 0.1:
+			floor_h.append(h[1])
+	floor_h.sort_custom(func(a, b): return a.position.x < b.position.x)
+	var gaps_ok := true
+	var min_gap := 999.0
+	for i in range(floor_h.size() - 1):
+		var gap: float = floor_h[i + 1].position.x - floor_h[i].end.x
+		min_gap = minf(min_gap, gap)
+		gaps_ok = gaps_ok and gap >= 3.0 * 16.0 - 0.1
+	_check("at least 3 tiles of safe floor between the floor hazards", gaps_ok and floor_h.size() >= 7, "hazards=%d smallest gap=%.0f px" % [floor_h.size(), min_gap])
+	hz.queue_free()
+
+	# ---- bars, the lever behind them, the cracked wall, the tunnel ----
+	await _goto("hazard", "right")
+	p = main.player
+	var bars: Node2D = main.room.bars
+	var ylever: Node2D = null
+	var wall: Node2D = null
+	for pr in main.room.props:
+		if pr.has_method("pull") and pr.kind == "bars":
+			ylever = pr
+		elif pr.has_method("prop_cut") and not pr.has_method("pull"):
+			wall = pr
+	_check("the hazard room has iron bars, a lever behind them and a cracked wall", bars != null and ylever != null and wall != null, "")
+	var floor_y: float = bars.rect.end.y
+	p.global_position = Vector2(bars.rect.end.x + 30.0, floor_y - 1.0)
+	p.facing = -1
+	await _frames(10)
+	Input.action_press("left")
+	await _frames(45)
+	Input.action_release("left")
+	_check("she can stand against the bars: they are solid", absf(p.global_position.x - (bars.rect.end.x + 6.0)) < 3.0, "x=%.1f" % p.global_position.x)
+	main.has_elegy = true
+	T.set_v("weapon", 0.0)
+	p.facing = -1
+	p.energy = T.v("energy_max")
+	await _tap("attack", 2)
+	await _frames(40)
+	p.energy = T.v("energy_max")
+	Input.action_press("down")
+	await _frames(20)
+	await _tap("attack", 2)
+	await _frames(40)
+	Input.action_release("down")
+	await _frames(20)
+	p.energy = T.v("energy_max")
+	p.facing = -1
+	Input.action_press("jump")
+	await _frames(14)
+	await _tap("attack", 2)
+	await _frames(14)
+	Input.action_release("jump")
+	await _frames(50)
+	main.throw_wave(ylever.global_position + Vector2(50.0, -14.0), -1)
+	main.player_swing(ylever.prop_rect(), 50.0, -1, [])
+	await _frames(40)
+	_check("the Dirge cut (standing, crouching, jumping) and the blade wave never reach the bars lever",
+		not ylever.pulled and not main.bars_opened, "pulled=%s dist=%.0f" % [str(ylever.pulled), p.global_position.x - ylever.prop_rect().end.x])
+	p.global_position = Vector2(bars.rect.end.x + 6.0, floor_y - 1.0)
+	p.facing = -1
+	await _frames(6)
+	T.set_v("weapon", 1.0)
+	p.energy = T.v("energy_max")
+	await _tap("attack", 2)
+	await _frames(45)
+	_check("an Elegy cut reaches it: the bars rise", ylever.pulled and main.bars_opened, "pulled=%s" % str(ylever.pulled))
+	await _frames(int(T.v("bars_rise_time") * 60.0) + 30)
+	_check("the bars are gone and the way through is open", bars._shape.disabled and main.room.cell(46, 12) == ".", "")
+	Input.action_press("left")
+	await _frames(70)
+	Input.action_release("left")
+	_check("she walks through the opening to the left half", p.global_position.x < bars.rect.position.x - 8.0, "x=%.0f" % p.global_position.x)
+	T.set_v("weapon", 0.0)
+	# the cracked wall
+	await _goto("hazard", "right")
+	p = main.player
+	for pr in main.room.props:
+		if pr.has_method("prop_cut") and not pr.has_method("pull"):
+			wall = pr
+	p.global_position = Vector2(wall.rect.end.x + 8.0, wall.rect.end.y - 1.0)
+	p.facing = -1
+	await _frames(6)
+	Input.action_press("left")
+	await _frames(15)
+	Input.action_release("left")
+	var hits: Array = []
+	for k in 3:
+		p.energy = T.v("energy_max")
+		await _tap("attack", 2)
+		await _frames(30)
+		hits.append(wall.hits)
+	_check("the cracked wall breaks on the third cut, not before", hits == [1, 2, 3] and wall.broken and main.wall_broken, str(hits))
+	Input.action_press("left")
+	await _frames(90)
+	Input.action_release("left")
+	_check("standing, she cannot enter the 2-tile tunnel", p.global_position.x > wall.rect.end.x + 3.0 and main.room_name == "hazard", "x=%.1f" % p.global_position.x)
+	p.facing = -1
+	Input.action_press("down")
+	await _frames(8)
+	Input.action_press("jump")
+	await _frames(2)
+	Input.action_release("jump")
+	await _frames(4)
+	var slide_ok: bool = p.state == "slide"
+	await _until_room("timemachine", 300)
+	Input.action_release("down")
+	await _frames(20)
+	p = main.player
+	_check("a slide passes the tunnel and leaves by the open edge into the time machine room",
+		slide_ok and main.room_name == "timemachine" and p.global_position.x > main.room.size.x - 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
+	main.enter("hazard", "left", "timemachine")
+	await _frames(4)
+	_check("arriving at the low tunnel puts her into a slide", main.player.state == "slide" and main.room.tunnels.get("left", false), "state=%s" % main.player.state)
+	await _frames(110)
+	_check("she comes out of the tunnel into the hall", main.player.global_position.x > wall.rect.end.x + 10.0, "x=%.0f" % main.player.global_position.x)
+
+	# ---- the time machine, the question, the shift ----
+	await _goto("timemachine", "K")
+	p = main.player
+	var tpos: Vector2 = main.room.spawns["T"]
+	_check("the organ stands in the room; the way back is a tall open edge", main.room.organ != null and main.room.open_edges.has("right")
+		and not main.room.tunnels.get("right", false), "")
+	p.global_position = Vector2(tpos.x, tpos.y - 1.0)
+	await _frames(10)
+	var saved_before: String = main.saved_room
+	await _tap("up", 2)
+	await _frames(4)
+	_check("Up beside the machine asks the question and holds her still", main.dialog.active and main.hold, "")
+	Input.action_press("right")
+	await _frames(20)
+	Input.action_release("right")
+	_check("while the question is open she cannot move", absf(p.global_position.x - tpos.x) < 2.0, "x=%.1f" % p.global_position.x)
+	while main.dialog._ready_t > 0.0:
+		await _frames(1)
+	await _tap("attack", 2)      # NO is the first pick
+	await _frames(8)
+	_check("NO changes nothing", not main.dialog.active and not G.shifted and not main.hold and main.saved_room == saved_before, "saved_room=%s" % main.saved_room)
+	await _tap("up", 2)
+	await _frames(4)
+	while main.dialog._ready_t > 0.0:
+		await _frames(1)
+	await _tap("up", 2)          # up/down moves the pick to YES
+	await _frames(4)
+	await _tap("attack", 2)
+	for i in 900:
+		await get_tree().physics_frame
+		if G.shifted and not main._busy:
+			break
+	await _frames(20)
+	p = main.player
+	_check("YES: the world is shifted, and she wakes next to the machine", G.shifted and main.saved_room == "timemachine" and main.room_name == "timemachine"
+		and absf(p.global_position.x - main.room.spawns["K"].x) < 6.0, "shifted=%s room=%s" % [str(G.shifted), main.room_name])
+	_check("the filter is on and the voices are scheduled", main.shift.visible and main._whisper_t > 0.0 and main._whisper_t <= T.v("shift_whisper_max") + 0.5,
+		"visible=%s next=%.1f" % [str(main.shift.visible), main._whisper_t])
+	_check("the shift tears the picture, then settles", main.shift.mode == 6, "mode=%d" % main.shift.mode)
+
+	# ---- after the shift ----
+	main.player.hp = 0.0
+	await main.reconstruct()
+	_check("death keeps the world shifted and wakes her at the time machine", G.shifted and main.room_name == "timemachine" and main.player.hp == T.v("player_hp"), main.room_name)
+	await _goto("vault", "left")
+	p = main.player
+	_check("the shifted vault has a locked special door on the right", main.room.doors.has("right") and main.room.doors["right"].boss and main.room.doors["right"].to == "", "")
+	p.hp = 20.0
+	p.global_position.x = main.room.spawns["M"].x
+	await _frames(10)
+	await _tap("up", 2)
+	await _frames(6)
+	_check("a shifted terminal heals and saves nothing: NO SIGNAL", p.hp == 20.0 and main.saved_room == "timemachine" and main.hud._toast.text == "NO SIGNAL", main.hud._toast.text)
+	var xd = main.room.doors["right"]
+	p.global_position = Vector2(main.room.size.x - 90.0, xd.feet().y)
+	await _frames(6)
+	Input.action_press("right")
+	await _frames(90)
+	Input.action_release("right")
+	_check("the special door stays locked: LOCKED - UNTIL THE NEXT UPDATE", xd.open < 0.1 and main.room_name == "vault" and main.hud._toast.text.begins_with("LOCKED"), main.hud._toast.text)
+	# mirrored rooms and the new doors
+	var mc := Room.new()
+	mc.position = Vector2(0, -9000)
+	add_child(mc)
+	mc.load_room("church", true)
+	var oc := Room.new()
+	oc.position = Vector2(0, -9000)
+	add_child(oc)
+	oc.load_room("church", false)
+	var diff := 0
+	for y in oc.grid.size():
+		for x in oc.grid[y].length():
+			if oc.cell(x, y) != mc.cell(oc.grid[y].length() - 1 - x, y):
+				diff += 1
+	_check("the church is mirrored: every cell flipped, doors swapped", diff == 0 and mc.head["left"] == "library" and mc.head["right"] == "shaft"
+		and mc.doors["left"].to == "library" and mc.doors["right"].to == "shaft", "differences=%d" % diff)
+	var ml := Room.new()
+	ml.position = Vector2(0, -9000)
+	add_child(ml)
+	ml.load_room("library", true)
+	_check("the library is mirrored: top-left door to the hazard room, bottom-right door to the church",
+		ml.head["left"] == "hazard" and ml.head["right"] == "church" and ml.doors["left"].position.y == 96.0 and ml.doors["right"].position.y == 512.0,
+		"left=%s right=%s" % [ml.head["left"], ml.head["right"]])
+	var mh := Room.new()
+	mh.position = Vector2(0, -9000)
+	add_child(mh)
+	mh.load_room("hazard", true)
+	_check("the hazard room's right door leads to the library after the shift", mh.head["right"] == "library" and mh.doors["right"].to == "library", "")
+	for r in [mc, oc, ml, mh]:
+		r.queue_free()
+	# the shifted way back: hazard -> library -> church -> shaft -> vault
+	await _goto("hazard", "right")
+	p = main.player
+	var d = main.room.doors["right"]
+	p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
+	await _frames(6)
+	Input.action_press("right")
+	await _until_room("library", 300)
+	Input.action_release("right")
+	await _frames(30)
+	p = main.player
+	_check("hazard -> mirrored library, arriving at its top-left door", main.room_name == "library" and p.global_position.x < 60.0 and p.global_position.y < 120.0,
+		"room=%s x=%.0f y=%.0f" % [main.room_name, p.global_position.x, p.global_position.y])
+	d = main.room.doors["right"]
+	p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
+	p.velocity = Vector2.ZERO
+	await _frames(20)
+	Input.action_press("right")
+	await _until_room("church", 300)
+	Input.action_release("right")
+	await _frames(30)
+	p = main.player
+	_check("library -> mirrored church, arriving at its bottom-left door", main.room_name == "church" and p.global_position.x < 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
+	d = main.room.doors["right"]
+	p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
+	await _frames(10)
+	Input.action_press("right")
+	await _until_room("shaft", 300)
+	Input.action_release("right")
+	await _frames(30)
+	p = main.player
+	_check("church -> shaft, arriving at the bottom right (the shaft itself is unchanged)", main.room_name == "shaft" and p.global_position.x > main.room.size.x - 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
+	up_span = main.room.up_span
+	p.global_position = Vector2((up_span.x + up_span.y) / 2.0, 6.0)
+	p.velocity = Vector2(0.0, -250.0)
+	await _frames(5)
+	_check("shaft -> the shifted vault", main.room_name == "vault" and main.room.doors.has("right"), main.room_name)
+
+	# ---- the tester keys 7, 8, 9, 0 ----
+	var seen: Array = []
+	for k in ["room7", "room8", "room9", "room10"]:
+		await _tap(k, 2)
+		await _frames(4)
+		seen.append(main.room_name)
+	_check("keys 7, 8, 9, 0 go to the shaft, vault, hazard room and time machine", seen == ["shaft", "vault", "hazard", "timemachine"], str(seen))
+	_check("the pause menu lists all ten rooms", main.touch.ROOM_LABELS.size() == 10, "")
