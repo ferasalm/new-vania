@@ -1,0 +1,23 @@
+{
+  "canvas": [
+    72,
+    120
+  ],
+  "anchor": [
+    37,
+    60
+  ],
+  "faces": "right",
+  "anims": {
+    "idle": 6,
+    "write": 6,
+    "throw": 4,
+    "melt": 5
+  },
+  "body": [
+    26,
+    98
+  ],
+  "notes": "Needle scribe, side view facing right, floating (legs trail). melt ends in an ink puddle near the bottom of the canvas.",
+  "palette_size": 24
+}

@@ -1,0 +1,20 @@
+{
+  "canvas": [
+    256,
+    288
+  ],
+  "anchor": [
+    128,
+    288
+  ],
+  "faces": "right",
+  "anims": {
+    "idle": 4
+  },
+  "body": [
+    200,
+    270
+  ],
+  "notes": "Time machine (memory organ) prop, front view, base on the bottom edge. idle = the glowing parts pulse.",
+  "palette_size": 24
+}

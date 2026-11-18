@@ -1,0 +1,22 @@
+{
+  "canvas": [
+    40,
+    88
+  ],
+  "anchor": [
+    20,
+    0
+  ],
+  "faces": "right",
+  "anims": {
+    "hang": 4,
+    "drop": 2,
+    "latch": 4
+  },
+  "body": [
+    22,
+    70
+  ],
+  "notes": "Thread leech hanging head-down; the thread attaches at the top centre. Latch frames are meant to be drawn over the target.",
+  "palette_size": 24
+}

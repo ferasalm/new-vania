@@ -1,0 +1,24 @@
+{
+  "canvas": [
+    112,
+    72
+  ],
+  "anchor": [
+    56,
+    72
+  ],
+  "faces": "right",
+  "anims": {
+    "idle": 4,
+    "walk": 6,
+    "rear": 4,
+    "burrow": 5,
+    "emerge": 4
+  },
+  "body": [
+    88,
+    40
+  ],
+  "notes": "Bone-ivory spine crab with dark-red shell, near-frontal view (it scuttles sideways, so it is almost symmetrical; 5 degree turn to the right). Feet on the bottom edge. burrow/emerge are cut off at the ground line (bottom row); the last burrow frame shows only the spine tip.",
+  "palette_size": 24
+}
