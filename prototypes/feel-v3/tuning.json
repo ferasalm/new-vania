@@ -946,5 +946,813 @@
     "step": 0.1,
     "label": "Screen flash",
     "help": "How bright the short screen flash of the specials is. 0 turns flashes off (for players bothered by flashing light)."
+  },
+  "crab_hp": {
+    "value": 70.0,
+    "min": 20.0,
+    "max": 200.0,
+    "step": 5.0,
+    "label": "Spine Crab: health",
+    "help": "How tough the crab is. 70 is seven Dirge cuts (10 each) or four Elegy cuts (20 each)."
+  },
+  "crab_damage": {
+    "value": 18.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Spine Crab: claw / eruption damage",
+    "help": "Damage from the claw rush and from the crab bursting out of the floor under her."
+  },
+  "crab_touch_damage": {
+    "value": 6.0,
+    "min": 0.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Spine Crab: bump damage",
+    "help": "Damage if she just bumps into the crab while it scuttles about."
+  },
+  "crab_speed": {
+    "value": 95.0,
+    "min": 40.0,
+    "max": 200.0,
+    "step": 5.0,
+    "label": "Spine Crab: scuttle speed",
+    "help": "How fast it scuttles sideways. 95 is a bit slower than her run (125)."
+  },
+  "crab_notice": {
+    "value": 190.0,
+    "min": 80.0,
+    "max": 320.0,
+    "step": 10.0,
+    "label": "Spine Crab: notices her at",
+    "help": "How far away the crab starts to attack. 190 is about twelve tiles."
+  },
+  "crab_turn_time": {
+    "value": 0.5,
+    "min": 0.1,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Spine Crab: slow to turn",
+    "help": "Seconds it needs to turn round when she gets behind it. Its shell only guards the front."
+  },
+  "crab_pinch_warning": {
+    "value": 0.55,
+    "min": 0.2,
+    "max": 1.2,
+    "step": 0.05,
+    "label": "Spine Crab: claw warning",
+    "help": "Seconds the claws stay open (it clicks and blinks orange) before the rush."
+  },
+  "crab_rush_speed": {
+    "value": 240.0,
+    "min": 120.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Spine Crab: claw rush speed",
+    "help": "How fast it lunges with open claws. 240 crosses the screen in about a second and a half."
+  },
+  "crab_rush_time": {
+    "value": 0.4,
+    "min": 0.15,
+    "max": 0.9,
+    "step": 0.05,
+    "label": "Spine Crab: claw rush length",
+    "help": "Seconds the rush lasts. 0.4 at speed 240 is about six tiles."
+  },
+  "crab_rear_warning": {
+    "value": 0.7,
+    "min": 0.3,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Spine Crab: rearing warning",
+    "help": "Seconds it rears up and rattles its spines before it fires them."
+  },
+  "crab_spine_speed": {
+    "value": 190.0,
+    "min": 90.0,
+    "max": 320.0,
+    "step": 10.0,
+    "label": "Spine Crab: spine speed",
+    "help": "How hard the five spines are flung upward. They arc and fall back around the crab."
+  },
+  "crab_spine_damage": {
+    "value": 12.0,
+    "min": 0.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Spine Crab: spine damage",
+    "help": "Damage from one falling spine."
+  },
+  "crab_spine_gravity": {
+    "value": 420.0,
+    "min": 200.0,
+    "max": 900.0,
+    "step": 20.0,
+    "label": "Spine Crab: spine fall",
+    "help": "How fast the spines drop back down. Higher = they come down sooner and closer."
+  },
+  "crab_burrow_time": {
+    "value": 0.4,
+    "min": 0.2,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Spine Crab: sinking time",
+    "help": "Seconds it takes to dig in (it blinks orange and rumbles)."
+  },
+  "crab_burrow_speed": {
+    "value": 130.0,
+    "min": 60.0,
+    "max": 260.0,
+    "step": 10.0,
+    "label": "Spine Crab: tunnel speed",
+    "help": "How fast it travels under the floor toward her. The dirt line shows where it is."
+  },
+  "crab_burrow_chase": {
+    "value": 1.3,
+    "min": 0.4,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Spine Crab: tunnel time",
+    "help": "Seconds it follows her under the floor before it stops to rumble."
+  },
+  "crab_rumble": {
+    "value": 0.6,
+    "min": 0.3,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Spine Crab: rumble warning",
+    "help": "Seconds the ground bulges and shakes before the crab bursts out. Step away in this time."
+  },
+  "crab_rest": {
+    "value": 0.8,
+    "min": 0.2,
+    "max": 2.0,
+    "step": 0.1,
+    "label": "Spine Crab: rest after an attack",
+    "help": "Seconds it is slow and open to hits after an attack."
+  },
+  "crab_wait": {
+    "value": 1.2,
+    "min": 0.3,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Spine Crab: pause between attacks",
+    "help": "Seconds before the crab starts its next attack."
+  },
+  "crab_tink_push": {
+    "value": 12.0,
+    "min": 0.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Spine Crab: shell knock-back",
+    "help": "How far she is pushed back when her cut bounces off the shell."
+  },
+  "moth_hp": {
+    "value": 40.0,
+    "min": 10.0,
+    "max": 150.0,
+    "step": 5.0,
+    "label": "Censer Moth: health",
+    "help": "How tough the moth is. 40 is four Dirge cuts."
+  },
+  "moth_damage": {
+    "value": 14.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Censer Moth: dive damage",
+    "help": "Damage if the moth hits her during its ember dive."
+  },
+  "moth_speed": {
+    "value": 70.0,
+    "min": 30.0,
+    "max": 160.0,
+    "step": 5.0,
+    "label": "Censer Moth: flying speed",
+    "help": "How fast it drifts about when it is not attacking."
+  },
+  "moth_notice": {
+    "value": 220.0,
+    "min": 100.0,
+    "max": 360.0,
+    "step": 10.0,
+    "label": "Censer Moth: notices her at",
+    "help": "How far away the moth starts hunting her."
+  },
+  "moth_veil_warning": {
+    "value": 0.7,
+    "min": 0.3,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Censer Moth: incense warning",
+    "help": "Seconds the censer glows and chimes before the smoke comes out."
+  },
+  "moth_cloud_damage": {
+    "value": 10.0,
+    "min": 0.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Censer Moth: smoke damage",
+    "help": "Damage when she touches a smoke cloud."
+  },
+  "moth_cloud_life": {
+    "value": 6.0,
+    "min": 2.0,
+    "max": 12.0,
+    "step": 0.5,
+    "label": "Censer Moth: smoke lasts",
+    "help": "Seconds each smoke cloud hangs in the room."
+  },
+  "moth_cloud_speed": {
+    "value": 22.0,
+    "min": 5.0,
+    "max": 70.0,
+    "step": 1.0,
+    "label": "Censer Moth: smoke drift",
+    "help": "How fast the smoke drifts toward her."
+  },
+  "moth_gust_warning": {
+    "value": 0.5,
+    "min": 0.2,
+    "max": 1.2,
+    "step": 0.05,
+    "label": "Censer Moth: gust warning",
+    "help": "Seconds the wings are held up before the gust. Brace or move."
+  },
+  "moth_gust_push": {
+    "value": 56.0,
+    "min": 16.0,
+    "max": 120.0,
+    "step": 4.0,
+    "label": "Censer Moth: gust shove",
+    "help": "How far the gust throws her. 56 is three and a half tiles. It does no damage by itself."
+  },
+  "moth_gust_time": {
+    "value": 0.35,
+    "min": 0.15,
+    "max": 0.8,
+    "step": 0.05,
+    "label": "Censer Moth: gust length",
+    "help": "Seconds the gust blows."
+  },
+  "moth_dive_warning": {
+    "value": 0.6,
+    "min": 0.3,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Censer Moth: dive warning",
+    "help": "Seconds of shrill fluttering before the ember dive."
+  },
+  "moth_dive_time": {
+    "value": 1.1,
+    "min": 0.5,
+    "max": 2.5,
+    "step": 0.1,
+    "label": "Censer Moth: dive length",
+    "help": "Seconds the swoop takes. Shorter = a faster dive."
+  },
+  "moth_ember_damage": {
+    "value": 8.0,
+    "min": 0.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Censer Moth: ember damage",
+    "help": "Damage from a falling or burning ember."
+  },
+  "moth_ember_burn": {
+    "value": 1.0,
+    "min": 0.3,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Censer Moth: ember burn time",
+    "help": "Seconds an ember keeps burning on the floor."
+  },
+  "moth_wait": {
+    "value": 1.6,
+    "min": 0.4,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Censer Moth: pause between attacks",
+    "help": "Seconds before the moth starts its next attack."
+  },
+  "scribe_hp": {
+    "value": 50.0,
+    "min": 10.0,
+    "max": 200.0,
+    "step": 5.0,
+    "label": "Needle Scribe: health",
+    "help": "How tough the scribe is. Below half of this it leaves an ink clone."
+  },
+  "scribe_damage": {
+    "value": 16.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Needle Scribe: needle / drop damage",
+    "help": "Damage from the needle and from the scribe dropping on her."
+  },
+  "scribe_glyph_damage": {
+    "value": 22.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Needle Scribe: glyph damage",
+    "help": "Damage from the glyph when it bursts."
+  },
+  "scribe_speed": {
+    "value": 60.0,
+    "min": 30.0,
+    "max": 150.0,
+    "step": 5.0,
+    "label": "Needle Scribe: floating speed",
+    "help": "How fast it floats about."
+  },
+  "scribe_notice": {
+    "value": 230.0,
+    "min": 100.0,
+    "max": 360.0,
+    "step": 10.0,
+    "label": "Needle Scribe: notices her at",
+    "help": "How far away the scribe starts to attack."
+  },
+  "scribe_needle_warning": {
+    "value": 0.5,
+    "min": 0.2,
+    "max": 1.2,
+    "step": 0.05,
+    "label": "Needle Scribe: needle warning",
+    "help": "Seconds of glint before the needle flies. The aim is locked for the last 0.2."
+  },
+  "scribe_needle_speed": {
+    "value": 330.0,
+    "min": 150.0,
+    "max": 560.0,
+    "step": 10.0,
+    "label": "Needle Scribe: needle speed",
+    "help": "How fast the needle flies. 330 crosses the screen in a bit more than a second."
+  },
+  "scribe_pin_time": {
+    "value": 0.8,
+    "min": 0.2,
+    "max": 2.0,
+    "step": 0.1,
+    "label": "Needle Scribe: pin time",
+    "help": "Seconds she is pinned and cannot move after a needle hit."
+  },
+  "scribe_drip_time": {
+    "value": 0.7,
+    "min": 0.3,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Needle Scribe: ink drip warning",
+    "help": "Seconds an ink drip hangs on the ceiling above her before the scribe drops from it."
+  },
+  "scribe_drop_speed": {
+    "value": 380.0,
+    "min": 180.0,
+    "max": 700.0,
+    "step": 20.0,
+    "label": "Needle Scribe: ink drop speed",
+    "help": "How fast the scribe falls from the ceiling."
+  },
+  "scribe_glyph_time": {
+    "value": 0.9,
+    "min": 0.4,
+    "max": 2.0,
+    "step": 0.05,
+    "label": "Needle Scribe: glyph fuse",
+    "help": "Seconds from the glyph being drawn to its burst. Step off it."
+  },
+  "scribe_glyph_radius": {
+    "value": 34.0,
+    "min": 16.0,
+    "max": 70.0,
+    "step": 2.0,
+    "label": "Needle Scribe: glyph size",
+    "help": "How wide the glyph burst is. 34 is about two tiles each side."
+  },
+  "scribe_wait": {
+    "value": 1.3,
+    "min": 0.3,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Needle Scribe: pause between attacks",
+    "help": "Seconds before the scribe starts its next attack."
+  },
+  "scribe_clone_every": {
+    "value": 7.0,
+    "min": 3.0,
+    "max": 20.0,
+    "step": 0.5,
+    "label": "Needle Scribe: new ink clone every",
+    "help": "Below half health, seconds between ink clones. A clone copies its attacks but is harmless and pops when hit."
+  },
+  "leech_hp": {
+    "value": 25.0,
+    "min": 5.0,
+    "max": 100.0,
+    "step": 5.0,
+    "label": "Thread Leech: health",
+    "help": "How tough the leech is. 25 is three Dirge cuts."
+  },
+  "leech_damage": {
+    "value": 8.0,
+    "min": 0.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Thread Leech: landing damage",
+    "help": "Damage when the leech lands on her. After that it drains her."
+  },
+  "leech_notice": {
+    "value": 20.0,
+    "min": 8.0,
+    "max": 48.0,
+    "step": 2.0,
+    "label": "Thread Leech: drops when she is within",
+    "help": "How close to straight under it she must be. 20 is about one tile and a half."
+  },
+  "leech_hang": {
+    "value": 24.0,
+    "min": 8.0,
+    "max": 60.0,
+    "step": 2.0,
+    "label": "Thread Leech: hanging length",
+    "help": "How far below the ceiling it hangs."
+  },
+  "leech_reach": {
+    "value": 230.0,
+    "min": 60.0,
+    "max": 400.0,
+    "step": 10.0,
+    "label": "Thread Leech: longest drop",
+    "help": "How far down its thread it can fall."
+  },
+  "leech_drop_warning": {
+    "value": 0.5,
+    "min": 0.2,
+    "max": 1.2,
+    "step": 0.05,
+    "label": "Thread Leech: drip warning",
+    "help": "Seconds a drop of slime falls before the leech itself drops."
+  },
+  "leech_drop_speed": {
+    "value": 360.0,
+    "min": 160.0,
+    "max": 640.0,
+    "step": 20.0,
+    "label": "Thread Leech: drop speed",
+    "help": "How fast the leech falls down its thread."
+  },
+  "leech_drain_mp": {
+    "value": 14.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Thread Leech: magic drain",
+    "help": "How much magic (MP) it drains from her each second while latched."
+  },
+  "leech_drain_en": {
+    "value": 24.0,
+    "min": 0.0,
+    "max": 80.0,
+    "step": 1.0,
+    "label": "Thread Leech: energy drain",
+    "help": "How much energy (EN) it drains each second once her magic is gone."
+  },
+  "leech_slow": {
+    "value": 0.5,
+    "min": 0.0,
+    "max": 0.9,
+    "step": 0.05,
+    "label": "Thread Leech: slowing",
+    "help": "How much of her running speed it takes away while latched. 0.5 = half."
+  },
+  "leech_latch_time": {
+    "value": 4.0,
+    "min": 1.0,
+    "max": 10.0,
+    "step": 0.5,
+    "label": "Thread Leech: longest latch",
+    "help": "Seconds before it lets go by itself."
+  },
+  "leech_jumps": {
+    "value": 2.0,
+    "min": 1.0,
+    "max": 5.0,
+    "step": 1.0,
+    "label": "Thread Leech: jumps to shake it off",
+    "help": "How many jumps make it fall off."
+  },
+  "leech_attacks": {
+    "value": 3.0,
+    "min": 1.0,
+    "max": 6.0,
+    "step": 1.0,
+    "label": "Thread Leech: swings to shake it off",
+    "help": "How many sword swings make it fall off."
+  },
+  "leech_stun": {
+    "value": 1.5,
+    "min": 0.3,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Thread Leech: stunned after falling",
+    "help": "Seconds it lies stunned on the floor, open to hits."
+  },
+  "leech_climb_speed": {
+    "value": 70.0,
+    "min": 20.0,
+    "max": 160.0,
+    "step": 5.0,
+    "label": "Thread Leech: climbing speed",
+    "help": "How fast it climbs back up its thread."
+  },
+  "leech_wait": {
+    "value": 2.0,
+    "min": 0.5,
+    "max": 6.0,
+    "step": 0.1,
+    "label": "Thread Leech: pause before dropping again",
+    "help": "Seconds before it can drop again after climbing back."
+  },
+  "pendulum_damage": {
+    "value": 35.0,
+    "min": 0.0,
+    "max": 100.0,
+    "step": 1.0,
+    "label": "Pendulum blade: damage",
+    "help": "Damage from touching the swinging blade."
+  },
+  "pendulum_period": {
+    "value": 2.4,
+    "min": 1.0,
+    "max": 5.0,
+    "step": 0.1,
+    "label": "Pendulum blade: swing time",
+    "help": "Seconds for one full swing there and back."
+  },
+  "pendulum_angle": {
+    "value": 60.0,
+    "min": 20.0,
+    "max": 80.0,
+    "step": 5.0,
+    "label": "Pendulum blade: swing angle",
+    "help": "How far to each side the blade swings, in degrees."
+  },
+  "pendulum_clearance": {
+    "value": 24.0,
+    "min": 8.0,
+    "max": 64.0,
+    "step": 2.0,
+    "label": "Pendulum blade: height above floor",
+    "help": "How high the blade passes above the floor at its lowest. 24 is one and a half tiles."
+  },
+  "crusher_damage": {
+    "value": 40.0,
+    "min": 0.0,
+    "max": 100.0,
+    "step": 1.0,
+    "label": "Crusher: damage",
+    "help": "Damage if she is under the crusher when it slams or while it sits on the floor."
+  },
+  "crusher_wait": {
+    "value": 1.0,
+    "min": 0.3,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Crusher: time up",
+    "help": "Seconds the crusher stays up between slams."
+  },
+  "crusher_warn": {
+    "value": 0.6,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Crusher: warning",
+    "help": "Seconds it rattles and drops dust before it slams."
+  },
+  "crusher_fall_speed": {
+    "value": 700.0,
+    "min": 300.0,
+    "max": 1400.0,
+    "step": 50.0,
+    "label": "Crusher: slam speed",
+    "help": "How fast it falls."
+  },
+  "crusher_sit": {
+    "value": 0.5,
+    "min": 0.1,
+    "max": 2.0,
+    "step": 0.1,
+    "label": "Crusher: time down",
+    "help": "Seconds it stays on the floor after the slam."
+  },
+  "crusher_rise": {
+    "value": 0.9,
+    "min": 0.3,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Crusher: rising time",
+    "help": "Seconds it takes to rise back up."
+  },
+  "flame_damage": {
+    "value": 30.0,
+    "min": 0.0,
+    "max": 100.0,
+    "step": 1.0,
+    "label": "Flame vent: damage",
+    "help": "Damage from standing in the flame."
+  },
+  "flame_idle": {
+    "value": 1.8,
+    "min": 0.5,
+    "max": 5.0,
+    "step": 0.1,
+    "label": "Flame vent: quiet time",
+    "help": "Seconds the vent is quiet between flames."
+  },
+  "flame_warn": {
+    "value": 0.6,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Flame vent: warning",
+    "help": "Seconds the grate glows and hisses before the flame."
+  },
+  "flame_time": {
+    "value": 1.0,
+    "min": 0.3,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Flame vent: burning time",
+    "help": "Seconds the flame column burns."
+  },
+  "flame_height": {
+    "value": 56.0,
+    "min": 24.0,
+    "max": 120.0,
+    "step": 4.0,
+    "label": "Flame vent: flame height",
+    "help": "How tall the flame is. 56 is three and a half tiles."
+  },
+  "spikes_damage": {
+    "value": 30.0,
+    "min": 0.0,
+    "max": 100.0,
+    "step": 1.0,
+    "label": "Floor spikes: damage",
+    "help": "Damage from standing on the spikes when they are up."
+  },
+  "spikes_hidden": {
+    "value": 2.0,
+    "min": 0.5,
+    "max": 5.0,
+    "step": 0.1,
+    "label": "Floor spikes: hidden time",
+    "help": "Seconds the spikes stay hidden between thrusts."
+  },
+  "spikes_warn": {
+    "value": 0.5,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Floor spikes: warning",
+    "help": "Seconds the floor glints and rumbles before the spikes come up."
+  },
+  "spikes_up": {
+    "value": 1.2,
+    "min": 0.3,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Floor spikes: up time",
+    "help": "Seconds the spikes stay up."
+  },
+  "hole_pop": {
+    "value": 280.0,
+    "min": 150.0,
+    "max": 420.0,
+    "step": 10.0,
+    "label": "Pop out of a hole",
+    "help": "How hard she is thrown up when she comes out of a hole in a floor. 280 lifts her about three tiles, enough to step onto the floor beside the hole."
+  },
+  "crack_hits": {
+    "value": 3.0,
+    "min": 1.0,
+    "max": 8.0,
+    "step": 1.0,
+    "label": "Hits to break the cracked wall",
+    "help": "How many weapon cuts the cracked wall takes before it crumbles."
+  },
+  "bars_rise_time": {
+    "value": 1.2,
+    "min": 0.4,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Iron bars: rising time",
+    "help": "How long the iron bars take to rise once the lever behind them is cut."
+  },
+  "lever_reach": {
+    "value": 22.0,
+    "min": 10.0,
+    "max": 40.0,
+    "step": 2.0,
+    "label": "Lever: pull distance",
+    "help": "How close she must stand to pull the library lever with Up. 22 is about one and a half tiles."
+  },
+  "shift_tear_time": {
+    "value": 2.2,
+    "min": 0.8,
+    "max": 5.0,
+    "step": 0.1,
+    "label": "The shift: tearing time",
+    "help": "How long the picture rips and goes white when the machine is switched on. 2.2 is a little over two seconds."
+  },
+  "shift_whisper_min": {
+    "value": 8.0,
+    "min": 3.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Voices: shortest wait",
+    "help": "After the shift, the least time (seconds) between two whispers or chants."
+  },
+  "shift_whisper_max": {
+    "value": 20.0,
+    "min": 5.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Voices: longest wait",
+    "help": "After the shift, the most time (seconds) between two whispers or chants."
+  },
+  "shift_noise": {
+    "value": 0.12,
+    "min": 0.0,
+    "max": 0.4,
+    "step": 0.01,
+    "label": "Shifted picture: grain",
+    "help": "How much film grain covers the picture after the shift. 0 = clean."
+  },
+  "shift_tear_chance": {
+    "value": 0.2,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Shifted picture: tearing",
+    "help": "How often a band of the picture slips sideways after the shift. 0 = never, 1 = all the time."
+  },
+  "boss_reap_warn": {
+    "value": 0.8,
+    "min": 0.4,
+    "max": 2.0,
+    "step": 0.1,
+    "label": "Pallbearer: scythe warning",
+    "help": "How long a hand holds the glowing scythe before the sweep or the throw. Longer = easier to read."
+  },
+  "boss_reap_speed": {
+    "value": 190.0,
+    "min": 80.0,
+    "max": 400.0,
+    "step": 10.0,
+    "label": "Pallbearer: scythe sweep speed",
+    "help": "How fast the scythe crosses the room in the sweep. 190 takes about two seconds."
+  },
+  "boss_reap_high": {
+    "value": 30.0,
+    "min": 24.0,
+    "max": 44.0,
+    "step": 1.0,
+    "label": "Pallbearer: high sweep height",
+    "help": "Height above the floor of the chest-high scythe. She ducks or slides under it. Keep it above 28 so crouching works."
+  },
+  "boss_reap_low": {
+    "value": 8.0,
+    "min": 2.0,
+    "max": 14.0,
+    "step": 1.0,
+    "label": "Pallbearer: low sweep height",
+    "help": "Height above the floor of the low scythe. She jumps over it."
+  },
+  "boss_reap_thick": {
+    "value": 12.0,
+    "min": 6.0,
+    "max": 24.0,
+    "step": 1.0,
+    "label": "Pallbearer: scythe thickness",
+    "help": "How tall the dangerous part of the scythe is, in pixels."
+  },
+  "boss_throw_speed": {
+    "value": 170.0,
+    "min": 80.0,
+    "max": 360.0,
+    "step": 10.0,
+    "label": "Pallbearer: thrown scythe speed",
+    "help": "How fast the thrown scythe flies out and back. 170 takes about two and a half seconds across."
+  },
+  "machine_charge_time": {
+    "value": 1.6,
+    "min": 0.5,
+    "max": 4.0,
+    "step": 0.1,
+    "label": "Time machine: warm-up",
+    "help": "How long the machine hums and shakes the room after you say YES, before the picture tears. 1.6 is a little over one and a half seconds."
   }
 }

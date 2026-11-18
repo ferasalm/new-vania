@@ -95,6 +95,47 @@ func play(name: String, pitch: float = 1.0) -> void:
 	p.play()
 
 
+var _files := {}          # rel path -> AudioStream (sounds played by file, not by event)
+var _loop: AudioStreamPlayer
+
+
+func play_file(rel: String, volume_db: float = -6.0, pitch: float = 1.0) -> void:
+	# A sound played straight from its file under assets/audio/ (e.g. "sfx/world/lever.wav").
+	# Used by the new rooms, hazards, enemies and the reality shift. Missing files stay silent.
+	if not _files.has(rel):
+		_files[rel] = _load(rel)
+	var st: AudioStream = _files[rel]
+	if st == null:
+		return
+	var p: AudioStreamPlayer = _pool[_next]
+	_next = (_next + 1) % _pool.size()
+	p.stream = st
+	p.volume_db = volume_db
+	p.pitch_scale = pitch
+	p.play()
+
+
+func play_loop(rel: String, volume_db: float = -10.0) -> void:
+	# One looping ambience (the drone after the shift). "" stops it.
+	if _loop == null:
+		_loop = AudioStreamPlayer.new()
+		add_child(_loop)
+	if rel == "":
+		_loop.stop()
+		return
+	var st := _load(rel)
+	if st == null:
+		return
+	if st is AudioStreamWAV:
+		st.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		st.loop_end = int(st.get_length() * st.mix_rate)
+	elif st is AudioStreamOggVorbis:
+		st.loop = true
+	_loop.stream = st
+	_loop.volume_db = volume_db
+	_loop.play()
+
+
 func play_music(name: String, restart: bool = false) -> void:
 	if not ev.has(name) or (name == _music_name and not restart):
 		return
@@ -105,6 +146,12 @@ func play_music(name: String, restart: bool = false) -> void:
 	_music.volume_db = float(e["volume_db"]) + float(o["gain_db"])
 	_music.play()
 	_music.stream_paused = _music_held
+
+
+func stop_music() -> void:
+	# after the reality shift there is no music, only the drone
+	_music.stop()
+	_music_name = ""
 
 
 func pause_music(on: bool) -> void:

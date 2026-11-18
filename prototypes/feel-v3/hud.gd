@@ -149,6 +149,12 @@ func boss_bar(title: String, part: float) -> void:
 	_boss_fill.size.x = 200.0 * clampf(part, 0.0, 1.0)
 
 
+func fade_in_from(alpha: float, time: float) -> void:
+	# a short veil that lifts (used when she goes up or down through a hole)
+	_fade.color.a = alpha
+	fade(0.0, time)
+
+
 func fade(to: float, time: float) -> void:
 	var tw := create_tween()
 	tw.tween_property(_fade, "color:a", to, time)

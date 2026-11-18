@@ -41,7 +41,8 @@ const DEFAULT_BTN := [
 	{"id": "pause", "pos": Vector2(366, 14), "r": 10.0, "label": "", "size": 6},
 ]
 const LAYOUT_FILE := "user://touch_layout.json"
-const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "save": "CACHE 1", "lab": "LAB", "save2": "CACHE 2", "boss": "BOSS"}
+const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "save": "CACHE 1", "lab": "LAB", "save2": "CACHE 2", "boss": "BOSS",
+	"shaft": "WELL", "vault": "CACHE 4", "hazard": "CHAPEL", "timemachine": "ORGAN"}
 
 var active := false
 var paused := false
@@ -75,6 +76,7 @@ var _down := {}          # button id -> finger index (for the pressed look)
 var _next_attack := "attack"
 var _bubble_on := false
 var _bubble_pos := Vector2.ZERO
+var _bubble_label := "CACHE"
 var _overlay: CanvasLayer
 
 
@@ -303,7 +305,8 @@ func _button_down(id: String) -> void:
 			Input.action_press("attack")
 			_release_soon(["up", "attack"])
 		"swap":
-			_tap("swap")
+			if G.main != null and G.main.has_elegy:
+				_tap("swap")      # nothing to swap to until the Pallbearer's scythe is hers
 		"backdash_left":
 			_tap("backdash_left")
 		"backdash_right":
@@ -549,20 +552,25 @@ func _goto_room(room: String) -> void:
 		return
 	_resume()
 	G.main.player.hp = 0.0
-	G.main.enter(room, "P" if room == "church" else "left")
+	G.main.enter(room, G.main.ENTRY.get(room, "left"))
 
 
 func _near_terminal() -> bool:
+	# the bubble shows at the cache terminal, the time machine and the library lever (main decides)
 	if G.main == null or G.main.player == null or G.main.room == null:
 		return false
-	if not G.main.room.spawns.has("M"):
+	var target: Dictionary = G.main.interact_target()
+	if target.is_empty():
 		return false
-	var p: Node = G.main.player
-	return absf(p.global_position.x - G.main.room.spawns["M"].x) < 30.0 and p.is_on_floor()
+	_bubble_label = String(target["label"])
+	return true
 
 
 func _terminal_screen_pos() -> Vector2:
-	var at: Vector2 = G.main.room.spawns["M"] + Vector2(0, -44)
+	var target: Dictionary = G.main.interact_target()
+	if target.is_empty():
+		return _bubble_pos
+	var at: Vector2 = target["pos"]
 	var p: Vector2 = G.main.get_viewport().get_canvas_transform() * at
 	return p.clamp(Vector2(BUBBLE_R + 2.0, BUBBLE_R + 2.0), VIEW - Vector2(BUBBLE_R + 2.0, BUBBLE_R + 2.0))
 
@@ -592,18 +600,20 @@ func _draw() -> void:
 	# the cluster
 	for b in BTN:
 		var on: bool = _down.has(b["id"])
-		draw_circle(b["pos"], float(b["r"]), Color(0.55, 0.9, 1.0, 0.55) if on else Color(0.05, 0.07, 0.12, minf(0.95, 0.55 * boost)))
-		draw_arc(b["pos"], float(b["r"]), 0.0, TAU, 28, Color(0.55, 0.9, 1.0, 0.7 if on else 0.35), 1.2)
+		# the SWAP button is dimmed until she has a second weapon
+		var dim := 0.3 if (b["id"] == "swap" and G.main != null and not G.main.has_elegy) else 1.0
+		draw_circle(b["pos"], float(b["r"]), Color(0.55, 0.9, 1.0, 0.55) if on else Color(0.05, 0.07, 0.12, minf(0.95, 0.55 * boost) * dim))
+		draw_arc(b["pos"], float(b["r"]), 0.0, TAU, 28, Color(0.55, 0.9, 1.0, (0.7 if on else 0.35) * dim), 1.2)
 		if b["id"] == "pause":
 			draw_rect(Rect2(b["pos"] + Vector2(-3, -4), Vector2(2, 8)), Color(1, 1, 1, 0.85))
 			draw_rect(Rect2(b["pos"] + Vector2(1, -4), Vector2(2, 8)), Color(1, 1, 1, 0.85))
 		elif String(b["label"]) != "":
-			_text_centered(String(b["label"]), b["pos"], int(b["size"]), Color(1, 1, 1, 0.85))
+			_text_centered(String(b["label"]), b["pos"], int(b["size"]), Color(1, 1, 1, 0.85 * dim))
 	# the save terminal's floating bubble
 	if _bubble_on:
 		draw_circle(_bubble_pos, BUBBLE_R, Color(0.05, 0.25, 0.25, 0.72))
 		draw_arc(_bubble_pos, BUBBLE_R, 0.0, TAU, 28, Color(0.6, 1.0, 1.0, 0.9), 1.5)
-		_text_centered("CACHE", _bubble_pos, 7, Color(0.85, 1.0, 1.0))
+		_text_centered(_bubble_label, _bubble_pos, 6 if _bubble_label.length() > 6 else 7, Color(0.85, 1.0, 1.0))
 
 
 func _text_centered(text: String, at: Vector2, font_size: int, color: Color) -> void:

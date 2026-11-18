@@ -1,0 +1,23 @@
+{
+  "canvas": [
+    112,
+    96
+  ],
+  "anchor": [
+    56,
+    52
+  ],
+  "faces": "right",
+  "anims": {
+    "fly": 6,
+    "gust": 4,
+    "swing": 6,
+    "dive": 2
+  },
+  "body": [
+    40,
+    56
+  ],
+  "notes": "Censer moth, front view with ember-orange censer glow; symmetrical so facing right is neutral. Anchor = body centre (56,52), 4 px below the canvas centre so raised wings fit. swing sweeps the censer left to right in one pass; dive is head-down with wings swept back.",
+  "palette_size": 24
+}

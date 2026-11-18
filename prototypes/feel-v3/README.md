@@ -1,5 +1,5 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# Feel v3 - the mini game (6 rooms, two save rooms, a boss)
+# Feel v3 - the mini game (10 rooms, two save rooms, a boss, a time machine)
 
 Date: 2026-11-16 - Status: **in progress** - patch on branch feat/proto-v3-patch (hits, wall latch, two save rooms, SYSTEM OFFLINE, phone controls)
 
@@ -10,10 +10,18 @@ library, rest in a save room, cross a cold lab past a big brute, rest in a secon
 fight a boss. Each place has its own look and its own music. Doors sit in the edge of the
 room: walk up, the door slides open, walk off the screen.
 
+Beating the boss gives you its scythe, Elegy-013, and a way back opens: a lever in the library
+unseals the church's lower door, a long well leads up to a hidden station, and a ruined chapel
+full of traps hides a machine. Switch the machine on and the world answers: the whole map is
+drawn backwards and wrong, the rooms you knew change their doors, and the voices start.
+
 ## How to play
 
-Double-click `play.cmd`. The first time it builds Pandora's frames from the reference
-sheet in `assets/references/` (they are not stored in the repository, see "Art").
+Double-click `play.cmd` (needs Godot 4.7.2), or run the standalone Windows build
+`build/windows/new-vania-feel-v4.exe` (no Godot needed; rebuild it with
+`godot --headless --path . --export-release "Windows Desktop" build/windows/new-vania-feel-v4.exe`).
+Pandora's frames come from your own GIFs in `assets/sprites-pandora/`
+(`python tools/build_pandora_v3.py` rebuilds them into `assets/2x/pandora/`).
 
 | Key | What it does |
 |---|---|
@@ -25,17 +33,19 @@ sheet in `assets/references/` (they are not stored in the repository, see "Art")
 | `W` + `J` | the special (Up + Attack): a blade wave with Dirge-042 (costs MP); the Requiem with Elegy-013 |
 | `Q` (or `U`) / `L` (or `O`) | backdash to the left / to the right (she faces away from where she dashes) |
 | `S` + `K` (Down + Jump) | slide; on a thin platform it drops through instead |
-| `E` (or Tab) | swap weapon: Dirge-042 (fast short sword) / Elegy-013 (slow, strong, two-handed scythe) |
+| `E` (or Tab) | swap weapon: Dirge-042 (fast short sword) / Elegy-013 (slow, strong, two-handed scythe). Does nothing until the boss has dropped the scythe and you have picked it up (the SWAP button on the phone is dim until then) |
 | `W` at the brain cache station (middle of a save room) | heal fully and save |
 | `S` + `K` | drop through a thin ledge |
 | `Esc` or `P` | pause menu (Start on a gamepad). The music holds and goes on from the same spot |
 | `1`-`6` | tester shortcut: jump to church, library, cache 002, lab, cache 003, boss |
+| `7` `8` `9` `0` | tester shortcut: the marrow well, cache station 004, the threshing chapel, the organ of hours |
+| `W` beside a lever or the machine | pull the library lever / switch on the time machine (it asks first: W or S picks YES or NO, `J` confirms) |
 | `F1` | tuning panel (every number, every sound, each area's music) |
 | `R` | RECONSTRUCT: the same as after a defeat, but without dying |
 
 ## On an Android phone
 
-The shareable build is `build/android/new-vania-feel-v3.apk` (debug-signed, arm64). Copy it
+The shareable build is `build/android/new-vania-feel-v4.apk` (debug-signed, arm64). Copy it
 to the phone, open it, allow "install unknown apps" for the app you opened it from, and
 install. The game locks to landscape. Full install/build notes: `ANDROID.md`.
 
@@ -63,9 +73,23 @@ touchscreen, or when launched with `--touch`.
 3. **Cache Station 002** (save room): two capsules on the left (one holds a sleeping body, the one next to it is empty), the brain cache station in the middle (stand there and press W, or tap CACHE, to heal and save), and the terminal on the right.
 4. **Specimen Hall** (lab): catwalks over machines, the GRIP SERVOS relic, then the warden (the mini boss).
 5. **Cache Station 003** (save room): the same layout as 002, with violet light and amber warning lamps.
-6. **The Pallbearer** (boss).
+6. **The Pallbearer** (boss). Beating it leaves its scythe floating where it fell. Walk into it: Elegy-013 is yours.
+7. **The Marrow Well** (shaft): reached from the church's lower left door, which stays sealed until you cut the lever in the library (it sits on the climb; press W beside it or cut it). A tall well with ledges every six tiles. A plain jump rises about four tiles, so a ledge is out of reach without the wall grip: latch the wall, kick up and away, land on the next ledge. At the top is a hole into the vault.
+8. **Cache Station 004** (vault): a save room with a brain cache station and a terminal. The hole in its floor drops back into the well (and from the well the top opening leads up into it). Its left door leads on to the chapel. After the shift its right edge shows a locked special door: LOCKED - UNTIL THE NEXT UPDATE.
+9. **The Threshing Chapel** (hazard room): long hall of swinging pendulums, crushers, flame vents and spike strips, with crabs, moths, scribes and leeches. Iron bars cut it in two; the lever that raises them sits behind the bars, out of reach of the short sword: only the long Elegy-013 cut reaches it (the blade wave never does). On the left end a cracked wall takes three cuts to break; behind it is a low tunnel only a slide fits through. Standing, she is stopped. The tunnel ends in the time machine room.
+10. **The Organ of Hours** (time machine room): a dead pipe organ. Stand beside it and press W: THE MACHINE asks "Are you sure you want to activate this machine?" with YES and NO (NO is picked first). Choose YES.
 
 In both save rooms her feet now stand on the painted floor. Before, she floated above it.
+
+### After the shift
+
+- The screen tears, flashes white, then settles into a rough, grainy picture. Each room has its own colour filter: red in the chapel, inverted and red in the library, sick green in the church, deep blue in the well, red and black in the vault, violet in the machine room.
+- The ordinary music stops. A low drone runs, and every 8 to 20 seconds a whisper or a chant is heard.
+- The library and the church are drawn mirrored. The way through changes: chapel, library (top left door), church (bottom left door), well, vault. The church's lower door is open.
+- The terminals are dead: they say NO SIGNAL and neither heal nor save.
+- Dying wakes her next to the machine. She is also saved there.
+- The vault's right-hand special door cannot be opened yet.
+
 
 ## The wall grip (GRIP SERVOS)
 
@@ -92,6 +116,13 @@ slams the floor stays stuck for about three seconds: stand on it, jump, and cut 
 Hitting a hand hurts it only a little. It also slides a hand along the floor (jump it)
 and throws golden bolts (crouch under the high ones, jump the low ones). Under half
 health it gets faster and claps both hands together where you stand.
+
+Two attacks use the scythe it keeps (the same Elegy-013 you win from it). A hand lifts it,
+glows orange, and a lane line shows the height. **The reap**: a huge slash crosses the room at
+chest height (crouch or slide under it); every second reap is low (jump it). **The throw**: the
+scythe spins across the room at one height and comes back at the other, so you duck one pass
+and hop the other. The slash is drawn as a bright crescent, because the scythe picture is too tall to dodge by ducking.
+When it dies, the scythe drops: you win Elegy-013. (Until then the E key does nothing.)
 
 ## Weapons, hits and the special attack
 
@@ -153,6 +184,7 @@ PANDORA-002, and so on. The R key does the same without dying.
 
 `godot --headless --path prototypes/feel-v3 res://smoke.tscn` prints the checks (self-test: see the latest run) and
 `SMOKE PASS`. Add `-- shots` without `--headless` to save screenshots to `shots/`.
+It also covers the new area: the sealed door and the lever, the well and its ledges, up and down between the well and the vault, the bars, the cracked wall, the slide-only tunnel, the YES/NO question, the shift, the mirrored rooms and the new boss attacks.
 
 ## The three bars (stage 1b)
 

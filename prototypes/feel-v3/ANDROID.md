@@ -7,14 +7,15 @@ keyboard uses.
 
 ## The file
 
-`build/android/new-vania-feel-v3.apk`
+`build/android/new-vania-feel-v4.apk` (about 67 MB; the build folder is not in git,
+rebuild it with the export command below)
 
-- Debug-signed, `arm64-v8a`, package `com.ferasalm.newvania.feelv3`.
+- Debug-signed, `arm64-v8a`, package `com.ferasalm.newvania.feelv3` (same package, so it
+  installs over the v3 build).
 - Android 7.0 or newer (minSdk 24). The game locks to sensor landscape.
-- **Do not publish this APK.** It contains the placeholder hero frames traced from the
-  Order of Ecclesia reference sheet (`assets/hero/` is git-ignored for that reason) and
-  music whose licence is not confirmed. Share it by hand with people playtesting the
-  prototype, not on a store or a public link.
+- Pandora now comes from your own GIFs; the old traced frames are no longer in the build.
+- **Do not publish this APK.** The music licence is not confirmed. Share it by hand with
+  people playtesting the prototype, not on a store or a public link.
 
 ## Install
 
@@ -68,7 +69,7 @@ debug keystore).
 
 ```bat
 "C:\Users\AUC\opencode-workspace\tools\Godot\Godot_v4.7.2-stable_win64_console.exe" ^
-  --headless --path . --export-debug "Android" build/android/new-vania-feel-v3.apk
+  --headless --path . --export-debug "Android" build/android/new-vania-feel-v4.apk
 ```
 
 The export packs the raw PNG/JSON/TXT/OGG/WAV files (`include_filter` in

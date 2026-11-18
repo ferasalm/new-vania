@@ -26,8 +26,8 @@ const WEAPONS := [
 const SWINGS := {
 	"stand_j": {"at": Vector2(3, -35), "a0": -150.0, "a1": 30.0, "r0": 9.0, "r1": 22.0},
 	"stand_i": {"at": Vector2(1, -34), "a0": 115.0, "a1": -14.0, "r0": 8.0, "r1": 13.0},
-	"crouch_j": {"at": Vector2(3, -17), "a0": -120.0, "a1": 4.0, "r0": 9.0, "r1": 22.0},
-	"crouch_i": {"at": Vector2(1, -17), "a0": 60.0, "a1": -8.0, "r0": 8.0, "r1": 13.0},
+	"crouch_j": {"at": Vector2(3, -22), "a0": -120.0, "a1": 4.0, "r0": 9.0, "r1": 22.0},
+	"crouch_i": {"at": Vector2(1, -22), "a0": 60.0, "a1": -8.0, "r0": 8.0, "r1": 13.0},
 	"air_j": {"at": Vector2(3, -35), "a0": -150.0, "a1": 24.0, "r0": 9.0, "r1": 22.0},
 	"air_i": {"at": Vector2(1, -34), "a0": 120.0, "a1": -10.0, "r0": 8.0, "r1": 13.0},
 }
@@ -68,6 +68,7 @@ var _latch_cd := 0.0
 var _air_latches := 0       # latches used since her feet last touched the floor
 var _slide_t := 0.0         # seconds spent sliding
 var _slide_cd := 0.0
+var _slide_grace := 0.0     # a slide she was put into on arrival (a low tunnel) survives the first ticks before the floor is felt
 var _attack_elegy := false   # the weapon the current attack started with
 var _fx_t := 0.0            # time to the next spark/afterimage of a slide or Requiem
 var _shape: CollisionShape2D
@@ -291,6 +292,7 @@ func _physics_process(delta: float) -> void:
 				Vfx.backdash_end(global_position, -facing)
 		"slide":
 			_slide_t += delta
+			_slide_grace = maxf(0.0, _slide_grace - delta)
 			_fx_t -= delta
 			if _fx_t <= 0.0:
 				_fx_t = 0.045
@@ -308,7 +310,7 @@ func _physics_process(delta: float) -> void:
 				velocity.y = -T.v("jump_velocity")
 				Sfx.play("jump")
 				G.main.dust(global_position, 3)
-			elif not on_floor:
+			elif not on_floor and _slide_grace <= 0.0:
 				# sliding off an edge ends the slide
 				if _room_to_stand():
 					_set_body_height(BODY.y)
@@ -577,6 +579,8 @@ func weapon_showing() -> bool:
 
 
 func swap_weapon() -> void:
+	if not G.main.has_elegy:
+		return          # she only carries Dirge-042 until the Pallbearer's scythe is hers
 	T.set_v("weapon", 0.0 if _is_elegy() else 1.0)
 	Sfx.play("pickup", 0.8)
 	G.main.hud.toast(weapon_name())
@@ -665,6 +669,13 @@ func _try_backdash(dash_dir: int) -> bool:
 	Sfx.play("backdash")
 	G.main.dust(global_position, 3)
 	return true
+
+
+func force_slide(dir: int) -> void:
+	# she is put into a low tunnel (arriving through an open edge): she starts sliding that way
+	facing = dir
+	_start_slide()
+	_slide_grace = 0.15
 
 
 func _start_slide() -> void:
