@@ -17,8 +17,11 @@ drawn backwards and wrong, the rooms you knew change their doors, and the voices
 
 ## How to play
 
-Double-click `play.cmd`. The first time it builds Pandora's frames from the reference
-sheet in `assets/references/` (they are not stored in the repository, see "Art").
+Double-click `play.cmd` (needs Godot 4.7.2), or run the standalone Windows build
+`build/windows/new-vania-feel-v4.exe` (no Godot needed; rebuild it with
+`godot --headless --path . --export-release "Windows Desktop" build/windows/new-vania-feel-v4.exe`).
+Pandora's frames come from your own GIFs in `assets/sprites-pandora/`
+(`python tools/build_pandora_v3.py` rebuilds them into `assets/2x/pandora/`).
 
 | Key | What it does |
 |---|---|
@@ -42,7 +45,7 @@ sheet in `assets/references/` (they are not stored in the repository, see "Art")
 
 ## On an Android phone
 
-The shareable build is `build/android/new-vania-feel-v3.apk` (debug-signed, arm64). Copy it
+The shareable build is `build/android/new-vania-feel-v4.apk` (debug-signed, arm64). Copy it
 to the phone, open it, allow "install unknown apps" for the app you opened it from, and
 install. The game locks to landscape. Full install/build notes: `ANDROID.md`.
 
