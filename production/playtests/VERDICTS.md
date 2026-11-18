@@ -275,3 +275,16 @@ The user's words on the previous build, tidied:
 
 What was built in answer (branch `feat/proto-v3-mini`): see `prototypes/feel-v3/README.md`.
 Status: waiting on user (not yet played).
+
+## 2026-11-19: directions for proto v4 "area" (planning session; the user's words outrank the GDDs)
+
+Full log with GDD lines overruled: `prototypes/feel-v3/design/decisions.md` (24 decisions). The main ones:
+- Up picks up items, weapons, abilities and gear; soul orbs and machine scrap are taken by touch.
+- At most two enemy kinds per room; weak enemies return 10 s after dying while she is still in the room. Rooms easier, bosses harder, slower pace, same movement speed.
+- Levels: a full refill and 2 points per level, spent in a CHARACTER menu (or AUTO); stats include MAGIC.
+- Gear: 2 harness slots and 2 module slots; a restore module adds REBUILD HERE on the offline screen.
+- Sutures are never refilled; scrap fills a gauge spent by standing-still self-repair (a hit cancels it).
+- Two new machine enemies; a cyborg mini-boss (SEXTON-19) drops a bolt pistol for the off hand (with DIRGE-042 only). Rare drops; one strong one.
+- Arnetria behind three candles after the shift; her death ends it; her cracked visor stays. RECALL refights give best time + 25% XP.
+- Pandora: true 16-bit, a new palette (user picks A, B or C), hand-on-hip idle, Elegy's own two-handed moves, death and repair animations; voice via ElevenLabs after a yes.
+- No hint text. Every playable version is kept in playable-history.
