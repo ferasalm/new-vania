@@ -57,7 +57,7 @@ Every Agent call sets `model`. Never `general-purpose`, `Explore` or `Plan` for 
 ## Session 1: foundation, world, taking things, art proof
 
 1. Start: in `workspace/new-vania`, on branch `feat/proto-v4-area` made from an up-to-date Main (the user's untracked reference art was copied there on 2026-11-19). Run `worker.mjs verify` on the test lock.
-2. S0 Core runs alone (contract S0): the autoloads `W` and `R`, the data files and `rpg_math.gd`, with main.gd cut down. No change in behaviour: old smoke 66/66, climb and hazard tests still pass; t_data and t_math S0 checks pass.
+2. S0 Core runs alone (contract S0): the autoloads `W` and `R`, the data files and `rpg_math.gd`, with main.gd cut down. No change in behaviour: old smoke 135/135, climb and hazard tests still pass; t_data and t_math S0 checks pass.
 3. Alongside S0 (no shared files): the art proof. Palettes A, B and C on her idle frame, and the stationary jump made both ways (sprites.md section 6). The user picks a palette and a method. glm-flash finalises the voice-line script (no paid calls).
 4. S1 World and S2 Interact in parallel (separate files per the contract).
 5. Checkpoint: both map sheets walkable (placeholder art in new rooms is fine), Up pickups with cards, special show, XP and level-ups (points kept, AUTO available), orbs, scrap, self-repair, Sutures with a quickslot key, the new hazard room, the winch, backdrops and filters fixed, hints gone.

@@ -24,7 +24,7 @@ Write 6 headless test scenes in `prototypes/feel-v3/tests_v4/` exactly as `desig
 1. In `workspace/new-vania`: `git switch Main`, `git pull --ff-only`, then `git switch -c feat/proto-v4-area`. The hook blocks commits on Main. At the end of the session, after the user has played, open a PR into Main and merge it (backup tag on Main first). The next session starts the same way with a new branch.
 2. Usage: none to track in OpenCode (Claude's usage.mjs applies only to Claude sessions).
 3. `node ~/.claude/skills/lean-orchestrator/tools/worker.mjs verify <the lock file from step 0>`. It must report all intact.
-4. Baseline: from `prototypes/feel-v3`, `<godot> --headless --path . --import`, then smoke `res://smoke.tscn` (expect 66/66), and each `res://tests_v4/t_*.tscn` (they fail until the features exist; record the counts).
+4. Baseline: from `prototypes/feel-v3`, `<godot> --headless --path . --import`, then smoke `res://smoke.tscn` (expect 135/135), and each `res://tests_v4/t_*.tscn` (they fail until the features exist; record the counts).
 5. Session 1 = S0 alone, then S1 + S2 in parallel, with the art proof alongside S0 (plan, "Session 1").
 
 ## Commands
