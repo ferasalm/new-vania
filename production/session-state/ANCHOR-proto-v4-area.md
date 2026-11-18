@@ -1,11 +1,11 @@
 # ANCHOR: proto v4 "area" build. Read first after any compaction
 
-Worktree `C:/Users/AUC/opencode-workspace/workspace/new-vania-proto-v4`. Game `prototypes/feel-v3`.
+Work folder `C:/Users/AUC/opencode-workspace/workspace/new-vania` (the Main checkout). Each build session works on its own branch, which is merged into Main after the user plays it. Game `prototypes/feel-v3`.
 Godot `C:/Users/AUC/opencode-workspace/tools/Godot/Godot_v4.7.2-stable_win64_console.exe`.
 Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3/design/contract.md` (section 8 overrides). User decisions: `design/decisions.md`.
 
 ## Now
-- Planning: done (2026-11-19). The design pack and the plan are committed on `feat/proto-v4-backtrack` (draft PR #104).
+- Planning: done (2026-11-19). Merged into Main with PR #104 (feel v4 backtrack, the design pack and the plan).
 - Tests: NOT written yet. The Claude test writers were stopped at 85% of the 5-hour limit, before writing any file.
 - Next: the user continues in OPENCODE ONLY. Step 0 writes and locks the tests, then build session 1 runs. (waiting on user)
 
@@ -21,7 +21,7 @@ Write 6 headless test scenes in `prototypes/feel-v3/tests_v4/` exactly as `desig
 - Then `worker.mjs lock` on the 12 files, and commit and push the lock with them.
 
 ## Start of build session 1 (in order)
-1. `git switch -c feat/proto-v4-area` (stacked on feat/proto-v4-backtrack; PR #104 is not merged).
+1. In `workspace/new-vania`: `git switch Main`, `git pull --ff-only`, then `git switch -c feat/proto-v4-area`. The hook blocks commits on Main. At the end of the session, after the user has played, open a PR into Main and merge it (backup tag on Main first). The next session starts the same way with a new branch.
 2. Usage: none to track in OpenCode (Claude's usage.mjs applies only to Claude sessions).
 3. `node ~/.claude/skills/lean-orchestrator/tools/worker.mjs verify <the lock file from step 0>`. It must report all intact.
 4. Baseline: from `prototypes/feel-v3`, `<godot> --headless --path . --import`, then smoke `res://smoke.tscn` (expect 66/66), and each `res://tests_v4/t_*.tscn` (they fail until the features exist; record the counts).
@@ -35,7 +35,7 @@ Write 6 headless test scenes in `prototypes/feel-v3/tests_v4/` exactly as `desig
 
 ## Guards
 - Stage in a separate command, then commit. Never commit: `assets/hero_2d_base/complete-sprites-reference.png`, `assets/hero_2d_base/pandora-16-bit/`, `assets/hero/`, `assets/references/`, `.usage-start.json`.
-- No rm / reset --hard / clean / force-push; move aside. No `cd ..` out of the worktree.
+- No rm / reset --hard / clean / force-push; move aside. Stay inside `workspace/new-vania`. The untracked reference art (`assets/hero_2d_base/pandora-16-bit/`, the rig) was copied there on 2026-11-19; it stays untracked.
 - Every Agent call sets a model. Paid tools only after the user's yes.
 - The user has no game-dev experience: plain words, status words done / in progress / planned / not planned / waiting on user.
 - After each slice: update this file (Now, Verified, Next) and keep it under 60 lines.
