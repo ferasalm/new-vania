@@ -373,6 +373,8 @@ func _ask_machine() -> void:
 	if choice == "yes":
 		await _activate_machine()
 	else:
+		# the key that said NO is still down: she must not swing at the air as the question closes
+		await get_tree().create_timer(0.3).timeout
 		hold = false
 
 
@@ -385,8 +387,8 @@ func _activate_machine() -> void:
 		room.organ.charge()
 	Sfx.pause_music(true)
 	Sfx.play_file("sfx/shift/machine_activate.wav", -2.0)
-	shake(1.5, 1.6)
-	await get_tree().create_timer(1.6).timeout
+	shake(1.5, T.v("machine_charge_time"))
+	await get_tree().create_timer(T.v("machine_charge_time")).timeout
 	var tear_time: float = T.v("shift_tear_time")
 	Sfx.play_file("sfx/shift/shift_tear.wav", -1.0)
 	shift.tear(tear_time)

@@ -221,6 +221,15 @@ func _build() -> void:
 				up_cells.append(x)
 			elif ch == "v" and y == last_row:
 				down_cells.append(x)
+				# a thin ledge covers the hole: she pops up through it and lands on it,
+				# and Down + Jump drops her back down (no falling in by accident)
+				var cover := CollisionShape2D.new()
+				var cover_rect := RectangleShape2D.new()
+				cover_rect.size = Vector2(TILE, 6.0)
+				cover.shape = cover_rect
+				cover.position = Vector2(x * TILE + TILE / 2.0, y * TILE + 3.0)
+				cover.one_way_collision = true
+				ledge.add_child(cover)
 			elif ch == "<" or ch == ">":
 				_open_edge(x, y, ch)
 			elif ch == "D" or ch == "X":
@@ -357,6 +366,6 @@ func _draw() -> void:
 					depth = 1 if cell(x, y - 2) != "#" else 2
 				draw_texture_rect_region(_tiles, Rect2(x * TILE, y * TILE, TILE, TILE),
 					Rect2((x % 4) * TILE, depth * TILE, TILE, TILE), tt)
-			elif ch == "=":
+			elif ch == "=" or ch == "v":
 				draw_texture_rect_region(_ledge, Rect2(x * TILE, y * TILE, TILE, 8),
 					Rect2((x % 4) * TILE, 0, TILE, 8), tt)

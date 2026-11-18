@@ -588,8 +588,12 @@ func _goto_from(room_name: String, key: String, from_room: String) -> void:
 	await _frames(30)
 
 
-func _climb_hop(p: CharacterBody2D, target_top: float) -> bool:
-	# jump at the right wall, latch it, kick off up and left onto the next ledge (human timing)
+func _climb_hop(p: CharacterBody2D, target_top: float, start_x: float) -> bool:
+	# jump at the right wall, latch it, kick off up and left onto the next ledge (human timing).
+	# She starts at the right end of the ledge (x 172), where a player would take the run.
+	p.global_position.x = start_x
+	p.velocity = Vector2.ZERO
+	await _frames(6)
 	Input.action_press("right")
 	Input.action_press("jump")
 	var latched := false
@@ -704,13 +708,30 @@ func _new_area() -> void:
 	var dn: Vector2 = main.room.down_span
 	_check("she pops out of the vault hole, above its floor", absf(p.global_position.x - (dn.x + dn.y) / 2.0) < 6.0
 		and p.global_position.y < main.room.size.y - 8.0 and p.velocity.y < 0.0, "x=%.0f y=%.0f vy=%.0f" % [p.global_position.x, p.global_position.y, p.velocity.y])
-	await _frames(40)
-	p.global_position = Vector2((dn.x + dn.y) / 2.0, main.room.size.y - 6.0)
+	Input.action_press("right")
+	await _frames(45)
+	Input.action_release("right")
+	await _frames(20)
+	p = main.player
+	_check("steering in the air she lands on the vault floor beside the hole", main.room_name == "vault" and p.is_on_floor() and p.global_position.x > dn.y + 2.0,
+		"room=%s x=%.0f floor=%s" % [main.room_name, p.global_position.x, str(p.is_on_floor())])
+	# the hole is covered by a thin ledge: standing on it she stays in the vault
+	p.global_position = Vector2((dn.x + dn.y) / 2.0, main.room.size.y - 20.0)
 	p.velocity = Vector2.ZERO
+	await _frames(30)
+	p = main.player
+	_check("a thin ledge covers the vault hole: she stands on it and does not fall back", main.room_name == "vault" and p.is_on_floor(),
+		"room=%s y=%.0f floor=%s" % [main.room_name, p.global_position.y, str(p.is_on_floor())])
+	Input.action_press("down")
+	await _frames(2)
+	Input.action_press("jump")
+	await _frames(3)
+	Input.action_release("jump")
 	await _until_room("shaft", 120)
+	Input.action_release("down")
 	await _frames(1)
 	p = main.player
-	_check("falling through the vault hole leads back into the top of the shaft, still falling", main.room_name == "shaft" and p.global_position.y < 80.0 and p.velocity.y > 0.0,
+	_check("Down + Jump on the hole ledge drops her back into the top of the shaft, still falling", main.room_name == "shaft" and p.global_position.y < 80.0 and p.velocity.y > 0.0,
 		"room=%s y=%.0f vy=%.0f" % [main.room_name, p.global_position.y, p.velocity.y])
 
 	# ---- the ledges: 96 apart, so a plain jump cannot do it ----
@@ -750,7 +771,7 @@ func _new_area() -> void:
 	await _frames(15)
 	var hops: Array = []
 	for k in 4:
-		var hop_ok: bool = await _climb_hop(p, float(ledges[k]))
+		var hop_ok: bool = await _climb_hop(p, float(ledges[k]), 180.0 if k == 0 else 172.0)
 		hops.append(hop_ok)
 		if not hop_ok:
 			break
@@ -860,6 +881,7 @@ func _new_area() -> void:
 	for pr in main.room.props:
 		if pr.has_method("prop_cut") and not pr.has_method("pull"):
 			wall = pr
+	var wall_end_x: float = wall.rect.end.x
 	p.global_position = Vector2(wall.rect.end.x + 8.0, wall.rect.end.y - 1.0)
 	p.facing = -1
 	await _frames(6)
@@ -876,7 +898,7 @@ func _new_area() -> void:
 	Input.action_press("left")
 	await _frames(90)
 	Input.action_release("left")
-	_check("standing, she cannot enter the 2-tile tunnel", p.global_position.x > wall.rect.end.x + 3.0 and main.room_name == "hazard", "x=%.1f" % p.global_position.x)
+	_check("standing, she cannot enter the 2-tile tunnel", p.global_position.x > wall_end_x + 3.0 and main.room_name == "hazard", "x=%.1f" % p.global_position.x)
 	p.facing = -1
 	Input.action_press("down")
 	await _frames(8)
@@ -895,7 +917,7 @@ func _new_area() -> void:
 	await _frames(4)
 	_check("arriving at the low tunnel puts her into a slide", main.player.state == "slide" and main.room.tunnels.get("left", false), "state=%s" % main.player.state)
 	await _frames(110)
-	_check("she comes out of the tunnel into the hall", main.player.global_position.x > wall.rect.end.x + 10.0, "x=%.0f" % main.player.global_position.x)
+	_check("she comes out of the tunnel into the hall", main.player.global_position.x > wall_end_x + 6.0, "x=%.0f" % main.player.global_position.x)
 
 	# ---- the time machine, the question, the shift ----
 	await _goto("timemachine", "K")
@@ -915,16 +937,20 @@ func _new_area() -> void:
 	_check("while the question is open she cannot move", absf(p.global_position.x - tpos.x) < 2.0, "x=%.1f" % p.global_position.x)
 	while main.dialog._ready_t > 0.0:
 		await _frames(1)
-	await _tap("attack", 2)      # NO is the first pick
-	await _frames(8)
+	_check("the first pick is NO", main.dialog._pick == 1, "")
+	await _tap("attack", 6)      # NO is the first pick
+	await _frames(40)
 	_check("NO changes nothing", not main.dialog.active and not G.shifted and not main.hold and main.saved_room == saved_before, "saved_room=%s" % main.saved_room)
 	await _tap("up", 2)
 	await _frames(4)
+	_check("asking again opens the question again", main.dialog.active, "")
 	while main.dialog._ready_t > 0.0:
 		await _frames(1)
-	await _tap("up", 2)          # up/down moves the pick to YES
+	await _tap("up", 6)          # up/down moves the pick to YES
 	await _frames(4)
-	await _tap("attack", 2)
+	_check("W moves the pick to YES", main.dialog._pick == 0, "pick=%d" % main.dialog._pick)
+	await _tap("attack", 6)
+	await _frames(4)
 	for i in 900:
 		await get_tree().physics_frame
 		if G.shifted and not main._busy:
