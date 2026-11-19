@@ -37,11 +37,14 @@ GIFS = Path("assets/sprites-pandora/jump")
 SIZE = 256
 GROUND = 240                     # her ankles' line on the 256 canvas
 DESCRIPTION = ("slender pale woman with long flowing silver-cyan hair, sleek black-teal bodysuit with thin glowing "
-               "cyan seam lines, glowing cyan eyes, long dark sleeve-tails trailing from her forearms")
-ACTION = "graceful jump"
-# pass-2 picks (gif, frame, beat): the air frames come from j2's knee lift and raised arm (more grace than pass 1)
-PICKS2 = [("j1", 7, "crouch"), ("j1", 10, "push-off"), ("j2", 20, "rise: knee up"), ("j2", 24, "rise: arm up"),
-          ("j3", 29, "top"), ("j1", 43, "fall"), ("j1", 64, "land")]
+               "cyan seam lines, glowing cyan eyes, long dark ribbon-like sleeve-tails that flow and trail behind her")
+ACTION = "graceful leaping jump"
+# picks (gif, frame, beat). Seeds 7/8 used upright picks (see raw/seedN/picks.json); the user found them not
+# graceful enough, so seed 9 uses the leap poses the user approved on 2026-11-19 (proposed_poses_seed9.png).
+PICKS2 = [("j3", 6, "crouch: lean in"), ("j1", 12, "push-off: toes pointed"), ("j2", 51, "rise: split leap"),
+          ("j2", 57, "rise: knees gather"), ("j3", 54, "top: tuck, hair floats"), ("j1", 48, "fall: long glide"),
+          ("j1", 60, "land: knees soften")]
+FLIP = {("j3", 6)}               # faces left in the GIF; every game frame faces right (user, 2026-11-19)
 BONES = [("NECK", "NOSE"), ("NOSE", "RIGHT EYE"), ("NOSE", "LEFT EYE"), ("RIGHT EYE", "RIGHT EAR"),
          ("LEFT EYE", "LEFT EAR"), ("NECK", "RIGHT SHOULDER"), ("RIGHT SHOULDER", "RIGHT ELBOW"),
          ("RIGHT ELBOW", "RIGHT ARM"), ("NECK", "LEFT SHOULDER"), ("LEFT SHOULDER", "LEFT ELBOW"),
@@ -96,7 +99,7 @@ def ref_image():
 
 
 def source_image(gif, idx):
-    """One frame of the user's GIF with the green keyed out (135 x 240)."""
+    """One frame of the user's GIF with the green keyed out (135 x 240), mirrored when it is in FLIP."""
     im = Image.open(GIFS / f"{gif}.gif")
     im.seek(idx)
     rgb = im.convert("RGB")
@@ -107,13 +110,17 @@ def source_image(gif, idx):
             c = px[x, y]
             if not g2p.is_bg(*c):
                 po[x, y] = c + (255,)
-    return out
+    return out.transpose(Image.FLIP_LEFT_RIGHT) if (gif, idx) in FLIP else out
+
+
+def src_name(gif, idx):
+    return f"{gif}_{idx:02d}" + ("m" if (gif, idx) in FLIP else "")
 
 
 def _images():
     yield "ref", Image.open(OUT / "ref_a.png")
     for gif, idx, _b in PICKS2:
-        yield f"{gif}_{idx:02d}", source_image(gif, idx)
+        yield src_name(gif, idx), source_image(gif, idx)
 
 
 # ---------------------------------------------------------------- steps
@@ -211,7 +218,7 @@ def step_retarget():
         per_gif.setdefault(f.stem.split("_")[0], []).append(body_ratio(ref, _load(f.stem)))
     per_gif = {g: statistics.median(v) for g, v in per_gif.items()}
     for n, (gif, idx, beat) in enumerate(PICKS2):
-        src = _load(f"{gif}_{idx:02d}")
+        src = _load(src_name(gif, idx))
         out, k = retarget(ref, src, per_gif[gif])
         poses.append(_as_api(out))
         info.append({"pose": n, "src": f"{gif}:{idx}", "beat": beat, "scale": round(k, 3)})

@@ -600,8 +600,17 @@ func _weak_respawn() -> void:
 	var moth := _find_kind("moth")
 	var moth_bad := "no moth in the library"
 	if moth != null:
-		await _kill(moth)
-		await _frames(10)
+		# the library holds 2 moths (map.md): kill every one, so "gone" means none came back
+		var killed_ids := []
+		while moth != null and killed_ids.size() < 8:
+			killed_ids.append(moth.get_instance_id())
+			await _kill(moth)
+			await _frames(10)
+			moth = null
+			for c in main.get("room").get_children():
+				if c is Node and _kind_of(c) == "moth" and not killed_ids.has(c.get_instance_id()):
+					moth = c
+					break
 		if main.get("player").has_method("debug_set"):
 			main.get("player").call("debug_set", {"pos": Vector2(10.0, 10.0)})
 		resp.call("debug_tick", wait + 5.0)

@@ -25,7 +25,7 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
   `tools/jump_rig.py` caches paid steps. PixelLab: 7 of 40 trial generations used (yes was up to 8).
   NEXT: user's yes at game speed -> hand clean-up (arm-up frame's raised tail) -> wire 7 frames in player.gd
   (game picks 4 by velocity today) -> assets/2x/pandora + pandora_b -> test build.
-- S1: pass 1 committed b36f2cf on feat/proto-v4-s1 (t_world 21/38, smoke crashed at 40/44: door.gd sealed_msg). Fix round 1 running (brief s1-world-fix1.md, log job tmp s1-fix1-worker.log). LEAD TODO: smoke rewrite per contract 4.4 item 5 (skipped in step 0); t_world:352 sealed_x added with the user's yes (2026-11-19, re-locked).
+- S1: pass 1 committed b36f2cf on feat/proto-v4-s1 (t_world 21/38, smoke crashed at 40/44: door.gd sealed_msg). Fix round 1 running (brief s1-world-fix1.md, log job tmp s1-fix1-worker.log). LEAD TODO: smoke rewrite per contract 4.4 item 5 (skipped in step 0); t_world:352 sealed_x + moth kill-all fixed with the user's yes (2026-11-19, re-locked); S1 t_world 34/38.
 - DECIDED (user, decisions 25-27): skins, jump sources, attack style (fencer/dancer, J vs I differ, slim blade on hit frames).
 - USER (2026-11-19): pass-2 jump 'not graceful enough' -> try other poses from the GIFs; ask before any PixelLab spend (33 left).
 - USER RULES (2026-11-19): tests LOCKED from builders; only the lead amends the pack (rare, logged, re-locked, like 3507398); `worker.mjs verify <lock>` before every commit. NEW (2026-11-19): NEVER tune the opus-authored tests - they are the quality gates; if a test fails twice in a row, report it to the user before further changes.
