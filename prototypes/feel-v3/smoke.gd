@@ -643,7 +643,7 @@ func _climb_hop(p: CharacterBody2D, target_top: float, start_x: float) -> bool:
 	await _frames(55)
 	Input.action_release("left")
 	await _frames(10)
-	var ok: bool = p.is_on_floor() and absf(p.global_position.y - target_top) < 3.0 and p.global_position.x < 180.0
+	var ok: bool = p.is_on_floor() and absf(p.global_position.y - target_top) < 3.0 and p.global_position.x < 192.0      # the ledge and its lip end at x 192
 	print("      hop to y=%.0f: latched=%s now x=%.0f y=%.0f floor=%s" % [target_top, str(latched), p.global_position.x, p.global_position.y, str(p.is_on_floor())])
 	return ok
 
@@ -668,7 +668,19 @@ func _new_area() -> void:
 	await _frames(100)
 	p.global_position = Vector2(main._scythe.global_position.x, main.room.spawns["O"].y)
 	await _frames(8)
-	_check("touching the scythe gives ELEGY-013", main.has_elegy and main._scythe == null and main.hud._toast.text.begins_with("ELEGY-013"), main.hud._toast.text.left(30))
+	# user ask C5 (2026-11-18): every pickup with Up, never by touch; the card shows it
+	_check("touching the scythe does not take it", not main.has_elegy and main._scythe != null, "")
+	await _tap("up", 2)
+	var card_shown := false
+	for i in 120:      # a special pickup plays its show first, then the card opens
+		await _frames(1)
+		if main.card != null and main.card.active:
+			card_shown = true
+			break
+	_check("Up at the scythe gives ELEGY-013 and shows its card", main.has_elegy and main._scythe == null and card_shown, "")
+	await _frames(60)
+	await _tap("up", 2)
+	await _frames(8)
 	await _tap("swap", 2)
 	_check("E swaps once the scythe is hers", int(T.v("weapon")) == 1, "")
 	T.set_v("weapon", 0.0)
@@ -762,20 +774,20 @@ func _new_area() -> void:
 	_check("Down + Jump on the hole ledge drops her back into the top of the shaft, still falling", main.room_name == "shaft" and p.global_position.y < 80.0 and p.velocity.y > 0.0,
 		"room=%s y=%.0f vy=%.0f" % [main.room_name, p.global_position.y, p.velocity.y])
 
-	# ---- the ledges: 96 apart, so a plain jump cannot do it ----
+	# ---- the ledges: 80 apart with a one-way lip (user decision 2026-11-19), so a plain jump cannot do it ----
 	await _goto_from("shaft", "right", "church")
 	main.has_latch = false
 	p = main.player
 	var ledges: Array = []
 	for y in main.room.grid.size():
-		if main.room.cell(9, y) == "#" and main.room.cell(10, y) == "#" and main.room.cell(11, y) == "." and main.room.cell(9, y - 1) == "." and y < 27:
+		if main.room.cell(9, y) == "#" and main.room.cell(10, y) == "#" and (main.room.cell(11, y) == "." or main.room.cell(11, y) == "=") and main.room.cell(9, y - 1) == "." and y < 27:
 			ledges.append(float(y * 16))
 	ledges.reverse()
 	var jump_up: float = T.v("jump_velocity") * T.v("jump_velocity") / (2.0 * T.v("gravity"))
-	var spacing_ok := ledges.size() == 4
+	var spacing_ok := ledges.size() == 5
 	for i in range(ledges.size() - 1):
-		spacing_ok = spacing_ok and absf(ledges[i] - ledges[i + 1] - 96.0) < 0.1
-	_check("four ledges, 96 apart, more than a jump rises (%.0f)" % jump_up, spacing_ok and 96.0 > jump_up + 10.0, str(ledges))
+		spacing_ok = spacing_ok and absf(ledges[i] - ledges[i + 1] - 80.0) < 0.1
+	_check("five ledges, 80 apart, more than a jump rises (%.0f)" % jump_up, spacing_ok and 80.0 > jump_up + 10.0, str(ledges))
 	var best := 9999.0
 	for variant in ["", "right", "left"]:
 		p.global_position = Vector2(160.0, ledges[0] - 1.0)
@@ -791,20 +803,20 @@ func _new_area() -> void:
 		if variant != "":
 			Input.action_release(variant)
 		await _frames(70)
-	_check("without the grip a plain jump from ledge 1 stays below ledge 2", best > ledges[1] + 20.0, "highest feet y=%.0f, ledge 2 top=%.0f" % [best, ledges[1]])
-	# with the grip: floor -> ledge 1 -> 2 -> 3 -> 4, then out through the top
+	_check("without the grip a plain jump from ledge 1 stays below ledge 2", best > ledges[1] + 8.0, "highest feet y=%.0f, ledge 2 top=%.0f" % [best, ledges[1]])
+	# with the grip: floor -> ledge 1 -> ... -> 5, then out through the top
 	main.has_latch = true
 	p.global_position = Vector2(180.0, 447.0)
 	p.velocity = Vector2.ZERO
 	await _frames(15)
 	var hops: Array = []
-	for k in 4:
+	for k in ledges.size():
 		var hop_ok: bool = await _climb_hop(p, float(ledges[k]), 180.0 if k == 0 else 172.0)
 		hops.append(hop_ok)
 		if not hop_ok:
 			break
-	_check("with the grip she climbs floor -> 4 ledges (latch the right wall, kick up and left)", hops.size() == 4 and not hops.has(false), str(hops))
-	if hops.size() == 4 and not hops.has(false):
+	_check("with the grip she climbs floor -> 5 ledges (latch the right wall, kick up and left)", hops.size() == 5 and not hops.has(false), str(hops))
+	if hops.size() == 5 and not hops.has(false):
 		Input.action_press("jump")
 		await _until_room("vault", 60)
 		Input.action_release("jump")
@@ -941,7 +953,7 @@ func _new_area() -> void:
 	await _frames(20)
 	p = main.player
 	_check("a slide passes the tunnel and leaves by the open edge into the time machine room",
-		slide_ok and main.room_name == "timemachine" and p.global_position.x > main.room.size.x - 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
+		slide_ok and main.room_name == "timemachine" and p.global_position.x > main.room.size.x - 120.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])      # her arrival slide carries her about 4 tiles in (user decision 2026-11-19)
 	main.enter("hazard", "left", "timemachine")
 	await _frames(4)
 	_check("arriving at the low tunnel puts her into a slide", main.player.state == "slide" and main.room.tunnels.get("left", false), "state=%s" % main.player.state)
