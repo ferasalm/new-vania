@@ -55,41 +55,79 @@ Z = {lab: REF[lab][2] for lab in REF}
 # angle, tw = shoulder/hip turn (+1 = chest to the viewer, as in her idle; 0 = side; -1 = back to the viewer),
 # head = head tilt from the torso line, sw = sword (far) arm (upper, fore[, length 0-1 for foreshortening]),
 # off = near arm, lead = far leg (thigh, shin), rear = near leg (thigh, shin).
+# Dirge-042 swings level (user, 2026-11-19): a horizontal slash, J with the right hand and I the same lunge with
+# the left. The blade is given as yaw (0 forward, 90 toward the camera, 180 back, -90 away) and tilt (degrees the
+# swing plane leans, + = front end down); seen from the side a level swing is a flat ellipse (FLAT).
+# wz: blade in front of her (1) or behind (-1). tr=0: no swoosh into this frame (the recovery).
+LEVEL_BEATS = ["wind-up: arm drawn back", "step in: arm comes round", "hit: level lunge", "follow-through", "recover"]
 MOVES = {
-    "attack": {   # ground J: RIGHT hand (near). One falling cut: cocked back, over the top, down into a deep lunge
-        "action": "graceful fencer's wide sweeping one-handed cut in a deep low lunge",
-        "beats": ["wind-up: cocked back", "step in: over the top", "hit: low lunge", "follow-through", "recover"],
-        "hand": "RIGHT", "hit": 2,
+    "attack": {   # ground J: RIGHT hand (near). The blade comes round in front of her (toward the camera)
+        "action": "graceful wide level sweep of the right arm across her body into a deep low lunge",
+        "beats": LEVEL_BEATS, "hand": "RIGHT", "hit": 2,
         "frames": [
-            dict(hx=-10, torso=-100, tw=1.3, head=26, sw=(-125, -165), off=(-15, -5), lead=(45, 62), rear=(68, 116),
-                 wa=160, wz=1),
-            dict(hx=2, torso=-86, tw=0.5, head=30, sw=(-95, -70), off=(150, 125), lead=(52, 96), rear=(108, 104),
-                 wa=-115, wz=1),
-            dict(hx=22, torso=-60, tw=-0.6, head=38, sw=(-25, -12), off=(-165, -140), lead=(12, 92), rear=(142, 142),
-                 wa=22, wz=1),
-            dict(hx=24, torso=-62, tw=-0.8, head=40, sw=(15, 35, 0.95), off=(-150, -125), lead=(14, 94),
-                 rear=(145, 150), wa=30, wz=1),
-            dict(hx=8, torso=-84, tw=0.6, head=30, sw=(50, 0), off=(150, 110), lead=(60, 98), rear=(110, 84),
-                 wa=-20, wz=1),
+            dict(hx=-8, torso=-96, tw=1.4, head=26, sw=(150, 185), off=(-15, -5), lead=(45, 62), rear=(68, 116),
+                 yaw=180, tilt=-8, wz=1),
+            dict(hx=2, torso=-84, tw=0.5, head=30, sw=(160, 15), off=(150, 125), lead=(52, 96), rear=(108, 104),
+                 yaw=110, tilt=0, wz=1),
+            dict(hx=22, torso=-60, tw=-0.6, head=38, sw=(-15, -8), off=(-165, -140), lead=(12, 92), rear=(142, 142),
+                 yaw=0, tilt=6, wz=1),
+            dict(hx=24, torso=-62, tw=-0.8, head=40, sw=(0, 25, 0.85), off=(-150, -125), lead=(14, 94),
+                 rear=(145, 150), yaw=-40, tilt=4, wz=1),
+            dict(hx=8, torso=-84, tw=0.6, head=30, sw=(60, 20), off=(150, 110), lead=(60, 98), rear=(110, 84),
+                 yaw=0, tilt=30, wz=1, tr=0),
         ]},
-    "attack2": {  # ground I: the mirror of J; a rising cut from low in front to over her head, turning on her toe
-        "action": "graceful dancer rising onto her toes and turning, sword sweeping upward",
-        "beats": ["wind-up: low", "rise and turn", "hit: arabesque", "follow-through", "recover"],
-        "hand": "LEFT", "hit": 2,
+    "attack2": {  # ground I: the same lunge with the LEFT hand (far). The blade comes round behind her, then in front
+        "action": "graceful wide level sweep of the left arm across her body into a deep low lunge",
+        "beats": LEVEL_BEATS, "hand": "LEFT", "hit": 2,
         "frames": [
-            dict(hx=2, torso=-74, tw=1.3, head=36, sw=(80, 20, 0.9), off=(-150, -120), lead=(55, 112),
-                 rear=(112, 70), wa=38, wz=1),       # blade low, tip near the floor (user: start lower)
-            dict(hx=6, torso=-80, tw=0.4, head=28, sw=(40, -10), off=(160, 140), lead=(80, 96), rear=(125, 120),
-                 wa=45, wz=1),        # hand rises, tip still drags low
-            dict(hx=8, lift=6, torso=-74, tw=-0.3, head=20, sw=(-40, -55), off=(170, 150), lead=(86, 92),
-                 rear=(160, 168), wa=-55, wz=1),
-            dict(hx=6, lift=4, torso=-88, tw=-0.9, head=12, sw=(-85, -105), off=(150, 120), lead=(88, 90),
-                 rear=(140, 120), wa=-110, wz=1),
-            dict(hx=2, torso=-86, tw=0.6, head=28, sw=(45, 15), off=(120, 80), lead=(66, 100), rear=(106, 84),
-                 wa=-20, wz=1),
+            dict(hx=-8, torso=-96, tw=-1.4, head=26, sw=(150, 185), off=(-15, -5), lead=(45, 62), rear=(68, 116),
+                 yaw=180, tilt=-8, wz=-1),
+            dict(hx=2, torso=-84, tw=-0.5, head=30, sw=(160, 15), off=(150, 125), lead=(52, 96), rear=(108, 104),
+                 yaw=-110, tilt=0, wz=-1),
+            dict(hx=22, torso=-60, tw=0.6, head=38, sw=(-15, -8), off=(-165, -140), lead=(12, 92), rear=(142, 142),
+                 yaw=0, tilt=6, wz=1),
+            dict(hx=24, torso=-62, tw=0.8, head=40, sw=(0, 25, 0.85), off=(-150, -125), lead=(14, 94),
+                 rear=(145, 150), yaw=40, tilt=4, wz=1),
+            dict(hx=8, torso=-84, tw=-0.6, head=30, sw=(60, 20), off=(150, 110), lead=(60, 98), rear=(110, 84),
+                 yaw=0, tilt=30, wz=1, tr=0),
         ]},
 }
 WEAPON = {"tex": "assets/2x/weapon/dirge.png", "grip": (12, 10)}     # player.gd WEAPONS grip (6, 5) at 1x
+FLAT = 0.28
+
+
+def blade_vec(f):
+    """The blade on screen, as a vector of length <= 1 (1 = full length, seen side-on)."""
+    if "yaw" in f:
+        y, t = math.radians(f["yaw"]), math.radians(f.get("tilt", 0))
+        x, z = math.cos(y), FLAT * math.sin(y)
+        return x * math.cos(t) - z * math.sin(t), x * math.sin(t) + z * math.cos(t)
+    a = math.radians(f["wa"] if "wa" in f else f["angle"])
+    return math.cos(a), math.sin(a)
+
+
+def _wrap(d):
+    return (d + 180) % 360 - 180
+
+
+def blade_at(a, b, u):
+    """The blade between two frames (u 0..1): a level swing turns its yaw the short way round, else the angle."""
+    if "yaw" in a and "yaw" in b:
+        return blade_vec({"yaw": a["yaw"] + _wrap(b["yaw"] - a["yaw"]) * u,
+                          "tilt": a.get("tilt", 0) + (b.get("tilt", 0) - a.get("tilt", 0)) * u})
+    va, vb = blade_vec(a), blade_vec(b)
+    aa, ab = math.atan2(va[1], va[0]), math.atan2(vb[1], vb[0])
+    ang = aa + math.radians(_wrap(math.degrees(ab - aa))) * u
+    ln = math.hypot(*va) + (math.hypot(*vb) - math.hypot(*va)) * u
+    return math.cos(ang) * ln, math.sin(ang) * ln
+
+
+def turn(a, b):
+    """How far the blade turned between two frames, in degrees."""
+    if "yaw" in a and "yaw" in b:
+        return abs(_wrap(b["yaw"] - a["yaw"]))
+    va, vb = blade_vec(a), blade_vec(b)
+    return abs(_wrap(math.degrees(math.atan2(vb[1], vb[0]) - math.atan2(va[1], va[0]))))
 
 
 # ---------------------------------------------------------------- forward kinematics
@@ -168,7 +206,7 @@ def step_poses(moves):
             near = {k: v for k, v in p.items() if not k.startswith(side)}
             far = {k: v for k, v in p.items() if not k.startswith(other)}
             hand = p[side + " ARM"]
-            c, sn = math.cos(math.radians(f["wa"])), math.sin(math.radians(f["wa"]))
+            c, sn = blade_vec(f)
             seg = [(ox + (hand[0] - c * hilt) * S, oy + (hand[1] - sn * hilt) * S),
                    (ox + (hand[0] + c * wlen) * S, oy + (hand[1] + sn * wlen) * S)]
             if f["wz"] < 0:
@@ -458,7 +496,11 @@ def step_finish(moves, seed):
             if gone:
                 print(f.name, "painted blade erased:", gone, "px")
             fr = spec["frames"][n]
-            track.append({"hand": [round(hx), round(hy)], "angle": fr["wa"], "front": fr["wz"] >= 0,
+            vx, vy = blade_vec(fr)
+            level = {"yaw": fr["yaw"], "tilt": fr.get("tilt", 0)} if "yaw" in fr else {}
+            track.append({"hand": [round(hx), round(hy)], "angle": round(math.degrees(math.atan2(vy, vx)), 1),
+                          "len": round(math.hypot(vx, vy), 3), **level, "front": fr["wz"] >= 0,
+                          "trail": bool(fr.get("tr", 1)),
                           "shoulder": [round(v) for v in _map(poses[n][spec.get("hand", "LEFT") + " SHOULDER"])]})
             a = hp.paint(roles, pal)
             a.save(fa / f"{move}_{n:02d}.png")
@@ -493,9 +535,9 @@ def weapon_for(skin):
     return w
 
 
-def _rotated(w, angle):
+def _rotated(w, angle, grip=None):
     """The weapon turned about its grip; returns the image and where the grip lands in it."""
-    gx, gy = WEAPON["grip"]
+    gx, gy = grip or WEAPON["grip"]
     pad = max(w.size) + 4
     canvas = Image.new("RGBA", (pad * 2, pad * 2), (0, 0, 0, 0))
     canvas.paste(w, (pad - gx, pad - gy), w)
@@ -558,33 +600,38 @@ def _shift(tr):
                                     "shoulder": [tr["shoulder"][0], tr["shoulder"][1] + PAD]}
 
 
+PHASES = {0: ("in", 0.55), 4: ("out", 0.35)}       # frame -> weapon phase; frames 1-3 solid
+
+
 def compose(body, tr, skin, prev=None, phase=("solid", 0.0)):
     """Body plus the weapon layer (behind or in front), plus a swoosh: the band the outer blade swept through
-    since the last frame (hand and angle both interpolated), thick at the new end and thin at the old."""
+    since the last frame (hand and blade both interpolated; a level swing traces a flat ellipse), thick at the
+    new end and thin at the old. A blade pointing toward or away from the camera is drawn shorter."""
     body, tr, prev = _pad(body), _shift(tr), _shift(prev)
     w = weapon_for(skin)
     base, bright = glow_colours(skin)
-    rot, (gx, gy) = _rotated(w, tr["angle"])
+    ln = tr.get("len", 1.0)
+    gx0, gy0 = WEAPON["grip"]
+    ws = w.resize((max(6, round(w.width * ln)), w.height), Image.NEAREST) if ln < 0.98 else w
+    rot, (gx, gy) = _rotated(ws, tr["angle"], (round(gx0 * ws.width / w.width), gy0))
     rot = _phase(_halo(rot, base), phase[0], phase[1], bright)
     pos = (tr["hand"][0] - gx, tr["hand"][1] - gy)
     weapon = Image.new("RGBA", body.size, (0, 0, 0, 0))
     weapon.paste(rot, pos, rot)
     arc = None
-    sweep = (tr["angle"] - prev["angle"] + 180) % 360 - 180 if prev is not None else 0     # the short way round
-    if abs(sweep) > 30 and phase[0] == "solid":
+    if prev is not None and tr.get("trail", True) and turn(prev, tr) > 30 and phase[0] == "solid":
         arc = Image.new("RGBA", body.size, (0, 0, 0, 0))
         d = ImageDraw.Draw(arc)
-        reach = w.width - WEAPON["grip"][0]
+        reach = w.width - gx0
         outer, inner = [], []
-        for k in range(21):
-            u = k / 20                                     # 0 = last frame, 1 = this frame
+        for k in range(25):
+            u = k / 24                                     # 0 = last frame, 1 = this frame
             hx = prev["hand"][0] + (tr["hand"][0] - prev["hand"][0]) * u
             hy = prev["hand"][1] + (tr["hand"][1] - prev["hand"][1]) * u
-            a = math.radians(prev["angle"] + sweep * u)
-            ca, sa = math.cos(a), math.sin(a)
+            vx, vy = blade_at(prev, tr, u)
             band = 0.08 + 0.42 * u ** 1.5                  # share of the blade the band covers
-            outer.append((hx + ca * reach, hy + sa * reach))
-            inner.append((hx + ca * reach * (1 - band), hy + sa * reach * (1 - band)))
+            outer.append((hx + vx * reach, hy + vy * reach))
+            inner.append((hx + vx * reach * (1 - band), hy + vy * reach * (1 - band)))
         d.polygon(outer + inner[::-1], fill=bright + (105,))
         d.line(outer[6:], fill=bright + (230,), width=2)
     out = Image.new("RGBA", body.size, (0, 0, 0, 0))
@@ -595,7 +642,75 @@ def compose(body, tr, skin, prev=None, phase=("solid", 0.0)):
     return out
 
 
-PHASES = {0: ("in", 0.55), 4: ("out", 0.35)}       # frame -> weapon phase; frames 1-3 solid
+def _stick(pose, side):
+    """A stick figure of one planned pose on the game's 224 x 160 canvas (attacking side orange)."""
+    img = Image.new("RGBA", (224, 160), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    m = {lab: _map(v[:2]) for lab, v in pose.items()}
+    other = "RIGHT" if side == "LEFT" else "LEFT"
+    bones = [("NECK", "NOSE"), ("LEFT SHOULDER", "RIGHT SHOULDER"), ("LEFT HIP", "RIGHT HIP")]
+    for s in (other, side):
+        bones += [(f"{s} SHOULDER", f"{s} ELBOW"), (f"{s} ELBOW", f"{s} ARM"), (f"{s} HIP", f"{s} KNEE"),
+                  (f"{s} KNEE", f"{s} LEG"), (f"{s} SHOULDER", f"{s} HIP")]
+    for a, b in bones:
+        col = (255, 170, 60, 255) if a.startswith(side) and "HIP" not in b else (200, 210, 225, 255)
+        d.line([m[a], m[b]], fill=col, width=3)
+    nx, ny = m["NOSE"]
+    d.ellipse([nx - 6, ny - 7, nx + 4, ny + 3], outline=(200, 210, 225, 255), width=2)
+    return img
+
+
+def step_plan(moves):
+    """Free preview before any drawing: the planned poses as stick figures, with the real Dirge layer, its swoosh
+    and the appear / dissolve, at game speed and slowed down."""
+    cells, durs = {m: [] for m in moves}, []
+    for m in moves:
+        spec = MOVES[m]
+        side = spec.get("hand", "LEFT")
+        poses = move_poses(m)
+        track = []
+        for i, (p, f) in enumerate(zip(poses, spec["frames"])):
+            vx, vy = blade_vec(f)
+            level = {"yaw": f["yaw"], "tilt": f.get("tilt", 0)} if "yaw" in f else {}
+            track.append({"hand": [round(v) for v in _map(p[side + " ARM"][:2])],
+                          "angle": math.degrees(math.atan2(vy, vx)), "len": math.hypot(vx, vy), **level,
+                          "front": f["wz"] >= 0, "trail": bool(f.get("tr", 1)),
+                          "shoulder": [round(v) for v in _map(p[side + " SHOULDER"][:2])]})
+        for i, p in enumerate(poses):
+            cells[m].append(compose(_stick(p, side), track[i], "a", track[i - 1] if i else None,
+                                    PHASES.get(i, ("solid", 0))))
+    n = max(len(v) for v in cells.values())
+    bg = Image.new("RGB", (224 + PADX, 160 + PAD), (38, 34, 58))
+    ImageDraw.Draw(bg).rectangle([0, 153 + PAD, 224 + PADX, 160 + PAD], fill=(92, 72, 110))
+    frames = []
+    for j in range(n):
+        panel = Image.new("RGB", ((224 + PADX) * len(moves), 160 + PAD))
+        for c, m in enumerate(moves):
+            cell = bg.copy()
+            cell.paste(cells[m][j], (0, 0), cells[m][j])
+            panel.paste(cell, (c * (224 + PADX), 0))
+        panel = panel.resize((panel.width * 2, panel.height * 2), Image.NEAREST)
+        dd = ImageDraw.Draw(panel)
+        for c, m in enumerate(moves):
+            dd.text((c * (224 + PADX) * 2 + 8, 8), f"{'J (right hand)' if m == 'attack' else 'I (left hand)'}: "
+                    f"{MOVES[m]['beats'][j]}", fill=(255, 255, 255))
+        frames.append(panel)
+    sheet = Image.new("RGB", (frames[0].width // 2 * n // len(moves) * len(moves), frames[0].height), (0, 0, 0))
+    sheet = Image.new("RGB", ((224 + PADX) * n, (160 + PAD) * len(moves)))
+    for c, m in enumerate(moves):
+        for j in range(n):
+            cell = bg.copy()
+            cell.paste(cells[m][j], (0, 0), cells[m][j])
+            sheet.paste(cell, (j * (224 + PADX), c * (160 + PAD)))
+    sheet = sheet.resize((sheet.width * 2, sheet.height * 2), Image.NEAREST)
+    sheet.save(OUT / "plan_level_sheet.png")
+    for name, d in (("gamespeed", 80), ("slow", 400)):
+        gif = OUT / f"plan_level_{name}.gif"
+        frames[0].save(gif, save_all=True, append_images=frames[1:] + [frames[-1]], duration=[d] * n + [600],
+                       loop=0, disposal=2)
+        print("wrote", gif)
+
+
 
 
 def step_sample(moves, seed):
@@ -707,6 +822,8 @@ if __name__ == "__main__":
         step_finish(moves, seed)
     elif cmd == "sample":
         step_sample(moves, seed)
+    elif cmd == "plan":
+        step_plan(moves)
     elif cmd == "install":
         step_install(moves, seed)
     else:
