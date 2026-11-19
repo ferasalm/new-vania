@@ -1,0 +1,35 @@
+{
+  "base": {
+    "hp_max_key": "player_hp",
+    "en_max_key": "energy_max",
+    "mp_max_key": "mp_max"
+  },
+  "stats": {
+    "vigor": {
+      "label": "VIGOR",
+      "help": "Every point is 10 more health.",
+      "gives": {"hp_max_key": "vigor_hp"}
+    },
+    "power": {
+      "label": "POWER",
+      "help": "Every point is 8 percent more weapon damage.",
+      "gives": {"atk_key": "power_atk"}
+    },
+    "guard": {
+      "label": "GUARD",
+      "help": "Every point is 3 percent less damage taken.",
+      "gives": {"def_key": "guard_def"}
+    },
+    "stamina": {
+      "label": "STAMINA",
+      "help": "Every point is 8 more energy.",
+      "gives": {"en_max_key": "stamina_en"}
+    },
+    "magic": {
+      "label": "MAGIC",
+      "help": "Every point is 8 percent more special damage and 6 more MP.",
+      "gives": {"special_key": "magic_special", "mp_max_key": "magic_mp"}
+    }
+  },
+  "auto_order": ["vigor", "power", "guard", "vigor", "power", "magic", "vigor", "power", "guard", "stamina"]
+}

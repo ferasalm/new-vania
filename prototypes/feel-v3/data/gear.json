@@ -1,0 +1,51 @@
+{
+  "coupler_034": {
+    "name": "COUPLER-034",
+    "slot": "module",
+    "desc": "Bolts the arm servos to the core. Every strike lands heavier; the core runs thin.",
+    "icon": "res://assets/items/coupler_034.png",
+    "effects": {"atk_add_key": "coupler_damage", "hp_max_add_key": "coupler_hp"}
+  },
+  "governor_207": {
+    "name": "GOVERNOR-207",
+    "slot": "module",
+    "desc": "A plated governor for the spine. It keeps the body standing a little longer.",
+    "icon": "res://assets/items/governor_207.png",
+    "effects": {"hp_max_add_key": "governor_hp"}
+  },
+  "regulator_000": {
+    "name": "REGULATOR-000",
+    "slot": "module",
+    "desc": "The Warden's own regulator, still ticking after its heart stopped.",
+    "icon": "res://assets/items/regulator_000.png",
+    "effects": {"atk_add_key": "regulator_damage"}
+  },
+  "restore_module": {
+    "name": "RESTORE MODULE",
+    "slot": "core",
+    "desc": "A cache core small enough to carry. It keeps one copy of her, and only one.",
+    "icon": "res://assets/items/restore_module.png",
+    "effects": {"rebuild_here_key": ""}
+  },
+  "cerement_112": {
+    "name": "CEREMENT-112",
+    "slot": "harness",
+    "desc": "Grave-cloth bound in steel thread. It held something that did not want to stay down.",
+    "icon": "res://assets/items/cerement_112.png",
+    "effects": {"def_add_key": "cerement_def"}
+  },
+  "pall_090": {
+    "name": "PALL-090",
+    "slot": "harness",
+    "desc": "The velvet from the bier. It remembers the weight of the dead and gives some back.",
+    "icon": "res://assets/items/pall_090.png",
+    "effects": {"mp_max_add_key": "pall_mp", "orb_reach_add_key": "pall_orb_mult"}
+  },
+  "tether_06": {
+    "name": "TETHER-06",
+    "slot": "harness",
+    "desc": "Restraint straps from the kennel. Every buckle has a socket for spare parts.",
+    "icon": "res://assets/items/tether_06.png",
+    "effects": {"scrap_gain_mult_key": "tether_scrap"}
+  }
+}

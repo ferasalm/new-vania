@@ -218,7 +218,7 @@ func _physics_process(delta: float) -> void:
 	if Util.can_hit():
 		var p: Node2D = G.main.player
 		if p.invuln <= 0.0 and hits(p.body_rect()):
-			p.take_hit(T.v(kind + "_damage"), _hit_x())
+			p.take_hit(T.v(kind + "_damage"), _hit_x(), "trap")
 
 
 func _step(dt: float) -> void:

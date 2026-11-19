@@ -1,0 +1,173 @@
+{
+  "cell_tiles": [24, 14],
+  "sheets": {
+    "before": {
+      "church": {
+        "code": "CH",
+        "title": "THE NAVE OF ASH",
+        "cell": [7, 4, 3, 1],
+        "entry": "P",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_church",
+        "exits": [
+          {"side": "L", "at": 0, "to": "shaft", "kind": "lever_door"},
+          {"side": "R", "at": 0, "to": "library", "kind": "door"}
+        ],
+        "marks": {}
+      },
+      "library": {
+        "code": "LB",
+        "title": "THE UNREAD STACKS",
+        "cell": [10, 2, 2, 3],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_library",
+        "exits": [
+          {"side": "L", "at": 2, "to": "church", "kind": "door"},
+          {"side": "R", "at": 0, "to": "save", "kind": "door"}
+        ],
+        "marks": {"L": {"type": "lever", "flag": "lever_library"}}
+      },
+      "save": {
+        "code": "S2",
+        "title": "CACHE STATION 002",
+        "cell": [12, 2, 1, 1],
+        "entry": "left",
+        "save": true,
+        "boss": "",
+        "respawn": false,
+        "music": "music_save",
+        "exits": [
+          {"side": "L", "at": 0, "to": "library", "kind": "door"},
+          {"side": "R", "at": 0, "to": "lab", "kind": "door"}
+        ],
+        "marks": {"M": {"type": "terminal"}}
+      },
+      "lab": {
+        "code": "LA",
+        "title": "SPECIMEN HALL",
+        "cell": [13, 1, 3, 2],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "L", "at": 1, "to": "save", "kind": "door"},
+          {"side": "R", "at": 1, "to": "save2", "kind": "door"}
+        ],
+        "marks": {"A": {"type": "item", "item": "wall_jump"}}
+      },
+      "save2": {
+        "code": "S3",
+        "title": "CACHE STATION 003",
+        "cell": [12, 3, 1, 1],
+        "entry": "left",
+        "save": true,
+        "boss": "",
+        "respawn": false,
+        "music": "music_save",
+        "exits": [
+          {"side": "L", "at": 0, "to": "lab", "kind": "door"},
+          {"side": "R", "at": 0, "to": "boss", "kind": "boss_door"}
+        ],
+        "marks": {"M": {"type": "terminal"}}
+      },
+      "boss": {
+        "code": "PB",
+        "title": "THE PALLBEARER",
+        "cell": [18, 2, 1, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "pallbearer",
+        "respawn": false,
+        "music": "music_boss",
+        "exits": [
+          {"side": "L", "at": 0, "to": "save2", "kind": "door"}
+        ],
+        "marks": {"O": {"type": "boss", "boss": "pallbearer"}}
+      },
+      "shaft": {
+        "code": "SH",
+        "title": "THE MARROW WELL",
+        "cell": [6, 3, 1, 2],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 1, "to": "church", "kind": "lever_door"},
+          {"side": "U", "at": 0, "to": "vault", "kind": "hole"}
+        ],
+        "marks": {}
+      },
+      "vault": {
+        "code": "VA",
+        "title": "CACHE STATION 004",
+        "cell": [6, 2, 1, 1],
+        "entry": "left",
+        "save": true,
+        "boss": "",
+        "respawn": false,
+        "music": "music_save",
+        "exits": [
+          {"side": "L", "at": 0, "to": "hazard", "kind": "door"},
+          {"side": "D", "at": 0, "to": "shaft", "kind": "hole"}
+        ],
+        "marks": {"M": {"type": "terminal"}}
+      },
+      "hazard": {
+        "code": "HZ",
+        "title": "THE THRESHING CHAPEL",
+        "cell": [2, 2, 4, 1],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "L", "at": 0, "to": "timemachine", "kind": "tunnel"},
+          {"side": "R", "at": 0, "to": "vault", "kind": "door"}
+        ],
+        "marks": {"Y": {"type": "lever", "flag": "bars_opened"}}
+      },
+      "timemachine": {
+        "code": "OR",
+        "title": "THE ORGAN OF HOURS",
+        "cell": [0, 2, 2, 1],
+        "entry": "K",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 0, "to": "hazard", "kind": "open"}
+        ],
+        "marks": {"T": {"type": "organ"}}
+      }
+    },
+    "after": {
+      "church_shift": {
+        "code": "CH~",
+        "title": "THE NAVE UNBURNED",
+        "cell": [3, 2, 3, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_church",
+        "exits": [],
+        "marks": {}
+      }
+    },
+    "restored": {
+      "base": "before",
+      "add": {}
+    }
+  }
+}

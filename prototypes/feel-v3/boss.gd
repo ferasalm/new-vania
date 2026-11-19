@@ -293,7 +293,7 @@ func _hand(i: int, delta: float, player: Node2D) -> void:
 				h["t"] = -T.v("boss_stuck") * 0.3     # the clap leaves them stuck a little longer
 	h["danger"] = danger
 	if danger and not G.peace and hand_rect(i).intersects(player.body_rect()):
-		player.take_hit(T.v("boss_damage"), s.position.x)
+		player.take_hit(T.v("boss_damage"), s.position.x, "boss")
 
 
 func _launch(h: Dictionary) -> void:
@@ -338,7 +338,7 @@ func _slash_step(delta: float, player: Node2D) -> void:
 	var box := Rect2(Vector2(x - half_w, floor_y - float(_slash["h"]) - thick / 2.0), Vector2(half_w * 2.0, thick))
 	_slash["box"] = box
 	if _slash["on"] and not G.peace and box.intersects(player.body_rect()):
-		player.take_hit(T.v("boss_damage"), x)
+		player.take_hit(T.v("boss_damage"), x, "boss")
 
 
 func _stick(h: Dictionary) -> void:

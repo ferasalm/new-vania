@@ -99,8 +99,8 @@ func _centered(at: Vector2, font: int) -> Label:
 
 
 func refresh(player: Node, kills: int) -> void:
-	var now := {"hp": player.hp / maxf(1.0, T.v("player_hp")), "energy": player.energy / maxf(1.0, T.v("energy_max")),
-		"mp": player.mp / maxf(1.0, T.v("mp_max"))}
+	var now := {"hp": player.hp / maxf(1.0, R.max_hp()), "energy": player.energy / maxf(1.0, R.max_en()),
+		"mp": player.mp / maxf(1.0, R.max_mp())}
 	_fill["mp"].modulate = Color.WHITE if player.mp >= player.special_cost() else Color(0.55, 0.55, 0.7)
 	var delta := get_process_delta_time()
 	for name in _fill:

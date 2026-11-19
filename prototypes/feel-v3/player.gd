@@ -83,9 +83,9 @@ var hit_pts := PackedVector2Array()   # where the blade cut this tick (shown by 
 
 
 func _ready() -> void:
-	hp = T.v("player_hp")
-	energy = T.v("energy_max")
-	mp = T.v("mp_max")
+	hp = R.max_hp()
+	energy = R.max_en()
+	mp = R.max_mp()
 	collision_layer = 4
 	collision_mask = 1 | 2
 	var shape := CollisionShape2D.new()
@@ -176,9 +176,9 @@ func _physics_process(delta: float) -> void:
 	if _energy_wait > 0.0:
 		_energy_wait -= delta
 	else:
-		energy = minf(T.v("energy_max"), energy + T.v("energy_refill") * delta)
-	energy = minf(energy, T.v("energy_max"))
-	mp = minf(mp, T.v("mp_max"))
+		energy = minf(R.max_en(), energy + T.v("energy_refill") * delta)
+	energy = minf(energy, R.max_en())
+	mp = minf(mp, R.max_mp())
 	if _drop_t > 0.0:
 		_drop_t -= delta
 		if _drop_t <= 0.0:
@@ -333,6 +333,9 @@ func _physics_process(delta: float) -> void:
 			_hurt_t -= delta
 			if _hurt_t <= 0.0:
 				state = "move"
+		"locked":
+			# no input; gravity still pulls her down and she keeps her picture
+			velocity.x = 0.0
 
 	# letting go of jump early cuts the rise: tap = hop, hold = full jump
 	if Input.is_action_just_released("jump") and velocity.y < 0.0 and not _kicked:
@@ -612,7 +615,7 @@ func _attack_step() -> void:
 				_attack_hit.clear()
 				Sfx.play("swing_heavy", 1.1)
 			hit_pts = blade_points(_prev_ang, ang)
-			G.main.player_cut(hit_pts, T.v("elegy_special_damage"), facing, _attack_hit)
+			G.main.player_cut(hit_pts, R.hit_damage(T.v("elegy_special_damage"), true), facing, _attack_hit)
 			_fx_t -= get_physics_process_delta_time()
 			if _fx_t <= 0.0:
 				_fx_t = 0.035
@@ -621,7 +624,7 @@ func _attack_step() -> void:
 				Vfx.requiem_tick(tip, atan2(cos(ang), -sin(ang) * facing))
 	# the cut hurts exactly where the weapon is: through the sweep, then held out
 	elif _attack_t >= total * 0.1 and _attack_t <= total * 0.65:
-		var dmg := T.v("attack_damage") * (T.v("elegy_damage_mult") if _is_elegy() else 1.0)
+		var dmg := R.hit_damage(T.v("attack_damage") * (T.v("elegy_damage_mult") if _is_elegy() else 1.0), false)
 		hit_pts = blade_points(_prev_ang, ang)
 		G.main.player_cut(hit_pts, dmg, facing, _attack_hit)
 	_prev_ang = ang
@@ -690,18 +693,60 @@ func _start_slide() -> void:
 	G.main.dust(global_position, 2)
 
 
+func lock(anim := "") -> void:
+	# no input and no swing; gravity still pulls her down. The special show,
+	# the pickup card and the dialogs hold her this way.
+	if state == "dead":
+		return
+	state = "locked"
+	velocity.x = 0.0
+	if anim != "" and _spr.sprite_frames.has_animation(anim):
+		_spr.play(anim)
+
+
+func unlock() -> void:
+	# give the controls back
+	if state == "locked":
+		state = "move"
+
+
+func is_locked() -> bool:
+	# true while something holds her
+	return state == "locked"
+
+
+func debug_set(d: Dictionary) -> void:
+	# the test hook: set only the fields that are named
+	for k in d:
+		match String(k):
+			"hp":
+				hp = float(d[k])
+			"energy":
+				energy = float(d[k])
+			"mp":
+				mp = float(d[k])
+			"facing":
+				facing = int(d[k])
+			"state":
+				state = String(d[k])
+			"pos":
+				global_position = d[k]
+
+
 func gain_mp(amount: float) -> void:
-	mp = minf(T.v("mp_max"), mp + amount)
+	mp = minf(R.max_mp(), mp + amount)
 
 
-func take_hit(damage: float, from_x: float) -> void:
+func take_hit(damage: float, from_x: float, src := "enemy") -> void:
 	if invuln > 0.0 or state == "dead":
 		return
-	hp -= damage
+	var dmg := R.taken(damage, src)
+	hp -= dmg
 	invuln = T.v("hurt_safe")
 	Sfx.play("hurt")
-	G.main.number(global_position + Vector2(0, -44), int(damage), Color("#E8A94A"))
+	G.main.number(global_position + Vector2(0, -44), int(dmg), Color("#E8A94A"))
 	G.main.shake(T.v("shake") * 1.5, 0.16)
+	W.player_hurt.emit(int(dmg), src)
 	var casting := state == "attack" and _attack_kind == "special"
 	if not casting or hp <= 0.0:
 		_hide_weapons()
@@ -711,6 +756,7 @@ func take_hit(damage: float, from_x: float) -> void:
 		velocity = Vector2.ZERO
 		_spr.visible = true
 		_spr.play("dead")
+		W.player_down.emit()
 		G.main.player_died()
 		return
 	if casting:
@@ -732,6 +778,8 @@ func _afterimage() -> void:
 
 func _animate(on_floor: bool) -> void:
 	_spr.flip_h = facing < 0
+	if state == "locked":
+		return
 	# blink while she cannot be hurt after a hit
 	_spr.visible = not (invuln > 0.0 and state != "backdash" and int(invuln * 20.0) % 2 == 0)
 	if state != "attack":

@@ -17,6 +17,9 @@ const KEYS := {
 	"tuning": [KEY_F1],
 	"restart": [KEY_R],
 	"pause": [KEY_ESCAPE, KEY_P],
+	"quick": [KEY_H],
+	"repair": [KEY_G],
+	"map": [KEY_M],
 	"room1": [KEY_1], "room2": [KEY_2], "room3": [KEY_3], "room4": [KEY_4], "room5": [KEY_5], "room6": [KEY_6],
 	"room7": [KEY_7], "room8": [KEY_8], "room9": [KEY_9], "room10": [KEY_0],
 }
@@ -27,6 +30,8 @@ const PAD := {
 	"backdash_left": [JOY_BUTTON_LEFT_SHOULDER], "backdash_right": [JOY_BUTTON_RIGHT_SHOULDER],
 	"swap": [JOY_BUTTON_B],
 	"pause": [JOY_BUTTON_START],
+	"quick": [JOY_BUTTON_BACK],
+	"repair": [JOY_BUTTON_Y],
 }
 
 var hitstop := 0.0

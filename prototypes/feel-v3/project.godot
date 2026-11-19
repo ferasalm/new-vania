@@ -15,6 +15,9 @@ config/features=PackedStringArray("4.7")
 T="*res://tuning.gd"
 G="*res://game.gd"
 Sfx="*res://audio.gd"
+Db="*res://db.gd"
+W="*res://world_state.gd"
+R="*res://rpg.gd"
 
 [display]
 

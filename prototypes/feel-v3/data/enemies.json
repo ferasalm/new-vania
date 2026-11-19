@@ -1,0 +1,143 @@
+{
+  "ghost": {
+    "name": "GRAVE STATIC",
+    "kind": "spirit",
+    "boss": false,
+    "script": "res://enemy.gd",
+    "glyph": "G",
+    "xp_key": "xp_ghost",
+    "weak": true,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "A voice with nothing left to say it to. It drifts through walls and shrieks."
+  },
+  "leech": {
+    "name": "TITHE LEECH",
+    "kind": "organic",
+    "boss": false,
+    "script": "res://enemy2.gd",
+    "glyph": "l",
+    "xp_key": "xp_leech",
+    "weak": true,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "It hangs from the ceiling on a thread and takes a tenth of what she has."
+  },
+  "spitter": {
+    "name": "BILE CANTOR",
+    "kind": "organic",
+    "boss": false,
+    "script": "res://enemy.gd",
+    "glyph": "S",
+    "xp_key": "xp_spitter",
+    "weak": true,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "It sings through the bile in its throat and lobs what comes up."
+  },
+  "hound": {
+    "name": "CHAINBITE HOUND",
+    "kind": "organic",
+    "boss": false,
+    "script": "res://enemy.gd",
+    "glyph": "H",
+    "xp_key": "xp_hound",
+    "weak": true,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "Bred to fetch the dead. Still fetching."
+  },
+  "choir": {
+    "name": "HOLLOW CHOIR",
+    "kind": "spirit",
+    "boss": false,
+    "script": "res://enemy.gd",
+    "glyph": "C",
+    "xp_key": "xp_choir",
+    "weak": false,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "Many mouths, one hymn. It keeps its height and throws the notes down."
+  },
+  "moth": {
+    "name": "CENSER MOTH",
+    "kind": "organic",
+    "boss": false,
+    "script": "res://enemy2.gd",
+    "glyph": "m",
+    "xp_key": "xp_moth",
+    "weak": false,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "Its censer never empties. The smoke is not incense."
+  },
+  "scribe": {
+    "name": "NEEDLE SCRIBE",
+    "kind": "spirit",
+    "boss": false,
+    "script": "res://enemy2.gd",
+    "glyph": "n",
+    "xp_key": "xp_scribe",
+    "weak": false,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "It writes her name on the floor and then fills it in."
+  },
+  "crab": {
+    "name": "RELIQUARY CRAB",
+    "kind": "organic",
+    "boss": false,
+    "script": "res://enemy2.gd",
+    "glyph": "c",
+    "xp_key": "xp_crab",
+    "weak": false,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "It carries a saint's shell. The shell still turns a blade."
+  },
+  "warden": {
+    "name": "OSSUARY WARDEN",
+    "kind": "organic",
+    "boss": false,
+    "script": "res://enemy.gd",
+    "glyph": "W",
+    "xp_key": "xp_warden",
+    "weak": false,
+    "drops": [{"item": "soul_orb", "chance_key": "mp_drop_chance", "needs": ""}],
+    "bestiary": "The big one. It walks the lab like it still has a shift to finish."
+  },
+  "pallbearer": {
+    "name": "THE PALLBEARER",
+    "kind": "spirit",
+    "boss": true,
+    "script": "res://boss.gd",
+    "glyph": "",
+    "xp_key": "xp_boss",
+    "weak": false,
+    "drops": [],
+    "reward": "elegy_013",
+    "flag": "beaten_pallbearer",
+    "music_cut": true,
+    "bestiary": "It will not let go. Its hands are the only stairs it offers."
+  },
+  "unmuzzled": {
+    "name": "LUPERCAL-06, THE UNMUZZLED",
+    "kind": "spirit",
+    "boss": true,
+    "script": "res://werewolf.gd",
+    "glyph": "",
+    "xp_key": "xp_unmuzzled",
+    "weak": false,
+    "drops": [],
+    "reward": "wall_jump",
+    "flag": "beaten_unmuzzled",
+    "music_cut": true,
+    "bestiary": "It climbed the well once. It remembers how, and it wants her to learn."
+  },
+  "arnetria": {
+    "name": "ARNETRIA",
+    "kind": "cyborg",
+    "boss": true,
+    "script": "res://arnetria.gd",
+    "glyph": "",
+    "xp_key": "xp_arnetria",
+    "weak": false,
+    "drops": [],
+    "reward": "",
+    "flag": "beaten_arnetria",
+    "music_cut": false,
+    "bestiary": "She keeps the hour. Nothing has changed."
+  }
+}
