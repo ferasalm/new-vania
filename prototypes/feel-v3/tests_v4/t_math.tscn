@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests_v4/t_math.gd" id="1"]
+
+[node name="TMath" type="Node"]
+script = ExtResource("1")

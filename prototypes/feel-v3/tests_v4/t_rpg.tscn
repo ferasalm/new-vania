@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests_v4/t_rpg.gd" id="1"]
+
+[node name="TRpg" type="Node"]
+script = ExtResource("1")
