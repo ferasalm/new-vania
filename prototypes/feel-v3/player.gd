@@ -75,6 +75,10 @@ var _shape: CollisionShape2D
 var _rect: RectangleShape2D
 var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
 var _kick_t := 0.0          # seconds left of the kick-off picture after a wall jump
+var _air_t := 0.0           # seconds since she left the floor (the push-off picture shows first)
+var _land_t := 0.0          # seconds left of the landing picture
+var _land_hard := false     # she fell from high up: the deep lean-in crouch instead of soft knees
+var _apex_y := 0.0          # highest point (smallest y) since she left the floor
 var _kicked := false        # rising from a wall jump: letting go of jump does not cut it short
 var _swings := {}           # SWINGS, with shoulder and hand distance read from the hero frames
 var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
@@ -96,10 +100,15 @@ func _ready() -> void:
 	add_child(shape)
 	_shape = shape
 	_rect = rect
+	# skin B (tuning pandora_skin = 1) reads the same frames from the baked oxblood folder (design/skins.md)
+	var skin_dir := ""
+	if T.v("pandora_skin") >= 0.5 and String(G.frames["hero"].get("dir", "")) == "pandora":
+		skin_dir = "pandora_b"
 	_spr = G.sprite("hero", {"idle": 7.0, "run": 10.0, "crouch": 18.0, "backdash": 16.0, "slide": 14.0, "hurt": 8.0,
 		"cast": 12.0, "dead": 7.0, "rise": 8.0, "turn": 16.0, "dash": 16.0},
 		["jump", "land", "crouch", "attack", "attack2", "crouchatk", "crouchatk2",
-		"airatk", "airatk2", "backdash", "slide", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"])
+		"airatk", "airatk2", "backdash", "slide", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"],
+		skin_dir)
 	_fit_swings()
 	var feet: Array = G.frames["hero"]["feet"]
 	_spr.position = -Vector2(feet[0], feet[1])   # her feet sit on this node
@@ -170,6 +179,7 @@ func _physics_process(delta: float) -> void:
 	_latch_cd = maxf(0.0, _latch_cd - delta)
 	_steer_lock = maxf(0.0, _steer_lock - delta)
 	_kick_t = maxf(0.0, _kick_t - delta)
+	_land_t = maxf(0.0, _land_t - delta)
 	hit_pts = PackedVector2Array()
 	var hold_y := false
 	_jump_buf = maxf(0.0, _jump_buf - delta)
@@ -349,6 +359,15 @@ func _physics_process(delta: float) -> void:
 	if now_floor and not _was_floor:
 		Sfx.play("land")
 		G.main.dust(global_position, 4)
+		# the landing picture: soft knees, or the deep crouch after a long fall
+		_land_hard = global_position.y - _apex_y >= T.v("land_hard_drop")
+		_land_t = T.v("land_hard_show") if _land_hard else T.v("land_show")
+	if now_floor:
+		_air_t = 0.0
+		_apex_y = global_position.y
+	else:
+		_air_t += delta
+		_apex_y = minf(_apex_y, global_position.y)
 	_was_floor = now_floor
 	if now_floor and state == "move" and absf(velocity.x) > 10.0:
 		_step_t -= delta
@@ -806,14 +825,21 @@ func _animate(on_floor: bool) -> void:
 	if state == "attack" or state == "backdash" or state == "hurt" or state == "crouch":
 		return
 	if not on_floor:
-		var f := 0
-		if velocity.y > 120.0:
-			f = 3
-		elif velocity.y > 0.0:
-			f = 2
-		elif velocity.y > -150.0:
+		# push-off just after takeoff, then the leap by speed: split leap, knees gather, tuck at the
+		# top, long glide down (design/decisions.md row 26). A set with fewer frames uses its last one.
+		var f := 4
+		if velocity.y < 0.0 and _air_t < T.v("jump_push_show"):
+			f = 0
+		elif velocity.y < -150.0:
 			f = 1
-		_show("jump", f)
+		elif velocity.y < 0.0:
+			f = 2
+		elif velocity.y <= 120.0:
+			f = 3
+		_show("jump", mini(f, _spr.sprite_frames.get_frame_count("jump") - 1))
+	elif _land_t > 0.0 and (absf(velocity.x) <= 10.0 or not _land_hard):
+		# touchdown: soft knees (a hard landing only when she lands standing still)
+		_show("land", mini(1 if _land_hard else 0, _spr.sprite_frames.get_frame_count("land") - 1))
 	elif absf(velocity.x) > 10.0:
 		if _spr.animation != "run" or not _spr.is_playing():
 			_spr.play("run")

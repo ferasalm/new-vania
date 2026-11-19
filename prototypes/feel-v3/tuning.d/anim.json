@@ -6,5 +6,37 @@
     "step": 1.0,
     "label": "Pandora: skin (0 = A teal, 1 = B oxblood)",
     "help": "Skin A glows cyan; skin B is oxblood with red eyes, red suit seams and red strikes. See design/skins.md."
+  },
+  "jump_push_show": {
+    "value": 0.07,
+    "min": 0.0,
+    "max": 0.2,
+    "step": 0.01,
+    "label": "Pandora: push-off picture after takeoff (s)",
+    "help": "How long the toes-pointed push-off shows after she leaves the ground, before the leap frames take over."
+  },
+  "land_show": {
+    "value": 0.08,
+    "min": 0.0,
+    "max": 0.3,
+    "step": 0.01,
+    "label": "Pandora: landing picture (s)",
+    "help": "How long the knees-soften landing shows after touchdown. It never delays her: any input moves on."
+  },
+  "land_hard_show": {
+    "value": 0.16,
+    "min": 0.0,
+    "max": 0.4,
+    "step": 0.01,
+    "label": "Pandora: hard landing picture (s)",
+    "help": "After a long fall she lands in the deep lean-in crouch for this long (only when she lands standing still)."
+  },
+  "land_hard_drop": {
+    "value": 120.0,
+    "min": 40.0,
+    "max": 400.0,
+    "step": 10.0,
+    "label": "Pandora: fall height for a hard landing (px)",
+    "help": "A fall from at least this high above the landing point uses the deep crouch. A full jump is about 68 px high."
   }
 }

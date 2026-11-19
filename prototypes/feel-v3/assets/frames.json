@@ -4,8 +4,8 @@
     "anims": {
       "idle": 22,
       "run": 11,
-      "jump": 4,
-      "land": 1,
+      "jump": 5,
+      "land": 2,
       "crouch": 5,
       "attack": 5,
       "attack2": 5,

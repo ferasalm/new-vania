@@ -106,14 +106,15 @@ func tex(rel: String) -> Texture2D:
 	return t
 
 
-func sprite(set_name: String, fps: Dictionary, no_loop: Array = []) -> AnimatedSprite2D:
+func sprite(set_name: String, fps: Dictionary, no_loop: Array = [], dir_override: String = "") -> AnimatedSprite2D:
 	# Builds an animated sprite from assets/<set_name>/<anim>_NN.png.
+	# dir_override reads the same frames from another folder (Pandora's skin B: pandora_b).
 	var s := AnimatedSprite2D.new()
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
 	var anims: Dictionary = frames[set_name]["anims"]
 	# "dir" lets a set live in another folder (the hero set is chosen by tools/use_hero_set.py)
-	var dir: String = frames[set_name].get("dir", set_name)
+	var dir: String = dir_override if dir_override != "" else frames[set_name].get("dir", set_name)
 	for anim in anims:
 		sf.add_animation(anim)
 		sf.set_animation_speed(anim, float(fps.get(anim, 10.0)))
