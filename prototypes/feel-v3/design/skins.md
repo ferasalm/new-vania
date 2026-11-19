@@ -25,10 +25,20 @@ accent, highlight). Slot 11 and 12 are the glow: eyes, the seam lines on her sui
 If a new move needs a colour that is not in the palette, the palette changes first (both files, same slot),
 then every frame is re-checked. Never add a 17th colour to one skin only.
 
+## Rule: one look per skin (user, 2026-11-19)
+Within a skin, every frame shares one design and one palette. A redrawn move never goes into the game beside
+frames in the old look. `tools/harmonize_pandora.py` keeps the set in one look:
+- `python -I tools/harmonize_pandora.py` recolours her hand-made frames (`art_proof/harmony/original`, the
+  frames as they were before 2026-11-19) to A, with her face found in every frame and the cyan eye placed there.
+- `python -I tools/harmonize_pandora.py redrawn <A dir> <out dir>` brings a redrawn move (PixelLab) to the same
+  tone mix (shadow, mid and light shares of hair and skin) and places its eye from the rig.
+- `python -I tools/harmonize_pandora.py install` writes A to `assets/2x/pandora/` and B to `assets/2x/pandora_b/`.
+- Check the result on `art_proof/harmony/all_moves_game.png` (every move, A above B, near game size).
+
 ## In the game
 - Tuning key `pandora_skin`: 0 = A (default), 1 = B. The pause menu gets the switch with S3 (session 2).
 - The code colours of her strikes and dash come from `Vfx.her_glow()` / `Vfx.her_glow_alt()`, which follow the skin.
-- Her frames load from `assets/2x/pandora/` (A) or `assets/2x/pandora_b/` (B) once new frames are wired.
+- Her frames load from `assets/2x/pandora/` (A) or `assets/2x/pandora_b/` (B), chosen when she is created.
 
 ## Enemies and bosses
 They have one look each (their own palettes, sprites.md 5b). Skins are Pandora's only.
