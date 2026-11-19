@@ -15,7 +15,7 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | A1 | Slide like Order of Ecclesia | yes | done | `player.gd` slide state |
 | A2 | Two backdash buttons: one left, one right | yes | done | Q/U left, L/O right |
 | A3 | Her own frames replace the Konami hero frames | yes | done | `assets/2x/pandora` |
-| A4 | Every missing move drawn new; no frame or motion used by two moves | part | in progress | only the jump is new; 23 groups of identical frames remain (attack = attack2, air attacks, crouch attacks, cast = backdash) |
+| A4 | Every missing move drawn new; no frame or motion used by two moves | part | in progress | jump and standing J/I are new (attack != attack2 now); air attacks, crouch attacks, cast = backdash remain |
 | A5 | About 90 px, same level of detail as everything else | yes | done (her) | other assets not re-checked |
 
 ## B. The backtrack puzzle (2026-11-18 morning)
@@ -79,7 +79,7 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | E1 | Palette A (ash and teal), cyan-glowing eyes and seams; fix the bald-looking spot in her hair | yes | done | |
 | E2 | Skin B (oxblood, red strikes, eyes and seams) as an option; save the method | yes (F1) | done | pause-menu switch with the menus (session 2) |
 | E3 | Graceful jump from your 3 clips, rig + PixelLab; the crouch faces her way | yes | done | |
-| E4 | Attacks as a fencer or dancer: J and I clearly different, crouch, air and cast moves, Elegy and pistol sets, a slim blade on the hit frames | no | planned | needs PixelLab (29.3 left): your yes first |
+| E4 | Attacks as a fencer or dancer: J and I clearly different, crouch, air and cast moves, Elegy and pistol sets, a slim blade on the hit frames | part (standing J + I) | in progress | 2026-11-19: J = right-hand falling cut into a low lunge, I = left-hand rising cut (starts low, user); the real Dirge is its own layer (appears, swoosh, breaks into sparks). Build proto-v4-swings. Crouch/air/cast/wall/Elegy next; pistol in task 4 |
 | E5 | One design and one palette for every frame of a skin | yes | done | recolour; the redraws follow the same rule |
 | E6 | Moth test fix; smoke/climb tests rewritten for the new map | n/a | done | task 1: smoke 145/145 and climb PASS, both locked (`tests_v4/locks/step1.json`) |
 | E7 | Well climb too tight: ledge lips (thin planks at each ledge end) instead of a stronger kick | n/a | done | user decision 2026-11-19 (task 1) |
