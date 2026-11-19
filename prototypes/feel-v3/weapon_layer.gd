@@ -1,7 +1,8 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 extends RefCounted
 ## The weapon as its own layer, drawn from per-frame keys (frames.json hero.weapon.<anim>):
-## for every body frame, where her hand is, the blade angle, and whether it is in front.
+## for every body frame, where her hand is, the blade (angle, or yaw for a level swing),
+## whether it is in front, and whether the swing into it leaves a swoosh.
 ## Her frames carry no weapon, so any weapon can be held in the same swing
 ## (user, 2026-11-19: "the character is consistent, the weapon may change").
 
@@ -22,31 +23,56 @@ static func hand(key: Dictionary, facing: int) -> Vector2:
 	return Vector2((key["hand"][0] / density - feet[0]) * facing, key["hand"][1] / density - feet[1])
 
 
-static func dir(angle_deg: float, facing: int) -> Vector2:
-	var a := deg_to_rad(angle_deg)
-	return Vector2(cos(a) * facing, sin(a))
+const FLAT := 0.28    # a level swing seen from the side is an ellipse this flat (tools/attack_rig.py FLAT)
 
 
-## The short way round from one blade angle to the next, in degrees.
-static func sweep(a: Dictionary, b: Dictionary) -> float:
-	return wrapf(float(b["angle"]) - float(a["angle"]), -180.0, 180.0)
+## The blade on screen for a key, before mirroring: a vector of length <= 1 (1 = full length,
+## side-on). A level swing gives yaw (0 forward, 90 toward the camera, 180 back, -90 away) and
+## tilt (+ = front end down); other keys give the screen angle and a length.
+static func vec(key: Dictionary) -> Vector2:
+	if key.has("yaw"):
+		var y := deg_to_rad(float(key["yaw"]))
+		return Vector2(cos(y), FLAT * sin(y)).rotated(deg_to_rad(float(key.get("tilt", 0.0))))
+	return Vector2.RIGHT.rotated(deg_to_rad(float(key["angle"]))) * float(key.get("len", 1.0))
 
 
-## Points along the blade (player space): from key a to key b with the hand and angle in
+## The blade between key a and key b (u 0..1): a level swing turns its yaw the short way round,
+## anything else turns its screen angle the short way and changes length on the way.
+static func vec_at(a: Dictionary, b: Dictionary, u: float) -> Vector2:
+	if a.has("yaw") and b.has("yaw"):
+		var dy := wrapf(float(b["yaw"]) - float(a["yaw"]), -180.0, 180.0)
+		var ta := float(a.get("tilt", 0.0))
+		return vec({"yaw": float(a["yaw"]) + dy * u, "tilt": ta + (float(b.get("tilt", 0.0)) - ta) * u})
+	var va := vec(a)
+	var vb := vec(b)
+	var ang := va.angle() + wrapf(vb.angle() - va.angle(), -PI, PI) * u
+	return Vector2.RIGHT.rotated(ang) * lerpf(va.length(), vb.length(), u)
+
+
+## How far the blade turned from key a to key b, in degrees.
+static func turn(a: Dictionary, b: Dictionary) -> float:
+	if a.has("yaw") and b.has("yaw"):
+		return absf(wrapf(float(b["yaw"]) - float(a["yaw"]), -180.0, 180.0))
+	return absf(rad_to_deg(wrapf(vec(b).angle() - vec(a).angle(), -PI, PI)))
+
+
+static func mirror(v: Vector2, facing: int) -> Vector2:
+	return Vector2(v.x * facing, v.y)
+
+
+## Points along the blade (player space): from key a to key b with the hand and blade in
 ## between, or just key b's blade when a is empty. The cut is exactly what you see.
 static func cut_points(a: Dictionary, b: Dictionary, facing: int, reach: float) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	var hb := hand(b, facing)
-	var steps := 1 if a.is_empty() else maxi(1, int(ceil(absf(sweep(a, b)) / 7.0)))
+	var steps := 1 if a.is_empty() else maxi(1, int(ceil(turn(a, b) / 7.0)))
 	for i in steps + 1:
-		var u := 1.0 if a.is_empty() else float(i) / steps
+		var u := float(i) / steps
 		var h := hb if a.is_empty() else hand(a, facing).lerp(hb, u)
-		var d := dir((float(b["angle"]) if a.is_empty() else float(a["angle"]) + sweep(a, b) * u), facing)
-		var x := 2.0
-		while x < reach:
-			pts.append(h + d * x)
-			x += 4.0
-		pts.append(h + d * reach)
+		var v := mirror(vec(b) if a.is_empty() else vec_at(a, b, u), facing) * reach
+		var n := maxi(1, int(v.length() / 4.0))
+		for j in n + 1:
+			pts.append(h + v * (float(j) / n))
 	return pts
 
 
@@ -111,14 +137,13 @@ static func vanish(blade: Sprite2D, world: Node, from_t: float, life: float) -> 
 static func band(a: Dictionary, b: Dictionary, facing: int, reach: float) -> Array:
 	var outer := PackedVector2Array()
 	var inner := PackedVector2Array()
-	var s := sweep(a, b)
 	for i in 13:
 		var u := float(i) / 12.0
 		var h := hand(a, facing).lerp(hand(b, facing), u)
-		var d := dir(float(a["angle"]) + s * u, facing)
+		var v := mirror(vec_at(a, b, u), facing) * reach
 		var part := 0.08 + 0.42 * pow(u, 1.5)
-		outer.append(h + d * reach)
-		inner.append(h + d * reach * (1.0 - part))
+		outer.append(h + v)
+		inner.append(h + v * (1.0 - part))
 	return [outer, inner]
 
 

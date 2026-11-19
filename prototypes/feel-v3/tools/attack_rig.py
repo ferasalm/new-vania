@@ -797,7 +797,8 @@ def step_install(moves, seed):
             for i in range(n):
                 Image.open(fin_dir(m, seed) / k / f"{m}_{i:02d}.png").save(Path("assets/2x") / folder / f"{m}_{i:02d}.png")
         track = json.loads((fin_dir(m, seed) / "weapon_track.json").read_text())
-        keys[m] = [{"hand": t["hand"], "angle": t["angle"], "front": t["front"]} for t in track]
+        keep = ("hand", "angle", "len", "yaw", "tilt", "front", "trail")
+        keys[m] = [{k: t[k] for k in keep if k in t} for t in track]
         print("installed", m, n, "frames + weapon keys")
     fj.write_text(json.dumps(meta, indent=2) + "\n")
     for skin in ("a", "b"):

@@ -324,6 +324,8 @@ func take_hit(amount: float, dir: int) -> void:
 			return
 	elif kind == "scribe" and state == "puddle":
 		return
+	elif kind == "leech" and state == "latched":
+		return    # it clings to her: her swings shake it off (see _latched), they do not cut it
 	if _fake:
 		_pop()
 		return

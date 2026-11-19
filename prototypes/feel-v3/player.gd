@@ -135,6 +135,7 @@ func _ready() -> void:
 	_key_trail = WL.KeyTrail.new()
 	_key_trail.z_index = 1
 	add_child(_key_trail)
+	move_child(_key_trail, _spr.get_index())   # like the arm: z 0 = behind her, z 1 = in front
 	floor_snap_length = 4.0
 
 
@@ -631,8 +632,11 @@ func _pose_keyed() -> void:
 	_arm.position = WL.hand(key, facing)
 	_arm.scale.x = facing
 	_arm.z_index = 1 if key["front"] else 0
+	_key_trail.z_index = _arm.z_index
+	var v := WL.vec(key)                     # a blade pointing toward or away from the camera looks shorter
 	_blade.position = Vector2.ZERO
-	_blade.rotation = deg_to_rad(float(key["angle"]))
+	_blade.rotation = v.angle()
+	_blade.scale = Vector2(maxf(0.15, v.length()), 1.0)
 	_blade.modulate = Color.WHITE
 	_trail.set_arc(0.0, 0.0, 0.0, 0.0, 0.0)
 	if k == 0:
@@ -644,7 +648,7 @@ func _pose_keyed() -> void:
 	if k != _key_at:
 		if _key_at >= 0:
 			_cut_from = _keys[_key_at]
-			if absf(WL.sweep(_keys[_key_at], key)) > 30.0:
+			if key.get("trail", true) and WL.turn(_keys[_key_at], key) > 30.0:
 				_key_trail.show_band(WL.band(_keys[_key_at], key, facing, _blade_len), step * 1.6)
 		_key_at = k
 

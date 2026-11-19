@@ -37,85 +37,125 @@
       "attack": [
         {
           "hand": [
-            67,
-            74
+            65,
+            92
           ],
-          "angle": 160,
-          "front": true
+          "angle": 172.0,
+          "len": 1.0,
+          "yaw": 180,
+          "tilt": -8,
+          "front": true,
+          "trail": true
         },
         {
           "hand": [
             113,
-            55
+            91
           ],
-          "angle": -115,
-          "front": true
+          "angle": 142.4,
+          "len": 0.432,
+          "yaw": 110,
+          "tilt": 0,
+          "front": true,
+          "trail": true
         },
         {
           "hand": [
-            166,
-            93
+            167,
+            97
           ],
-          "angle": 22,
-          "front": true
+          "angle": 6.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 6,
+          "front": true,
+          "trail": true
         },
         {
           "hand": [
-            165,
-            113
+            164,
+            107
           ],
-          "angle": 30,
-          "front": true
+          "angle": -9.2,
+          "len": 0.787,
+          "yaw": -40,
+          "tilt": 4,
+          "front": true,
+          "trail": true
         },
         {
           "hand": [
-            137,
-            92
+            134,
+            99
           ],
-          "angle": -20,
-          "front": true
+          "angle": 30.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 30,
+          "front": true,
+          "trail": false
         }
       ],
       "attack2": [
         {
           "hand": [
-            142,
-            105
+            65,
+            92
           ],
-          "angle": 38,
-          "front": true
+          "angle": 172.0,
+          "len": 1.0,
+          "yaw": 180,
+          "tilt": -8,
+          "front": false,
+          "trail": true
         },
         {
           "hand": [
-            146,
-            88
+            113,
+            91
           ],
-          "angle": 45,
-          "front": true
+          "angle": -142.4,
+          "len": 0.432,
+          "yaw": -110,
+          "tilt": 0,
+          "front": false,
+          "trail": true
         },
         {
           "hand": [
-            138,
-            57
+            167,
+            97
           ],
-          "angle": -55,
-          "front": true
+          "angle": 6.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 6,
+          "front": true,
+          "trail": true
         },
         {
           "hand": [
-            105,
-            51
+            164,
+            107
           ],
-          "angle": -110,
-          "front": true
+          "angle": 17.2,
+          "len": 0.787,
+          "yaw": 40,
+          "tilt": 4,
+          "front": true,
+          "trail": true
         },
         {
           "hand": [
-            142,
-            96
+            132,
+            98
           ],
-          "angle": -20,
-          "front": true
+          "angle": 30.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 30,
+          "front": true,
+          "trail": false
         }
       ]
     }
