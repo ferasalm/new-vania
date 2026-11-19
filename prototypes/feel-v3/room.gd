@@ -424,10 +424,11 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), theme["clear"])
 	var tint: Color = theme["tint"]
 
-	# Draw seamless backdrop panels
+	# Draw the backdrop wall behind the whole room: the picture keeps its
+	# real size and is repeated to fill, so it is never squeezed or stretched
 	for rect in backdrop_rects():
 		if _wall != null:
-			draw_texture_rect(_wall, rect, false, tint)
+			_draw_wall(rect, tint)
 		else:
 			draw_rect(rect, theme["clear"] * Color(1.2, 1.2, 1.2))
 
@@ -456,3 +457,28 @@ func _draw() -> void:
 			elif ch == "=" or ch == "v":
 				draw_texture_rect_region(_ledge, Rect2(x * TILE, y * TILE, TILE, 8),
 					Rect2((x % 4) * TILE, 0, TILE, 8), tt)
+
+
+# The backdrop wall is painted with copies of the picture at its real size,
+# so it is never stretched out of shape. Copies repeat across the room from
+# its left edge, and on rooms taller than the picture more copies stack
+# upwards from the floor, so the picture always sits on the ground line.
+func _draw_wall(rect: Rect2, tint: Color) -> void:
+	var tw := _wall.get_size().x
+	var th := _wall.get_size().y
+	if tw <= 0.0 or th <= 0.0:
+		return
+	var j0 := int(floorf(rect.position.x / tw))
+	var j1 := int(floorf((rect.position.x + rect.size.x - 0.01) / tw))
+	var k := 0
+	while size.y - k * th > rect.position.y:
+		var y := size.y - (k + 1) * th
+		if y < rect.end.y:
+			for j in range(j0, j1 + 1):
+				var where := Rect2(j * tw, y, tw, th)
+				var vis := where.intersection(rect)
+				if vis.size.x <= 0.0 or vis.size.y <= 0.0:
+					continue
+				draw_texture_rect_region(_wall, vis,
+					Rect2(vis.position - where.position, vis.size), tint)
+		k += 1
