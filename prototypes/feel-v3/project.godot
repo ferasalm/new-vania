@@ -18,6 +18,7 @@ Sfx="*res://audio.gd"
 Db="*res://db.gd"
 W="*res://world_state.gd"
 R="*res://rpg.gd"
+Dev="*res://editor/dev_hub.gd"
 
 [display]
 
