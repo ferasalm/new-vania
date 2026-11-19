@@ -1,0 +1,466 @@
+# PROTOTYPE - NOT FOR PRODUCTION
+# The pause menu. Esc, P or Start opens it (the corner button on a phone does
+# the same), and the world stops while it is up. Five tabs sit across the top:
+#   MAP       the rooms she has walked through, newest last
+#   CHARACTER her level, her stat points, and what each stat does right now
+#   ITEMS     what she carries; things that can be used show USE
+#   EQUIPMENT what she wears: hand, core, two torso straps, two drive slots,
+#             and a live stat line that always matches the sheet
+#   SYSTEM    the tuning panel, the touch layout editor, a rebuild, tuning
+#             reset, resume and quit
+# The rows are real buttons, so a finger works; on keys the arrows move the
+# pick, left and right change the tab, jump confirms and Esc or swap goes back.
+# The list scrolls when a tab has more rows than fit, and the picked row always
+# scrolls into view. For menu_swallow seconds after the menu closes (tuned in
+# tuning.d/ui.json) she does not run her own physics, so the press that closed
+# the menu does not also swing her blade or make her jump; the world keeps
+# moving and a short grace keeps anything from hitting her while she stands
+# still. The locked test drives all of this with debug_rows, debug_tap and
+# debug_press, so those three never move.
+extends CanvasLayer
+
+const VIEW := Vector2(384, 216)
+const ROW_W := 358.0
+const ROW_H := 15.0
+
+var TABS: Array = ["MAP", "CHARACTER", "ITEMS", "EQUIPMENT", "SYSTEM"]
+var is_open := false
+var tab := "CHARACTER"
+var _sel := 0
+var _rows: Array = []          # the current tab's rows: {text, cb}
+var _row_btns: Array = []      # the row buttons, same order
+var _tab_btns: Array = []
+var _scroll: ScrollContainer
+var _list: VBoxContainer
+var _swallow := 0.0            # seconds left of the after-close hold
+var _holding := false          # the hold is on her right now
+var _had_invuln := false       # she was already untouchable when the hold began
+var _was := {}                 # action -> pressed a moment ago (own edge check)
+const NAV := ["up", "down", "left", "right", "ui_up", "ui_down", "ui_left", "ui_right",
+	"jump", "attack", "swap", "ui_accept", "ui_cancel"]
+
+
+func _ready() -> void:
+	layer = 45      # above the touch rig and the offline screen
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	visible = false
+	var dim := ColorRect.new()
+	dim.color = Color(0.02, 0.02, 0.05, 0.82)
+	dim.size = VIEW
+	add_child(dim)
+	var head := HBoxContainer.new()
+	head.position = Vector2(4, 2)
+	head.add_theme_constant_override("separation", 2)
+	add_child(head)
+	for t in TABS:
+		var b := Button.new()
+		b.text = String(t)
+		b.custom_minimum_size = Vector2(73, 14)
+		b.add_theme_font_size_override("font_size", 8)
+		b.focus_mode = Control.FOCUS_NONE
+		b.pressed.connect(_open_tab.bind(String(t)))
+		head.add_child(b)
+		_tab_btns.append(b)
+	_scroll = ScrollContainer.new()
+	_scroll.position = Vector2(4, 18)
+	_scroll.size = Vector2(376, 184)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_scroll)
+	_list = VBoxContainer.new()
+	_list.add_theme_constant_override("separation", 2)
+	_scroll.add_child(_list)
+	var foot := Label.new()
+	foot.text = "ARROWS: PICK   LEFT/RIGHT: TAB   JUMP: OK   ESC: BACK"
+	foot.position = Vector2(6, 204)
+	foot.add_theme_font_size_override("font_size", 6)
+	foot.add_theme_color_override("font_outline_color", Color.BLACK)
+	foot.add_theme_constant_override("outline_size", 2)
+	foot.modulate = Color(1, 1, 1, 0.6)
+	add_child(foot)
+
+
+func toggle() -> void:
+	if is_open:
+		close()
+	else:
+		open()
+
+
+func open(tab_name: String = "") -> void:
+	# open the menu (or switch its tab); the world stops while it is up
+	var m = G.main
+	if m != null and bool(m._busy):
+		return
+	if tab_name != "" and TABS.has(tab_name):
+		tab = tab_name
+	is_open = true
+	visible = true
+	if _holding:
+		_hold_end()
+	_swallow = 0.0      # reopening cancels the after-close hold
+	get_tree().paused = true
+	Sfx.pause_music(true)
+	if m != null and m.touch != null:
+		m.touch._release_all()
+		m.touch.paused = true
+		m.touch._overlay.visible = false
+	_sel = 0
+	for a in NAV:
+		_was[a] = true      # a key already held needs a fresh press
+	_refresh()
+
+
+func close() -> void:
+	is_open = false
+	visible = false
+	Sfx.pause_music(false)
+	get_tree().paused = false
+	if T.data.has("menu_swallow"):
+		_swallow = T.v("menu_swallow")      # the after-close hold (see _physics_process)
+	if G.main != null and G.main.touch != null:
+		G.main.touch.paused = false
+
+
+func _physics_process(delta: float) -> void:
+	# the after-close hold: for menu_swallow seconds she does not run her own
+	# physics, so an attack or jump press made while the menu was closing is
+	# never read, and the key that closed the menu does not also swing her
+	# blade or make her jump. The world itself keeps moving; a short grace
+	# keeps anything from hitting her while she stands still.
+	var m = G.main
+	if m == null:
+		return
+	if _holding:
+		_swallow = maxf(0.0, _swallow - delta)
+		if _swallow <= 0.0:
+			_hold_end()
+	elif _swallow > 0.0 and not is_open:
+		_hold_start()
+
+
+func _hold_start() -> void:
+	var m = G.main
+	if m == null:
+		_swallow = 0.0
+		return
+	var p = m.player
+	if p == null or not is_instance_valid(p):
+		_swallow = 0.0
+		return
+	_holding = true
+	p.process_mode = Node.PROCESS_MODE_DISABLED
+	_had_invuln = float(p.get("invuln")) > 0.0
+	if not _had_invuln:
+		p.set("invuln", _swallow + 0.1)
+
+
+func _hold_end() -> void:
+	_holding = false
+	var m = G.main
+	if m == null:
+		return
+	var p = m.player
+	if p != null and is_instance_valid(p):
+		p.process_mode = Node.PROCESS_MODE_INHERIT
+		if not _had_invuln:
+			p.set("invuln", 0.0)
+
+
+func offer_points() -> void:
+	# the level-up offer: the menu opens straight on CHARACTER to spend them
+	open("CHARACTER")
+
+
+func debug_rows() -> Array:
+	# the test hook: the row texts of the tab on screen
+	var out: Array = []
+	for r in _rows_for(tab):
+		out.append(String(r["text"]))
+	return out
+
+
+func debug_tap(i: int) -> void:
+	# the test hook: act like a finger on row i
+	_sel = clampi(i, 0, maxi(0, _rows.size() - 1))
+	_activate(_sel)
+
+
+func debug_press(a: String) -> void:
+	# the test hook: act like one press of a menu key
+	match a:
+		"tab_next":
+			_tab_shift(1)
+		"tab_prev":
+			_tab_shift(-1)
+		"up":
+			_move(-1)
+		"down":
+			_move(1)
+		"ok":
+			_activate(_sel)
+		"back":
+			close()
+
+
+func _process(delta: float) -> void:
+	if not is_open:
+		return
+	var m = G.main
+	if m != null and m.touch != null and bool(m.touch.editing):
+		return      # Pause > CONTROLS owns the fingers for a while
+	# own edge check (like the offline screen): a press made during a physics
+	# step can fall between two drawn frames and be missed by just_pressed
+	var e := {}
+	for a in NAV:
+		var now := Input.is_action_pressed(a)
+		e[a] = now and not bool(_was.get(a, false))
+		_was[a] = now
+	if e["up"] or e["ui_up"]:
+		_move(-1)
+	if e["down"] or e["ui_down"]:
+		_move(1)
+	if e["left"] or e["ui_left"]:
+		_tab_shift(-1)
+	if e["right"] or e["ui_right"]:
+		_tab_shift(1)
+	if e["jump"] or e["ui_accept"] or e["attack"]:
+		_activate(_sel)
+	if e["swap"] or e["ui_cancel"]:
+		close()
+
+
+func _move(d: int) -> void:
+	if _rows.is_empty():
+		return
+	_sel = wrapi(_sel + d, 0, _rows.size())
+	_show_sel()
+	Sfx.play("no_energy", 1.4)
+
+
+func _tab_shift(d: int) -> void:
+	tab = String(TABS[wrapi(TABS.find(tab) + d, 0, TABS.size())])
+	_sel = 0
+	_refresh()
+	Sfx.play("no_energy", 1.4)
+
+
+func _open_tab(tab_name: String) -> void:
+	# a tab button was tapped or picked
+	tab = tab_name
+	_sel = 0
+	_refresh()
+
+
+func _on_row(i: int) -> void:
+	_sel = i
+	_activate(i)
+
+
+func _activate(i: int) -> void:
+	if i < 0 or i >= _rows.size():
+		return
+	var cb = _rows[i].get("cb")
+	if cb != null and cb is Callable and (cb as Callable).is_valid():
+		(cb as Callable).call()
+		_refresh()
+		Sfx.play("pickup", 0.8)
+
+
+func _refresh() -> void:
+	_rows = _rows_for(tab)
+	for c in _list.get_children():
+		_list.remove_child(c)
+		c.queue_free()
+	_row_btns = []
+	for i in _rows.size():
+		var b := Button.new()
+		b.text = " " + String(_rows[i]["text"])
+		b.custom_minimum_size = Vector2(ROW_W, ROW_H)
+		b.add_theme_font_size_override("font_size", 8)
+		b.focus_mode = Control.FOCUS_NONE
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		if _rows[i].get("cb") != null:
+			b.pressed.connect(_on_row.bind(i))
+		_list.add_child(b)
+		_row_btns.append(b)
+	_sel = clampi(_sel, 0, maxi(0, _rows.size() - 1))
+	for j in _tab_btns.size():
+		_tab_btns[j].modulate = Color(1, 1, 1) if String(TABS[j]) == tab else Color(0.62, 0.62, 0.62, 0.9)
+	_show_sel()
+
+
+func _show_sel() -> void:
+	for i in _row_btns.size():
+		_row_btns[i].modulate = Color(1, 1, 1) if i == _sel else Color(0.68, 0.68, 0.68, 0.92)
+	if _sel >= 0 and _sel < _row_btns.size():
+		_scroll.ensure_control_visible(_row_btns[_sel])
+
+
+# ---- what each tab shows ----
+
+func _rows_for(which: String) -> Array:
+	match which:
+		"MAP":
+			return _map_rows()
+		"CHARACTER":
+			return _character_rows()
+		"ITEMS":
+			return _item_rows()
+		"EQUIPMENT":
+			return _equipment_rows()
+		"SYSTEM":
+			return _system_rows()
+	return []
+
+
+func _map_rows() -> Array:
+	# the rooms she has seen on the current sheet, in the order she saw them
+	var out: Array = []
+	var m = G.main
+	var seen: Dictionary = W.visited.get(W.sheet, {})
+	for id in seen:
+		var t := W.title(String(id))
+		if t == "" and m != null:
+			t = String(m.TITLES.get(String(id), ""))
+		out.append({"text": String(id).to_upper() + ("  " + t if t != "" else ""), "cb": null})
+	if out.is_empty():
+		out.append({"text": "(NO MAP YET)", "cb": null})
+	return out
+
+
+func _character_rows() -> Array:
+	var out: Array = []
+	out.append({"text": "LV %d   XP %d   PTS %d" % [R.level, R.xp, R.points], "cb": null})
+	var shown := {"vigor": "MAX HP %d", "power": "ATK %d%%", "guard": "DEF %d%%",
+		"stamina": "MAX EN %d", "magic": "MAX MP %d"}
+	var live := {"vigor": int(R.max_hp()), "power": int(R.atk()), "guard": int(R.def()),
+		"stamina": int(R.max_en()), "magic": int(R.max_mp())}
+	for s in R.STATS:
+		out.append({"text": "%s %d   %s" % [String(s).to_upper(), int(R.alloc.get(s, 0)), String(shown[s]) % int(live[s])],
+			"cb": _spend.bind(String(s))})
+	out.append({"text": "AUTO   SPEND ALL %d PTS" % R.points, "cb": _auto})
+	return out
+
+
+func _spend(stat: String) -> void:
+	# one point on one stat; the sheet refuses when she has none
+	R.spend(stat)
+
+
+func _auto() -> void:
+	R.auto_allocate()
+
+
+func _item_rows() -> Array:
+	# what she carries; gear lives on EQUIPMENT, so it is not listed twice
+	var out: Array = []
+	var gear: Dictionary = Db.table("gear")
+	var items: Dictionary = Db.table("items")
+	for id in R.items:
+		var n := R.count(String(id))
+		if n <= 0 or gear.has(String(id)):
+			continue
+		var d: Dictionary = items.get(String(id), {})
+		var nm := String(d.get("name", String(id).to_upper()))
+		var use: Dictionary = d.get("use", {})
+		if use.has("heal_hp_key") or use.has("heal_mp_key"):
+			out.append({"text": "%s x%d   USE" % [nm, n], "cb": _use.bind(String(id))})
+		else:
+			out.append({"text": "%s x%d" % [nm, n], "cb": null})
+	if out.is_empty():
+		out.append({"text": "(NOTHING CARRIED)", "cb": null})
+	return out
+
+
+func _use(id: String) -> void:
+	# a Suture and friends; the sheet refuses at full health or with none left
+	if not R.use_item(id):
+		Sfx.play("no_energy")
+
+
+func _equipment_rows() -> Array:
+	# hand and core on top, then the two torso straps and the two drive slots,
+	# then the stat line the way the sheet computes it right now
+	var out: Array = []
+	var wpn := "DIRGE-042"
+	var m = G.main
+	if m != null and m.player != null and m.player.has_method("weapon_name"):
+		wpn = String(m.player.weapon_name())
+	out.append({"text": "%-7s %s" % ["HAND", wpn], "cb": null})
+	out.append({"text": "%-7s %s" % ["CORE", "RESTORE MODULE" if R.has("restore_module") else "-"], "cb": null})
+	for slot in ["harness1", "harness2", "module1", "module2"]:
+		var tag := "TORSO-1" if slot == "harness1" else ("TORSO-2" if slot == "harness2" \
+			else ("DRIVE-1" if slot == "module1" else "DRIVE-2"))
+		out.append({"text": "%-7s %s" % [tag, _slot_text(slot)], "cb": _cycle_slot.bind(slot)})
+	out.append({"text": "ATK %d%%  DEF %d%%  HP %d  EN %d  MP %d" % [int(R.atk()), int(R.def()),
+		int(R.max_hp()), int(R.max_en()), int(R.max_mp())], "cb": null})
+	return out
+
+
+func _slot_text(slot: String) -> String:
+	var id := String(R.equip.get(slot, ""))
+	if id == "":
+		return "-"
+	var d: Dictionary = Db.table("gear").get(id, {})
+	return String(d.get("name", id))
+
+
+func _cycle_slot(slot: String) -> void:
+	# tap an empty slot to fit the first piece she owns, tap again for the next
+	# one, and round to empty: one tap is one step, the stat line follows
+	var kind := "harness" if slot.begins_with("harness") else "module"
+	var cands: Array = [""]
+	var gear: Dictionary = Db.table("gear")
+	for id in gear:
+		var d: Dictionary = gear[id]
+		var sid := String(id)
+		if String(d.get("slot", "")) == kind and (R.owned_gear.has(sid) or String(R.equip.get(slot, "")) == sid):
+			cands.append(sid)
+	if cands.size() <= 1:
+		return      # nothing she owns fits here
+	var cur := String(R.equip.get(slot, ""))
+	var i := cands.find(cur)
+	if i < 0:
+		i = 0
+	R.equip_gear(slot, String(cands[wrapi(i + 1, 0, cands.size())]))
+
+
+func _system_rows() -> Array:
+	return [
+		{"text": "TUNING PANEL   (F1)", "cb": _toggle_panel},
+		{"text": "CONTROLS   (TOUCH LAYOUT)", "cb": _controls},
+		{"text": "RECONSTRUCT", "cb": _rebuild},
+		{"text": "RESET TUNING", "cb": T.reset},
+		{"text": "RESUME", "cb": close},
+		{"text": "QUIT", "cb": _quit},
+	]
+
+
+func _toggle_panel() -> void:
+	var m = G.main
+	if m != null and m.panel != null:
+		m.panel._root.visible = not m.panel._root.visible
+
+
+func _controls() -> void:
+	# Pause > CONTROLS: the touch rig's own editor takes the screen; the menu
+	# waits hidden and the world stays stopped until DONE
+	var m = G.main
+	if m == null or m.touch == null:
+		return
+	visible = false
+	m.touch._edit_start()
+
+
+func _rebuild() -> void:
+	# a new Pandora at the last cache, same as the old pause screen's button
+	var m = G.main
+	if m == null or m._busy:
+		return
+	close()
+	_swallow = 0.0
+	m.reconstruct()
+
+
+func _quit() -> void:
+	get_tree().quit()

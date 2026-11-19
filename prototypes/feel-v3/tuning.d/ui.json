@@ -1,0 +1,10 @@
+{
+  "menu_swallow": {
+    "value": 0.25,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "MENU SWALLOW",
+    "help": "Seconds the world holds still after the pause menu closes, so the press that closed it does not also swing her blade or make her jump."
+  }
+}

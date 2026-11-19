@@ -122,7 +122,7 @@ func _build_menu() -> void:
 	_menu_button(col, "CONTROLS", _edit_start)
 	_menu_button(col, "RECONSTRUCT", _restart)
 	var grid := GridContainer.new()
-	grid.columns = 2
+	grid.columns = 3      # three columns so every row of the menu fits on the screen
 	grid.add_theme_constant_override("h_separation", 2)
 	grid.add_theme_constant_override("v_separation", 2)
 	col.add_child(grid)
@@ -313,7 +313,7 @@ func _button_down(id: String) -> void:
 		"backdash_right":
 			_tap("backdash_right")
 		"pause":
-			_pause()
+			toggle_pause()
 
 
 func _button_up(id: String) -> void:
@@ -345,8 +345,14 @@ func _release_all() -> void:
 
 
 func toggle_pause() -> void:
-	# Esc / P / Start on a keyboard or pad, the corner button on a phone
+	# Esc / P / Start on a keyboard or pad, the corner button on a phone.
+	# The tabbed pause menu (menu.gd) is the pause surface once it exists;
+	# this one-sheet overlay stays as the fallback for builds without it.
 	if blocked or editing:
+		return
+	if G.main != null and G.main.menu != null:
+		_release_all()
+		G.main.menu.toggle()
 		return
 	if paused:
 		_resume()
@@ -457,7 +463,13 @@ func _edit_done() -> void:
 	editing = false
 	_edit_bar.visible = false
 	visible = active
-	_overlay.visible = true
+	# back to whichever pause surface opened the editor: the tabbed menu if it
+	# is up, otherwise this overlay
+	var m = G.main.menu if G.main != null else null
+	if m != null and bool(m.get("is_open")):
+		m.visible = true
+	else:
+		_overlay.visible = true
 	queue_redraw()
 
 
