@@ -85,7 +85,7 @@ var _swings := {}           # SWINGS, with shoulder and hand distance read from 
 var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
 var _spin_hits := 0
 var _keys: Array = []        # this swing's weapon keys, one per body frame ([] = the old shoulder sweep)
-var _key_at := -1            # the body frame the weapon was last posed for
+var _key_at := -1            # the body frame the weapon was last posed for (at key count = it already broke up)
 var _cut_from := {}          # the key the blade swept from on this frame's first tick
 var _key_trail: Node2D
 var hit_pts := PackedVector2Array()   # where the blade cut this tick (shown by "show hit areas")
@@ -564,6 +564,7 @@ func _start_attack(btn: String, kind: String) -> void:
 	_blade.scale = Vector2.ONE
 	_blade_len = _blade.texture.get_width() - tg[1].x
 	_arm.z_index = 1
+	_blade.visible = true                   # the last swing hid it when it broke into sparks
 	WL.set_phase(_blade, 0, 1.0)
 	_swing = _swings[pose + "_" + hand].duplicate()
 	if kind == "special":
@@ -624,8 +625,17 @@ func _pose_weapon() -> void:
 
 func _pose_keyed() -> void:
 	# The weapon sits in the hand of the body frame on screen, at that frame's angle.
-	# It gathers out of glowing pixels on the first frame and starts to break up on the last.
+	# It gathers out of glowing pixels on the first frame. When the last frame starts
+	# the sword does not move on to that key: it breaks into sparks right where the
+	# follow-through left it, so her hand holds nothing on the last frame.
+	if _key_at >= _keys.size():
+		return      # the weapon already broke up when the last frame started
 	var k := clampi(_spr.frame, 0, _keys.size() - 1)
+	if k == _keys.size() - 1 and _key_at >= 0:
+		_vanish_weapon()
+		_blade.visible = false      # the last frame draws no sword at all
+		_key_at = _keys.size()      # remembers the weapon is gone, so this runs once
+		return
 	var key: Dictionary = _keys[k]
 	var step := _attack_total() / float(_keys.size())
 	var u := clampf((_attack_t - k * step) / step, 0.0, 1.0)
@@ -641,8 +651,6 @@ func _pose_keyed() -> void:
 	_trail.set_arc(0.0, 0.0, 0.0, 0.0, 0.0)
 	if k == 0:
 		WL.set_phase(_blade, 1, lerpf(0.3, 1.0, u))
-	elif k == _keys.size() - 1:
-		WL.set_phase(_blade, 2, lerpf(0.0, 0.45, u))
 	else:
 		WL.set_phase(_blade, 0, 1.0)
 	if k != _key_at:
@@ -655,6 +663,8 @@ func _pose_keyed() -> void:
 
 func _vanish_weapon() -> void:
 	# after a keyed swing the weapon stays where it was and breaks into rising sparks
+	if _key_at >= _keys.size():
+		return      # it already broke up when the last frame started
 	var last := _key_at >= _keys.size() - 1
 	WL.vanish(_blade, get_parent(), 0.45 if last else 0.0, T.v("weapon_vanish"))
 	_key_trail.clear()
@@ -665,7 +675,7 @@ func _hide_weapons() -> void:
 
 
 func weapon_showing() -> bool:
-	return _arm.visible and _blade.modulate.a > 0.5
+	return _arm.visible and _blade.visible and _blade.modulate.a > 0.5
 
 
 func swap_weapon() -> void:
