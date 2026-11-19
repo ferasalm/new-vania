@@ -1,0 +1,103 @@
+{
+  "sfx": {
+    "door_lamp": {
+      "file": "sfx/world/door_lamp.wav",
+      "volume_db": -6.0,
+      "pitch_random": 0.04,
+      "options": [
+        {
+          "file": "sfx/world/door_lamp.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "chain_run": {
+      "file": "sfx/world/chain_run.wav",
+      "volume_db": -4.0,
+      "pitch_random": 0.05,
+      "options": [
+        {
+          "file": "sfx/world/chain_run.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "boom": {
+      "file": "sfx/world/boom.wav",
+      "volume_db": -2.0,
+      "pitch_random": 0.03,
+      "options": [
+        {
+          "file": "sfx/world/boom.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "dust": {
+      "file": "sfx/world/dust.wav",
+      "volume_db": -8.0,
+      "pitch_random": 0.08,
+      "options": [
+        {
+          "file": "sfx/world/dust.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "cold_air": {
+      "file": "sfx/world/cold_air.wav",
+      "volume_db": -10.0,
+      "pitch_random": 0.05,
+      "options": [
+        {
+          "file": "sfx/world/cold_air.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "candle": {
+      "file": "sfx/world/candle.wav",
+      "volume_db": -4.0,
+      "pitch_random": 0.02,
+      "options": [
+        {
+          "file": "sfx/world/candle.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "rattle": {
+      "file": "sfx/world/rattle.wav",
+      "volume_db": -6.0,
+      "pitch_random": 0.06,
+      "options": [
+        {
+          "file": "sfx/world/rattle.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "door_refuse": {
+      "file": "sfx/world/locked.wav",
+      "volume_db": -4.0,
+      "pitch_random": 0.02,
+      "options": [
+        {
+          "file": "sfx/world/locked.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "winch": {
+      "file": "sfx/world/winch.wav",
+      "volume_db": -4.0,
+      "pitch_random": 0.03,
+      "options": [
+        {
+          "file": "sfx/world/winch.wav",
+          "gain_db": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -19,12 +19,18 @@ const MachineDialog := preload("res://machine_dialog.gd")
 const ShiftFx := preload("res://shift.gd")
 const Spawner := preload("res://spawner.gd")
 const Props := preload("res://props.gd")
-const ROOMS := ["church", "library", "save", "lab", "save2", "boss", "shaft", "vault", "hazard", "timemachine"]
+var ROOMS: Array:
+	get: return W.room_list("before")
 const TITLES := {"church": "THE NAVE OF ASH", "library": "THE UNREAD STACKS", "save": "CACHE STATION 002",
 	"lab": "SPECIMEN HALL", "save2": "CACHE STATION 003", "boss": "THE PALLBEARER", "shaft": "THE MARROW WELL",
 	"vault": "CACHE STATION 004", "hazard": "THE THRESHING CHAPEL", "timemachine": "THE ORGAN OF HOURS"}
 # where the number keys (and the pause menu) put her: the door side or marker that makes sense in that room
-const ENTRY := {"church": "P", "shaft": "right", "hazard": "right", "timemachine": "K"}
+var ENTRY: Dictionary:
+	get:
+		var d := {}
+		for r in ROOMS:
+			d[r] = String(W.meta(r).get("entry", "left"))
+		return d
 # every system file a later slice may add. _ready creates each one whose file exists.
 const SYSTEMS := {"spawner": "res://spawner.gd", "interact": "res://interact.gd", "loot": "res://loot.gd",
 	"arena": "res://arena.gd", "ambience": "res://ambience.gd", "projectiles": "res://projectiles.gd",
