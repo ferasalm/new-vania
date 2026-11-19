@@ -105,8 +105,8 @@ func _advance(dt: float) -> void:
 				var feet_d: float = p_pos.distance_to(item["feet"])
 				if pos_d < min_dist or feet_d < min_dist:
 					continue
-			# Check alive limit
-			if live_weak() + to_spawn.size() >= max_allowed:
+			# Check alive limit: one more may fill the room, never exceed its start
+			if live_weak() + to_spawn.size() > max_allowed:
 				continue
 			to_spawn.append(item)
 			pending.remove_at(i)

@@ -21,10 +21,6 @@ const Spawner := preload("res://spawner.gd")
 const TILE := 16
 const STAND := 36.0
 
-const ENEMY := {
-	"H": "hound", "G": "ghost", "C": "choir", "S": "spitter", "W": "warden",
-	"c": "crab", "m": "moth", "n": "scribe", "l": "leech"
-}
 const HAZARD := {"p": "pendulum", "u": "crusher", "f": "flame", "i": "spikes"}
 
 const PANELS := [
@@ -59,9 +55,11 @@ var head := {}
 var theme := {}
 var size := Vector2.ZERO
 var spawns := {}
-var enemies: Array = []
+var enemies: Array = []       # [kind, feet position], from the enemies.json glyphs
+var enemy_nodes: Array = []   # the enemy nodes this room owns
 var hazards: Array = []
-var doors := {}
+var doors := {}               # one primary door per side, for the map and the old callers
+var doors_all: Array = []     # every door, when a side holds two
 var open_edges := {}
 var tunnels := {}
 var up_span := Vector2(-1.0, -1.0)
@@ -79,6 +77,7 @@ var _tiles: Texture2D
 var _ledge: Texture2D
 var _wall: Texture2D
 var _point: Texture2D
+var _glyphs := {}             # enemy letter -> enemies.json id
 
 
 func backdrop_rects() -> Array[Rect2]:
@@ -123,12 +122,21 @@ func load_room(room_name: String, after_shift: bool = false) -> bool:
 	head.clear()
 	spawns.clear()
 	enemies.clear()
+	enemy_nodes.clear()
 	hazards.clear()
 	doors.clear()
+	doors_all.clear()
 	open_edges.clear()
 	tunnels.clear()
 	props.clear()
 	marks.clear()
+
+	_glyphs.clear()
+	var enemy_defs: Dictionary = Db.table("enemies")
+	for id in enemy_defs:
+		var glyph := String(enemy_defs[id].get("glyph", ""))
+		if glyph != "":
+			_glyphs[glyph] = String(id)
 
 	var lines := txt.replace("\r", "").split("\n", false)
 	for part in lines[0].split(","):
@@ -218,8 +226,8 @@ func _build() -> void:
 
 			var feet := Vector2(x * TILE + TILE / 2.0, (y + 1) * TILE)
 
-			if ENEMY.has(ch):
-				enemy_spawns.append([ENEMY[ch], feet])
+			if _glyphs.has(ch):
+				enemy_spawns.append([_glyphs[ch], feet])
 			elif HAZARD.has(ch):
 				if ch == "i":
 					var start2 := x
@@ -259,10 +267,11 @@ func _build() -> void:
 				var side := "left" if x == 0 else "right"
 				var d := Door.new()
 				var door_theme: String = theme["door"] if ch == "D" else "boss"
-				d.setup(side, ch == "X", door_theme, head.get(side, ""))
+				d.setup(side, ch == "X", door_theme, _door_target(side, y))
 				d.position = Vector2(0.0 if side == "left" else size.x - TILE, feet.y)
 				add_child(d)
 				doors[side] = d
+				doors_all.append(d)
 				spawns[side] = Vector2(26.0 if side == "left" else size.x - 26.0, feet.y)
 			x += 1
 
@@ -319,15 +328,26 @@ func _build() -> void:
 			d_node.position = Vector2(d_tile[0] * TILE + 8, d_tile[1] * TILE + 8)
 			add_child(d_node)
 
-	# Instantiate enemies into this room node
+	# Record and place every enemy: the room owns the nodes, main only lists them
 	for e in enemy_spawns:
+		enemies.append(e)
 		var en: Node2D = Spawner.enemy(e[0], e[1])
 		if en != null:
 			add_child(en)
-			if G.main != null and G.main.get("enemies") != null:
-				var m_enemies: Array = G.main.get("enemies")
-				if not m_enemies.has(en):
-					m_enemies.append(en)
+			enemy_nodes.append(en)
+
+
+func _door_target(side: String, y: int) -> String:
+	# the header names the room's main door; a second door on the same side takes
+	# its target from the meta exit in the same cell row
+	var fallback := String(head.get(side, ""))
+	var at := int(floor(float(y) / 14.0))
+	var letter := "L" if side == "left" else "R"
+	var m: Dictionary = meta
+	for ex in m.get("exits", []):
+		if ex is Dictionary and String(ex.get("side", "")) == letter and int(ex.get("at", 0)) == at:
+			return String(ex.get("to", fallback))
+	return fallback
 
 
 func _add_marked_prop(marker_char: String, feet: Vector2) -> void:

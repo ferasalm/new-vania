@@ -9,6 +9,7 @@ var side := "right"
 var boss := false
 var to := ""              # the room behind it ("" = nowhere)
 var locked := false       # a locked door never opens
+var sealed_msg := ""      # optional line shown when it refuses (never drawn by S1)
 var lamp := "red"         # "red" | "pale" | "off"
 var open := 0.0           # 0 shut .. 1 fully open
 var _slab: Texture2D

@@ -208,11 +208,8 @@ func enter(next_room: String, spawn_key: String, from_room: String = "", carry: 
 	player.add_child(cam)
 	cam.make_current()
 	cam.reset_smoothing()
-	for e in room.enemies:
-		var en: Node2D = Spawner.enemy(e[0], e[1])
-		if en != null:
-			world.add_child(en)
-			enemies.append(en)
+	for e in room.enemy_nodes:
+		enemies.append(e)
 	for h in room.hazards:
 		if ResourceLoader.exists("res://hazard.gd"):
 			var hz: Node2D = load("res://hazard.gd").new()
@@ -237,13 +234,14 @@ func enter(next_room: String, spawn_key: String, from_room: String = "", carry: 
 	hud.boss_bar("", 0.0)
 	hud.prompt("")
 	W.mark_visited(next_room)
-	W.room_entered.emit(next_room)
+	W.room_entered.emit(room.file_id)
 
 
 func debug_enter(room_id: String, side := "left", shifted := false) -> void:
 	# the test hook: jump straight to a room, on the sheet it asks for
-	G.shifted = shifted
-	W.sheet = "after" if shifted else "before"
+	if shifted:
+		W.sheet = "after"
+	G.shifted = W.sheet != "before"
 	if player != null:
 		player.hp = 0.0
 	enter(room_id, side)
@@ -274,10 +272,28 @@ func _physics_process(delta: float) -> void:
 		_vertical(false)
 		return
 	# the doors (and the open edges) are in the room edges: walking off the screen goes through
-	if px < 5.0 and ((room.doors.has("left") and room.doors["left"].open > 0.85) or room.open_edges.has("left")):
-		_through(room.head.get("left", ""), "right")
-	elif px > room.size.x - 5.0 and ((room.doors.has("right") and room.doors["right"].open > 0.85) or room.open_edges.has("right")):
-		_through(room.head.get("right", ""), "left")
+	if px < 5.0:
+		var left_to := _open_door_to("left")
+		if left_to != "":
+			_through(left_to, "right")
+			return
+		if room.open_edges.has("left"):
+			_through(room.head.get("left", ""), "right")
+	elif px > room.size.x - 5.0:
+		var right_to := _open_door_to("right")
+		if right_to != "":
+			_through(right_to, "left")
+			return
+		if room.open_edges.has("right"):
+			_through(room.head.get("right", ""), "left")
+
+
+func _open_door_to(side: String) -> String:
+	# the room may hold two doors on one side: take the one that is open
+	for d in room.doors_all:
+		if is_instance_valid(d) and String(d.side) == side and d.open > 0.85 and String(d.to) != "":
+			return String(d.to)
+	return ""
 
 
 func _process(delta: float) -> void:
@@ -409,7 +425,7 @@ func enemy_died(en: Node2D) -> void:
 	var at: Vector2 = en.hurt_rect().get_center()
 	fx("burst", at)
 	Sfx.play("enemy_die")
-	W.enemy_killed.emit(en, String(en.kind), at, false)
+	W.enemy_killed.emit(en, String(en.kind), at, bool(en.get("respawned")))
 
 
 func player_died() -> void:

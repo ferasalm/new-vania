@@ -22,6 +22,7 @@ const KINDS := {
 }
 
 var kind := "hound"
+var respawned := false    # it came back from the weak-respawn system
 var hp := 1.0
 var facing := -1
 var state := "idle"
