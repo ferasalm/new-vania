@@ -101,13 +101,13 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 ## 2026-11-19 evening asks (after the level-slash build)
 | # | Ask (user, short) | Status | Who / where |
 |---|---|---|---|
-| N1 | MP orbs pulled to her automatically ("I already told you, twice") | planned | OpenCode Q1 |
-| N2 | Butterfly attack lingers too long | planned | OpenCode Q2 |
-| N3 | Remove the dematerializing weapon frame at the end of the attack (clashes with the level slash) | planned | OpenCode Q3 |
-| N4 | Start menu entries cropped at the bottom; Equipment and Items menus unreachable | planned | OpenCode Q4 |
-| N5 | Stretched backdrops; rooms balanced, not too big | planned | OpenCode Q5 (backdrops); room sizes with B1 |
-| N6 | Library and lab platforms too hard; top platform traps her under the ceiling | planned | OpenCode Q6 stop-gap, then B1 |
-| N7 | Every picked-up item has an image; a doc listing all items; a folder for the images | planned | OpenCode Q7 |
+| N1 | MP orbs pulled to her automatically ("I already told you, twice") | done | OpenCode Q1 (23268bf): every orb pops out then flies to her from anywhere, speeds up, collected even at full MP; dead orb_magnet knob removed; q1_orb_pull 5/5 |
+| N2 | Butterfly attack lingers too long | done | OpenCode Q2 (24e4008): dive attack 1.70 s -&gt; 0.77 s (warning 0.35, dive 0.4, ember burn 0.4, new ember-every 0.09); q2_moth_time 7/7 |
+| N3 | Remove the dematerializing weapon frame at the end of the attack (clashes with the level slash) | done | OpenCode Q3 (6134930): sword breaks into sparks where the follow-through left it, no blade on the last frame, for every keyed swing; appear and swoosh kept |
+| N4 | Start menu entries cropped at the bottom; Equipment and Items menus unreachable | done | OpenCode Q4 (146504b): menu.gd built (5 tabs, keyboard/pad/touch, scroll-into-view); ITEMS use + EQUIPMENT fit/unequip work; overlay shortcuts 3 columns, nothing cropped; t_interact_ui 23/36 -&gt; 34/39, every menu check green |
+| N5 | Stretched backdrops; rooms balanced, not too big | done (backdrops) | OpenCode Q5 (2e27fdc): walls tile at real size, never stretched; room sizes stay with B1 |
+| N6 | Library and lab platforms too hard; top platform traps her under the ceiling | done (stop-gap) | OpenCode Q6 (5de277a): headroom 44 px rule met (top platforms now 64 px), every climb step 48 px or less (max jump 67.7, 80% = 54.2); roomreach all 29 rooms ok, roomcheck clean, q6_audit zero violations |
+| N7 | Every picked-up item has an image; a doc listing all items; a folder for the images | done | OpenCode Q7 (f6f0ec3): shared item_icons.gd lookup; room + pick-up card show assets/items/&lt;id&gt;.png, kind-coloured placeholder with first letter when missing; assets/items/README.txt + 26-row design/items/item-list.md; no real art yet (every row placeholder); menu icons later with the menus |
 | N8 | Dev tools: room and map builder usable live like F1; tiles and assets from PNG folders; place and spread enemies and traps | planned | Claude B1 |
 | N9 | Crouch attack as a level slash like standing; air attacks stay as they are | planned | Claude B2 |
 | N10 | Hair and scarf flow behind her in the attacks (fix the last frames, add frames) | planned | Claude B2 |
