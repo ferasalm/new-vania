@@ -66,8 +66,6 @@ func room_setup(room: Node2D, world: Node2D) -> Array:
 func tick(delta: float, player: Node2D) -> void:
 	# one tick of the arena: the fight starts, the relic and the scythe wait, the timer runs
 	_watch(player)
-	_relic_watch(player)
-	_scythe_watch(player)
 	if boss != null and is_instance_valid(boss) and boss.started and boss.alive:
 		fight_time += delta
 
@@ -79,10 +77,9 @@ func _watch(player: Node2D) -> void:
 		# the way back shuts and the fight starts
 		var room: Node2D = G.main.room
 		if room.doors.has("left"):
-			room.doors["left"].locked = true
+			room.doors["left"].held = true
 		boss.begin()
 		W.boss_started.emit(_id)
-		G.main.hud.toast("ITS HANDS ARE YOUR STAIRS")
 
 
 func dying(_b: Node2D) -> void:
@@ -102,6 +99,7 @@ func down(b: Node2D, at: Vector2 = Vector2.ZERO) -> void:
 	G.main.enemies = G.main.enemies.filter(func(e): return is_instance_valid(e) and e.kind != "boss")
 	boss = null
 	if room.doors.has("left"):
+		room.doors["left"].held = false
 		room.doors["left"].locked = false
 	G.main.ring_fx(room.size / 2.0, 160.0, Color(1.0, 0.85, 0.4))
 	G.main.hud.toast("LAID TO REST", 4.0)
@@ -127,43 +125,24 @@ func place_relic(room: Node2D, _world: Node2D) -> void:
 	# it waits for ever, because it is placed, not dropped
 	if not room.spawns.has("A"):
 		return
-	_relic = G.main.loot.spawn_pickup("wall_jump", room.spawns["A"] + Vector2(0, -12), {"life": 100000.0})
-
-
-func _relic_watch(player: Node2D) -> void:
-	# walking into it still takes it, without a card (smoke keeps this old path)
-	if _relic == null or not is_instance_valid(_relic):
-		return
-	if _relic.global_position.distance_to(player.global_position + Vector2(0, -18)) < 18.0:
-		if bool(_relic.call("take", true)):
-			_relic = null
-			Sfx.play("pickup", 0.6)
-			Sfx.play("special", 1.3)
-			G.main.ring_fx(player.global_position + Vector2(0, -20), 60.0, Color(0.5, 1.0, 1.0))
+	_relic = G.main.loot.spawn_pickup("wall_jump", room.spawns["A"] + Vector2(0, -12), {"life": 100000.0, "touch_take": false})
+	_relic.taken.connect(func(_id): _relic = null)
 
 
 func drop_scythe(at: Vector2) -> void:
 	# the scythe falls from where the body was and floats a little above the floor
 	var room: Node2D = G.main.room
 	var floor_y: float = room.spawns["O"].y if room.spawns.has("O") else room.size.y - 32.0
-	_scythe = G.main.loot.spawn_pickup("elegy_013", Vector2(at.x, floor_y - 26.0), {"life": 100000.0})
+	# she takes it with Up, and the pickup card shows it (no touch, no toast: user ask C5)
+	_scythe = G.main.loot.spawn_pickup("elegy_013", Vector2(at.x, floor_y - 8.0), {"life": 100000.0, "touch_take": false})
+	_scythe.taken.connect(_on_scythe_taken)
 
 
-func _scythe_watch(player: Node2D) -> void:
-	# touching it still gives ELEGY-013 without a card; Up opens the new card path
-	if _scythe == null:
-		return
-	if not is_instance_valid(_scythe):
-		_scythe = null
-		return
-	if _scythe.global_position.distance_to(player.global_position + Vector2(0, -18)) < 22.0:
-		if bool(_scythe.call("take", true)):
-			_scythe = null
-			Sfx.play("pickup", 0.6)
-			Sfx.play("special", 1.3)
-			Sfx.play("pickup", 1.0)
-			G.main.ring_fx(player.global_position + Vector2(0, -20), 70.0, Color(0.5, 1.0, 1.0))
-			G.main.hud.toast("ELEGY-013 - the Pallbearer's scythe is yours.", 7.0)
-			if G.main.touch != null:
-				G.main.touch.queue_redraw()
-
+func _on_scythe_taken(_id: String) -> void:
+	_scythe = null
+	Sfx.play("special", 1.3)
+	var p: Node2D = G.main.player
+	if p != null:
+		G.main.ring_fx(p.global_position + Vector2(0, -20), 70.0, Color(0.5, 1.0, 1.0))
+	if G.main.touch != null:
+		G.main.touch.queue_redraw()

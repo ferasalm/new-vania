@@ -9,6 +9,7 @@ var side := "right"
 var boss := false
 var to := ""              # the room behind it ("" = nowhere)
 var locked := false       # a locked door never opens
+var held := false         # held shut by a fight (the arena): stays locked, lamp red, until released
 var sealed_msg := ""      # optional line shown when it refuses (never drawn by S1)
 var lamp := "red"         # "red" | "pale" | "off"
 var open := 0.0           # 0 shut .. 1 fully open
@@ -42,7 +43,10 @@ func setup(door_side: String, is_boss: bool, look: String, leads_to: String) -> 
 
 
 func _update_lock_state() -> void:
-	if to == "":
+	if held:
+		locked = true
+		lamp = "red"
+	elif to == "":
 		locked = true
 		lamp = "off"
 	elif to == "arnetria":

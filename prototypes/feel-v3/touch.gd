@@ -41,8 +41,9 @@ const DEFAULT_BTN := [
 	{"id": "pause", "pos": Vector2(366, 14), "r": 10.0, "label": "", "size": 6},
 ]
 const LAYOUT_FILE := "user://touch_layout.json"
-const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "save": "CACHE 1", "lab": "LAB", "save2": "CACHE 2", "boss": "BOSS",
-	"shaft": "WELL", "vault": "CACHE 4", "hazard": "CHAPEL", "timemachine": "ORGAN"}
+const ROOM_LABELS := {"church": "CHURCH", "library": "LIBRARY", "scriptorium": "SCRIPTORIUM", "save": "CACHE 2", "lab": "LAB",
+	"kennel": "KENNEL", "ordnance": "ORDNANCE", "hallway": "HALLWAY", "boss": "BOSS", "gallery": "RELIQUARY",
+	"shaft": "WELL", "vault": "CACHE 4", "hazard": "CHAPEL", "loft": "LOFT", "timemachine": "ORGAN"}
 
 var active := false
 var paused := false

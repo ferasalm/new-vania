@@ -146,3 +146,22 @@ func clear() -> void:
 func move_orbs(_delta: float) -> void:
 	# orbs are pickups now; main still calls this
 	pass
+
+
+func place_items(room) -> void:
+	# the room's item marks (rooms_meta "marks": type "item") become pickups she takes with Up.
+	# Each one is taken once for ever: the flag "got_<file>_<mark>" remembers it.
+	var marks_meta: Dictionary = room.meta.get("marks", {})
+	for key in marks_meta:
+		var mk = marks_meta[key]
+		if not (mk is Dictionary) or String(mk.get("type", "")) != "item" or not room.spawns.has(key):
+			continue
+		var item_id := String(mk.get("item", ""))
+		var flag := "got_%s_%s" % [room.file_id, key]
+		if item_id == "" or W.flag(flag) or (item_id == "wall_jump" and G.main.has_latch):
+			continue
+		if not (Db.table("items").has(item_id) or Db.table("gear").has(item_id)):
+			continue      # no data yet (the BOLT PISTOL arrives with SEXTON-19, session 4)
+		var pk: Node2D = spawn_pickup(item_id, room.spawns[key], {"life": 1.0e9, "touch_take": false})
+		if pk != null:
+			pk.taken.connect(func(_id): W.set_flag(flag, true))

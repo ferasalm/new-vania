@@ -21,6 +21,7 @@ const HOT := Color(1.0, 0.55, 0.15)
 const BH := 28.0          # crusher block height
 
 var kind := "spikes"
+var stopped := false      # the winch loft's winch turned: the chapel's traps hang still for good, silent and harmless
 var rect := Rect2()
 var state := ""
 var _s := 0.0             # seconds in the current state
@@ -48,6 +49,7 @@ func setup(k: String, r: Rect2) -> void:
 	z_index = 2
 	_cx = r.get_center().x
 	var room: Node2D = G.main.room
+	stopped = String(room.file_id) == "hazard" and W.flag("winch_turned")
 	var cx := int(floor(_cx / 16.0))
 	var row := int(floor(r.position.y / 16.0))
 	var cr := row
@@ -200,7 +202,7 @@ func _enter(s: String) -> void:
 # ---------- the beat ----------
 
 func _physics_process(delta: float) -> void:
-	if G.frozen() or G.main == null or G.main.player == null:
+	if G.frozen() or G.main == null or G.main.player == null or stopped:
 		return
 	_clock += delta
 	_step(delta)
@@ -288,6 +290,8 @@ func _speck(at: Vector2, v: Vector2, life: float, col: Color) -> void:
 # ---------- where it hurts ----------
 
 func dangerous() -> bool:
+	if stopped:
+		return false
 	match kind:
 		"pendulum":
 			return true
@@ -301,6 +305,8 @@ func dangerous() -> bool:
 
 
 func hits(body: Rect2) -> bool:
+	if stopped:
+		return false
 	match kind:
 		"pendulum":
 			for c in _blade_circles():
