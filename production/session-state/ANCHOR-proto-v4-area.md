@@ -14,18 +14,17 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 - IN PROGRESS: S1 World builder in worktree `proto-v4-s1` (branch `feat/proto-v4-s1`, cut from 366b07a = S0+S2).
   Brief fixed first (15 rooms; backup `s1-world.md.orig-2026-11-19`). Routes deepseek cf/openrouter and codex all
   failed "no files changed"; the gemini-flash route was writing at 07:19. Log: job tmp `s1-worker.log`.
-- DONE (user picks 2026-11-19, commit 2b3d41e): palette A = main (eyes + suit seams glow cyan #38d8f8); skin B
-  (oxblood) = optional, eyes/seams/strikes glow red. `assets/palettes/`, `tools/pandora_skins.py` (check, bake),
-  `design/skins.md` (draw in A only, bake B), tuning `pandora_skin` (tuning.d/anim.json), Vfx.her()/her_alt().
-  LEFT: load frames from `assets/2x/pandora_b/` when new frames are wired; menu switch with S3.
-- DONE: jump pass 1 (pose pick) `art_proof/jump/pass1/` from the user's 3 GIFs (`assets/sprites-pandora/jump/`),
-  picks in `tools/gif_to_palette.py`. Noisy, seams faint, some hair tops cut by the GIF frame.
-- DONE: jump pass 2 (d7d4ea5) `art_proof/jump/pass2/`: PixelLab rig (estimate-skeleton per pose, one scale per
-  GIF) + animate-with-skeleton-v3 from her palette-A frame; best = seed 7 crouch + seed 8 rest (`seedbest/`).
-  `tools/jump_rig.py` caches paid steps. PixelLab: 7 of 40 trial generations used (yes was up to 8).
-  NEXT: user's yes at game speed -> hand clean-up (arm-up frame's raised tail) -> wire 7 frames in player.gd
-  (game picks 4 by velocity today) -> assets/2x/pandora + pandora_b -> test build.
-- S1: pass 1 committed b36f2cf on feat/proto-v4-s1 (t_world 21/38, smoke crashed at 40/44: door.gd sealed_msg). Fix round 1 running (brief s1-world-fix1.md, log job tmp s1-fix1-worker.log). LEAD TODO: smoke rewrite per contract 4.4 item 5 (skipped in step 0); t_world:352 sealed_x + moth kill-all fixed with the user's yes (2026-11-19, re-locked); S1 t_world 34/38.
+- DONE (2b3d41e): palette A main (cyan eyes/seams), skin B oxblood optional; `tools/pandora_skins.py`, `design/skins.md`.
+- DONE (4fc7709, a5c1cea, pushed): ONE LOOK PER SKIN (user rule): `tools/harmonize_pandora.py` recolours all 115
+  hand-made frames to A (head matched per frame -> skin face + cyan eye; originals in `art_proof/harmony/original`),
+  seed-9 PixelLab jump re-toned + eye from rig; B baked to `assets/2x/pandora_b`. Jump wired: push-off, 4 air frames
+  by vy, land_00 soft / land_01 hard (fall >= land_hard_drop), tuning in tuning.d/anim.json. Suite unchanged
+  (smoke 135/135, hazard 62/62, climb PASS, lock OK). Build: `playable-history/2026-11-19-proto-v4-harmony/` (exe).
+  WAITING ON USER: play it. PixelLab 29.3 of 40 left.
+- S1 (feat/proto-v4-s1, merged area -> f6d9ef6, not pushed): t_world 34/38 after the moth test fix (e43db6a,
+  user yes). Left: S4 machine counts (expected) + smoke/climb old-layout checks. Test-writer rewrite running
+  (brief `production/briefs/s1-smoke-rewrite.md`, route builder-iq, log job tmp `s1-smoke-worker.log`):
+  LEAD reviews every change, logs it, re-locks, then merges s1 -> area.
 - DECIDED (user, decisions 25-27): skins, jump sources, attack style (fencer/dancer, J vs I differ, slim blade on hit frames).
 - USER (2026-11-19): pass-2 jump 'not graceful enough' -> try other poses from the GIFs; ask before any PixelLab spend (33 left).
 - USER RULES (2026-11-19): tests LOCKED from builders; only the lead amends the pack (rare, logged, re-locked, like 3507398); `worker.mjs verify <lock>` before every commit. NEW (2026-11-19): NEVER tune the opus-authored tests - they are the quality gates; if a test fails twice in a row, report it to the user before further changes.
