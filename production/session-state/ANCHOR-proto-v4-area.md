@@ -10,8 +10,10 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 - DONE task 1 (rooms fix + merge, XP, orb pull, hint text), commits 951957e..b48567a on feat/proto-v4-area, pushed.
   Build `playable-history/2026-11-19-proto-v4-rooms/` (exe + APK + ABOUT), tag `proto-v4-rooms-2026-11-19`.
   WAITING ON USER: play it.
-- IN PROGRESS task 2: standing J + I done (tag proto-v4-swings-2026-11-19; weapon is its own layer from
-  frames.json hero.weapon keys). Rest: crouch/air/cast/wall/Elegy frames. State: `active.md`.
+- IN PROGRESS task 2: standing J + I done as LEVEL slashes (user: horizontal; I = J left-handed, no dance),
+  commit 89eb789, tag proto-v4-level-slash-2026-11-19. Weapon is its own layer from frames.json hero.weapon
+  keys (angle, or yaw + tilt for a level swing). WAITING ON USER: play it, judge the hands.
+  Rest: crouch/air/cast/wall/Elegy frames. State: `active.md`.
 - Room guards: `prototypes/feel-v3/tools/roomreach.py .` (can she reach every item and exit; run from feel-v3)
   and `tools/roomcheck.py .` (door headroom, low spots). Run both after any room edit.
 - RULING (S0, accepted): R.taken keeps src "enemy" at mult 1.0; area_damage_mult 0.75 applies to NAMED sources.
