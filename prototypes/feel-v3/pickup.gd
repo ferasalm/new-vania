@@ -1,9 +1,13 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # An item waiting in the world: it glows and bobs, it is taken with Up, and a
-# soul orb or scrap is taken by touch. S2.
+# soul orb or scrap is taken by touch. It shows assets/items/<id>.png when that
+# file exists, otherwise a placeholder square coloured by kind with a letter.
+# S2.
 extends Node2D
 
 signal taken(item_id: String)
+
+const ItemIcons := preload("res://item_icons.gd")
 
 var item_id := ""
 var touch_take := false
@@ -16,12 +20,19 @@ var _t := 0.0
 var _fly_t := 0.0
 var _taken := false
 var _color := Color(0.9, 0.9, 0.8)
+var _tex: Texture2D = null
+var _letter := "?"
 
 
 func _ready() -> void:
 	_life = life
 	_t = randf() * 6.0
 	_color = _color_for(item_id)
+	var data = Db.table("items").get(item_id, {})
+	if data.is_empty():
+		data = Db.table("gear").get(item_id, {})
+	_tex = ItemIcons.texture(item_id, String(data.get("icon", "")))
+	_letter = ItemIcons.letter(data, item_id)
 	W.room_entered.connect(_reregister)
 	_reregister("")
 
@@ -150,7 +161,18 @@ func _draw() -> void:
 	if _life < 3.0:
 		a = 0.35 + 0.65 * absf(sin(_t * 9.0))
 	var c := Color(_color.r, _color.g, _color.b, a)
+	# the soft glow stays either way: a halo around a real picture, a halo
+	# around the placeholder square when there is no picture yet
 	draw_circle(Vector2(0, bob), 8.0, Color(c.r, c.g, c.b, a * 0.18))
-	var pts := PackedVector2Array([Vector2(0, bob - 6), Vector2(5, bob), Vector2(0, bob + 6), Vector2(-5, bob)])
-	draw_colored_polygon(pts, Color(c.r * 0.4, c.g * 0.4, c.b * 0.4, a))
-	draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]]), c, 1.0)
+	if _tex != null:
+		# the item has a picture (assets/items/<id>.png): draw it 32x32,
+		# centred on the bob position
+		draw_texture_rect(_tex, Rect2(-16.0, bob - 16.0, 32.0, 32.0), false, Color(1.0, 1.0, 1.0, a))
+	else:
+		# no picture yet: a placeholder square coloured by the item's kind with
+		# its first letter. Adding assets/items/<id>.png switches this to the
+		# picture with no code change.
+		draw_rect(Rect2(-6.0, bob - 6.0, 12.0, 12.0), Color(c.r * 0.4, c.g * 0.4, c.b * 0.4, a), true)
+		draw_rect(Rect2(-6.0, bob - 6.0, 12.0, 12.0), c, false, 1.0)
+		draw_string(ThemeDB.fallback_font, Vector2(-6.0, bob + 3.5), _letter,
+			HORIZONTAL_ALIGNMENT_CENTER, 12.0, 8, Color(c.r, c.g, c.b, a))

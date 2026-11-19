@@ -1,7 +1,9 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # The pickup card and the special show (S2). The game pauses, the screen dims to
 # 70%, the item flies to her, and the card fades in at 0.15 s. Gear cards offer
-# EQUIP NOW (J) and LATER (K). A missing icon draws a placeholder, never an error.
+# EQUIP NOW (J) and LATER (K). The card asks item_icons.gd for the picture:
+# assets/items/<id>.png when the file exists, otherwise a placeholder square
+# coloured by the item's kind with its first letter - never an error.
 extends CanvasLayer
 
 signal card_closed(choice: String)
@@ -11,6 +13,8 @@ const TAG_ABILITY := "ABILITY"
 const TAG_WEAPON := "WEAPON"
 const TAG_HARNESS := "HARNESS"
 const TAG_MODULE := "MODULE"
+
+const ItemIcons := preload("res://item_icons.gd")
 
 
 class Rays extends Node2D:
@@ -44,6 +48,7 @@ var _name := ""
 var _desc := ""
 var _effect := ""
 var _icon := ""
+var _data := {}
 var _gear_slot := ""
 var _is_gear := false
 var _special := false
@@ -110,7 +115,7 @@ func present(item_id: String) -> String:
 	_word.visible = false
 	_flash.color = Color(1, 1, 1, 0)
 	Sfx.play("pickup_chime")
-	var tex := _load_icon(_icon)
+	var tex := ItemIcons.texture(_item_id, _icon)
 	_show_icon.texture = tex
 	if _special:
 		_show_total = maxf(0.1, T.v("special_pickup_time"))
@@ -156,6 +161,7 @@ func _read_data(item_id: String) -> void:
 		data = gear[item_id]
 	else:
 		data = items.get(item_id, {})
+	_data = data
 	_name = String(data.get("name", item_id.to_upper()))
 	_desc = String(data.get("desc", ""))
 	_icon = String(data.get("icon", ""))
@@ -197,12 +203,17 @@ func _populate() -> void:
 	_name_label.text = _name
 	_desc_label.text = _desc
 	_effect_label.text = _effect
-	_icon_letter.text = _name.left(1)
-	var tex := _load_icon(_icon)
+	_icon_letter.text = ItemIcons.letter(_data, _item_id)
+	var tex := ItemIcons.texture(_item_id, _icon)
 	_icon_rect.texture = tex
 	_icon_rect.visible = tex != null
 	_icon_placeholder.visible = tex == null
 	_icon_letter.visible = tex == null
+	# no picture yet: the placeholder square is coloured by the item's kind with
+	# its first letter (assets/items/README.txt)
+	var kc := ItemIcons.kind_color(_data, _item_id, _is_gear)
+	_icon_placeholder.color = Color(kc.r * 0.35, kc.g * 0.35, kc.b * 0.35, 1.0)
+	_icon_letter.add_theme_color_override("font_color", kc)
 
 
 func _tag_color() -> Color:
@@ -276,17 +287,6 @@ func _num(v: float) -> String:
 	if absf(v - roundf(v)) < 0.001:
 		return str(int(roundf(v)))
 	return "%.1f" % v
-
-
-func _load_icon(path: String) -> Texture2D:
-	if path == "":
-		return null
-	if not ResourceLoader.exists(path):
-		return null
-	if not FileAccess.file_exists(path):
-		return null
-	var res = load(path)
-	return res as Texture2D
 
 
 func _process(delta: float) -> void:
