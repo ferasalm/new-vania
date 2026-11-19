@@ -20,12 +20,14 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
   LEFT: load frames from `assets/2x/pandora_b/` when new frames are wired; menu switch with S3.
 - DONE: jump pass 1 (pose pick) `art_proof/jump/pass1/` from the user's 3 GIFs (`assets/sprites-pandora/jump/`),
   picks in `tools/gif_to_palette.py`. Noisy, seams faint, some hair tops cut by the GIF frame.
-- NEXT jump (user: graceful; use BOTH a rig and PixelLab): PIXELLAB_API_KEY is NOT set (user must set it).
-  Plan: build a skeleton rig (keypoints per pose; sizes j2/j3 frames, which head-matching could not), fix the cut
-  hair tops, PixelLab clean-up per frame, then hand clean-up; consider j2:20 (knee up, arm raised) for the rise.
-- NEXT S1: verify (routine in the handoff report) -> commit on feat/proto-v4-s1 -> merge -> rerun -> push.
+- DONE: jump pass 2 (d7d4ea5) `art_proof/jump/pass2/`: PixelLab rig (estimate-skeleton per pose, one scale per
+  GIF) + animate-with-skeleton-v3 from her palette-A frame; best = seed 7 crouch + seed 8 rest (`seedbest/`).
+  `tools/jump_rig.py` caches paid steps. PixelLab: 7 of 40 trial generations used (yes was up to 8).
+  NEXT: user's yes at game speed -> hand clean-up (arm-up frame's raised tail) -> wire 7 frames in player.gd
+  (game picks 4 by velocity today) -> assets/2x/pandora + pandora_b -> test build.
+- S1: pass 1 committed b36f2cf on feat/proto-v4-s1 (t_world 21/38, smoke crashed at 40/44: door.gd sealed_msg). Fix round 1 running (brief s1-world-fix1.md, log job tmp s1-fix1-worker.log). LEAD TODO: smoke rewrite per contract 4.4 item 5 (skipped in step 0); t_world:352 sealed_x added with the user's yes (2026-11-19, re-locked).
 - DECIDED (user, decisions 25-27): skins, jump sources, attack style (fencer/dancer, J vs I differ, slim blade on hit frames).
-- WAITING ON USER: PIXELLAB_API_KEY for the jump clean-up (Palette: DECIDED A + optional skin B. Method: user said use both rig and PixelLab. Waiting: PIXELLAB_API_KEY.)
+- USER (2026-11-19): pass-2 jump 'not graceful enough' -> try other poses from the GIFs; ask before any PixelLab spend (33 left).
 - USER RULES (2026-11-19): tests LOCKED from builders; only the lead amends the pack (rare, logged, re-locked, like 3507398); `worker.mjs verify <lock>` before every commit. NEW (2026-11-19): NEVER tune the opus-authored tests - they are the quality gates; if a test fails twice in a row, report it to the user before further changes.
 
 ## Step 0 rulings (lead, 2026-11-19): what the test pack fixes about the contract

@@ -349,7 +349,7 @@ func _check_sheet(w: Node, ids: Array, sheet: String) -> void:
 				var target := String(d.get("to"))
 				if not known.has(target):
 					edge = false
-				var meta_agrees := _meta_has_exit(w, String(fid), side_letter(side), target, ["door", "open", "lever_door", "boss_door"])
+				var meta_agrees := _meta_has_exit(w, String(fid), side_letter(side), target, ["door", "open", "lever_door", "boss_door", "sealed_x"])
 				if not (edge and meta_agrees):
 					door_bad.append("%s %s -> %s (edge=%s meta=%s)" % [loaded_fid, side, target, str(edge), str(meta_agrees)])
 			# hole exits pair with a hole back in the target (the shutter is exempt)

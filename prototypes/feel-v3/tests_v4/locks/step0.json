@@ -1,5 +1,5 @@
 {
-  "created": "2026-11-19T01:23:48.479Z",
+  "created": "2026-11-19T04:59:49.403Z",
   "files": {
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_data.gd": "694a3fcb4c00bddecf1cb913c875ac78c048de0573651ff534071f1c283feaeb",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_data.tscn": "8871ce39202f5804a773d0b7e8d5a5e1d403a7122d2fdaae493304ca135dae75",
@@ -9,7 +9,7 @@
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_rpg.tscn": "3c4cdf8c74cecdd71f55798eaa6eac645afbcedbea4c8b019e199e549029a195",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_interact_ui.gd": "8000bc0b8dccfc86b12d46fc761f280e051af70dea1b01ffca1b269c247b25db",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_interact_ui.tscn": "69fb0ff86698cf153a75aaf7aeb95efb58a4bf98df41a870a94e481e6d5fcc88",
-    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_world.gd": "bd9769b25c8e8c673d207c81d258bb7d41df602bfdbf648e42eb623421d21516",
+    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_world.gd": "69215064d94496bbbf889ab43a7803892b9a99606a032e4f7d60687e63c37684",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_world.tscn": "ea863a165dddebb76fcff3dae195f478d4df07e473b5060c9eb81c44b91a01d9",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_bosses.gd": "088a3f7ee1a29114cda0656c5feba93a348bcefad03d31a87d2cb8f089e88449",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_bosses.tscn": "c7453c32966aa93f3a51a01faf5ee27ddf52d5e427f23b329f9436bb9676b227"
