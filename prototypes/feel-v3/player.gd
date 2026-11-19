@@ -17,6 +17,7 @@ extends CharacterBody2D
 const BODY := Vector2(12, 36)
 const STEP_EVERY := 0.27
 const KICK_SHOW := 0.3      # seconds the kick-off picture stays after a wall jump
+const WL := preload("res://weapon_layer.gd")   # the weapon drawn from per-frame keys
 const WEAPONS := [
 	{"name": "DIRGE-042", "tex": "weapon/dirge.png", "grip": Vector2(6, 5)},
 	{"name": "ELEGY-013", "tex": "weapon/elegy.png", "grip": Vector2(10, 10)},
@@ -83,6 +84,10 @@ var _kicked := false        # rising from a wall jump: letting go of jump does n
 var _swings := {}           # SWINGS, with shoulder and hand distance read from the hero frames
 var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
 var _spin_hits := 0
+var _keys: Array = []        # this swing's weapon keys, one per body frame ([] = the old shoulder sweep)
+var _key_at := -1            # the body frame the weapon was last posed for
+var _cut_from := {}          # the key the blade swept from on this frame's first tick
+var _key_trail: Node2D
 var hit_pts := PackedVector2Array()   # where the blade cut this tick (shown by "show hit areas")
 
 
@@ -123,8 +128,13 @@ func _ready() -> void:
 	_arm.add_child(_trail)
 	_blade = Sprite2D.new()
 	_blade.centered = false
+	_blade.material = WL.material()
 	_arm.add_child(_blade)
 	_arm.visible = false
+	move_child(_arm, _spr.get_index())     # z 0 = behind her, z 1 = in front
+	_key_trail = WL.KeyTrail.new()
+	_key_trail.z_index = 1
+	add_child(_key_trail)
 	floor_snap_length = 4.0
 
 
@@ -154,6 +164,13 @@ func blade_points(from_ang: float, to_ang: float) -> PackedVector2Array:
 	# The cut is exactly what you see: points along the weapon, from her hand to
 	# its tip, for every angle the weapon passed through since the last tick.
 	# "Weapon reach" stretches or shrinks it; 1.0 = the picture.
+	if not _keys.is_empty() and _key_at >= 0:
+		# keyed swing: the frame's blade, swept from the last frame's on the first tick of a frame
+		var cut := WL.cut_points(_cut_from, _keys[_key_at], facing, _blade_len * T.v("hit_reach"))
+		_cut_from = {}
+		for i in cut.size():
+			cut[i] += global_position
+		return cut
 	var pts := PackedVector2Array()
 	var r: float = _blade.position.length()
 	var tip: float = r + _blade_len * T.v("hit_reach")
@@ -510,6 +527,8 @@ func _attack_total() -> float:
 
 
 func _start_attack(btn: String, kind: String) -> void:
+	if _arm.visible and not _keys.is_empty():
+		_vanish_weapon()                    # a chained swing: the last weapon breaks up where it was
 	_attack_elegy = int(T.v("weapon")) == 1
 	state = "attack"
 	_attack_t = 0.0
@@ -529,16 +548,22 @@ func _start_attack(btn: String, kind: String) -> void:
 	_spr.play(anim)
 	_spr.frame = 0
 	_spin_hits = 0
+	_keys = [] if kind == "special" else WL.keys_for(anim, _spr.sprite_frames.get_frame_count(anim))
+	_key_at = -1
+	_cut_from = {}
 	if kind == "special" and not _is_elegy():
 		_arm.visible = false
 		Sfx.play("special")
 		Vfx.cast_gather(global_position + Vector2(facing * 14.0, -22.0), _attack_total() * 0.3)
 		return
 	var w: Dictionary = WEAPONS[1 if _is_elegy() else 0]
-	_blade.texture = G.tex(w["tex"])
-	_blade.offset = -w["grip"]
+	var tg: Array = WL.texture(w)           # the glowing version for her skin, when there is one
+	_blade.texture = tg[0]
+	_blade.offset = -tg[1]
 	_blade.scale = Vector2.ONE
-	_blade_len = _blade.texture.get_width() - w["grip"].x
+	_blade_len = _blade.texture.get_width() - tg[1].x
+	_arm.z_index = 1
+	WL.set_phase(_blade, 0, 1.0)
 	_swing = _swings[pose + "_" + hand].duplicate()
 	if kind == "special":
 		# Elegy's special, the Requiem: the scythe turns twice all the way round her,
@@ -554,7 +579,7 @@ func _start_attack(btn: String, kind: String) -> void:
 		Vfx.requiem_start(global_position, _attack_total(), _spr)
 		Sfx.play("special", 0.8)
 		return
-	if _is_elegy():
+	if _is_elegy() and _keys.is_empty():
 		# the two-handed scythe takes a wider arc
 		var down: bool = _swing["a0"] < 0.0
 		_swing["a0"] += -25.0 if down else 25.0
@@ -569,6 +594,9 @@ func _start_attack(btn: String, kind: String) -> void:
 
 
 func _pose_weapon() -> void:
+	if not _keys.is_empty():
+		_pose_keyed()
+		return
 	# materialize -> sweep through the cut -> hold at the end of the arc -> fade
 	var u := clampf(_attack_t / _attack_total(), 0.0, 1.0)
 	var s := _sweep()
@@ -591,6 +619,41 @@ func _pose_weapon() -> void:
 	if _attack_kind == "special":
 		glow = 1.0 if (s > 0.0 and s < 1.0) else 0.0
 	_trail.set_arc(from, ang, r + _blade_len * 0.3, r + _blade_len, glow)
+
+
+func _pose_keyed() -> void:
+	# The weapon sits in the hand of the body frame on screen, at that frame's angle.
+	# It gathers out of glowing pixels on the first frame and starts to break up on the last.
+	var k := clampi(_spr.frame, 0, _keys.size() - 1)
+	var key: Dictionary = _keys[k]
+	var step := _attack_total() / float(_keys.size())
+	var u := clampf((_attack_t - k * step) / step, 0.0, 1.0)
+	_arm.position = WL.hand(key, facing)
+	_arm.scale.x = facing
+	_arm.z_index = 1 if key["front"] else 0
+	_blade.position = Vector2.ZERO
+	_blade.rotation = deg_to_rad(float(key["angle"]))
+	_blade.modulate = Color.WHITE
+	_trail.set_arc(0.0, 0.0, 0.0, 0.0, 0.0)
+	if k == 0:
+		WL.set_phase(_blade, 1, lerpf(0.3, 1.0, u))
+	elif k == _keys.size() - 1:
+		WL.set_phase(_blade, 2, lerpf(0.0, 0.45, u))
+	else:
+		WL.set_phase(_blade, 0, 1.0)
+	if k != _key_at:
+		if _key_at >= 0:
+			_cut_from = _keys[_key_at]
+			if absf(WL.sweep(_keys[_key_at], key)) > 30.0:
+				_key_trail.show_band(WL.band(_keys[_key_at], key, facing, _blade_len), step * 1.6)
+		_key_at = k
+
+
+func _vanish_weapon() -> void:
+	# after a keyed swing the weapon stays where it was and breaks into rising sparks
+	var last := _key_at >= _keys.size() - 1
+	WL.vanish(_blade, get_parent(), 0.45 if last else 0.0, T.v("weapon_vanish"))
+	_key_trail.clear()
 
 
 func _hide_weapons() -> void:
@@ -803,6 +866,8 @@ func _animate(on_floor: bool) -> void:
 	# blink while she cannot be hurt after a hit
 	_spr.visible = not (invuln > 0.0 and state != "backdash" and int(invuln * 20.0) % 2 == 0)
 	if state != "attack":
+		if _arm.visible and not _keys.is_empty():
+			_vanish_weapon()
 		_arm.visible = false
 	if state == "wall":
 		if _spr.sprite_frames.has_animation("wall"):

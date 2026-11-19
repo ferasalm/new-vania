@@ -78,9 +78,9 @@ MOVES = {
         "hand": "LEFT", "hit": 2,
         "frames": [
             dict(hx=2, torso=-74, tw=1.3, head=36, sw=(80, 20, 0.9), off=(-150, -120), lead=(55, 112),
-                 rear=(112, 70), wa=10, wz=1),
+                 rear=(112, 70), wa=38, wz=1),       # blade low, tip near the floor (user: start lower)
             dict(hx=6, torso=-80, tw=0.4, head=28, sw=(40, -10), off=(160, 140), lead=(80, 96), rear=(125, 120),
-                 wa=-15, wz=1),
+                 wa=45, wz=1),        # hand rises, tip still drags low
             dict(hx=8, lift=6, torso=-74, tw=-0.3, head=20, sw=(-40, -55), off=(170, 150), lead=(86, 92),
                  rear=(160, 168), wa=-55, wz=1),
             dict(hx=6, lift=4, torso=-88, tw=-0.9, head=12, sw=(-85, -105), off=(150, 120), lead=(88, 90),
@@ -669,6 +669,31 @@ def step_sample(moves, seed):
         print("wrote", gif)
 
 
+def step_install(moves, seed):
+    """Put the finished frames into the game (skin A and B), their weapon keys into assets/frames.json
+    (hero.weapon.<anim>: per frame the hand on the 224x160 canvas, the blade angle, in front or behind),
+    and bake the glowing Dirge textures (1 px halo; skin B recoloured) as weapon/dirge_glow(_b).png."""
+    fj = Path("assets/frames.json")
+    meta = json.loads(fj.read_text())
+    keys = meta["hero"].setdefault("weapon", {})
+    for m in moves:
+        n = len(MOVES[m]["frames"])
+        for k, folder in (("a", "pandora"), ("b", "pandora_b")):
+            for i in range(n):
+                Image.open(fin_dir(m, seed) / k / f"{m}_{i:02d}.png").save(Path("assets/2x") / folder / f"{m}_{i:02d}.png")
+        track = json.loads((fin_dir(m, seed) / "weapon_track.json").read_text())
+        keys[m] = [{"hand": t["hand"], "angle": t["angle"], "front": t["front"]} for t in track]
+        print("installed", m, n, "frames + weapon keys")
+    fj.write_text(json.dumps(meta, indent=2) + "\n")
+    for skin in ("a", "b"):
+        w = weapon_for(skin)
+        big = Image.new("RGBA", (w.width + 2, w.height + 2), (0, 0, 0, 0))
+        big.paste(w, (1, 1))
+        out = Path("assets/2x/weapon") / ("dirge_glow.png" if skin == "a" else "dirge_glow_b.png")
+        _halo(big, glow_colours(skin)[0]).save(out)
+        print("baked", out, "grip", (WEAPON["grip"][0] + 1, WEAPON["grip"][1] + 1))
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     seed = int(sys.argv[sys.argv.index("--seed") + 1]) if "--seed" in sys.argv else 9
@@ -682,5 +707,7 @@ if __name__ == "__main__":
         step_finish(moves, seed)
     elif cmd == "sample":
         step_sample(moves, seed)
+    elif cmd == "install":
+        step_install(moves, seed)
     else:
         print(__doc__)

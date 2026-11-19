@@ -127,6 +127,14 @@
     "label": "Chain speed (J then I)",
     "help": "How soon the next swing can start when you alternate the two attack buttons."
   },
+  "weapon_vanish": {
+    "value": 0.22,
+    "min": 0.05,
+    "max": 0.6,
+    "step": 0.01,
+    "label": "Weapon fade-out",
+    "help": "How long the weapon takes to break into sparks after a swing, in seconds."
+  },
   "attack_damage": {
     "value": 10.0,
     "min": 2.0,

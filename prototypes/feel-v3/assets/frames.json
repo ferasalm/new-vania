@@ -32,7 +32,93 @@
       76
     ],
     "dir": "pandora",
-    "density": 2
+    "density": 2,
+    "weapon": {
+      "attack": [
+        {
+          "hand": [
+            67,
+            74
+          ],
+          "angle": 160,
+          "front": true
+        },
+        {
+          "hand": [
+            113,
+            55
+          ],
+          "angle": -115,
+          "front": true
+        },
+        {
+          "hand": [
+            166,
+            93
+          ],
+          "angle": 22,
+          "front": true
+        },
+        {
+          "hand": [
+            165,
+            113
+          ],
+          "angle": 30,
+          "front": true
+        },
+        {
+          "hand": [
+            137,
+            92
+          ],
+          "angle": -20,
+          "front": true
+        }
+      ],
+      "attack2": [
+        {
+          "hand": [
+            142,
+            105
+          ],
+          "angle": 38,
+          "front": true
+        },
+        {
+          "hand": [
+            146,
+            88
+          ],
+          "angle": 45,
+          "front": true
+        },
+        {
+          "hand": [
+            138,
+            57
+          ],
+          "angle": -55,
+          "front": true
+        },
+        {
+          "hand": [
+            105,
+            51
+          ],
+          "angle": -110,
+          "front": true
+        },
+        {
+          "hand": [
+            142,
+            96
+          ],
+          "angle": -20,
+          "front": true
+        }
+      ]
+    }
   },
   "hound": {
     "faces": "left",
