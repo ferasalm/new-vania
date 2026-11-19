@@ -135,6 +135,14 @@
     "label": "Weapon fade-out",
     "help": "How long the weapon takes to break into sparks after a swing, in seconds."
   },
+  "weapon_level_flat": {
+    "value": 0.45,
+    "min": 0.2,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Scythe head flatness in level swings",
+    "help": "How flat the scythe's curved head is drawn in the sideways swing. 1.0 = upright as in the picture, lower = lies along the swing."
+  },
   "attack_damage": {
     "value": 10.0,
     "min": 2.0,

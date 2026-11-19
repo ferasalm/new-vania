@@ -107,21 +107,11 @@ static func set_phase(spr: Sprite2D, mode: int, t: float) -> void:
 
 
 ## After the swing the weapon stays where it was and breaks into rising sparks.
-static func vanish(blade: Sprite2D, world: Node, from_t: float, life: float) -> void:
+## There is no dissolving ghost copy of the blade (user, N14: it showed the old vertical
+## look); only the sparks remain. from_t is kept so callers do not change.
+static func vanish(blade: Sprite2D, world: Node, _from_t: float, life: float) -> void:
 	if world == null or blade.texture == null:
 		return
-	var ghost := Sprite2D.new()
-	ghost.texture = blade.texture
-	ghost.centered = false
-	ghost.offset = blade.offset
-	ghost.material = material()
-	ghost.z_index = 2
-	world.add_child(ghost)
-	ghost.global_transform = blade.global_transform
-	set_phase(ghost, 2, from_t)
-	var tw := ghost.create_tween()
-	tw.tween_method(func(v: float) -> void: set_phase(ghost, 2, v), from_t, 1.0, life)
-	tw.tween_callback(ghost.queue_free)
 	# sparks drift up from along the blade
 	var blade_len := blade.texture.get_width() * absf(blade.global_scale.x)
 	var d := Vector2.RIGHT.rotated(blade.global_rotation) * signf(blade.global_scale.x)

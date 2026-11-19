@@ -646,13 +646,16 @@ func _pose_keyed() -> void:
 	var v := WL.vec(key)                     # a blade pointing toward or away from the camera looks shorter
 	_blade.position = Vector2.ZERO
 	_blade.rotation = v.angle()
-	_blade.scale = Vector2(maxf(0.15, v.length()), 1.0)
+	# the scythe's curved head stays upright in the picture; in a level swing it is drawn
+	# flatter so it lies along the swing (the sword is drawn as it is)
+	var flat := T.v("weapon_level_flat") if (key.has("yaw") and _is_elegy()) else 1.0
+	_blade.scale = Vector2(maxf(0.15, v.length()), flat)
 	_blade.modulate = Color.WHITE
 	_trail.set_arc(0.0, 0.0, 0.0, 0.0, 0.0)
-	if k == 0:
-		WL.set_phase(_blade, 1, lerpf(0.3, 1.0, u))
-	else:
-		WL.set_phase(_blade, 0, 1.0)
+	# the wind-up frame holds no weapon (it used to gather out of pixels in the old
+	# vertical orientation); the blade first shows on the next frame, fully drawn
+	_blade.visible = k > 0
+	WL.set_phase(_blade, 0, 1.0)
 	if k != _key_at:
 		if _key_at >= 0:
 			_cut_from = _keys[_key_at]
@@ -665,6 +668,8 @@ func _vanish_weapon() -> void:
 	# after a keyed swing the weapon stays where it was and breaks into rising sparks
 	if _key_at >= _keys.size():
 		return      # it already broke up when the last frame started
+	if not _blade.visible:
+		return      # the wind-up frame holds no weapon, so there is nothing to break up
 	var last := _key_at >= _keys.size() - 1
 	WL.vanish(_blade, get_parent(), 0.45 if last else 0.0, T.v("weapon_vanish"))
 	_key_trail.clear()
