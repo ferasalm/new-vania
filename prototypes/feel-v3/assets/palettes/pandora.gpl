@@ -1,0 +1,21 @@
+GIMP Palette
+Name: Pandora A - ash and teal (main skin)
+Columns: 8
+# 16 colours, index order = role order; skin B maps index i of A to index i of B (cyan glow).
+# Index 0 (see-through) is not listed.
+ 10  13  18	outline
+107  74  82	skin shade
+184 138 128	skin base
+232 195 176	skin light
+ 86 112 124	hair shade
+157 184 194	hair base
+223 240 240	hair light
+ 15  35  40	suit shade
+ 27  74  82	suit base
+ 45 123 128	suit light
+ 56 216 248	glow base (eyes, seams, strikes)
+191 252 255	glow bright
+ 59  66  82	steel dark
+142 154 174	steel light
+200 144  58	accent (small trim)
+253 253 246	highlight (sparkle)

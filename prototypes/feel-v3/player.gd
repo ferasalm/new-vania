@@ -298,7 +298,8 @@ func _physics_process(delta: float) -> void:
 				_fx_t = 0.045
 				Vfx.slide_tick(global_position, facing)
 				if int(_slide_t / 0.045) % 2 == 0:
-					Vfx.ghost(_spr, Color(Vfx.CYAN.r, Vfx.CYAN.g, Vfx.CYAN.b, 0.45), 0.22)
+					var g := Vfx.her()
+					Vfx.ghost(_spr, Color(g.r, g.g, g.b, 0.45), 0.22)
 			var total := T.v("slide_time")
 			velocity.x = facing * T.v("slide_speed") * (1.0 - 0.5 * minf(_slide_t, total) / total)
 			if _slide_t >= 0.08 and _jump_buf > 0.0 and on_floor and _room_to_stand():
@@ -771,7 +772,7 @@ func take_hit(damage: float, from_x: float, src := "enemy") -> void:
 func _afterimage() -> void:
 	# glowing copies left along the dash, cyan at the start turning violet
 	var k := clampf(_dash_t / maxf(0.05, T.v("backdash_time")), 0.0, 1.0)
-	var c := Vfx.CYAN.lerp(Vfx.VIOLET, k)
+	var c := Vfx.her().lerp(Vfx.her_alt(), k)
 	c.a = 0.8
 	Vfx.ghost(_spr, c, 0.3)
 
@@ -881,6 +882,10 @@ class Swoosh extends Node2D:
 	func _draw() -> void:
 		if _alpha <= 0.01 or absf(_to - _from) < 0.05:
 			return
+		# the strike follows her skin (design/skins.md): cyan for A, red for B
+		var skin_b := T.v("pandora_skin") >= 0.5
+		var _arc := Color(1.0, 0.3, 0.36) if skin_b else Color(0.45, 0.95, 1.0)
+		var _edge := Color(1.0, 0.82, 0.85) if skin_b else Color(0.9, 1.0, 1.0)
 		var n := 10
 		for i in n:
 			var a := lerpf(_from, _to, float(i) / n)
@@ -889,5 +894,5 @@ class Swoosh extends Node2D:
 			var inner := lerpf(_r1 - 3.0, _r0, k * k)
 			var pts := PackedVector2Array([Vector2(cos(a), sin(a)) * inner, Vector2(cos(a), sin(a)) * _r1,
 				Vector2(cos(b), sin(b)) * _r1, Vector2(cos(b), sin(b)) * inner])
-			draw_colored_polygon(pts, Color(0.45, 0.95, 1.0, _alpha * k * 0.75))
-			draw_line(pts[1], pts[2], Color(0.9, 1.0, 1.0, _alpha * k), 1.0)
+			draw_colored_polygon(pts, Color(_arc.r, _arc.g, _arc.b, _alpha * k * 0.75))
+			draw_line(pts[1], pts[2], Color(_edge.r, _edge.g, _edge.b, _alpha * k), 1.0)

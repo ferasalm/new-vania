@@ -15,13 +15,17 @@ SRC = "assets/sprites-pandora/sprite-sheet-pandora-5.gif"
 FRAME = 40                      # inside the hand-on-hip hold (g5 022-065)
 CROP = (79, 0, 155, 135)        # the figure's box in the 240 x 135 frame
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pandora_skins import read_gpl, PAL_A, PAL_B  # noqa: E402
+
+
+def _hex(pal):
+    return ["%02x%02x%02x" % c for c in pal]
+
+
 PALETTES = {
-    "A  ASH AND TEAL": ["0a0d12", "6b4a52", "b88a80", "e8c3b0", "56707c", "9db8c2", "dff0f0", "0f2328",
-                        "1b4a52", "2d7b80", "1fc9c0", "9ffff0", "3b4252", "8e9aae", "c8903a", "fdfdf6"],
-    "B  OXBLOOD AND BONE": ["120a0c", "6d3f3a", "b97e66", "ecc7a4", "8a6a3c", "cfa65e", "f3dc9a", "2a0f16",
-                            "5c1d2a", "9a3342", "e8a02e", "ffe08a", "3a3436", "9a9088", "3fa7a0", "fff8e8"],
-    "C  TWILIGHT VIOLET": ["0c0a14", "5e4254", "a97a78", "e0b9a6", "5b4a8c", "9a86d1", "d9ccf5", "17142e",
-                           "2c2a5c", "4a4d94", "ff5fa2", "ffc2dd", "36344a", "8a8aa8", "e6b14a", "fbf8ff"],
+    "A  ASH AND TEAL (main)": _hex(read_gpl(PAL_A)),
+    "B  OXBLOOD (optional skin)": _hex(read_gpl(PAL_B)),
 }
 ROLE_NAMES = ["outline", "skin shade", "skin base", "skin light", "hair shade", "hair base", "hair light",
               "suit shade", "suit base", "suit light", "glow", "glow bright", "steel dark", "steel light",
@@ -34,7 +38,7 @@ MAP = {
     (43, 69, 78): (9, 9, 9),
     (49, 78, 63): (9, 9, 9),
     (58, 112, 141): (9, 5, 9),
-    (105, 159, 172): (10, 6, 10),
+    (105, 159, 172): (11, 6, 10),     # suit seams glow (user, 2026-11-19)
     (79, 91, 66): (9, 5, 9),
     (80, 86, 60): (9, 5, 9),
     (153, 158, 135): (9, 6, 6),
@@ -43,7 +47,8 @@ MAP = {
     (231, 178, 112): (3, 6, 3),
     (180, 145, 98): (2, 5, 2),
 }
-SKIN = [(39, 13, 49, 28), (25, 34, 41, 41), (43, 29, 60, 45), (39, 54, 47, 61)]   # face, chest, shoulder, hand
+SKIN = [(43, 13, 49, 26), (25, 34, 41, 41), (43, 29, 60, 45), (39, 54, 47, 61)]   # face, chest, shoulder, hand
+EYES = {(44, 17): 12, (45, 17): 11}   # eye glow, near eye (3/4 view)
 HAIR = [(18, 0, 56, 33), (16, 25, 30, 52), (56, 38, 70, 64)]
 
 
@@ -74,7 +79,10 @@ def role_image(src):
                 roles[y][x] = 1
                 continue
             out, hair, skin = MAP[c]
-            roles[y][x] = skin if _in(SKIN, x, y) else (hair if _in(HAIR, x, y) else out)
+            in_skin = _in(SKIN, x, y) and not (c == (237, 230, 203) and y < 18)   # cream bangs stay hair
+            roles[y][x] = skin if in_skin else (hair if _in(HAIR, x, y) else out)
+    for (x, y), r in EYES.items():
+        roles[y][x] = r
     return roles
 
 

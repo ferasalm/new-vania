@@ -1,0 +1,10 @@
+{
+  "pandora_skin": {
+    "value": 0.0,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 1.0,
+    "label": "Pandora: skin (0 = A teal, 1 = B oxblood)",
+    "help": "Skin A glows cyan; skin B is oxblood with red eyes, red suit seams and red strikes. See design/skins.md."
+  }
+}
