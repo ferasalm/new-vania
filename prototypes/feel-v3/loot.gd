@@ -91,12 +91,15 @@ func grant(item_id: String, rare := false) -> bool:
 		var data = items[item_id]
 		var typ := String(data.get("type", ""))
 		if typ == "orb":
-			if p == null or float(p.mp) >= R.max_mp() - 0.01:
+			# an orb is always collected: with MP to spare it refills her, and at a
+			# full gauge it is simply taken in with nothing to refill
+			if p == null:
 				return false
-			p.gain_mp(T.v("mp_pickup"))
-			Sfx.play("pickup")
-			if m != null:
-				m.number(p.global_position + Vector2(0, -30), int(T.v("mp_pickup")), Color("#5AB4FF"))
+			if float(p.mp) < R.max_mp() - 0.01:
+				p.gain_mp(T.v("mp_pickup"))
+				Sfx.play("pickup")
+				if m != null:
+					m.number(p.global_position + Vector2(0, -30), int(T.v("mp_pickup")), Color("#5AB4FF"))
 			return true
 		if typ == "material":
 			if R.scrap >= scrap_cap() - 0.01:

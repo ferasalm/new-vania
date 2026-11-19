@@ -55,14 +55,6 @@
     "label": "Drops: Suture from other enemies",
     "help": "The chance any other enemy leaves a Suture."
   },
-  "orb_magnet": {
-    "value": 0.0,
-    "min": 0.0,
-    "max": 64.0,
-    "step": 4.0,
-    "label": "Soul orb: pull distance",
-    "help": "0 means an orb is taken only by touch. Higher numbers pull it toward her."
-  },
   "soul_orb_chance_weak": {
     "value": 0.6,
     "min": 0.0,

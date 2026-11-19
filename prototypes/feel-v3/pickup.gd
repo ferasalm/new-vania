@@ -13,6 +13,7 @@ var life := 12.0
 
 var _life := 12.0
 var _t := 0.0
+var _fly_t := 0.0
 var _taken := false
 var _color := Color(0.9, 0.9, 0.8)
 
@@ -60,15 +61,32 @@ func _physics_process(delta: float) -> void:
 	if p == null:
 		return
 	var chest: Vector2 = p.global_position + Vector2(0, -18)
-	if item_id == "soul_orb" and T.v("orb_magnet") > 0.0 and not _full(p):
-		if chest.distance_to(global_position) <= T.v("orb_magnet"):
-			global_position = global_position.move_toward(chest, T.v("orb_speed") * delta)
+	if _is_orb():
+		_fly_to(chest, delta)
 	if touch_take:
-		if _full(p):
+		if not _is_orb() and _full(p):
 			return
 		if chest.distance_to(global_position) <= T.v("pickup_reach") * 0.66:
 			take()
 			return
+
+
+func _is_orb() -> bool:
+	# every orb kind flies to her on its own (MP today; HP and XP orbs when they exist)
+	return String(Db.table("items").get(item_id, {}).get("type", "")) == "orb"
+
+
+func _fly_to(chest: Vector2, delta: float) -> void:
+	# pops out for orb_hang, then flies to her from anywhere on screen with no
+	# button, no distance limit and no full-gauge gate. It speeds up as it goes
+	# and is collected when it touches her.
+	_fly_t += delta
+	if _fly_t < T.v("orb_hang"):
+		return
+	var speed: float = minf(T.v("orb_speed") + T.v("orb_accel") * (_fly_t - T.v("orb_hang")), T.v("orb_speed_max"))
+	global_position = global_position.move_toward(chest, speed * delta)
+	if chest.distance_to(global_position) <= T.v("pickup_reach") * 0.66:
+		take()
 
 
 func _full(p) -> bool:
