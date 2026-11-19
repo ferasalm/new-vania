@@ -1,0 +1,62 @@
+[
+ {
+  "hand": [
+   67,
+   74
+  ],
+  "angle": 160,
+  "front": true,
+  "shoulder": [
+   90,
+   89
+  ]
+ },
+ {
+  "hand": [
+   113,
+   55
+  ],
+  "angle": -115,
+  "front": true,
+  "shoulder": [
+   109,
+   83
+  ]
+ },
+ {
+  "hand": [
+   166,
+   93
+  ],
+  "angle": 22,
+  "front": true,
+  "shoulder": [
+   139,
+   102
+  ]
+ },
+ {
+  "hand": [
+   165,
+   113
+  ],
+  "angle": 30,
+  "front": true,
+  "shoulder": [
+   141,
+   101
+  ]
+ },
+ {
+  "hand": [
+   137,
+   92
+  ],
+  "angle": -20,
+  "front": true,
+  "shoulder": [
+   113,
+   82
+  ]
+ }
+]
