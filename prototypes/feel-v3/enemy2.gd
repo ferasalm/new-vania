@@ -736,7 +736,7 @@ func _moth(delta: float, to: Vector2) -> void:
 			if absf(step.x) > 0.5:
 				facing = 1 if step.x > 0.0 else -1
 			_tick += delta
-			if _tick >= 0.14:
+			if _tick >= T.v("moth_ember_every"):
 				_tick = 0.0
 				_drop_ember()
 			if u >= 1.0 or _blocked(q):
