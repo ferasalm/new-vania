@@ -1034,9 +1034,7 @@ func _latch() -> void:
 	_rising = p.velocity.y < -150.0
 	_prev_at = float(p.get("_attack_t"))
 	_pstate = String(p.state)
-	if not _hinted and G.main.hud != null:
-		_hinted = true
-		G.main.hud.toast("A LEECH CLINGS TO HER  -  jump or strike to shake it off", 4.0)
+	_hinted = true      # no tip on screen (user ask C8)
 
 
 func _latched(delta: float, p: Node2D) -> void:

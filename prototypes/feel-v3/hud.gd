@@ -5,6 +5,8 @@
 # has not got.
 extends CanvasLayer
 
+const RpgMath := preload("res://rpg_math.gd")
+
 const BARS := [["hp", "HP", "#D9BC8F"], ["energy", "EN", "#7BD67B"], ["mp", "MP", "#5AB4FF"]]
 const WIDTH := 80.0
 
@@ -52,7 +54,7 @@ func _ready() -> void:
 	_kills = _label("", Vector2(110, 9))
 	_weapon = _label("", Vector2(110, 18))
 	_weapon.modulate = Color("#7BE6F2")
-	_hint = _label("A/D move  S crouch  K jump  J/I attack  W+J special  S+K slide  Q/L backdash left/right  E weapon  Esc pause  F1 tune", Vector2(6, 203))
+	_hint = _label("", Vector2(6, 203))      # no controls line on screen (user ask C8: no hand-holding text)
 	_hint.modulate = Color(1, 1, 1, 0.55)
 	_banner = _centered(Vector2(0, 60), 16)
 	_toast = _centered(Vector2(0, 84), 8)
@@ -107,7 +109,11 @@ func refresh(player: Node, kills: int) -> void:
 		_fill[name].size.x = WIDTH * clampf(now[name], 0.0, 1.0)
 		_flash[name] = maxf(0.0, _flash[name] - delta)
 		_back[name].color = Color(0.9, 0.15, 0.15, 0.9) if _flash[name] > 0.0 else Color(0, 0, 0, 0.6)
-	_kills.text = "defeated %d" % kills
+	# level and XP toward the next level (kills pay XP; the CHARACTER screen to spend points comes with the menus)
+	var step := T.v("xp_curve_step")
+	var need: int = RpgMath.xp_total(R.level + 1, step) - RpgMath.xp_total(R.level, step)
+	var have: int = R.xp - RpgMath.xp_total(R.level, step)
+	_kills.text = "LV %d  XP %d/%d" % [R.level, have, need] + ("  +%d PTS" % R.points if R.points > 0 else "")
 	_weapon.text = player.weapon_name()
 	_banner_t = maxf(0.0, _banner_t - delta)
 	_banner.modulate.a = clampf(_banner_t, 0.0, 1.0)

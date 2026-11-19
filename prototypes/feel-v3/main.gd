@@ -23,7 +23,10 @@ var ROOMS: Array:
 	get: return W.room_list("before")
 const TITLES := {"church": "THE NAVE OF ASH", "library": "THE UNREAD STACKS", "save": "CACHE STATION 002",
 	"lab": "SPECIMEN HALL", "save2": "CACHE STATION 003", "boss": "THE PALLBEARER", "shaft": "THE MARROW WELL",
-	"vault": "CACHE STATION 004", "hazard": "THE THRESHING CHAPEL", "timemachine": "THE ORGAN OF HOURS"}
+	"vault": "CACHE STATION 004", "hazard": "THE THRESHING CHAPEL", "timemachine": "THE ORGAN OF HOURS",
+	"scriptorium": "THE SCRIPTORIUM", "kennel": "THE KENNEL", "ordnance": "THE ORDNANCE WARD",
+	"hallway": "THE PROCESSIONAL", "gallery": "THE RELIQUARY OF SHELLS", "loft": "THE WINCH LOFT",
+	"arnetria": "THE QUIET RING"}
 # where the number keys (and the pause menu) put her: the door side or marker that makes sense in that room
 var ENTRY: Dictionary:
 	get:
@@ -175,12 +178,14 @@ func enter(next_room: String, spawn_key: String, from_room: String = "", carry: 
 	add_child(world)
 	room = Room.new()
 	world.add_child(room)
+	next_room = next_room.trim_suffix("_shift")      # room_name is always the plain name; file_id says which sheet
+	from_room = from_room.trim_suffix("_shift")
 	room.load_room(next_room, G.shifted)
 	room_name = next_room
 	if from_room != "":
-		if room.head.get("left", "") == from_room:
+		if String(room.head.get("left", "")).trim_suffix("_shift") == from_room:
 			spawn_key = "left"
-		elif room.head.get("right", "") == from_room:
+		elif String(room.head.get("right", "")).trim_suffix("_shift") == from_room:
 			spawn_key = "right"
 	_entry = spawn_key
 	var fresh: bool = player == null or player.hp <= 0.0
@@ -189,6 +194,9 @@ func enter(next_room: String, spawn_key: String, from_room: String = "", carry: 
 	player = Player.new()
 	var fallback: Vector2 = room.spawns.get("left", room.spawns.get("P", Vector2(64, 64)))
 	player.position = room.spawns.get(spawn_key, fallback)
+	for d in room.doors_all:      # two doors on one side: arrive at the one that leads back where she came from
+		if from_room != "" and d.side == spawn_key and String(d.to).trim_suffix("_shift") == from_room:
+			player.position = Vector2(room.spawns[spawn_key].x, d.feet().y)
 	world.add_child(player)
 	player.hp = keep_hp
 	player.mp = keep_mp
@@ -216,6 +224,7 @@ func enter(next_room: String, spawn_key: String, from_room: String = "", carry: 
 			hz.setup(h[0], h[1])
 			world.add_child(hz)
 	enemies.append_array(arena.room_setup(room, world))
+	loot.place_items(room)
 	var marks := Marks.new()
 	marks.z_index = 50
 	world.add_child(marks)
@@ -223,7 +232,6 @@ func enter(next_room: String, spawn_key: String, from_room: String = "", carry: 
 		# the church's lower door stays shut until the library lever is pulled
 		if room.doors[side].to == "shaft" and not (lever_library or G.shifted):
 			room.doors[side].locked = true
-			room.doors[side].sealed_msg = "SEALED. Something in the library holds it shut."
 	ambience.motes(room, world)
 	shift.set_room(next_room)
 	if G.shifted:
@@ -289,11 +297,16 @@ func _physics_process(delta: float) -> void:
 
 
 func _open_door_to(side: String) -> String:
-	# the room may hold two doors on one side: take the one that is open
+	# the room may hold two doors on one side: take the open one nearest her feet
+	var best := ""
+	var best_dy := INF
 	for d in room.doors_all:
 		if is_instance_valid(d) and String(d.side) == side and d.open > 0.85 and String(d.to) != "":
-			return String(d.to)
-	return ""
+			var dy := absf(d.feet().y - player.global_position.y)
+			if dy < best_dy:
+				best_dy = dy
+				best = String(d.to)
+	return best
 
 
 func _process(delta: float) -> void:
@@ -426,6 +439,10 @@ func enemy_died(en: Node2D) -> void:
 	fx("burst", at)
 	Sfx.play("enemy_die")
 	W.enemy_killed.emit(en, String(en.kind), at, bool(en.get("respawned")))
+	# every kill pays XP (half, rounded up, for one that came back): the number floats up in gold
+	var xp_gain := R.award_kill(String(en.kind), bool(en.get("respawned")))
+	if xp_gain > 0:
+		number(at + Vector2(0, -12), xp_gain, Color("#F2D16B"))
 
 
 func player_died() -> void:

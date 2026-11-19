@@ -59,17 +59,16 @@ func _physics_process(delta: float) -> void:
 		p = m.player
 	if p == null:
 		return
+	var chest: Vector2 = p.global_position + Vector2(0, -18)
+	if item_id == "soul_orb" and T.v("orb_magnet") > 0.0 and not _full(p):
+		if chest.distance_to(global_position) <= T.v("orb_magnet"):
+			global_position = global_position.move_toward(chest, T.v("orb_speed") * delta)
 	if touch_take:
 		if _full(p):
 			return
-		var chest: Vector2 = p.global_position + Vector2(0, -18)
 		if chest.distance_to(global_position) <= T.v("pickup_reach") * 0.66:
 			take()
 			return
-	elif item_id == "soul_orb" and T.v("orb_magnet") > 0.0:
-		var chest2: Vector2 = p.global_position + Vector2(0, -18)
-		if chest2.distance_to(global_position) <= T.v("orb_magnet"):
-			global_position = global_position.move_toward(chest2, T.v("orb_speed") * delta)
 
 
 func _full(p) -> bool:

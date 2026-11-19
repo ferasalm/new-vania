@@ -108,7 +108,6 @@ func hit(amount: float, part: int) -> void:
 		_phase = 2
 		G.main.shake(4.0, 0.5)
 		G.main.ring_fx(_body.position, 90.0, Color(1.0, 0.3, 0.9))
-		G.main.hud.toast("IT WILL NOT LET GO")
 		_gap = 1.8
 	if hp <= 0.0:
 		hp = 0.0
