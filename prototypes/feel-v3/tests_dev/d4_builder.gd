@@ -106,6 +106,11 @@ func _run() -> void:
 			if f.begins_with("church_") and FileAccess.get_file_as_string(ProjectSettings.globalize_path("user://room_backups").path_join(f)) == old_text:
 				found = true
 	_check("the old file is copied aside before it is replaced", found, "")
+	_check("saving runs the full check and tells how many warnings", b._msg.contains("red warning"), b._msg)
+	b._recheck()
+	b.doc.set_cell(1, 1, "D")
+	b._recheck()
+	_check("the quick checks run after an edit", b.checks is Array, "")
 	Dev.project_dir_override = ""
 	# F2 again closes it and leaves nothing behind
 	Dev.close_tool()

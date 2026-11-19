@@ -153,6 +153,7 @@ func _build_ui() -> void:
 	_btn(bar, "REDO", func() -> void: _redo())
 	_btn(bar, "SAVE", func() -> void: save())
 	_btn(bar, "PLAY", func() -> void: play())
+	_btn(bar, "CHECK", func() -> void: run_full_check())
 	_sep(bar)
 	_btn(bar, "W+", func() -> void: _resize(1, 0))
 	_btn(bar, "W-", func() -> void: _resize(-1, 0))
@@ -249,8 +250,14 @@ func _update_status() -> void:
 		cell = "%d,%d '%s'" % [_hover.x, _hover.y, doc.get_cell(_hover.x, _hover.y)]
 	var w: int = doc.width()
 	var h: int = doc.height()
+	var tip := ""
+	if _in_view(_mouse):
+		var mw := _to_world(_mouse)
+		for ck in checks:
+			if ck["rect"].has_point(mw):
+				tip = String(ck["text"])
 	_status.text = "%s%s %dx%d  cell %s  %s  layer %s%s  | %s" % [doc.file_id, "*" if _dirty else "", w, h, cell, tool, plane,
-		"  flip" if _flip_next else "", _msg]
+		"  flip" if _flip_next else "", ("RED: %s" % tip) if tip != "" else (("%d red | %s" % [checks.size(), _msg]) if not checks.is_empty() else _msg)]
 
 
 func _set_ui_visible(v: bool) -> void:
@@ -337,9 +344,24 @@ func _changed() -> void:
 
 
 func _recheck() -> void:
+	# the quick checks run after every edit; the reach search runs on CHECK and on save
 	checks = []
 	if _checks_script != null and doc != null:
 		checks = _checks_script.new().run(doc)
+
+
+## The full check, with the can-she-get-there search (a second or two on a big room).
+func run_full_check() -> void:
+	if _checks_script == null or doc == null:
+		return
+	_say("checking...")
+	checks = _checks_script.new().run(doc, true)
+	if checks.is_empty():
+		_say("no red warnings: every exit and item can be reached")
+	else:
+		_say("%d red warning(s): read the labels in the room" % checks.size())
+	if _view != null:
+		_view.queue_redraw()
 
 
 func _undo() -> void:
@@ -509,7 +531,8 @@ func save() -> bool:
 			pf.close()
 	_dirty = false
 	_update_status()
-	_say("saved rooms/%s.txt (git keeps the old one)" % doc.file_id)
+	run_full_check()
+	_say("saved rooms/%s.txt (git keeps the old one); %d red warning(s)" % [doc.file_id, checks.size()])
 	return true
 
 
