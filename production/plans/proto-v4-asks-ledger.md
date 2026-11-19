@@ -23,13 +23,13 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | # | Ask | Played? | Status | Where it stands |
 |---|---|---|---|---|
 | B1 | Church's left door locked; the library lever opens it | yes | done | S1 keeps it, lamp instead of text |
-| B2 | Vertical hall needs the wall jump; wall jump earned in the lab (now: from the werewolf's room, KN) | yes (old lab relic) | in progress | S1: nothing gives the wall jump yet, so the well cannot be climbed |
+| B2 | Vertical hall needs the wall jump; wall jump earned in the lab (now: from the werewolf's room, KN) | yes (old lab relic) | in progress | task 1: GRIP SERVOS lies in the kennel (Up); the well is climbable (4 wide, ledges 80 px apart with lips, climb test PASS); the werewolf who drops it: session 5 |
 | B3 | First boss uses ELEGY-013 against her; she takes it after | yes | done | still taken by touch, not Up (C5) |
 | B4 | Save terminal in the room above | yes | done | |
 | B5 | Hazard room: new enemies (Rodin models) with surprising telegraphed moves; dynamic hazards that hit hard | yes | done | S1 trims it to 2 kinds, 4 traps (C4) |
-| B6 | Bars with a lever behind them that only Elegy reaches | yes | in progress | S1 defect: the lever stands in front of the bars |
-| B7 | Cracked wall, then a low opening only a slide passes | yes | in progress | S1 defect: the wall is missing |
-| B8 | Time machine asks Yes/No; YES shifts reality: demonic sounds and incantations, new filters, rooms reordered | yes (old) | in progress | S1 defect: the shift crashes (`Organ.charge()` missing) |
+| B6 | Bars with a lever behind them that only Elegy reaches | yes | done | task 1: chapel rebuilt, lever west of the bars |
+| B7 | Cracked wall, then a low opening only a slide passes | yes | done | task 1: cracked wall at the chapel's west end, 2-tile crawl to the organ |
+| B8 | Time machine asks Yes/No; YES shifts reality: demonic sounds and incantations, new filters, rooms reordered | yes (old) | done | task 1: organ restored (the shift crashed), she wakes beside it |
 | B9 | After the shift the terminal is dead; a special boss door stays shut | yes | done | now the sealed door to Arnetria (C15) |
 | B10 | Dying after the shift keeps the world shifted | yes | done | |
 | B11 | Windows and Android every time | part | done | the harmony APK was missing; added 2026-11-19 09:15 |
@@ -38,20 +38,20 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 
 | # | Ask | Played? | Status | Where it stands |
 |---|---|---|---|---|
-| C1 | Church and boss backdrops without black gaps | no | in progress | fixed on S1, not merged |
-| C2 | No filter that makes things harder to see (the library's red) | no | in progress | S1 still tints the library red (0.45) and keeps a vignette: to fix |
+| C1 | Church and boss backdrops without black gaps | no | done | merged with the rooms (task 1) |
+| C2 | No filter that makes things harder to see (the library's red) | no | done | task 1: library red but not inverted, full brightness; no dark screen edges; well and vault lighter |
 | C3 | Draw every move: jump standing and moving (separate), wall jump, all attacks, dynamic idles (hand-on-hip turn first), death, self-repair | part (jump) | planned | session 2 batches; the 12-frame turn exists but the game never plays it |
-| C4 | At most 2 enemy kinds per room; weak enemies back in 10 s while she stays, slowly; a lever that turns the traps off; a reward at the end | no | in progress | S1: kinds and respawn done; the winch does not turn traps off; reward not placed |
-| C5 | Library: several doors, hazard monsters, a healing item; every pickup with Up, never by touch | part | in progress | S1: 3 doors, moth + scribe; Suture not placed; relic and scythe still by touch |
+| C4 | At most 2 enemy kinds per room; weak enemies back in 10 s while she stays, slowly; a lever that turns the traps off; a reward at the end | no | done | task 1: the loft winch stops every chapel trap for good; GOVERNOR-207 on the chapel altar |
+| C5 | Library: several doors, hazard monsters, a healing item; every pickup with Up, never by touch | part | done | task 1: Suture on the library ledge; scythe and relic with Up + card |
 | C6 | Whole map before and after the shift; corner map + full map; a blank new map after the shift | no | planned | design done (`map.md`); screens in session 2 |
 | C7 | Pallbearer: attacks fixed, top tier (about 3 min, 3 stages, its body swings the scythe) | no | planned | session 3 |
-| C8 | No hand-holding text | no | in progress | S1 removed the door/lever text; still there: "ITS HANDS ARE YOUR STAIRS", the leech tip, the controls line at the bottom |
-| C9 | Lab to 3 ways: save; hallway with a monster room (harness reward) and the Pallbearer; top-left werewolf who wall-jumps and gives the wall jump; a special show for special pickups | part (show) | in progress | S1 rooms exist; harness not placed; werewolf session 3 |
-| C10 | Pickup card with picture and text; LEXICON CORE shows descriptive enemy names on hit | part | in progress | card works; item pictures missing; name plate session 2; LEXICON not placed |
+| C8 | No hand-holding text | no | done | task 1: removed ITS HANDS ARE YOUR STAIRS, IT WILL NOT LET GO, the leech tip, the controls line, the SEALED line |
+| C9 | Lab to 3 ways: save; hallway with a monster room (harness reward) and the Pallbearer; top-left werewolf who wall-jumps and gives the wall jump; a special show for special pickups | part (show) | in progress | task 1: CEREMENT-112 harness in the reliquary, COUPLER-034 in the lab; werewolf session 5 |
+| C10 | Pickup card with picture and text; LEXICON CORE shows descriptive enemy names on hit | part | in progress | task 1: LEXICON CORE lies in the scriptorium (Up); item pictures and the name plate: session 3 |
 | C11 | ITEMS and EQUIPMENT menus | no | planned | session 2 |
-| C12 | A room off the hazard room turns the traps off (winch loft) | no | in progress | S1 room and winch exist; traps stay on |
-| C13 | Post-shift map reorganised a lot | old version | in progress | S1: 11 new shifted rooms |
-| C14 | RPG: XP, levels, 2 points, AUTO, 5 stats with MAGIC, full refill on level-up, orbs, scrap, self-repair, Sutures, rare drops (one strong) | part | in progress | orbs, scrap, self-repair, Suture key, rare drops work; **kills give no XP (missed wiring)**; no way to spend points (CHARACTER, session 2); no XP/level on screen |
+| C12 | A room off the hazard room turns the traps off (winch loft) | no | done | task 1: climb two lipped ledges to the loft; the winch stops the traps |
+| C13 | Post-shift map reorganised a lot | old version | done | 11 shifted rooms merged (task 1) |
+| C14 | RPG: XP, levels, 2 points, AUTO, 5 stats with MAGIC, full refill on level-up, orbs, scrap, self-repair, Sutures, rare drops (one strong) | part | in progress | task 1: kills give XP (gold number), LV and XP in the top bar, orbs drift to her again; spending points (CHARACTER): session 3 |
 | C15 | Arnetria: three candles, dialogue, her death ends the shift, cracked visor | no | planned | session 3; S1 has her room and the candle door |
 | C16 | RECALL boss refights at the terminal (best time + some XP) | no | planned | session 2 |
 
@@ -62,9 +62,9 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | D1 | Rooms easier, bosses harder, slower pace, same movement speed | no | planned | balance pass after the bosses |
 | D2 | New machine enemies (SAWBONES TROLLEY, GRAFTED ORDERLY); cyborgs drop scrap and soul orbs | no | planned | session 2 |
 | D3 | Scrap by touch, more when her health is low, a cap, then self-repair standing still with an animation | part | in progress | works; the repair animation is in the C3 batches |
-| D4 | RESTORE MODULE: stand up where she fell, from SYSTEM OFFLINE | no | in progress | S1 places its marker in the winch loft, but nothing gives it |
-| D5 | Harness and modules, both, in different places; 2 + 2 slots | no | in progress | logic done; menu session 2; pieces not placed |
-| D6 | Sutures: only the ones you find | part | in progress | logic done; none placed |
+| D4 | RESTORE MODULE: stand up where she fell, from SYSTEM OFFLINE | no | in progress | task 1: lies in the winch loft (Up); not yet checked in a run |
+| D5 | Harness and modules, both, in different places; 2 + 2 slots | no | in progress | task 1: pieces placed (lab, reliquary, chapel, shifted rooms); EQUIPMENT menu session 3 |
+| D6 | Sutures: only the ones you find | part | done | task 1: Sutures 1-4 (LB, HW, SH, HZ) and 5-8 after the shift placed |
 | D7 | Level-up: offer CHARACTER at once, full HP/EN/MP, 2 points, AUTO, MAGIC raises special damage and max MP | part | in progress | logic only |
 | D8 | SEXTON-19 (cyborg mini-boss) drops the BOLT PISTOL: off hand, with Dirge, uses EN | no | planned | session 2 |
 | D9 | Elegy gets its own two-handed moves | no | planned | sprites |
@@ -81,7 +81,10 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | E3 | Graceful jump from your 3 clips, rig + PixelLab; the crouch faces her way | yes | done | |
 | E4 | Attacks as a fencer or dancer: J and I clearly different, crouch, air and cast moves, Elegy and pistol sets, a slim blade on the hit frames | no | planned | needs PixelLab (29.3 left): your yes first |
 | E5 | One design and one palette for every frame of a skin | yes | done | recolour; the redraws follow the same rule |
-| E6 | Moth test fix; smoke/climb tests rewritten for the new map | n/a | in progress | review done 2026-11-19; climb test being finished |
+| E6 | Moth test fix; smoke/climb tests rewritten for the new map | n/a | done | task 1: smoke 145/145 and climb PASS, both locked (`tests_v4/locks/step1.json`) |
+| E7 | Well climb too tight: ledge lips (thin planks at each ledge end) instead of a stronger kick | n/a | done | user decision 2026-11-19 (task 1) |
+| E8 | Tunnel test: her slide out of a low tunnel may carry her up to 120 px in (was 60) | n/a | done | user decision 2026-11-19 (task 1); the game is unchanged |
+| E9 | Every room walkable: no item, door or exit she cannot reach | n/a | done | task 1: `tools/roomreach.py` walks her moves through all 29 rooms; fixed the lab (floors joined, climb to the kennel without the wall jump), the library climb (3 floors joined, before and after the shift), reliquary, hallway, loft, shifted kennel and scriptorium; she now arrives at the door that leads back |
 
 ## How you want the work done
 

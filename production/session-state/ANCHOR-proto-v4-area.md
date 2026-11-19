@@ -5,29 +5,18 @@ Godot `C:/Users/AUC/opencode-workspace/tools/Godot/Godot_v4.7.2-stable_win64_con
 Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3/design/contract.md` (section 8 overrides). User decisions: `design/decisions.md`.
 
 ## Now
-- Session 1 mid-flight on `feat/proto-v4-area` (pushed through 366b07a). Lead = Claude Code again (2026-11-19).
-- VERIFIED by Claude Code (2026-11-19): lock OK 12 files; main-checkout rerun = SMOKE 135/135, t_data 44/44,
-  t_math 11/11, t_rpg 33/33, t_interact_ui 23/36 (13 = S3 UI), t_world 1/4 (S1), t_bosses 2/8 (S4), HAZARD 62/62,
-  climb PASS. Test fix 3507398 reviewed: setup-order bugs only, assertions unchanged (fair).
-- DONE: step 0 tests (locked), S0 Core 0eb7e2f, S2 Interact 85c33ee; details and the S2 scrap-roll ruling: handoff report.
-- RULING (S0, accepted): R.taken keeps src "enemy" at mult 1.0 (legacy hazard_test pins today's full enemy damage); area_damage_mult 0.75 applies to NAMED sources ("ghost", "shot", "machine", ...). S2/S4 briefs must name their sources; bosses pass "boss" (mult 1.0), traps "trap" (raw).
-- IN PROGRESS: S1 World builder in worktree `proto-v4-s1` (branch `feat/proto-v4-s1`, cut from 366b07a = S0+S2).
-  Brief fixed first (15 rooms; backup `s1-world.md.orig-2026-11-19`). Routes deepseek cf/openrouter and codex all
-  failed "no files changed"; the gemini-flash route was writing at 07:19. Log: job tmp `s1-worker.log`.
-- DONE (2b3d41e): palette A main (cyan eyes/seams), skin B oxblood optional; `tools/pandora_skins.py`, `design/skins.md`.
-- DONE (4fc7709, a5c1cea, pushed): ONE LOOK PER SKIN (user rule): `tools/harmonize_pandora.py` recolours all 115
-  hand-made frames to A (head matched per frame -> skin face + cyan eye; originals in `art_proof/harmony/original`),
-  seed-9 PixelLab jump re-toned + eye from rig; B baked to `assets/2x/pandora_b`. Jump wired: push-off, 4 air frames
-  by vy, land_00 soft / land_01 hard (fall >= land_hard_drop), tuning in tuning.d/anim.json. Suite unchanged
-  (smoke 135/135, hazard 62/62, climb PASS, lock OK). Build: `playable-history/2026-11-19-proto-v4-harmony/` (exe).
-  WAITING ON USER: play it. PixelLab 29.3 of 40 left.
-- S1 (feat/proto-v4-s1, merged area -> f6d9ef6, not pushed): t_world 34/38 after the moth test fix (e43db6a,
-  user yes). Left: S4 machine counts (expected) + smoke/climb old-layout checks. Test-writer rewrite running
-  (brief `production/briefs/s1-smoke-rewrite.md`, route builder-iq, log job tmp `s1-smoke-worker.log`):
-  LEAD reviews every change, logs it, re-locks, then merges s1 -> area.
-- DECIDED (user, decisions 25-27): skins, jump sources, attack style (fencer/dancer, J vs I differ, slim blade on hit frames).
-- USER (2026-11-19): pass-2 jump 'not graceful enough' -> try other poses from the GIFs; ask before any PixelLab spend (33 left).
-- USER RULES (2026-11-19): tests LOCKED from builders; only the lead amends the pack (rare, logged, re-locked, like 3507398); `worker.mjs verify <lock>` before every commit. NEW (2026-11-19): NEVER tune the opus-authored tests - they are the quality gates; if a test fails twice in a row, report it to the user before further changes.
+- Way of working (user, 2026-11-20 rule): Claude Code builds directly, one task per chat, hand off at ~220k.
+  Task order and every ask with its status: `production/plans/proto-v4-asks-ledger.md` (read it first).
+- DONE task 1 (rooms fix + merge, XP, orb pull, hint text), commits 951957e..b48567a on feat/proto-v4-area, pushed.
+  Build `playable-history/2026-11-19-proto-v4-rooms/` (exe + APK + ABOUT), tag `proto-v4-rooms-2026-11-19`.
+  WAITING ON USER: play it.
+- NEXT task 2: attacks (decision 27: fencer/dancer, J and I differ, slim blade on hit frames) + wall jump frames.
+  Needs PixelLab: ask the user's yes before any spend (29.3 of 40 left). Start file: `handoff-2026-11-19-task2.md`.
+- Room guards: `prototypes/feel-v3/tools/roomreach.py .` (can she reach every item and exit; run from feel-v3)
+  and `tools/roomcheck.py .` (door headroom, low spots). Run both after any room edit.
+- RULING (S0, accepted): R.taken keeps src "enemy" at mult 1.0; area_damage_mult 0.75 applies to NAMED sources.
+- USER RULES: tests LOCKED (`tests_v4/locks/step0.json` 12 files, `step1.json` smoke + climb); `worker.mjs verify
+  <lock>` before every commit. NEVER tune the opus-authored tests; a test failing twice in a row goes to the user first.
 
 ## Step 0 rulings (lead, 2026-11-19): what the test pack fixes about the contract
 - The six tests hold contract 4.2's content, regrouped per the anchor: t_data = static files + S0 tuning; t_math = rpg_math formulas + the R damage trio; t_rpg = W/R behaviour (xp, levels, stats, Sutures, gear, forwarding, snapshots, award_kill, spawner, main.gd <= 600 lines, SYSTEMS); t_interact_ui = S2 interact + S3 UI; t_world = S1 world (rooms, exits, counts, reachability, banned strings, backdrops, filter, respawn, shift, candles, visited); t_bosses = S4 machines + S5 + S6 + S7 + S8. t_anim/t_voice are NOT in the 12-file pack; added in their own sessions if needed.
@@ -55,4 +44,6 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 - After each slice: update this file (Now, Verified, Next) and keep it under 60 lines.
 
 ## Verified
+- Task 1 (2026-11-19): smoke 145/145, climb PASS, hazard 62/62, t_rpg 33/33, t_data 44/44, t_math 11/11;
+  expected fails (later tasks): t_world 35/38 machines, t_interact_ui 23/36 menus/map, t_bosses 2/8 machines + Pallbearer.
 - The map check (`design/mapgen2.py`) passes: no room overlap, every exit is matched. Saved build: `playable-history/2026-11-18-feel-v4-backtrack/` (exe + APK), tag `proto-v4-backtrack-2026-11-18`.
