@@ -1,0 +1,58 @@
+{
+  "weak_respawn_s": {
+    "value": 10.0,
+    "min": 3.0,
+    "max": 120.0,
+    "step": 1.0,
+    "label": "Respawn: weak enemy return time",
+    "help": "Seconds before a fallen weak enemy returns while she stays in the room."
+  },
+  "respawn_warning": {
+    "value": 1.0,
+    "min": 0.35,
+    "max": 2.5,
+    "step": 0.1,
+    "label": "Respawn: rattle warning time",
+    "help": "Seconds of warning rattle before a weak enemy reappears."
+  },
+  "respawn_distance": {
+    "value": 96.0,
+    "min": 32.0,
+    "max": 200.0,
+    "step": 8.0,
+    "label": "Respawn: minimum distance",
+    "help": "A weak enemy never returns closer to her than this distance in pixels."
+  },
+  "respawn_attack_delay": {
+    "value": 1.0,
+    "min": 0.0,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Respawn: first attack pause",
+    "help": "Seconds a respawned enemy pauses before starting its first attack."
+  },
+  "shift_library_strength": {
+    "value": 0.45,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Shift: library filter brightness",
+    "help": "Linear brightness strength of the library negative filter after the shift."
+  },
+  "shift_restore_time": {
+    "value": 12.0,
+    "min": 4.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Shift: world restore time",
+    "help": "Seconds for the screen tear to reverse and colour to return when Arnetria falls."
+  },
+  "lamp_blink": {
+    "value": 0.5,
+    "min": 0.2,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Door: refuse lamp blink length",
+    "help": "Seconds the door red lamp blinks when a locked door refuses to open."
+  }
+}

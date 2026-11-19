@@ -27,6 +27,7 @@ const GONE := Rect2(Vector2(-9999.0, -9999.0), Vector2.ZERO)
 static var _hinted := false
 
 var kind := "crab"
+var respawned := false    # it came back from the weak-respawn system
 var hp := 1.0
 var facing := -1
 var state := "idle"
