@@ -52,24 +52,22 @@ void fragment() {
 	if (mode == 1) {
 		o = mix(vec3(lum) * vec3(1.35, 0.16, 0.1), c * vec3(1.1, 0.3, 0.25), 0.25);
 	} else if (mode == 2) {
-		vec3 inv = vec3(1.0) - c;
-		float il = dot(inv, vec3(0.299, 0.587, 0.114));
-		o = vec3(il * library_strength) * vec3(0.75, 0.07, 0.06) + vec3(0.02, 0.0, 0.0);
+		// red, but readable (user ask C2): not inverted, the picture keeps its brightness
+		o = vec3(lum * library_strength) * vec3(1.3, 0.5, 0.45) + vec3(0.03, 0.0, 0.0);
 	} else if (mode == 3) {
 		o = vec3(lum) * vec3(0.55, 1.1, 0.4) + vec3(0.02, 0.07, 0.0);
 	} else if (mode == 4) {
-		o = vec3(lum) * vec3(0.3, 0.5, 1.2) + vec3(0.0, 0.01, 0.05);
+		o = vec3(lum) * vec3(0.55, 0.75, 1.25) + vec3(0.0, 0.01, 0.05);
 		rim = 1.0;
 	} else if (mode == 5) {
-		float fl = 0.55 + 0.45 * step(0.5, rnd(floor(t * 9.0)));
-		o = vec3(lum * lum * 1.6) * vec3(1.4, 0.1, 0.08) * fl;
+		float fl = 0.82 + 0.18 * step(0.5, rnd(floor(t * 9.0)));
+		o = vec3(lum * 1.15) * vec3(1.35, 0.3, 0.25) * fl;
 	} else if (mode == 6) {
 		o = vec3(lum) * vec3(0.9, 0.4, 1.2) + vec3(0.04, 0.0, 0.07);
 	} else {
 		o = mix(vec3(lum), c, 0.3) * vec3(0.95, 0.95, 1.0);
 	}
-	float d = length(SCREEN_UV - vec2(0.5)) * 1.25;
-	o *= 1.0 - smoothstep(0.45, 1.0, d) * (rim > 0.5 ? 0.85 : 0.35);
+	// no dark vignette at the screen edges (user ask C2: no filter that makes things harder to see)
 	o += (rnd(uv.y * 91.0 + uv.x * 13.0 + t) - 0.5) * noise;
 	float tear = step(0.997 - boost * 0.06, rnd(floor(uv.y * 108.0) + tick * 3.1));
 	o = mix(o, vec3(0.9), tear * 0.5 * clamp(on, 0.0, 1.0));
