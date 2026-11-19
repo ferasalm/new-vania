@@ -86,7 +86,11 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 ## How you want the work done
 
 - Plain words; ask on taste, edge cases and critical choices, and explain design documents simply.
-- The best model writes tests and designs; cheap models write code; Haiku xhigh is good for code; no Opus helper
-  for small jobs. The locked tests are never tuned; a test failing twice in a row is reported first.
+- From 2026-11-20 (user's decision): the main Claude session builds everything itself, no briefs or cheap workers;
+  one task per chat; hand off at about 220k context. Task order: 1 rooms fix + merge, XP from kills, orb pull,
+  hint text; 2 attacks (decision 27) + wall jump; 3 menus + map; 4 machines, SEXTON-19, pistol, RECALL;
+  5 Pallbearer + werewolf; 6 Arnetria + voice; 7 remaining frames + pacing.
+- The locked tests are never tuned; a test failing twice in a row is reported first.
+- Every build hand-off lists, from this file, what is in it and what is NOT.
 - Before compaction or after each task, write the state and next steps to a file.
 - Every session ends with a dated exe and APK in `playable-history/`, never overwritten, plus a tag.
