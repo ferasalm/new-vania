@@ -1180,8 +1180,8 @@
     "help": "Damage when she touches a smoke cloud."
   },
   "moth_cloud_life": {
-    "value": 6.0,
-    "min": 2.0,
+    "value": 3.0,
+    "min": 1.0,
     "max": 12.0,
     "step": 0.5,
     "label": "Censer Moth: smoke lasts",
@@ -1220,7 +1220,7 @@
     "help": "Seconds the gust blows."
   },
   "moth_dive_warning": {
-    "value": 0.35,
+    "value": 0.6,
     "min": 0.3,
     "max": 1.5,
     "step": 0.05,
@@ -1228,7 +1228,7 @@
     "help": "Seconds of shrill fluttering before the ember dive."
   },
   "moth_dive_time": {
-    "value": 0.4,
+    "value": 1.1,
     "min": 0.2,
     "max": 2.5,
     "step": 0.1,
@@ -1244,7 +1244,7 @@
     "help": "Damage from a falling or burning ember."
   },
   "moth_ember_burn": {
-    "value": 0.4,
+    "value": 1.0,
     "min": 0.3,
     "max": 3.0,
     "step": 0.1,
@@ -1252,7 +1252,7 @@
     "help": "Seconds an ember keeps burning on the floor."
   },
   "moth_ember_every": {
-    "value": 0.09,
+    "value": 0.14,
     "min": 0.04,
     "max": 0.4,
     "step": 0.01,

@@ -1,12 +1,12 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# tests_quick/q2_moth_time.gd - proof for ledger N2 (handoff Q2).
-# Times one butterfly (moth) dive attack, phase by phase: the warning, the dive
-# itself, and the moment it is back up in the air after the strike. The whole
-# attack (warning -> strike -> backing away) must take about 0.8 s or less, and
-# the embers it drops must not keep burning on the floor long after the attack.
-# The moth's flying speed and damage are not touched by this check.
+# tests_quick/q2_moth_time.gd - proof for ledger N12 (redo of N2).
+# User: the butterfly's smoke object floats and then disappears too slowly. The smoke
+# clouds must be gone about 3 s after they are released, and the dive attack must be
+# back at its original timing (OpenCode had sped up the moth itself by mistake).
 # Run: godot --headless --path . res://tests_quick/q2_moth_time.tscn
 extends Node
+
+const OLD_DIVE := {"moth_dive_warning": 0.6, "moth_dive_time": 1.1, "moth_ember_burn": 1.0, "moth_ember_every": 0.14}
 
 var main: Node = null
 var passed := 0
@@ -33,63 +33,47 @@ func _run() -> void:
 	_check("she is in the room", p != null, "player=%s" % str(p))
 	if p == null:
 		return
-	# the church door is on the left, so she starts against the west wall: stand
-	# her in the open middle of the nave so the dive has air on every side
+	# the dive keeps its original numbers (the moth itself is not faster)
+	for k in OLD_DIVE:
+		_check("%s is back at %.2f" % [k, OLD_DIVE[k]], absf(_tv(k) - float(OLD_DIVE[k])) < 0.001,
+			"%s=%s" % [k, str(_tv(k))])
+	_check("smoke cloud life is 3.0 s", absf(_tv("moth_cloud_life") - 3.0) < 0.001,
+		"moth_cloud_life=%s" % str(_tv("moth_cloud_life")))
+	# stand her in the open middle of the nave and put a moth beside her
 	var room: Node2D = main.get("room")
-	var cx: float = room.size.x * 0.5
-	p.call("debug_set", {"pos": Vector2(cx, p.global_position.y)})
+	p.call("debug_set", {"pos": Vector2(room.size.x * 0.5, p.global_position.y)})
 	await _frames(15)
 	var feet: Vector2 = p.global_position
-	# spawn the moth exactly on the spot it would pick for the dive warning
-	# (her right side, 90 px over and 88 px up; setup() lifts it 30 more)
 	var moth := _spawn_moth(feet + Vector2(90.0, -58.0))
 	_check("a moth is spawned near her", moth != null and String(moth.get("kind")) == "moth",
 		"moth=%s" % str(moth))
 	if moth == null:
 		return
-	# the moth works her right side (side follows _count; 2 means right)
-	moth.set("_count", 2)
-	# force the dive attack (start_attack is the same hook the AI uses)
 	moth.set("_cool", 0.0)
-	moth.call("start_attack", "dive")
-	# walk the attack through its phases, counting 60 fps frames
-	var warn_frames := 0
-	var dive_frames := 0
-	var got_warn := false
-	var got_dive := false
-	var end_y := NAN
-	var player_y: float = p.global_position.y
-	for i in 480:
+	moth.call("start_attack", "veil")
+	# wait for the smoke to be released
+	var released := false
+	for i in 240:
 		await get_tree().physics_frame
-		var st: String = String(moth.get("state"))
-		if st == "warn_dive":
-			got_warn = true
-			warn_frames += 1
-		elif st == "dive":
-			got_dive = true
-			dive_frames += 1
-		elif st == "hover" and got_dive:
-			end_y = float((moth as Node2D).global_position.y)
+		if _cloud_count() > 0:
+			released = true
 			break
-	_check("the moth telegraphs (warn_dive) then dives", got_warn and got_dive,
-		"warn=%d dive=%d" % [warn_frames, dive_frames])
-	var warn_s := warn_frames / 60.0
-	var dive_s := (dive_frames + 1) / 60.0    # +1: the frame it leaves the dive belongs to the dive
-	var total_s := (warn_frames + dive_frames + 1) / 60.0
-	print("moth dive attack phases: warning %.2f s, dive %.2f s, whole attack %.2f s"
-		% [warn_s, dive_s, total_s])
-	_check("the dive ran its full length (not cut short by a wall)",
-		absf(dive_s - _tv("moth_dive_time")) <= 0.08,
-		"dive=%.2f s tuning=%.2f s" % [dive_s, _tv("moth_dive_time")])
-	_check("the whole dive attack (warning + strike + back away) is about 0.8 s or less",
-		total_s <= 0.85, "total=%.2f s (want <= 0.80)" % total_s)
-	_check("after the strike it is back up in the air, not down at the bottom",
-		end_y < player_y - 40.0, "moth_y=%.0f her_y=%.0f" % [end_y, player_y])
-	# the embers it dropped: how long do they stay on screen after the strike
-	var linger := await _embers_gone(240)
-	print("moth embers still on screen after the strike: %.2f s" % linger)
-	_check("no ember keeps burning long after the strike is over", linger <= 1.30,
-		"linger=%.2f s (want <= 1.30)" % linger)
+	_check("the veil attack releases smoke clouds", released, "clouds=%d" % _cloud_count())
+	if not released:
+		return
+	# how long until every cloud is gone
+	var frames := 0
+	var peak := _cloud_count()
+	for i in 600:
+		await get_tree().physics_frame
+		frames += 1
+		peak = maxi(peak, _cloud_count())
+		if _cloud_count() == 0:
+			break
+	var secs := frames / 60.0
+	print("moth smoke: %d clouds at most, all gone %.2f s after release" % [peak, secs])
+	_check("all smoke is gone about 3 s after release", secs <= 3.1 and secs >= 1.5,
+		"gone after %.2f s (want 1.5 to 3.1)" % secs)
 
 
 func _spawn_moth(at: Vector2) -> Node2D:
@@ -102,19 +86,10 @@ func _spawn_moth(at: Vector2) -> Node2D:
 	return moth
 
 
-func _embers_gone(max_frames: int) -> float:
-	# seconds from the end of the strike until no ember is left falling or burning
-	for i in max_frames:
-		await get_tree().physics_frame
-		if _ember_count() == 0:
-			return i / 60.0
-	return max_frames / 60.0
-
-
-func _ember_count() -> int:
+func _cloud_count() -> int:
 	var n := 0
-	for e in get_tree().get_nodes_in_group("e2_ember"):
-		if is_instance_valid(e):
+	for c in get_tree().get_nodes_in_group("e2_cloud"):
+		if is_instance_valid(c) and not c.is_queued_for_deletion():
 			n += 1
 	return n
 
@@ -138,11 +113,9 @@ func _r_seed() -> void:
 		r.debug_seed(7)
 
 
-func _tv(key: String, alt := "") -> float:
+func _tv(key: String) -> float:
 	if T.data.has(key):
 		return T.v(key)
-	if alt != "" and T.data.has(alt):
-		return T.v(alt)
 	return NAN
 
 

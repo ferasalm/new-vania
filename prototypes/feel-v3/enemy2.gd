@@ -1528,7 +1528,8 @@ class Cloud extends Node2D:
 				player.take_hit(dmg, global_position.x)
 
 	func _draw() -> void:
-		var fade := clampf(life / 1.5, 0.0, 1.0) * clampf(_t / 0.4, 0.0, 1.0)
+		var fade_len := minf(1.5, max_life * 0.5)    # a short-lived cloud still fades smoothly
+		var fade := clampf(life / fade_len, 0.0, 1.0) * clampf(_t / 0.4, 0.0, 1.0)
 		for i in 7:
 			var a := _seed + i * 0.9 + _t * 0.25
 			var o := Vector2(cos(a), sin(a * 1.3)) * r * 0.45
