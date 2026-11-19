@@ -12,6 +12,9 @@ const CYAN := Color(0.3, 1.0, 0.95)
 const ICE := Color(0.82, 0.96, 1.0)
 const VIOLET := Color(0.72, 0.42, 1.0)
 const EMBER := Color(1.0, 0.72, 0.32)
+# skin B (design/skins.md): her glow turns red, and violet turns crimson
+const RED := Color(1.0, 0.23, 0.31)
+const CRIMSON := Color(0.78, 0.16, 0.36)
 
 # particle: {p, v, life, max, col, size, streak, drag, grav, shrink}
 var parts: Array = []
@@ -27,6 +30,16 @@ func _init() -> void:
 	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	material = m
 	z_index = 6
+
+
+## Her main glow for the current skin: cyan (skin A) or red (skin B, tuning key pandora_skin = 1).
+static func her() -> Color:
+	return RED if T.v("pandora_skin") >= 0.5 else CYAN
+
+
+## Her second glow for the current skin: violet (skin A) or crimson (skin B).
+static func her_alt() -> Color:
+	return CRIMSON if T.v("pandora_skin") >= 0.5 else VIOLET
 
 
 static func _amount() -> float:
@@ -242,12 +255,12 @@ static func flash(col: Color, alpha: float, life: float) -> void:
 
 ## Backdash start: she lights up, the ground cracks with light behind her push.
 static func backdash_start(feet: Vector2, dash_dir: int, spr: AnimatedSprite2D) -> void:
-	charge(spr, CYAN * 0.9, 0.14)
-	ring(feet + Vector2(-dash_dir * 2.0, 0), 2.0, 22.0, 0.3, CYAN, 0.22, 2.0)
-	burst(feet + Vector2(-dash_dir * 3.0, -1), 10, CYAN, PI if dash_dir > 0 else 0.0, 0.5, Vector2(70, 160), 0.3, 120.0, 1.0, 4.0)
+	charge(spr, her() * 0.9, 0.14)
+	ring(feet + Vector2(-dash_dir * 2.0, 0), 2.0, 22.0, 0.3, her(), 0.22, 2.0)
+	burst(feet + Vector2(-dash_dir * 3.0, -1), 10, her(), PI if dash_dir > 0 else 0.0, 0.5, Vector2(70, 160), 0.3, 120.0, 1.0, 4.0)
 	burst(feet + Vector2(0, -1), 6, ICE, -PI / 2.0, 1.2, Vector2(20, 50), 0.35, 60.0, 2.0)
 	streaks(feet, dash_dir, 10, ICE, 40.0)
-	floor_trail(feet, dash_dir, CYAN)
+	floor_trail(feet, dash_dir, her())
 	ghost(spr, Color(ICE.r, ICE.g, ICE.b, 1.0), 0.35)
 
 
@@ -264,15 +277,15 @@ static func floor_trail(feet: Vector2, dir: int, col: Color) -> void:
 ## Backdash end: her heels skid and spit sparks.
 static func backdash_end(feet: Vector2, dash_dir: int) -> void:
 	burst(feet + Vector2(dash_dir * 3.0, -1), 8, EMBER, -PI / 2.0 + dash_dir * 1.1, 0.35, Vector2(60, 120), 0.28, 300.0, 1.0, 3.0)
-	ring(feet, 2.0, 12.0, 0.2, VIOLET, 0.25, 1.0)
+	ring(feet, 2.0, 12.0, 0.2, her_alt(), 0.25, 1.0)
 
 
 ## Slide start: a line of light along the floor.
 static func slide_start(feet: Vector2, dir: int, spr: AnimatedSprite2D) -> void:
 	charge(spr, ICE * 0.7, 0.12)
-	ring(feet, 4.0, 30.0, 0.28, CYAN, 0.1, 2.0)
+	ring(feet, 4.0, 30.0, 0.28, her(), 0.1, 2.0)
 	burst(feet + Vector2(-dir * 4.0, -1), 12, ICE, -PI / 2.0 - dir * 0.9, 0.5, Vector2(40, 110), 0.35, 160.0, 2.0)
-	floor_trail(feet, dir, CYAN)
+	floor_trail(feet, dir, her())
 	ghost(spr, Color(ICE.r, ICE.g, ICE.b, 1.0), 0.3)
 
 
@@ -280,53 +293,53 @@ static func slide_start(feet: Vector2, dir: int, spr: AnimatedSprite2D) -> void:
 static func slide_tick(feet: Vector2, dir: int) -> void:
 	burst(feet + Vector2(dir * 10.0, -1), 5, EMBER, -PI / 2.0 - dir * 1.25, 0.3, Vector2(70, 140), 0.25, 380.0, 1.0, 3.0)
 	burst(feet + Vector2(-dir * 6.0, -2), 2, Color(0.55, 0.6, 0.75), -PI / 2.0 - dir * 0.6, 0.6, Vector2(10, 30), 0.4, -10.0, 2.0)
-	streaks(feet, dir, 3, CYAN, 16.0)
-	floor_trail(feet, -dir, CYAN)
+	streaks(feet, dir, 3, her(), 16.0)
+	floor_trail(feet, -dir, her())
 
 
 ## Dirge special wind-up: light gathers into her hand.
 static func cast_gather(hand: Vector2, life: float) -> void:
-	gather(hand, 30.0, 28, CYAN, life)
-	gather(hand, 18.0, 12, VIOLET, life * 0.8)
-	ring(hand, 30.0, 3.0, life, CYAN, 1.0, 2.0)
-	ring(hand, 18.0, 2.0, life * 0.7, VIOLET, 1.0, 1.0)
+	gather(hand, 30.0, 28, her(), life)
+	gather(hand, 18.0, 12, her_alt(), life * 0.8)
+	ring(hand, 30.0, 3.0, life, her(), 1.0, 2.0)
+	ring(hand, 18.0, 2.0, life * 0.7, her_alt(), 1.0, 1.0)
 
 
 ## Dirge special release: burst, ring, flash.
 static func cast_release(hand: Vector2, dir: int) -> void:
-	ring(hand, 2.0, 26.0, 0.32, CYAN, 1.0, 2.0)
+	ring(hand, 2.0, 26.0, 0.32, her(), 1.0, 2.0)
 	ring(hand, 2.0, 14.0, 0.22, ICE, 1.0, 1.0)
-	burst(hand, 16, CYAN, 0.0 if dir > 0 else PI, 0.7, Vector2(80, 200), 0.35, 0.0, 1.0, 5.0, 4.0)
-	flash(CYAN, 0.22, 0.14)
+	burst(hand, 16, her(), 0.0 if dir > 0 else PI, 0.7, Vector2(80, 200), 0.35, 0.0, 1.0, 5.0, 4.0)
+	flash(her(), 0.22, 0.14)
 	if G.main != null:
 		G.main.shake(1.5, 0.12)
 
 
 ## The flying wave sheds light.
 static func wave_trail(at: Vector2, dir: int) -> void:
-	burst(at + Vector2(-dir * 4.0, randf_range(-10, 10)), 2, CYAN, PI if dir > 0 else 0.0, 0.3, Vector2(30, 70), 0.3, 0.0, 1.0, 3.0)
+	burst(at + Vector2(-dir * 4.0, randf_range(-10, 10)), 2, her(), PI if dir > 0 else 0.0, 0.3, Vector2(30, 70), 0.3, 0.0, 1.0, 3.0)
 
 
 ## Requiem start: the seal opens under her, light gathers.
 static func requiem_start(feet: Vector2, life: float, spr: AnimatedSprite2D) -> void:
-	charge(spr, VIOLET * 0.8, 0.2)
-	rune_circle(feet, 30.0, life, VIOLET, 2.4)
-	ring(feet, 4.0, 34.0, 0.4, CYAN, 0.32, 2.0)
-	gather(feet + Vector2(0, -24), 30.0, 14, VIOLET, 0.25)
+	charge(spr, her_alt() * 0.8, 0.2)
+	rune_circle(feet, 30.0, life, her_alt(), 2.4)
+	ring(feet, 4.0, 34.0, 0.4, her(), 0.32, 2.0)
+	gather(feet + Vector2(0, -24), 30.0, 14, her_alt(), 0.25)
 
 
 ## Requiem, every few frames: sparks thrown off the scythe tip.
 ## `a` = the direction the tip is travelling (radians, world space).
 static func requiem_tick(tip: Vector2, a: float) -> void:
-	burst(tip, 3, CYAN, a, 0.4, Vector2(40, 110), 0.3, 40.0, 1.0, 4.0)
-	burst(tip, 1, VIOLET, a + PI, 0.6, Vector2(10, 30), 0.4, 0.0, 2.0)
+	burst(tip, 3, her(), a, 0.4, Vector2(40, 110), 0.3, 40.0, 1.0, 4.0)
+	burst(tip, 1, her_alt(), a + PI, 0.6, Vector2(10, 30), 0.4, 0.0, 2.0)
 
 
 ## Requiem end: the last turn bursts out.
 static func requiem_end(feet: Vector2) -> void:
-	ring(feet + Vector2(0, -24), 6.0, 46.0, 0.4, VIOLET, 1.0, 2.0)
-	ring(feet + Vector2(0, -24), 4.0, 32.0, 0.3, CYAN, 1.0, 1.0)
-	burst(feet + Vector2(0, -24), 22, CYAN, 0.0, PI, Vector2(60, 170), 0.45, 60.0, 1.0, 4.0, 3.0)
-	flash(VIOLET, 0.2, 0.18)
+	ring(feet + Vector2(0, -24), 6.0, 46.0, 0.4, her_alt(), 1.0, 2.0)
+	ring(feet + Vector2(0, -24), 4.0, 32.0, 0.3, her(), 1.0, 1.0)
+	burst(feet + Vector2(0, -24), 22, her(), 0.0, PI, Vector2(60, 170), 0.45, 60.0, 1.0, 4.0, 3.0)
+	flash(her_alt(), 0.2, 0.18)
 	if G.main != null:
 		G.main.shake(2.5, 0.18)

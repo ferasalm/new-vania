@@ -1,0 +1,21 @@
+GIMP Palette
+Name: Pandora B - oxblood and bone (optional skin)
+Columns: 8
+# 16 colours, index order = role order; skin B maps index i of A to index i of B (red glow).
+# Index 0 (see-through) is not listed.
+ 18  10  12	outline
+109  63  58	skin shade
+185 126 102	skin base
+236 199 164	skin light
+138 106  60	hair shade
+207 166  94	hair base
+243 220 154	hair light
+ 42  15  22	suit shade
+ 92  29  42	suit base
+154  51  66	suit light
+255  59  78	glow base (eyes, seams, strikes)
+255 184 192	glow bright
+ 58  52  54	steel dark
+154 144 136	steel light
+ 63 167 160	accent (small trim)
+255 248 232	highlight (sparkle)
