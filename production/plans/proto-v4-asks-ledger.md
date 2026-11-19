@@ -102,8 +102,8 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | # | Ask (user, short) | Status | Who / where |
 |---|---|---|---|
 | N1 | MP orbs pulled to her automatically ("I already told you, twice") | done | OpenCode Q1 (23268bf): every orb pops out then flies to her from anywhere, speeds up, collected even at full MP; dead orb_magnet knob removed; q1_orb_pull 5/5 |
-| N2 | Butterfly attack lingers too long | done | OpenCode Q2 (24e4008): dive attack 1.70 s -&gt; 0.77 s (warning 0.35, dive 0.4, ember burn 0.4, new ember-every 0.09); q2_moth_time 7/7 |
-| N3 | Remove the dematerializing weapon frame at the end of the attack (clashes with the level slash) | done | OpenCode Q3 (6134930): sword breaks into sparks where the follow-through left it, no blade on the last frame, for every keyed swing; appear and swoosh kept |
+| N2 | Butterfly attack lingers too long | redone, see N12 (user: OpenCode sped up the dive; the smoke cloud was the problem) | OpenCode Q2 (24e4008): dive attack 1.70 s -&gt; 0.77 s (warning 0.35, dive 0.4, ember burn 0.4, new ember-every 0.09); q2_moth_time 7/7 |
+| N3 | Remove the dematerializing weapon frame at the end of the attack (clashes with the level slash) | redone, see N14 (user: nothing changed; wind-up gather and end ghost still look like the old vertical swing) | OpenCode Q3 (6134930): sword breaks into sparks where the follow-through left it, no blade on the last frame, for every keyed swing; appear and swoosh kept |
 | N4 | Start menu entries cropped at the bottom; Equipment and Items menus unreachable | done | OpenCode Q4 (146504b): menu.gd built (5 tabs, keyboard/pad/touch, scroll-into-view); ITEMS use + EQUIPMENT fit/unequip work; overlay shortcuts 3 columns, nothing cropped; t_interact_ui 23/36 -&gt; 34/39, every menu check green |
 | N5 | Stretched backdrops; rooms balanced, not too big | done (backdrops) | OpenCode Q5 (2e27fdc): walls tile at real size, never stretched; room sizes stay with B1 |
 | N6 | Library and lab platforms too hard; top platform traps her under the ceiling | done (stop-gap) | OpenCode Q6 (5de277a): headroom 44 px rule met (top platforms now 64 px), every climb step 48 px or less (max jump 67.7, 80% = 54.2); roomreach all 29 rooms ok, roomcheck clean, q6_audit zero violations |
@@ -113,3 +113,17 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 | N10 | Hair and scarf flow behind her in the attacks (fix the last frames, add frames) | planned | Claude B2 |
 | N11 | Fix the wall latch sprites | planned | Claude B2 |
 Hand-offs: production/session-state/handoff-2026-11-19-opencode-quick.md and handoff-2026-11-19-next.md.
+
+## 2026-11-19 late asks (after playing the quick-fixes build)
+| # | Ask (user, short) | Status | Who / where |
+|---|---|---|---|
+| N12 | Butterfly: the smoke object floats too long; make the smoke fade sooner, not the moth faster | in progress | Claude B1 chat: smoke 3.0 s (was 6), dive back to its old timing |
+| N13 | Scrap flies to her like MP orbs; MP orbs and scrap wait on the floor when her bar is full, then fly to her | in progress | Claude B1 chat |
+| N14 | Remove the weapon wind-up (materialize) and end (dematerialize) frames that look like the old vertical swing; scythe head lies flat | in progress | Claude B1 chat |
+| N15 | In-game screenshot tool: mark it, add a comment, written to a text file for Claude to read (F4) | planned | Claude B1 chat |
+| N16 | Menu MAP tab: draw the map and let her move around it | planned | next Claude chat (task 3 menus) |
+| N17 | Teleport to areas from the map, for testing | planned | next Claude chat (partly covered by the F3 map builder) |
+| N18 | Equipment tab: a side list of the gear she can wear and choose from | planned | next Claude chat |
+| N19 | Option to reset level (progression) points | planned | next Claude chat |
+| N20 | Remove magic as a stat: MP and magic attacks do not grow with levels; magic attacks scale with ATK | waiting on user: ruling needed; it conflicts with locked checks (t_data.gd 12-13 and 155-156, t_rpg.gd 184-188) | next Claude chat |
+| N21 | Show every stat the RPG GDDs decided (the menu shows only some) | planned | next Claude chat |
