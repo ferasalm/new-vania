@@ -47,5 +47,29 @@
     "desc": "Restraint straps from the kennel. Every buckle has a socket for spare parts.",
     "icon": "res://assets/items/tether_06.png",
     "effects": {"scrap_gain_mult_key": "tether_scrap"}
+  },
+  "chain_collar": {
+    "name": "CHAIN COLLAR",
+    "slot": "harness",
+    "desc": "The hound's collar, still warm. The links sit like ribs across her chest.",
+    "icon": "res://assets/items/chain_collar.png",
+    "effects": {"def_add_key": "chain_collar_def"},
+    "rare": true
+  },
+  "saint_rib": {
+    "name": "SAINT RIB",
+    "slot": "harness",
+    "desc": "A curved plate from the crab's shell. It was a saint once, or wore one.",
+    "icon": "res://assets/items/saint_rib.png",
+    "effects": {"def_add_key": "saint_rib_def"},
+    "rare": true
+  },
+  "steel_nib": {
+    "name": "STEEL NIB",
+    "slot": "module",
+    "desc": "The Scribe's pen tip, snapped off. It writes in a hand that is not hers.",
+    "icon": "res://assets/items/steel_nib.png",
+    "effects": {"atk_add_key": "steel_nib_damage"},
+    "rare": true
   }
 }

@@ -1,0 +1,59 @@
+{
+  "sfx": {
+    "pickup_chime": {
+      "file": "sfx/pickup/soft_chime.wav",
+      "volume_db": -4.0,
+      "pitch_random": 0.03,
+      "options": [
+        {
+          "file": "sfx/pickup/soft_chime.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "pickup_show": {
+      "file": "sfx/special/magic_rise.ogg",
+      "volume_db": -3.0,
+      "pitch_random": 0.02,
+      "options": [
+        {
+          "file": "sfx/special/magic_rise.ogg",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "pickup_equip": {
+      "file": "sfx/door/switch_latch.wav",
+      "volume_db": -5.0,
+      "pitch_random": 0.04,
+      "options": [
+        {
+          "file": "sfx/door/switch_latch.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "repair_tick": {
+      "file": "sfx/hit/made_tick.wav",
+      "volume_db": -8.0,
+      "pitch_random": 0.06,
+      "options": [
+        {
+          "file": "sfx/hit/made_tick.wav",
+          "gain_db": 0.0
+        }
+      ]
+    },
+    "pickup_refuse": {
+      "file": "sfx/no_energy/dull_click.wav",
+      "volume_db": -5.0,
+      "pitch_random": 0.0,
+      "options": [
+        {
+          "file": "sfx/no_energy/dull_click.wav",
+          "gain_db": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "pickup_reach": {
+    "value": 24.0,
+    "min": 12.0,
+    "max": 48.0,
+    "step": 2.0,
+    "label": "Pickup: reach",
+    "help": "How close she must stand to take an item with Up. 24 is about one and a half tiles."
+  },
+  "pickup_lock": {
+    "value": 0.5,
+    "min": 0.0,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Pickup card: cannot close for",
+    "help": "Stops a mashed button from skipping the card. The first card holds this long."
+  },
+  "special_pickup_time": {
+    "value": 1.6,
+    "min": 0.6,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "Special pickup: show length",
+    "help": "How long the light show runs before a weapon, ability or gear card opens."
+  },
+  "input_swallow": {
+    "value": 0.15,
+    "min": 0.0,
+    "max": 0.5,
+    "step": 0.05,
+    "label": "After a card: ignored input",
+    "help": "Seconds the key that closed a card is ignored, so she does not swing or jump."
+  },
+  "drop_life": {
+    "value": 12.0,
+    "min": 4.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Drops: seconds on the floor",
+    "help": "How long an item, orb or scrap waits before it fades. Blinks the last 3 seconds."
+  },
+  "drop_suture_weak": {
+    "value": 0.04,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.01,
+    "label": "Drops: Suture from weak enemies",
+    "help": "The chance a weak enemy leaves a Suture."
+  },
+  "drop_suture_other": {
+    "value": 0.1,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.01,
+    "label": "Drops: Suture from other enemies",
+    "help": "The chance any other enemy leaves a Suture."
+  },
+  "orb_magnet": {
+    "value": 0.0,
+    "min": 0.0,
+    "max": 64.0,
+    "step": 4.0,
+    "label": "Soul orb: pull distance",
+    "help": "0 means an orb is taken only by touch. Higher numbers pull it toward her."
+  },
+  "soul_orb_chance_weak": {
+    "value": 0.6,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Soul orb: chance from weak enemies",
+    "help": "Weak enemies drop one this often. Every other enemy always drops one."
+  },
+  "scrap_max": {
+    "value": 100.0,
+    "min": 20.0,
+    "max": 300.0,
+    "step": 10.0,
+    "label": "Scrap: gauge size",
+    "help": "The most scrap she can carry."
+  },
+  "scrap_per_pickup": {
+    "value": 10.0,
+    "min": 1.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "Scrap: per pickup",
+    "help": "How much one heap of machine scrap adds to the gauge."
+  },
+  "scrap_drop_base": {
+    "value": 0.1,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.01,
+    "label": "Scrap: chance at full health",
+    "help": "The base chance that a kill leaves machine scrap."
+  },
+  "scrap_drop_low": {
+    "value": 0.35,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.01,
+    "label": "Scrap: extra chance when hurt",
+    "help": "Added to the base chance as her health falls. At 10 percent health the chance is base plus 0.9 times this."
+  },
+  "repair_hold": {
+    "value": 0.6,
+    "min": 0.1,
+    "max": 2.0,
+    "step": 0.05,
+    "label": "Self-repair: hold time",
+    "help": "How long she holds still before the repair starts."
+  },
+  "repair_rate": {
+    "value": 20.0,
+    "min": 5.0,
+    "max": 80.0,
+    "step": 5.0,
+    "label": "Self-repair: health per second",
+    "help": "How fast she heals while the repair runs."
+  },
+  "repair_cost": {
+    "value": 1.0,
+    "min": 0.2,
+    "max": 5.0,
+    "step": 0.1,
+    "label": "Self-repair: scrap per health",
+    "help": "How much scrap one point of health costs."
+  },
+  "heal_hold": {
+    "value": 0.15,
+    "min": 0.0,
+    "max": 0.5,
+    "step": 0.05,
+    "label": "Touch: hold before a take",
+    "help": "A short guard so a passing finger does not take a touch item by accident."
+  },
+  "rare_chance_weak": {
+    "value": 0.03,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: weak enemies",
+    "help": "The chance a weak enemy leaves its rare item."
+  },
+  "rare_chance_trolley": {
+    "value": 0.04,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: trolley",
+    "help": "The chance a trolley leaves its rare item."
+  },
+  "rare_chance_choir": {
+    "value": 0.04,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: Hollow Choir",
+    "help": "The chance the Hollow Choir leaves its rare item."
+  },
+  "rare_chance_moth": {
+    "value": 0.04,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: Censer Moth",
+    "help": "The chance the Censer Moth leaves its rare item."
+  },
+  "rare_chance_scribe": {
+    "value": 0.04,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: Needle Scribe",
+    "help": "The chance the Needle Scribe leaves its rare item."
+  },
+  "rare_chance_crab": {
+    "value": 0.05,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: Reliquary Crab",
+    "help": "The chance the Reliquary Crab leaves its rare item."
+  },
+  "rare_chance_warden": {
+    "value": 0.05,
+    "min": 0.0,
+    "max": 0.1,
+    "step": 0.005,
+    "label": "Rare drop: Ossuary Warden",
+    "help": "The chance the Ossuary Warden leaves its rare item."
+  },
+  "rare_chance_strong": {
+    "value": 0.02,
+    "min": 0.0,
+    "max": 0.03,
+    "step": 0.005,
+    "label": "Rare drop: strong enemies",
+    "help": "The chance a strong enemy leaves its rare item."
+  },
+  "rare_respawn_mult": {
+    "value": 0.5,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.1,
+    "label": "Rare drop: respawn multiplier",
+    "help": "A returned enemy rolls its rare drop at this fraction of the chance."
+  },
+  "rare_stack_max": {
+    "value": 3.0,
+    "min": 1.0,
+    "max": 9.0,
+    "step": 1.0,
+    "label": "Rare items: stack cap",
+    "help": "The most of one rare consumable she can carry."
+  },
+  "rare_life": {
+    "value": 20.0,
+    "min": 5.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Rare drops: seconds on the floor",
+    "help": "How long a rare drop waits before it fades."
+  },
+  "static_shard_mp": {
+    "value": 30.0,
+    "min": 5.0,
+    "max": 100.0,
+    "step": 5.0,
+    "label": "Static Shard: MP",
+    "help": "How much MP a Static Shard restores."
+  },
+  "ash_poultice_hp": {
+    "value": 20.0,
+    "min": 5.0,
+    "max": 100.0,
+    "step": 5.0,
+    "label": "Ash Poultice: HP",
+    "help": "How much HP an Ash Poultice heals."
+  },
+  "grave_salt_hp": {
+    "value": 30.0,
+    "min": 5.0,
+    "max": 100.0,
+    "step": 5.0,
+    "label": "Grave Salt: HP",
+    "help": "How much HP Grave Salt heals."
+  },
+  "bile_flask_damage": {
+    "value": 3.0,
+    "min": 1.0,
+    "max": 60.0,
+    "step": 1.0,
+    "label": "Bile Flask: damage",
+    "help": "Extra swing damage while the Bile Flask lasts."
+  },
+  "bile_flask_time": {
+    "value": 20.0,
+    "min": 5.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Bile Flask: seconds",
+    "help": "How long the Bile Flask lasts."
+  },
+  "trolley_bolts_scrap": {
+    "value": 5.0,
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "label": "Trolley Bolts: scrap",
+    "help": "How much scrap Trolley Bolts adds at once."
+  },
+  "hushed_bell_cut": {
+    "value": 0.25,
+    "min": 0.05,
+    "max": 0.6,
+    "step": 0.05,
+    "label": "Hushed Bell: damage cut",
+    "help": "The fraction of incoming damage the Hushed Bell removes."
+  },
+  "hushed_bell_time": {
+    "value": 15.0,
+    "min": 5.0,
+    "max": 40.0,
+    "step": 1.0,
+    "label": "Hushed Bell: seconds",
+    "help": "How long the Hushed Bell lasts."
+  },
+  "steel_nib_damage": {
+    "value": 2.0,
+    "min": 0.0,
+    "max": 8.0,
+    "step": 1.0,
+    "label": "Steel Nib: damage",
+    "help": "Extra damage while the Steel Nib module is fitted."
+  },
+  "chain_collar_def": {
+    "value": 2.0,
+    "min": 0.0,
+    "max": 8.0,
+    "step": 1.0,
+    "label": "Chain Collar: defence",
+    "help": "Extra defence while the Chain Collar harness is fitted."
+  },
+  "saint_rib_def": {
+    "value": 3.0,
+    "min": 0.0,
+    "max": 8.0,
+    "step": 1.0,
+    "label": "Saint Rib: defence",
+    "help": "Extra defence while the Saint Rib harness is fitted."
+  },
+  "tank_heart_hp": {
+    "value": 20.0,
+    "min": 5.0,
+    "max": 50.0,
+    "step": 5.0,
+    "label": "Tank Heart: max HP",
+    "help": "How much max HP a Tank Heart adds for good."
+  },
+  "tank_heart_max": {
+    "value": 2.0,
+    "min": 1.0,
+    "max": 5.0,
+    "step": 1.0,
+    "label": "Tank Heart: cap",
+    "help": "The most Tank Hearts she can hold."
+  }
+}

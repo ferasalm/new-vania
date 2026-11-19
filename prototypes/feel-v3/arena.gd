@@ -122,67 +122,48 @@ func debug_win() -> void:
 	down(boss, boss.global_position)
 
 
-func place_relic(room: Node2D, world: Node2D) -> void:
-	# the wall-latch relic: a slowly bobbing cyan claw-mark she walks into
+func place_relic(room: Node2D, _world: Node2D) -> void:
+	# the wall-latch relic (GRIP SERVOS) is a placed pickup owned by the loot path;
+	# it waits for ever, because it is placed, not dropped
 	if not room.spawns.has("A"):
 		return
-	_relic = Relic.new()
-	_relic.position = room.spawns["A"] + Vector2(0, -22)
-	_relic.z_index = 6
-	world.add_child(_relic)
+	_relic = G.main.loot.spawn_pickup("wall_jump", room.spawns["A"] + Vector2(0, -12), {"life": 100000.0})
 
 
 func _relic_watch(player: Node2D) -> void:
+	# walking into it still takes it, without a card (smoke keeps this old path)
 	if _relic == null or not is_instance_valid(_relic):
 		return
-	if _relic.position.distance_to(player.global_position + Vector2(0, -18)) < 18.0:
-		_relic.queue_free()
-		_relic = null
-		G.main.has_latch = true
-		Sfx.play("pickup", 0.6)
-		Sfx.play("special", 1.3)
-		G.main.ring_fx(player.global_position + Vector2(0, -20), 60.0, Color(0.5, 1.0, 1.0))
-		G.main.hud.toast("GRIP SERVOS ONLINE  -  jump at a wall and hold toward it to cling, jump again to kick off", 7.0)
+	if _relic.global_position.distance_to(player.global_position + Vector2(0, -18)) < 18.0:
+		if bool(_relic.call("take", true)):
+			_relic = null
+			Sfx.play("pickup", 0.6)
+			Sfx.play("special", 1.3)
+			G.main.ring_fx(player.global_position + Vector2(0, -20), 60.0, Color(0.5, 1.0, 1.0))
 
 
 func drop_scythe(at: Vector2) -> void:
 	# the scythe falls from where the body was and floats a little above the floor
 	var room: Node2D = G.main.room
-	var sc := Props.Scythe.new()
 	var floor_y: float = room.spawns["O"].y if room.spawns.has("O") else room.size.y - 32.0
-	sc.setup(at, floor_y - 26.0)
-	G.main.world.add_child(sc)
-	_scythe = sc
+	_scythe = G.main.loot.spawn_pickup("elegy_013", Vector2(at.x, floor_y - 26.0), {"life": 100000.0})
 
 
 func _scythe_watch(player: Node2D) -> void:
-	if _scythe == null or not is_instance_valid(_scythe):
+	# touching it still gives ELEGY-013 without a card; Up opens the new card path
+	if _scythe == null:
+		return
+	if not is_instance_valid(_scythe):
+		_scythe = null
 		return
 	if _scythe.global_position.distance_to(player.global_position + Vector2(0, -18)) < 22.0:
-		_scythe.queue_free()
-		_scythe = null
-		G.main.has_elegy = true
-		Sfx.play("pickup", 0.6)
-		Sfx.play("special", 1.3)
-		Sfx.play("pickup", 1.0)
-		G.main.ring_fx(player.global_position + Vector2(0, -20), 70.0, Color(0.5, 1.0, 1.0))
-		G.main.hud.toast("ELEGY-013 - the Pallbearer's scythe is yours. E (or SWAP) to change weapon.", 7.0)
-		if G.main.touch != null:
-			G.main.touch.queue_redraw()
+		if bool(_scythe.call("take", true)):
+			_scythe = null
+			Sfx.play("pickup", 0.6)
+			Sfx.play("special", 1.3)
+			Sfx.play("pickup", 1.0)
+			G.main.ring_fx(player.global_position + Vector2(0, -20), 70.0, Color(0.5, 1.0, 1.0))
+			G.main.hud.toast("ELEGY-013 - the Pallbearer's scythe is yours.", 7.0)
+			if G.main.touch != null:
+				G.main.touch.queue_redraw()
 
-
-# The wall-latch relic: a slowly bobbing cyan claw-mark she walks into.
-class Relic extends Node2D:
-	var _t := 0.0
-
-	func _process(delta: float) -> void:
-		_t += delta
-		queue_redraw()
-
-	func _draw() -> void:
-		var y := sin(_t * 3.0) * 2.0
-		draw_circle(Vector2(0, y), 9.0 + sin(_t * 5.0), Color(0.3, 1.0, 1.0, 0.18))
-		draw_colored_polygon(PackedVector2Array([Vector2(0, y - 7), Vector2(6, y), Vector2(0, y + 7), Vector2(-6, y)]), Color(0.1, 0.25, 0.3))
-		draw_polyline(PackedVector2Array([Vector2(0, y - 7), Vector2(6, y), Vector2(0, y + 7), Vector2(-6, y), Vector2(0, y - 7)]), Color(0.6, 1.0, 1.0), 1.0)
-		for i in 3:
-			draw_line(Vector2(-3 + i * 3, y - 3), Vector2(-4 + i * 3, y + 3), Color(0.8, 1.0, 1.0), 1.0)
