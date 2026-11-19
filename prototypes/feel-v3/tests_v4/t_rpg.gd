@@ -187,8 +187,13 @@ func _run() -> void:
 	_check("spend('magic') gives +6 MP and +8 percent special",
 		absf(mp - (maxmp + _tv("magic_mp", "mag_mp"))) < 0.01 and absf(spc - (100.0 + _tv("magic_special", "mag_special"))) < 0.01,
 		"mp=%.0f spc=%.0f" % [mp, spc])
+	# spend every remaining point, then the next spend must be refused
+	var drain := 0
+	while int(r.get("points")) > 0 and drain < 40:
+		r.call("spend", "vigor")
+		drain += 1
 	var spent_all: bool = not bool(r.call("spend", "vigor"))
-	_check("spend with no points left is refused", spent_all, "spend returned true with 0 points")
+	_check("spend with no points left is refused", spent_all, "points_left=%d" % int(r.get("points")))
 
 	# --- AUTO ------------------------------------------------------------------
 	_reset_all()

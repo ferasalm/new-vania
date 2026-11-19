@@ -167,22 +167,7 @@ func _run() -> void:
 		_check("R exists for the damage checks", false, "no /root/R autoload")
 		return
 
-	var trap1: float = float(r.call("taken", 40.0, "trap"))
-	var trap_def := NAN
-	# give her DEF through points, then check the trap is still unchanged
-	if r.has_method("debug_set"):
-		r.call("debug_set", {"points": 8})
-	var spent := false
-	if r.has_method("spend"):
-		spent = bool(r.call("spend", "guard"))
-		if spent and r.has_method("spend"):
-			r.call("spend", "guard")
-	var trap2: float = float(r.call("taken", 40.0, "trap"))
-	if spent:
-		trap_def = trap2
-	_check("a trap takes its raw number whatever her DEF", trap1 == 40.0 and (not spent or trap_def == 40.0),
-		"raw=%.0f with_def=%.0f (def applied=%s)" % [trap1, trap_def, str(spent)])
-
+	# boss and ordinary-enemy mults at her base sheet (DEF 0, before any points are spent)
 	var boss_hit: float = float(r.call("taken", 16.0, "boss"))
 	_check("a boss hit uses mult 1.0", boss_hit == 16.0, "taken=%.0f" % boss_hit)
 	var ghost_hit: float = float(r.call("taken", 7.0, "ghost"))
@@ -195,3 +180,19 @@ func _run() -> void:
 		hd_special = int(r.call("hit_damage", 30.0, true))
 	_check("hit_damage(10, false) is 10 and (30, true) is 30 at her base sheet",
 		hd_plain == 10 and hd_special == 30, "plain=%d special=%d" % [hd_plain, hd_special])
+
+	# a trap ignores DEF: give her DEF through points, then the trap is still unchanged
+	var trap1: float = float(r.call("taken", 40.0, "trap"))
+	var trap_def := NAN
+	if r.has_method("debug_set"):
+		r.call("debug_set", {"points": 8})
+	var spent := false
+	if r.has_method("spend"):
+		spent = bool(r.call("spend", "guard"))
+		if spent and r.has_method("spend"):
+			r.call("spend", "guard")
+	var trap2: float = float(r.call("taken", 40.0, "trap"))
+	if spent:
+		trap_def = trap2
+	_check("a trap takes its raw number whatever her DEF", trap1 == 40.0 and (not spent or trap_def == 40.0),
+		"raw=%.0f with_def=%.0f (def applied=%s)" % [trap1, trap_def, str(spent)])
