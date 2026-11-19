@@ -97,3 +97,19 @@ from this file.** Status words: done | in progress | planned | not planned | wai
 - Every build hand-off lists, from this file, what is in it and what is NOT.
 - Before compaction or after each task, write the state and next steps to a file.
 - Every session ends with a dated exe and APK in `playable-history/`, never overwritten, plus a tag.
+
+## 2026-11-19 evening asks (after the level-slash build)
+| # | Ask (user, short) | Status | Who / where |
+|---|---|---|---|
+| N1 | MP orbs pulled to her automatically ("I already told you, twice") | planned | OpenCode Q1 |
+| N2 | Butterfly attack lingers too long | planned | OpenCode Q2 |
+| N3 | Remove the dematerializing weapon frame at the end of the attack (clashes with the level slash) | planned | OpenCode Q3 |
+| N4 | Start menu entries cropped at the bottom; Equipment and Items menus unreachable | planned | OpenCode Q4 |
+| N5 | Stretched backdrops; rooms balanced, not too big | planned | OpenCode Q5 (backdrops); room sizes with B1 |
+| N6 | Library and lab platforms too hard; top platform traps her under the ceiling | planned | OpenCode Q6 stop-gap, then B1 |
+| N7 | Every picked-up item has an image; a doc listing all items; a folder for the images | planned | OpenCode Q7 |
+| N8 | Dev tools: room and map builder usable live like F1; tiles and assets from PNG folders; place and spread enemies and traps | planned | Claude B1 |
+| N9 | Crouch attack as a level slash like standing; air attacks stay as they are | planned | Claude B2 |
+| N10 | Hair and scarf flow behind her in the attacks (fix the last frames, add frames) | planned | Claude B2 |
+| N11 | Fix the wall latch sprites | planned | Claude B2 |
+Hand-offs: production/session-state/handoff-2026-11-19-opencode-quick.md and handoff-2026-11-19-next.md.

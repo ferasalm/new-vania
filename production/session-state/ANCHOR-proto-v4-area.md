@@ -13,7 +13,8 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 - IN PROGRESS task 2: standing J + I done as LEVEL slashes (user: horizontal; I = J left-handed, no dance),
   commit 89eb789, tag proto-v4-level-slash-2026-11-19. Weapon is its own layer from frames.json hero.weapon
   keys (angle, or yaw + tilt for a level swing). WAITING ON USER: play it, judge the hands.
-  Rest: crouch/air/cast/wall/Elegy frames. State: `active.md`.
+  NEXT: OpenCode quick fixes Q1-Q7 (handoff-2026-11-19-opencode-quick.md); after the reset Claude does B1 dev tools,
+  then B2 art (handoff-2026-11-19-next.md). Air attacks stay as they are (user). Ledger rows N1-N11. State: active.md.
 - Room guards: `prototypes/feel-v3/tools/roomreach.py .` (can she reach every item and exit; run from feel-v3)
   and `tools/roomcheck.py .` (door headroom, low spots). Run both after any room edit.
 - RULING (S0, accepted): R.taken keeps src "enemy" at mult 1.0; area_damage_mult 0.75 applies to NAMED sources.
