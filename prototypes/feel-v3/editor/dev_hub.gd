@@ -1,8 +1,8 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # Autoload "Dev": the in-game developer tools, desktop only.
 #   F4  screenshot notes  (mark the picture, type a comment, saved for Claude to read)
-#   F2  room builder      (added in a later slice)
-#   F3  map builder       (added in a later slice)
+#   F2  room builder      (draw rooms, place things, red warnings, Tab to play)
+#   F3  map builder       (where rooms sit on the map; jump to any room)
 # One tool is open at a time. The game pauses while a tool is open, and the
 # pause menu cannot open on top of it.
 extends Node
@@ -12,6 +12,7 @@ extends Node
 const TOOLS := {
 	"dev_notes": [KEY_F4, "res://editor/note_tool.gd"],
 	"dev_room": [KEY_F2, "res://editor/room_builder.gd"],
+	"dev_map": [KEY_F3, "res://editor/map_builder.gd"],
 }
 
 var god := false                 # invincible (room builder debug toggle)
@@ -156,3 +157,15 @@ func notes_dir() -> String:
 				break
 			a = up
 	return ProjectSettings.globalize_path("user://notes")
+
+
+## Jump to a room on a map page (used by the F3 map builder). Runs on this node, so it
+## keeps going after the tool that asked has closed.
+func teleport(room_id: String, sheet := "before") -> void:
+	var m = G.main
+	if m == null:
+		return
+	W.sheet = sheet
+	await m.debug_enter(room_id, "left", false)
+	if sheet == "restored":
+		G.shifted = false       # debug_enter treats every page but "before" as shifted

@@ -13,8 +13,11 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 - IN PROGRESS task 2: standing J + I done as LEVEL slashes (user: horizontal; I = J left-handed, no dance),
   commit 89eb789, tag proto-v4-level-slash-2026-11-19. Weapon is its own layer from frames.json hero.weapon
   keys (angle, or yaw + tilt for a level swing). WAITING ON USER: play it, judge the hands.
-  NEXT: OpenCode quick fixes Q1-Q7 (handoff-2026-11-19-opencode-quick.md); after the reset Claude does B1 dev tools,
-  then B2 art (handoff-2026-11-19-next.md). Air attacks stay as they are (user). Ledger rows N1-N11. State: active.md.
+  Air attacks stay as they are (user). Ledger rows N1-N11. State: active.md.
+- DONE OpenCode quick fixes Q1-Q7 (N1-N7), build `playable-history/2026-11-19-proto-v4-quick-fixes/`. WAITING ON USER: play.
+- DONE Claude B1 chat (2026-11-19): moth smoke 3.0 s (N12), scrap+orbs wait-then-fly (N13), weapon frames (N14), F4 notes (N15),
+  F2 room builder + red warnings + F3 map builder (N8). Tests d0-d6 in tests_dev/. WAITING ON USER: play it.
+  NEXT: menus + stats chat (ledger N16-N21; N20 needs the user's ruling), then B2 art (handoff-2026-11-19-next.md).
 - Room guards: `prototypes/feel-v3/tools/roomreach.py .` (can she reach every item and exit; run from feel-v3)
   and `tools/roomcheck.py .` (door headroom, low spots). Run both after any room edit.
 - RULING (S0, accepted): R.taken keeps src "enemy" at mult 1.0; area_damage_mult 0.75 applies to NAMED sources.
@@ -49,4 +52,7 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 ## Verified
 - Task 1 (2026-11-19): smoke 145/145, climb PASS, hazard 62/62, t_rpg 33/33, t_data 44/44, t_math 11/11;
   expected fails (later tasks): t_world 35/38 machines, t_interact_ui 23/36 menus/map, t_bosses 2/8 machines + Pallbearer.
+- Quick fixes Q1-Q7 (2026-11-19): smoke 145/145, climb PASS, hazard 62/62, t_rpg 33/33, t_data 44/44, t_math 11/11;
+  expected fails: t_world 35/38, t_bosses 2/8, t_interact_ui 34/39 (better: every menu check green).
+- B1 chat (2026-11-19): same locked counts as above; d0 15, d1 20, d4 19, d5 9, d6 21, q1 11, q2 9, q3 24 all pass; main.gd 597 lines.
 - The map check (`design/mapgen2.py`) passes: no room overlap, every exit is matched. Saved build: `playable-history/2026-11-18-feel-v4-backtrack/` (exe + APK), tag `proto-v4-backtrack-2026-11-18`.
