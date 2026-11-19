@@ -54,3 +54,8 @@ tools/aseprite-mcp/.venv/
 # Local Godot binaries (large; install separately)
 /Godot_v*.exe
 /Godot_v*.zip
+
+# Godot headless import regenerates these in fresh worktrees; never commit
+prototypes/feel-v3/tools/models/bank/*.png
+prototypes/feel-v3/assets/hero_3d_preview/textures/shaded.png
+prototypes/feel-v3/assets/pandora_proportion_study/textures/shaded.png
