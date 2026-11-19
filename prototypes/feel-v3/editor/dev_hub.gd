@@ -11,10 +11,12 @@ extends Node
 ## begin(info: Dictionary) and a `closed` signal.
 const TOOLS := {
 	"dev_notes": [KEY_F4, "res://editor/note_tool.gd"],
+	"dev_room": [KEY_F2, "res://editor/room_builder.gd"],
 }
 
 var god := false                 # invincible (room builder debug toggle)
 var notes_dir_override := ""     # tests write notes somewhere else
+var project_dir_override := ""   # tests save rooms somewhere else
 var tool: Node = null            # the open tool, or null
 var tool_action := ""
 
@@ -114,6 +116,27 @@ func game_info() -> Dictionary:
 		info["hp"] = float(p.hp)
 		info["facing"] = int(p.facing)
 	return info
+
+
+## The project folder (the one with project.godot), also when this is an exported build that was
+## started from playable-history: rooms and the PNG folders are read and written there. "" when it
+## cannot be found.
+func project_dir() -> String:
+	if project_dir_override != "":
+		return project_dir_override
+	var res := ProjectSettings.globalize_path("res://").simplify_path()
+	if FileAccess.file_exists(res.path_join("project.godot")):
+		return res
+	var a: String = OS.get_executable_path().get_base_dir().simplify_path()
+	for i in 8:
+		for rel in ["workspace/new-vania/prototypes/feel-v3", "prototypes/feel-v3"]:
+			if FileAccess.file_exists(a.path_join(rel).path_join("project.godot")):
+				return a.path_join(rel)
+		var up := a.get_base_dir()
+		if up == a:
+			break
+		a = up
+	return ""
 
 
 ## The folder notes are written to. Next to the project's production/playtests when it can

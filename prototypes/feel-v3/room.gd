@@ -18,6 +18,7 @@ extends Node2D
 const Door := preload("res://door.gd")
 const Props := preload("res://props.gd")
 const Spawner := preload("res://spawner.gd")
+const PropsLayer := preload("res://editor/props_layer.gd")
 const TILE := 16
 const STAND := 36.0
 
@@ -48,6 +49,9 @@ const THEMES := {
 }
 
 const POINT_K := 39.0
+
+## The room builder's live copy of a room that is not saved yet: file id -> room text.
+static var override := {}
 
 var file_id := ""
 var grid: Array = []
@@ -113,7 +117,7 @@ func load_room(room_name: String, after_shift: bool = false) -> bool:
 	W.mark_visited(file_id)
 	W.mark_visited(room_name)
 
-	var txt := FileAccess.get_file_as_string("res://rooms/%s.txt" % file)
+	var txt := String(override[file]) if override.has(file) else FileAccess.get_file_as_string("res://rooms/%s.txt" % file)
 	if txt == "":
 		push_error("missing room " + file)
 		return false
@@ -156,6 +160,8 @@ func load_room(room_name: String, after_shift: bool = false) -> bool:
 		_tiles = G.tex("env/%s_tiles.png" % theme["tiles"])
 		_ledge = G.tex("env/%s_ledge.png" % theme["tiles"])
 	_wall = G.tex("env/church_backgrounds.png" if theme["wall"] == "panels" else theme["wall"])
+	if head.has("backdrop"):
+		_wall = PropsLayer.backdrop_texture(String(head["backdrop"]), _wall)      # the builder's own wall picture, tiled at real size
 	if theme.has("point"):
 		_point = G.tex(theme["point"])
 
@@ -335,6 +341,11 @@ func _build() -> void:
 		if en != null:
 			add_child(en)
 			enemy_nodes.append(en)
+	# PNG props and tiles from the room builder sit behind everything that moves
+	var pl := PropsLayer.new()
+	pl.setup(file_id)
+	add_child(pl)
+	move_child(pl, 0)
 
 
 func _door_target(side: String, y: int) -> String:

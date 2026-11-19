@@ -840,7 +840,7 @@ func gain_mp(amount: float) -> void:
 
 
 func take_hit(damage: float, from_x: float, src := "enemy") -> void:
-	if invuln > 0.0 or state == "dead":
+	if invuln > 0.0 or state == "dead" or Dev.god:      # Dev.god: the room builder's invincible toggle
 		return
 	var dmg := R.taken(damage, src)
 	hp -= dmg
