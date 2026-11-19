@@ -157,19 +157,22 @@ func _find_wall() -> bool:
 func _find_ledges() -> bool:
 	# the ledges: the 2-tile shelves where the shaft's left wall juts in, each with open air above
 	# it; the lowest one is the first step of the climb. The shaft is the columns of the top opening.
+	# A ledge may end in a one-way plank lip ("=", user decision 2026-11-19): she jumps up through
+	# it from below and lands on it from above, so the lip counts as part of the ledge's top.
 	var found: Array = []
 	var floor_row := int(floor_y / TILE)
 	var lc := int(main.room.up_span.x / TILE)         # the shaft's left column
 	for y in range(1, floor_row):
-		if main.room.cell(lc, y) == "#" and main.room.cell(lc + 1, y) == "#" and main.room.cell(lc + 2, y) == "." and main.room.cell(lc, y - 1) == ".":
+		var lip: bool = main.room.cell(lc + 2, y) == "=" and main.room.cell(lc + 3, y) == "."
+		if main.room.cell(lc, y) == "#" and main.room.cell(lc + 1, y) == "#" and (main.room.cell(lc + 2, y) == "." or lip) and main.room.cell(lc, y - 1) == ".":
 			found.append(y)
 	if found.size() < 2:
 		return false
 	var y := int(found[found.size() - 1])
 	var x0 := lc + 2
 	var x1 := lc + 1
-	for x in range(0, lc + 2):
-		if main.room.cell(x, y) == "#" and main.room.cell(x, y - 1) == ".":
+	for x in range(0, lc + 3):
+		if (main.room.cell(x, y) == "#" or main.room.cell(x, y) == "=") and main.room.cell(x, y - 1) == ".":
 			x0 = mini(x0, x)
 			x1 = maxi(x1, x)
 	ledges["left"] = {"row": y, "x0": x0, "x1": x1, "y": y * TILE}

@@ -357,29 +357,71 @@ class Decor extends Node2D:
 			draw_arc(Vector2.ZERO, 6.0, 0.0, PI, 8, c, 0.5)
 
 
-# The Organ of Hours (time machine).
+# The Organ of Hours (time machine). Up at the "T" marker (interact.gd) asks the question.
 class Organ extends Node2D:
-	var dead := false
+	var dead := false              # after the shift it is silent
+	var _frames: Array = []
+	var _t := 0.0
+	var _glow := 0.0
+	var _hum: AudioStreamPlayer2D
 
 	func setup() -> void:
 		z_index = 2
-		_register()
+		var n := 0
+		while n < 40 and exists("organ/idle_%02d.png" % n):
+			_frames.append(G.tex("organ/idle_%02d.png" % n))
+			n += 1
+		_hum = AudioStreamPlayer2D.new()
+		var st: AudioStream = Sfx._load("sfx/shift/machine_hum.wav")
+		if st != null:
+			if st is AudioStreamWAV:
+				st.loop_mode = AudioStreamWAV.LOOP_FORWARD
+				st.loop_end = int(st.get_length() * st.mix_rate)
+			_hum.stream = st
+			_hum.volume_db = -6.0
+			_hum.max_distance = 260.0
+			_hum.position = Vector2(0, -30)
+			add_child(_hum)
+			_hum.autoplay = not dead
 
-	func _register() -> void:
-		if not dead and G.main != null and G.main.get("interact") != null:
-			G.main.get("interact").register(self, "organ", "USE", Callable(self, "use"), 32.0)
+	static func exists(rel: String) -> bool:
+		return ResourceLoader.exists("res://assets/2x/" + rel) or ResourceLoader.exists("res://assets/" + rel) \
+			or FileAccess.file_exists("res://assets/2x/" + rel) or FileAccess.file_exists("res://assets/" + rel)
 
-	func use() -> void:
-		if dead:
-			Sfx.play_file("sfx/world/locked.wav", -4.0)
-			return
-		if G.main != null and G.main.get("dialog") != null:
-			G.main.get("dialog").ask()
+	func silence() -> void:
+		dead = true
+		if _hum != null:
+			_hum.stop()
+
+	func charge() -> void:
+		_glow = 1.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		_glow = maxf(0.0, _glow - delta * 0.4)
+		queue_redraw()
 
 	func _draw() -> void:
-		# Organ console placeholder
-		draw_rect(Rect2(-16, -28, 32, 28), Color(0.18, 0.12, 0.16))
-		draw_rect(Rect2(-12, -24, 24, 10), Color(0.3, 0.2, 0.28))
-		for i in 6:
-			var px := -10.0 + i * 4.0
-			draw_line(Vector2(px, -24), Vector2(px, -36 - (i % 3) * 4), Color(0.7, 0.55, 0.3), 1.5)
+		var live := 0.0 if dead else 1.0
+		if not _frames.is_empty():
+			var tex: Texture2D = _frames[int(_t * 8.0 * live) % _frames.size()]
+			var s := tex.get_size()
+			draw_texture(tex, Vector2(-s.x / 2.0, -s.y), Color(0.5, 0.5, 0.55) if dead else Color.WHITE)
+			return
+		# placeholder: a bank of brass pipes, a keyboard, a glowing core
+		var w := 76.0
+		draw_rect(Rect2(-w / 2.0, -12, w, 12), Color(0.16, 0.1, 0.07))
+		draw_rect(Rect2(-w / 2.0 + 4, -22, w - 8, 10), Color(0.22, 0.14, 0.09))
+		for i in 11:
+			var h := 40.0 + 34.0 * absf(sin(float(i) * 0.9 + 0.5))
+			var x := -w / 2.0 + 4.0 + i * 6.4
+			var tone := Color(0.78, 0.6, 0.28) if not dead else Color(0.35, 0.3, 0.22)
+			draw_rect(Rect2(x, -22.0 - h, 5, h), tone.darkened(0.45))
+			draw_rect(Rect2(x, -22.0 - h, 2, h), tone)
+			draw_rect(Rect2(x + 1, -22.0 - h - 2, 3, 2), tone.lightened(0.2))
+		for k in 14:
+			draw_rect(Rect2(-w / 2.0 + 6 + k * 4.6, -13, 3, 6), Color(0.85, 0.82, 0.7) if k % 3 != 2 else Color(0.1, 0.08, 0.08))
+		var pulse := (0.5 + 0.5 * sin(_t * 3.0)) * live
+		draw_circle(Vector2(0, -52), 9.0 + pulse * 2.0 + _glow * 6.0, Color(0.75, 0.4, 1.0, (0.12 + 0.12 * pulse) * (1.0 + _glow)))
+		draw_circle(Vector2(0, -52), 3.0, Color(0.9, 0.7, 1.0, 0.4 + 0.5 * pulse))
+
