@@ -1,7 +1,8 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# tests_quick/q1_orb_pull.gd - proof for ledger N1 (handoff Q1).
-# An MP orb dropped 150 px and 400 px away must reach her within 2 s with no
-# input, and an orb must be collected even when her MP is full.
+# tests_quick/q1_orb_pull.gd - proof for ledger N1 and N13.
+# An MP orb or a scrap piece dropped 150 px and 400 px away must reach her within
+# 2 s with no input. When her MP (or scrap) bar is full it waits on the floor and
+# flies to her as soon as she has room.
 # Run: godot --headless --path . res://tests_quick/q1_orb_pull.tscn
 extends Node
 
@@ -44,12 +45,41 @@ func _run() -> void:
 	var orb_b = _spawn("soul_orb", Vector2(400.0, -6.0))
 	var got_b := await _wait_collected(orb_b, 120)
 	_check("MP orb 400 px away is collected within 2 s with no input", got_b, "")
-	# full MP: the orb still flies and is collected
+	# full MP: the orb waits on the floor (not lost), then flies once there is room
 	var maxmp: float = float(_r().call("max_mp"))
 	_player().call("debug_set", {"mp": maxmp})
 	var orb_c = _spawn("soul_orb", Vector2(150.0, -6.0))
-	var got_c := await _wait_collected(orb_c, 120)
-	_check("MP orb is collected even when her MP is full", got_c, "max_mp=%.0f" % maxmp)
+	var start_c: Vector2 = orb_c.global_position
+	await _frames(240)    # 4 s: longer than the pop-out, longer than the old fly time
+	_check("MP orb waits on the floor while her MP is full",
+		is_instance_valid(orb_c) and orb_c.global_position.distance_to(start_c) < 4.0,
+		"moved %.0f px" % (orb_c.global_position.distance_to(start_c) if is_instance_valid(orb_c) else -1.0))
+	_player().call("debug_set", {"mp": 10.0})
+	var got_c := await _wait_collected(orb_c, 150)
+	_check("the waiting MP orb flies to her once she has room", got_c, "")
+	# scrap flies to her like an orb
+	_r().call("add_scrap", -float(_r().get("scrap")))
+	var sc0: float = float(_r().get("scrap"))
+	var scrap_a = _spawn("scrap", Vector2(150.0, -6.0))
+	var got_sa := await _wait_collected(scrap_a, 120)
+	_check("scrap 150 px away is collected within 2 s with no input", got_sa, "")
+	_check("a collected scrap piece adds scrap_per_pickup",
+		float(_r().get("scrap")) >= sc0 + _tv("scrap_per_pickup") - 0.01,
+		"scrap %.0f -> %.0f" % [sc0, float(_r().get("scrap"))])
+	var scrap_b = _spawn("scrap", Vector2(400.0, -6.0))
+	var got_sb := await _wait_collected(scrap_b, 120)
+	_check("scrap 400 px away is collected within 2 s with no input", got_sb, "")
+	# a full scrap bar: the piece waits, then flies once she has spent some
+	_r().call("add_scrap", 100000.0)
+	var scrap_c = _spawn("scrap", Vector2(150.0, -6.0))
+	var start_s: Vector2 = scrap_c.global_position
+	await _frames(240)
+	_check("scrap waits on the floor while her scrap bar is full",
+		is_instance_valid(scrap_c) and scrap_c.global_position.distance_to(start_s) < 4.0,
+		"moved %.0f px" % (scrap_c.global_position.distance_to(start_s) if is_instance_valid(scrap_c) else -1.0))
+	_r().call("add_scrap", -40.0)
+	var got_sc := await _wait_collected(scrap_c, 150)
+	_check("the waiting scrap flies to her once she has room", got_sc, "")
 
 
 func _wait_collected(orb, max_frames: int) -> bool:

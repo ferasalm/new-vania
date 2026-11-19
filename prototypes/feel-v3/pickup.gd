@@ -19,6 +19,7 @@ var _life := 12.0
 var _t := 0.0
 var _fly_t := 0.0
 var _taken := false
+var _waiting := false
 var _color := Color(0.9, 0.9, 0.8)
 var _tex: Texture2D = null
 var _letter := "?"
@@ -60,37 +61,46 @@ func _physics_process(delta: float) -> void:
 	if _taken:
 		return
 	_t += delta
-	_life -= delta
-	if _life <= 0.0:
-		_despawn()
-		return
-	queue_redraw()
 	var m = G.main
 	var p = null
 	if m != null:
 		p = m.player
+	# a flying pickup (orb, scrap) whose bar is full waits on the floor: its life
+	# does not run down, so nothing is wasted, and it flies to her once there is room
+	_waiting = p != null and _flies() and _full(p)
+	if not _waiting:
+		_life -= delta
+	if _life <= 0.0:
+		_despawn()
+		return
+	queue_redraw()
 	if p == null:
 		return
 	var chest: Vector2 = p.global_position + Vector2(0, -18)
-	if _is_orb():
+	if _waiting:
+		_fly_t = 0.0      # pops out again when it starts flying
+		return
+	if _flies():
 		_fly_to(chest, delta)
 	if touch_take:
-		if not _is_orb() and _full(p):
-			return
 		if chest.distance_to(global_position) <= T.v("pickup_reach") * 0.66:
 			take()
 			return
 
 
+func _flies() -> bool:
+	# orbs (MP today; HP and XP orbs when they exist) and scrap fly to her on their own
+	return item_id == "scrap" or String(Db.table("items").get(item_id, {}).get("type", "")) == "orb"
+
+
 func _is_orb() -> bool:
-	# every orb kind flies to her on its own (MP today; HP and XP orbs when they exist)
-	return String(Db.table("items").get(item_id, {}).get("type", "")) == "orb"
+	return _flies()
 
 
 func _fly_to(chest: Vector2, delta: float) -> void:
 	# pops out for orb_hang, then flies to her from anywhere on screen with no
-	# button, no distance limit and no full-gauge gate. It speeds up as it goes
-	# and is collected when it touches her.
+	# button and no distance limit. It speeds up as it goes and is collected when
+	# it touches her. A full gauge makes it wait instead (see _physics_process).
 	_fly_t += delta
 	if _fly_t < T.v("orb_hang"):
 		return
@@ -158,7 +168,9 @@ func _reregister(_file_id: String) -> void:
 func _draw() -> void:
 	var bob := sin(_t * 3.0) * 2.0
 	var a := 1.0
-	if _life < 3.0:
+	if _waiting:
+		a = 0.45 + 0.4 * absf(sin(_t * 4.0))      # blinks slowly while it waits for room
+	elif _life < 3.0:
 		a = 0.35 + 0.65 * absf(sin(_t * 9.0))
 	var c := Color(_color.r, _color.g, _color.b, a)
 	# the soft glow stays either way: a halo around a real picture, a halo
