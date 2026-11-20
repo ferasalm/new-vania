@@ -2,7 +2,7 @@
 # The pause menu. Esc, P or Start opens it (the corner button on a phone does
 # the same), and the world stops while it is up. Five tabs sit across the top:
 #   MAP       the current sheet's rooms and Pandora's location
-#   CHARACTER her level, her stat points, and what each stat does right now
+#   CHARACTER her level, her stats, and what the next level adds
 #   ITEMS     what she carries; things that can be used show USE
 #   EQUIPMENT what she wears: hand, core, two torso straps, two drive slots,
 #             and a live stat line that always matches the sheet
@@ -23,6 +23,7 @@ const VIEW := Vector2(384, 216)
 const ROW_W := 358.0
 const ROW_H := 15.0
 const PauseMap := preload("res://pause_map.gd")
+const RpgMath := preload("res://rpg_math.gd")
 
 var TABS: Array = ["MAP", "CHARACTER", "ITEMS", "EQUIPMENT", "SYSTEM"]
 var is_open := false
@@ -183,11 +184,6 @@ func _hold_end() -> void:
 		p.process_mode = Node.PROCESS_MODE_INHERIT
 		if not _had_invuln:
 			p.set("invuln", 0.0)
-
-
-func offer_points() -> void:
-	# the level-up offer: the menu opens straight on CHARACTER to spend them
-	open("CHARACTER")
 
 
 func debug_rows() -> Array:
@@ -389,26 +385,32 @@ func _teleport(id: String) -> void:
 
 
 func _character_rows() -> Array:
+	# her sheet: level and XP toward the next, the live stats, and what a level adds
 	var out: Array = []
-	out.append({"text": "LV %d   XP %d   PTS %d" % [R.level, R.xp, R.points], "cb": null})
-	var shown := {"vigor": "MAX HP %d", "power": "ATK %d%%", "guard": "DEF %d%%",
-		"stamina": "MAX EN %d", "magic": "MAX MP %d"}
-	var live := {"vigor": int(R.max_hp()), "power": int(R.atk()), "guard": int(R.def()),
-		"stamina": int(R.max_en()), "magic": int(R.max_mp())}
-	for s in R.STATS:
-		out.append({"text": "%s %d   %s" % [String(s).to_upper(), int(R.alloc.get(s, 0)), String(shown[s]) % int(live[s])],
-			"cb": _spend.bind(String(s))})
-	out.append({"text": "AUTO   SPEND ALL %d PTS" % R.points, "cb": _auto})
+	var step := T.v("xp_curve_step")
+	var cap := int(T.v("level_cap"))
+	var next_text := "MAX"
+	if R.level < cap:
+		next_text = str(maxi(0, RpgMath.xp_total(R.level + 1, step) - R.xp))
+	out.append({"text": "LV %d   XP %d   NEXT %s" % [R.level, R.xp, next_text], "cb": null})
+	out.append({"text": "HP %d" % int(R.max_hp()), "cb": null})
+	out.append({"text": "EN %d" % int(R.max_en()), "cb": null})
+	out.append({"text": "MP %d" % int(R.max_mp()), "cb": null})
+	out.append({"text": "ATK %d%%" % int(R.atk()), "cb": null})
+	out.append({"text": "DEF %s%%" % _pct(R.def()), "cb": null})
+	out.append({"text": "SPC %d%%" % int(R.special_pct()), "cb": null})
+	if R.level < cap:
+		out.append({"text": "NEXT LEVEL  HP +%s  EN +%s  ATK +%s%%  DEF +%s%%" % [
+			_pct(T.v("level_hp")), _pct(T.v("level_en")),
+			_pct(T.v("level_atk")), _pct(T.v("level_def"))], "cb": null})
 	return out
 
 
-func _spend(stat: String) -> void:
-	# one point on one stat; the sheet refuses when she has none
-	R.spend(stat)
-
-
-func _auto() -> void:
-	R.auto_allocate()
+func _pct(v: float) -> String:
+	# a percent the way the sheet prints it: 4.5 keeps its half, 4 does not
+	if is_equal_approx(v, roundf(v)):
+		return str(int(roundf(v)))
+	return "%.1f" % v
 
 
 func _item_rows() -> Array:
@@ -452,7 +454,7 @@ func _equipment_rows() -> Array:
 		var tag := "TORSO-1" if slot == "harness1" else ("TORSO-2" if slot == "harness2" \
 			else ("DRIVE-1" if slot == "module1" else "DRIVE-2"))
 		out.append({"text": "%-7s %s" % [tag, _slot_text(slot)], "slot": slot, "cb": _cycle_slot.bind(slot)})
-	out.append({"text": "ATK %d%%  DEF %d%%  HP %d  EN %d  MP %d" % [int(R.atk()), int(R.def()),
+	out.append({"text": "ATK %d%%  DEF %s%%  HP %d  EN %d  MP %d" % [int(R.atk()), _pct(R.def()),
 		int(R.max_hp()), int(R.max_en()), int(R.max_mp())], "cb": null})
 	return out
 
