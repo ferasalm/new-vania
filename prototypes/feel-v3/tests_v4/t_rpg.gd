@@ -1,6 +1,6 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # tests_v4/t_rpg.gd - locked test (step 0, written from design/contract.md section 4 only).
-# RPG behaviour on the W and R autoloads (S0): XP, levels, points, stats, Sutures, gear,
+# RPG behaviour on the W and R autoloads (S0): XP, levels, automatic growth, Sutures, gear,
 # forwarding, snapshots, award_kill, the spawner interface, main.gd size and SYSTEMS.
 # Builders never edit this pack. Run: godot --headless --path . res://tests_v4/t_rpg.tscn
 extends Node
@@ -88,7 +88,7 @@ func _reset_all() -> void:
 		w.call("debug_set", {"flags": {}, "taken": {}})
 
 
-func _on_leveled(_lvl: int, _pts: int) -> void:
+func _on_leveled(_lvl: int) -> void:
 	leveled_count += 1
 
 
@@ -111,12 +111,12 @@ func _run() -> void:
 			w_missing.append("var " + prop)
 	_check("W carries its whole public interface", w_missing.is_empty(), "missing=%s" % str(w_missing))
 
-	var r_needs := ["max_hp", "max_en", "max_mp", "atk", "def", "special_pct", "hit_damage", "taken", "award_kill", "add_xp", "spend", "auto_allocate", "has", "set_owned", "count", "add_item", "use_item", "equip_gear", "gear_effect", "add_scrap", "refill_at_terminal", "snapshot", "restore", "reset", "debug_set", "debug_seed"]
+	var r_needs := ["max_hp", "max_en", "max_mp", "atk", "def", "special_pct", "hit_damage", "taken", "award_kill", "add_xp", "growth", "has", "set_owned", "count", "add_item", "use_item", "equip_gear", "gear_effect", "add_scrap", "refill_at_terminal", "snapshot", "restore", "reset", "debug_set", "debug_seed"]
 	var r_missing := []
 	for m in r_needs:
 		if not r.has_method(m):
 			r_missing.append(m)
-	for prop in ["level", "xp", "points", "alloc", "items", "owned_gear", "equip", "scrap", "names_seen", "rng"]:
+	for prop in ["level", "xp", "items", "owned_gear", "equip", "scrap", "names_seen", "rng"]:
 		if r.get(prop) == null and prop != "rng":
 			r_missing.append("var " + prop)
 	if r.get("rng") == null:
@@ -130,19 +130,17 @@ func _run() -> void:
 		r.connect("leveled", _on_leveled)
 	var lvl0: int = int(r.get("level"))
 	if lvl0 != 1:
-		_check("R.reset() starts her at level 1 with 0 points", false, "level=%d points=%s" % [lvl0, str(r.get("points"))])
+		_check("R.reset() starts her at level 1", false, "level=%d" % lvl0)
 		return
 	r.call("add_xp", 20)
 	var lvl2: int = int(r.get("level"))
-	var pts2: int = int(r.get("points"))
-	_check("add_xp(20) at L1 gives L2, 2 points and exactly one leveled",
-		lvl2 == 2 and pts2 == 2 and leveled_count == 1, "level=%d points=%d leveled=%d" % [lvl2, pts2, leveled_count])
+	_check("add_xp(20) at L1 gives L2 and exactly one leveled",
+		lvl2 == 2 and leveled_count == 1, "level=%d leveled=%d" % [lvl2, leveled_count])
 
 	_reset_all()
 	r.call("add_xp", 70)
 	var lvl3: int = int(r.get("level"))
-	_check("add_xp(70) from L1 gives L3 and 4 points", lvl3 == 3 and int(r.get("points")) == 4,
-		"level=%d points=%d" % [lvl3, int(r.get("points"))])
+	_check("add_xp(70) from L1 gives L3", lvl3 == 3, "level=%d" % lvl3)
 
 	_reset_all()
 	r.call("add_xp", 99999)
@@ -151,61 +149,74 @@ func _run() -> void:
 
 	# --- the level-up refill ---------------------------------------------------
 	_reset_all()
-	var maxhp: float = float(r.call("max_hp"))
-	var maxen: float = float(r.call("max_en"))
-	var maxmp: float = float(r.call("max_mp"))
 	if main != null and main.get("player") != null:
 		var pl: Node = main.get("player")
 		if pl.has_method("debug_set"):
 			pl.call("debug_set", {"hp": 10.0, "energy": 5.0, "mp": 3.0})
 	r.call("add_xp", 20)
+	# the maxima AFTER the level-up (growth raises them); the bars refill to these
+	var maxhp: float = float(r.call("max_hp"))
+	var maxen: float = float(r.call("max_en"))
+	var maxmp: float = float(r.call("max_mp"))
 	var php: float = float(main.get("player").get("hp")) if main != null and main.get("player") != null else 0.0
 	var pen: float = float(main.get("player").get("energy")) if main != null and main.get("player") != null else 0.0
 	var pmp: float = float(main.get("player").get("mp")) if main != null and main.get("player") != null else 0.0
 	_check("a level-up refills HP, EN and MP", absf(php - maxhp) < 0.5 and absf(pen - maxen) < 0.5 and absf(pmp - maxmp) < 0.5,
 		"hp=%.0f/%.0f en=%.0f/%.0f mp=%.0f/%.0f" % [php, maxhp, pen, maxen, pmp, maxmp])
 
-	# --- one point gives (lead ruling 3) ---------------------------------------
+	# --- automatic growth (user decision 2026-11-20) ---------------------------
+	# Expected numbers come from tuning, never typed in: each level above 1 adds level_hp, level_en,
+	# level_atk and level_def. No points, no spending, no menu. "grew" guards against a level that never happened.
 	_reset_all()
-	r.call("add_xp", 99999)
-	var ok_v = r.call("spend", "vigor")
-	var hp_gain: float = float(r.call("max_hp")) - maxhp
-	_check("spend('vigor') raises max_hp by vigor_hp", bool(ok_v) and absf(hp_gain - _tv("vigor_hp", "vit_hp")) < 0.01,
-		"gain=%.0f want=%.0f" % [hp_gain, _tv("vigor_hp", "vit_hp")])
-	r.call("spend", "power")
-	var atk: float = float(r.call("atk"))
-	_check("spend('power') raises ATK to 108", absf(atk - (100.0 + _tv("power_atk", "str_atk"))) < 0.01, "atk=%.0f" % atk)
-	r.call("spend", "guard")
-	var dfn: float = float(r.call("def"))
-	_check("spend('guard') raises DEF to 3", absf(dfn - _tv("guard_def", "end_def")) < 0.01, "def=%.0f" % dfn)
-	r.call("spend", "stamina")
-	var en: float = float(r.call("max_en"))
-	_check("spend('stamina') raises max EN by 8", absf(en - (maxen + _tv("stamina_en", "end_en"))) < 0.01, "en=%.0f" % en)
-	r.call("spend", "magic")
-	var mp: float = float(r.call("max_mp"))
-	var spc: float = float(r.call("special_pct"))
-	_check("spend('magic') gives +6 MP and +8 percent special",
-		absf(mp - (maxmp + _tv("magic_mp", "mag_mp"))) < 0.01 and absf(spc - (100.0 + _tv("magic_special", "mag_special"))) < 0.01,
-		"mp=%.0f spc=%.0f" % [mp, spc])
-	# spend every remaining point, then the next spend must be refused
-	var drain := 0
-	while int(r.get("points")) > 0 and drain < 40:
-		r.call("spend", "vigor")
-		drain += 1
-	var spent_all: bool = not bool(r.call("spend", "vigor"))
-	_check("spend with no points left is refused", spent_all, "points_left=%d" % int(r.get("points")))
-
-	# --- AUTO ------------------------------------------------------------------
-	_reset_all()
+	var hp1: float = float(r.call("max_hp"))
+	var en1: float = float(r.call("max_en"))
+	var mp1: float = float(r.call("max_mp"))
+	var atk1: float = float(r.call("atk"))
+	var def1: float = float(r.call("def"))
 	r.call("add_xp", 90)
-	r.call("auto_allocate")
-	var alloc = r.get("alloc")
-	var alloc_sum := 0
-	if alloc is Dictionary:
-		for k in alloc:
-			alloc_sum += int(alloc[k])
-	_check("auto_allocate spends every point in auto_order", int(r.get("points")) == 0 and alloc_sum == 6,
-		"points=%d alloc_sum=%d alloc=%s" % [int(r.get("points")), alloc_sum, str(alloc)])
+	var steps: float = float(int(r.get("level")) - 1)
+	var grew := steps > 0.0
+	var hp_now: float = float(r.call("max_hp"))
+	_check("max HP grows by level_hp for every level above 1",
+		grew and absf((hp_now - hp1) - steps * _tv("level_hp")) < 0.01,
+		"steps=%.0f gain=%.2f want=%.2f" % [steps, hp_now - hp1, steps * _tv("level_hp")])
+	var en_now: float = float(r.call("max_en"))
+	_check("max EN grows by level_en for every level above 1",
+		grew and absf((en_now - en1) - steps * _tv("level_en")) < 0.01,
+		"steps=%.0f gain=%.2f want=%.2f" % [steps, en_now - en1, steps * _tv("level_en")])
+	var atk_now: float = float(r.call("atk"))
+	_check("ATK grows by level_atk for every level above 1",
+		grew and absf((atk_now - atk1) - steps * _tv("level_atk")) < 0.01,
+		"steps=%.0f gain=%.2f want=%.2f" % [steps, atk_now - atk1, steps * _tv("level_atk")])
+	var def_now: float = float(r.call("def"))
+	var want_def: float = minf(_tv("def_cap"), def1 + steps * _tv("level_def"))
+	_check("DEF grows by level_def for every level above 1, never past def_cap",
+		grew and absf(def_now - want_def) < 0.01, "def=%.2f want=%.2f" % [def_now, want_def])
+	var mp_now: float = float(r.call("max_mp"))
+	_check("MP does not grow with levels", grew and absf(mp_now - mp1) < 0.01, "mp1=%.0f mp_now=%.0f" % [mp1, mp_now])
+	var spc_now: float = float(r.call("special_pct"))
+	var spec_hit: int = int(r.call("hit_damage", 30.0, true))
+	var want_spec: int = int(round(30.0 * atk_now / 100.0))
+	_check("specials follow ATK: SPC equals ATK with no gear, and a 30-power special scales with it",
+		grew and absf(spc_now - atk_now) < 0.01 and spec_hit == want_spec,
+		"spc=%.1f atk=%.1f special=%d want=%d" % [spc_now, atk_now, spec_hit, want_spec])
+
+	# an old save that still carries points and an allocation: level, XP, items and gear are kept,
+	# and every stat now comes from the level alone (the old allocation is ignored)
+	_reset_all()
+	var old_save := {"level": 6, "xp": 210, "points": 3,
+		"alloc": {"vigor": 4, "power": 2, "guard": 0, "stamina": 0, "magic": 1},
+		"items": {"suture": 2}, "owned_gear": ["cerement_112"], "equip": {"harness1": "cerement_112"}}
+	r.call("restore", old_save)
+	var eq_old = r.get("equip")
+	var gear_old = r.get("owned_gear")
+	var kept: bool = int(r.get("level")) == 6 and int(r.get("xp")) == 210 and int(r.call("count", "suture")) == 2
+	kept = kept and eq_old is Dictionary and String(eq_old.get("harness1", "")) == "cerement_112"
+	kept = kept and gear_old is Array and gear_old.has("cerement_112")
+	var want_hp6: float = _tv("player_hp") + 5.0 * _tv("level_hp")
+	var got_hp6: float = float(r.call("max_hp"))
+	_check("an old save with points loads: level, XP, items and gear kept; stats come from the level",
+		kept and absf(got_hp6 - want_hp6) < 0.01, "kept=%s max_hp=%.1f want=%.1f" % [str(kept), got_hp6, want_hp6])
 
 	# --- Sutures ---------------------------------------------------------------
 	_reset_all()
