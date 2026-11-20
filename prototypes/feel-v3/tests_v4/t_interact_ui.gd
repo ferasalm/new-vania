@@ -730,12 +730,16 @@ func _ui_checks() -> void:
 		_check("dialog_box.ask returns the chosen index and a page has at most 3 lines", false, "no dialog_box")
 
 
-# true when some row holds `word` as a whole word and, if `num` is not empty, also that number
+# true when some row holds `word` as a whole word and, if `num` is not empty, that exact number
+# right after it ("HP 1060" does not match 106; a trailing % is ignored, so "SPC 105%" matches 105)
 func _row_has(rows: Array, word: String, num: String) -> bool:
 	for r in rows:
-		var text := String(r)
-		if text.split(" ", false).has(word) and (num == "" or text.contains(num)):
-			return true
+		var tokens := String(r).split(" ", false)
+		for i in tokens.size():
+			if tokens[i] != word:
+				continue
+			if num == "" or (i + 1 < tokens.size() and tokens[i + 1].trim_suffix("%") == num):
+				return true
 	return false
 
 
