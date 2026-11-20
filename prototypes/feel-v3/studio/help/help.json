@@ -1,0 +1,33 @@
+{
+	"builder.save": {
+		"title": "Save",
+		"what": "Saves the room you are editing, and the pictures you placed in it, to files on this computer.",
+		"how": "Press the Save button or Ctrl+S.",
+		"limits": ["Works in the desktop game only; the Android build has no builders."],
+		"keys": ["Ctrl+S: save"]
+	},
+	"builder.playtest": {
+		"title": "Playtest",
+		"what": "Plays the room you are editing with your current changes, so you can try it before you save.",
+		"how": "Press the Playtest button or Tab. Press Tab again to come back to the builder.",
+		"keys": ["Tab: play or stop"]
+	},
+	"builder.map": {
+		"title": "Map",
+		"what": "Opens the map builder, which shows every room as a box.",
+		"how": "Press the Map button or F3.",
+		"keys": ["F3: open the map"]
+	},
+	"builder.undo": {
+		"title": "Undo and Redo",
+		"what": "Takes back your last change in the room, or puts it back.",
+		"how": "Press Undo or Ctrl+Z to take a change back. Press Redo or Ctrl+Y to put it back.",
+		"keys": ["Ctrl+Z: undo", "Ctrl+Y: redo"]
+	},
+	"studio.library": {
+		"title": "The asset library",
+		"what": "One folder that holds a copy of every picture, sound and source file in the project, with a list (catalog.json) that describes each one.",
+		"how": "Run node tools/asset_library.mjs in the project folder. It builds prototypes/feel-v3/studio/library and studio/catalog.json.",
+		"limits": ["It holds copies: change the original files, then run the command again.", "The 3D model bank and the inbox are listed in the catalog but are not copied.", "The folder is not part of the exported game."]
+	}
+}

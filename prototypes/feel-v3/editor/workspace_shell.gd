@@ -1,5 +1,6 @@
 extends RefCounted
 
+const EdHelp := preload("res://editor/ed_help.gd")
 const SIZE := Vector2(1280, 720)
 const BACKGROUND := Color("#171923")
 const SURFACE := Color("#222634")
@@ -16,13 +17,20 @@ static func mount(layer: CanvasLayer) -> Control:
 	return panel
 
 
-## Create a keyboard-focusable toolbar or panel action.
-static func button(parent: Container, label: String, action: Callable, tooltip := "") -> Button:
+## Create a keyboard-focusable toolbar or panel action, with an optional "?" help button.
+static func button(parent: Container, label: String, action: Callable, tooltip := "", help_key := "") -> Button:
 	var control := Button.new()
 	control.text = label
 	control.tooltip_text = tooltip
 	control.pressed.connect(action)
 	parent.add_child(control)
+	if not help_key.is_empty():
+		var help := Button.new()
+		help.text = "?"
+		help.tooltip_text = "Help: %s" % label
+		help.custom_minimum_size = Vector2(28, 0)
+		help.pressed.connect(func() -> void: EdHelp.show(help_key))
+		parent.add_child(help)
 	return control
 
 
