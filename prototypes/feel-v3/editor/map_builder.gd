@@ -1,388 +1,669 @@
-# PROTOTYPE - NOT FOR PRODUCTION
-# F3 map builder: every room as a box on the map (data/rooms_meta.json, one page at a time).
-#   drag a box = move it, drag its bottom-right corner = resize, right/middle drag or arrows = pan, wheel = zoom
-#   Alt+arrows move the picked room, Shift+arrows resize it, Ctrl+Z undo, Ctrl+S saves
-#   Enter = open the picked room in the room builder (F2), T = jump into the picked room and play
-# Red = two rooms overlap, an exit that leads nowhere, or a door nobody answers on the other side.
-# Only each room's four "cell" numbers are written (see meta_patch.gd); exits are shown, not edited.
 extends CanvasLayer
 
 signal closed
 
-const RoomDoc := preload("res://editor/room_doc.gd")
 const MetaPatch := preload("res://editor/meta_patch.gd")
+const Workspace := preload("res://editor/workspace_shell.gd")
+const WorkspaceFiles := preload("res://editor/workspace_files.gd")
 const SHEETS := ["before", "after", "restored"]
-const TOP := 16.0
-const BOTTOM := 12.0
+const META_FILE := "data/rooms_meta.json"
+const ACCENT := Color("#afccfa")
+const WARNING := Color("#f2b674")
+const ERROR := Color("#ff9696")
 
 var sheet := "before"
-var picked := ""                 # room id
-var warnings: Array = []         # {id, text}
-var data: Dictionary = {}        # the parsed rooms_meta.json (edited in place)
+var picked := ""
+var warnings: Array = []
+var data: Dictionary = {}
 
-var _orig: Dictionary = {}       # the same, as loaded (to see what changed)
-var _text := ""                  # the file text as loaded
-var _view: Control = null
-var _status: Label = null
-var _theme: Theme = null
-var _cam := Vector2.ZERO         # map cell at the top left of the view
-var _zoom := 6.0                 # screen pixels (of 384x216) per map cell
-var _drag := ""                  # "" | "move" | "size" | "pan"
-var _drag_from := Vector2.ZERO
-var _drag_cell := Vector2i.ZERO
-var _drag_start: Array = []
-var _cam_from := Vector2.ZERO
-var _undo: Array = []            # [[sheet, id, cell], ...]
+var _orig: Dictionary = {}
+var _source := ""
+var _path := ""
+var _had_file := false
 var _msg := ""
-var _ui: Array = []
+var _undo: Array = []
+var _redo: Array = []
+var _cameras: Dictionary = {}
+var _view_size := Vector2.ZERO
+var _cam := Vector2.ZERO
+var _zoom := 12.0
+var _gesture: Dictionary = {}
+var _workspace: Control
+var _view: Control
+var _search: LineEdit
+var _list: ItemList
+var _room_count: Label
+var _room_title: Label
+var _room_hint: Label
+var _issue_title: Label
+var _issue_detail: Label
+var _issue_list: VBoxContainer
+var _status: Label
+var _zoom_label: Label
+var _overlap: PanelContainer
+var _edit_button: Button
+var _play_button: Button
+var _save_button: Button
+var _undo_button: Button
+var _redo_button: Button
+var _sheet_buttons: Array[Button] = []
+var _fields: Array[SpinBox] = []
 
 
 func _ready() -> void:
 	layer = 101
 
 
+## Load the map draft once. Sheet switches and opening rooms leave the draft intact.
 func begin(info: Dictionary) -> void:
-	_theme = _make_theme()
 	_load()
+	var initial_sheet := String(info.get("sheet", W.sheet))
+	if SHEETS.has(initial_sheet) and data.get("sheets", {}).has(initial_sheet):
+		sheet = initial_sheet
 	var room := String(info.get("room", ""))
-	if info.has("sheet") and SHEETS.has(String(info["sheet"])):
-		sheet = String(info["sheet"])
-	elif W.sheet != "" and SHEETS.has(String(W.sheet)):
-		sheet = String(W.sheet)
+	if not _rooms().has(room):
+		room = String(info.get("file_id", ""))
 	if _rooms().has(room):
 		picked = room
 	_build_ui()
-	_fit()
+	_refresh_rooms()
 	_recheck()
-	_say("F3 map: drag a room to move it, Enter opens it in F2, T jumps into it.")
+	_fit.call_deferred()
 
 
-# ---------- data ----------
+func set_active(active: bool) -> void:
+	visible = active
+	set_process_unhandled_key_input(active)
+	if not active:
+		_cancel_gesture()
+		_hide_overlap()
 
-func _meta_path() -> String:
-	var pd: String = Dev.project_dir()
-	if pd != "" and FileAccess.file_exists(pd.path_join("data/rooms_meta.json")):
-		return pd.path_join("data/rooms_meta.json")
-	return "res://data/rooms_meta.json"
 
+# Map documents
 
 func _load() -> void:
-	_text = FileAccess.get_file_as_string(_meta_path())
-	data = JSON.parse_string(_text)
+	var root: String = Dev.project_dir()
+	if root != "":
+		_path = root.path_join(META_FILE)
+		_had_file = FileAccess.file_exists(_path)
+	_source = WorkspaceFiles.read(_path) if _had_file else WorkspaceFiles.read("res://" + META_FILE)
+	data = _parse_map(_source)
 	_orig = data.duplicate(true)
+	if data.is_empty():
+		_msg = "Could not read the map. Check %s and reopen the workspace." % META_FILE
 
 
-## id -> the room's dictionary, for the page shown. "restored" is its base page plus the rooms it adds.
+func _parse_map(contents: String) -> Dictionary:
+	var parsed = JSON.parse_string(contents)
+	if not parsed is Dictionary or not parsed.get("sheets") is Dictionary:
+		return {}
+	var sheets: Dictionary = parsed["sheets"]
+	for era in SHEETS:
+		if not sheets.get(era) is Dictionary:
+			return {}
+		var rooms: Dictionary = sheets[era]
+		if era == "restored":
+			if not rooms.get("add") is Dictionary or not ["before", "after"].has(String(rooms.get("base", "before"))):
+				return {}
+			rooms = rooms["add"]
+		for room in rooms.values():
+			if not room is Dictionary or not room.get("cell") is Array or room["cell"].size() != 4:
+				return {}
+			var index := 0
+			for value in room["cell"]:
+				if not (value is float or value is int) or int(value) != value or value < (0 if index < 2 else 1):
+					return {}
+				index += 1
+			if not room.get("exits", []) is Array:
+				return {}
+			for exit in room.get("exits", []):
+				if not exit is Dictionary:
+					return {}
+	return parsed
+
+
+## Get visible rooms, including inherited rooms on the Restored sheet.
 func _rooms(which := "") -> Dictionary:
-	if which == "":
-		which = sheet
+	var era := sheet if which == "" else which
 	var sheets: Dictionary = data.get("sheets", {})
-	var page: Dictionary = sheets.get(which, {})
-	if which != "restored":
+	var page: Dictionary = sheets.get(era, {})
+	if era != "restored":
 		return page
-	var out: Dictionary = {}
 	var base: Dictionary = sheets.get(String(page.get("base", "before")), {})
-	for k in base:
-		out[k] = base[k]
-	for k in page.get("add", {}):
-		out[k] = page["add"][k]
-	return out
+	var inherited := base.duplicate()
+	inherited.merge(page.get("add", {}), true)
+	return inherited
 
 
-## The page a room is stored on (the restored page keeps only the rooms it adds).
 func _home(id: String) -> String:
-	if sheet == "restored" and data["sheets"]["restored"].get("add", {}).has(id):
-		return "restored"
-	return "before" if sheet == "restored" else sheet
+	if sheet != "restored":
+		return sheet
+	var restored: Dictionary = data.get("sheets", {}).get("restored", {})
+	return "restored" if restored.get("add", {}).has(id) else String(restored.get("base", "before"))
 
 
-func _stored(home: String, id: String) -> Dictionary:
-	if home == "restored":
-		return data["sheets"]["restored"]["add"][id]
-	return data["sheets"][home][id]
+func _stored_rooms(model: Dictionary, era: String) -> Dictionary:
+	var page: Dictionary = model.get("sheets", {}).get(era, {})
+	return page.get("add", {}) if era == "restored" else page
 
 
-func _orig_cell(home: String, id: String) -> Array:
-	if home == "restored":
-		return _orig["sheets"]["restored"]["add"][id]["cell"]
-	return _orig["sheets"][home][id]["cell"]
+func _cell_from(model: Dictionary, era: String, id: String) -> Array:
+	return _stored_rooms(model, era).get(id, {}).get("cell", [])
 
 
 func _rect(id: String) -> Rect2:
-	var c: Array = _rooms()[id]["cell"]
-	return Rect2(float(c[0]), float(c[1]), float(c[2]), float(c[3]))
+	return _cell_rect(_rooms()[id]["cell"])
+
+
+func _cell_rect(cell: Array) -> Rect2:
+	return Rect2(float(cell[0]), float(cell[1]), float(cell[2]), float(cell[3]))
+
+
+func _same_cell(a: Array, b: Array) -> bool:
+	if a.size() != 4 or b.size() != 4:
+		return false
+	for i in 4:
+		if int(a[i]) != int(b[i]):
+			return false
+	return true
 
 
 func is_dirty() -> bool:
 	return not changed_rooms().is_empty()
 
 
-## [[home page, id, cell], ...] of the rooms whose cell is not what the file says.
+## List the cells changed from disk as [home era, room ID, cell].
 func changed_rooms() -> Array:
-	var out: Array = []
-	var sheets: Dictionary = data.get("sheets", {})
-	for home in sheets:
-		var rooms: Dictionary = sheets[home].get("add", {}) if home == "restored" else sheets[home]
+	var changes: Array = []
+	for era in SHEETS:
+		var rooms := _stored_rooms(data, era)
 		for id in rooms:
-			if rooms[id] is Dictionary and rooms[id].has("cell") and rooms[id]["cell"] != _orig_cell(home, id):
-				out.append([home, id, rooms[id]["cell"]])
-	return out
+			if not _same_cell(rooms[id]["cell"], _cell_from(_orig, era, id)):
+				changes.append([era, id, rooms[id]["cell"]])
+	return changes
+
+
+## Save a checked patch to the project file. External edits to other rooms are kept.
+func save() -> bool:
+	var changes := changed_rooms()
+	if changes.is_empty():
+		_say("No map changes to save.")
+		return true
+	if _path == "":
+		_say("Choose a writable project folder before saving the map.")
+		return false
+	var disk: Variant = null
+	if FileAccess.file_exists(_path):
+		disk = WorkspaceFiles.read(_path)
+	elif _had_file:
+		_say("The map file was removed outside the builder. Restore it, then try again.")
+		return false
+	var latest := _source if disk == null else String(disk)
+	var next_model := _parse_map(latest)
+	if next_model.is_empty():
+		_say("The map file is unreadable. Fix it on disk and try saving again.")
+		return false
+	for change in changes:
+		var era := String(change[0])
+		var id := String(change[1])
+		var cell := _cell_from(next_model, era, id)
+		if not _same_cell(cell, _cell_from(_orig, era, id)) and not _same_cell(cell, change[2]):
+			_say("%s was changed outside the builder. Your draft is still open." % _name_for(id))
+			return false
+		_stored_rooms(next_model, era)[id]["cell"] = change[2].map(func(value): return float(value))
+	var patched := MetaPatch.set_cells(latest, changes)
+	var checked := _parse_map(patched)
+	if checked.is_empty() or checked != next_model:
+		_say("Could not locate the changed cells in the map file. Your draft is still open.")
+		return false
+	var problem := WorkspaceFiles.commit({_path: patched}, {_path: disk})
+	if problem != "":
+		_say(problem)
+		return false
+	if latest != _source:
+		_undo.clear()
+		_redo.clear()
+	_had_file = true
+	_source = patched
+	data = checked
+	_orig = data.duplicate(true)
+	var live: Dictionary = Db.table("rooms_meta")
+	for change in changes:
+		var rooms := _stored_rooms(live, String(change[0]))
+		if rooms.has(change[1]):
+			rooms[change[1]]["cell"] = change[2].duplicate()
+	if not _rooms().has(picked):
+		picked = ""
+	_refresh_rooms()
+	_recheck()
+	_say("Saved %d room changes to %s." % [changes.size(), META_FILE])
+	return true
+
+
+# Editing and navigation
+
+func select(id: String) -> void:
+	picked = id if _rooms().has(id) else ""
+	_issue_detail.text = ""
+	if not _search.text.is_empty() and picked != "" and not _visible_in_list(picked):
+		_search.text = ""
+		_refresh_rooms()
+	else:
+		_refresh_selection()
+	_refresh_issues()
+	_view.queue_redraw()
+
+
+func set_sheet(which: String) -> void:
+	if which == sheet or not SHEETS.has(which) or not data.get("sheets", {}).has(which):
+		return
+	_cancel_gesture()
+	_hide_overlap()
+	_cameras[sheet] = [_cam, _zoom]
+	sheet = which
+	picked = _era_counterpart(picked)
+	if _cameras.has(sheet):
+		_cam = _cameras[sheet][0]
+		_zoom = _cameras[sheet][1]
+		_refresh_zoom()
+	else:
+		_fit()
+	_refresh_rooms()
+	_recheck()
+
+
+func _era_counterpart(id: String) -> String:
+	var rooms := _rooms()
+	if rooms.has(id):
+		return id
+	var base := id.trim_suffix("_shift").trim_suffix("_restored")
+	var suffix := "_shift" if sheet == "after" else "_restored" if sheet == "restored" else ""
+	if rooms.has(base + suffix):
+		return base + suffix
+	return base if rooms.has(base) else ""
+
+
+func _editable() -> bool:
+	return picked != "" and _home(picked) == sheet
+
+
+## Move the current room in map cells.
+func nudge(dx: int, dy: int) -> bool:
+	return _edit([dx, dy, 0, 0])
+
+
+## Adjust the current room's map footprint.
+func resize_by(dw: int, dh: int) -> bool:
+	return _edit([0, 0, dw, dh])
+
+
+func _edit(delta: Array) -> bool:
+	if not _editable():
+		return false
+	var cell: Array = _rooms()[picked]["cell"]
+	var next: Array = []
+	for i in 4:
+		next.append(maxi(0 if i < 2 else 1, int(cell[i]) + int(delta[i])))
+	return _apply_cell(next)
+
+
+func _apply_cell(next: Array) -> bool:
+	if not _editable():
+		return false
+	var room: Dictionary = _rooms()[picked]
+	if _same_cell(next, room["cell"]):
+		return false
+	_record_edit(_home(picked), picked, room["cell"], next)
+	room["cell"] = next
+	_msg = ""
+	_recheck()
+	return true
+
+
+func _record_edit(era: String, id: String, previous: Array, next: Array) -> void:
+	_undo.append([era, id, previous.duplicate(), next.duplicate()])
+	_redo.clear()
+
+
+func undo() -> void:
+	_apply_history(_undo, _redo, 2)
+
+
+func redo() -> void:
+	_apply_history(_redo, _undo, 3)
+
+
+func _apply_history(from: Array, to: Array, value_index: int) -> void:
+	_cancel_gesture()
+	if from.is_empty():
+		return
+	var step: Array = from.pop_back()
+	_stored_rooms(data, String(step[0]))[step[1]]["cell"] = step[value_index].duplicate()
+	to.append(step)
+	_msg = ""
+	_recheck()
+
+
+func open_in_room_builder() -> void:
+	if picked != "" and Dev.open_room_editor(picked, sheet) == null:
+		_say("Could not open the %s room file in %s." % [_name_for(picked), sheet.capitalize()])
+
+
+func teleport() -> void:
+	if picked != "" and not Dev.play_map_room(picked, sheet):
+		_say("Could not start a playtest for %s in %s." % [_name_for(picked), sheet.capitalize()])
+
+
+# Workspace controls
+
+func _build_ui() -> void:
+	_workspace = Workspace.mount(self)
+	var padding := MarginContainer.new()
+	for edge in ["left", "top", "right", "bottom"]:
+		padding.add_theme_constant_override("margin_" + edge, 16)
+	_workspace.add_child(padding)
+	padding.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 14)
+	padding.add_child(layout)
+	var bar := HBoxContainer.new()
+	layout.add_child(bar)
+	var map_tab := Workspace.button(bar, "Map", func(): pass)
+	map_tab.toggle_mode = true
+	map_tab.set_pressed_no_signal(true)
+	map_tab.disabled = true
+	_edit_button = Workspace.button(bar, "Edit Room", open_in_room_builder, "Open the selected room in F2 (Enter)")
+	_play_button = Workspace.button(bar, "Play Here", teleport, "Playtest the selected room (T)")
+	bar.add_spacer(false)
+	_undo_button = Workspace.button(bar, "Undo", undo, "Undo (Ctrl+Z)")
+	_redo_button = Workspace.button(bar, "Redo", redo, "Redo (Ctrl+Y)")
+	_save_button = Workspace.button(bar, "Save Map", func(): save(), "Save map footprint changes (Ctrl+S)")
+	Workspace.button(bar, "Close", Dev.request_close, "Close both builders")
+
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 14)
+	layout.add_child(body)
+	_build_room_list(body)
+	_build_map_area(body)
+	_build_inspector(body)
+
+	_status = Label.new()
+	_status.custom_minimum_size.y = 24
+	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	layout.add_child(_status)
+
+
+func _build_room_list(body: HBoxContainer) -> void:
+	var sidebar := VBoxContainer.new()
+	sidebar.custom_minimum_size.x = 228
+	sidebar.add_theme_constant_override("separation", 8)
+	body.add_child(sidebar)
+	_heading(sidebar, "Rooms")
+	_search = LineEdit.new()
+	_search.placeholder_text = "Search name or code"
+	_search.clear_button_enabled = true
+	_search.text_changed.connect(func(_query: String): _refresh_rooms())
+	sidebar.add_child(_search)
+	_list = ItemList.new()
+	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_list.item_selected.connect(_select_list_room)
+	_list.item_activated.connect(func(_index: int): open_in_room_builder())
+	sidebar.add_child(_list)
+	_room_count = _heading(sidebar, "", 14)
+
+
+func _build_map_area(body: HBoxContainer) -> void:
+	var area := VBoxContainer.new()
+	area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	area.add_theme_constant_override("separation", 8)
+	body.add_child(area)
+	var tools := HBoxContainer.new()
+	area.add_child(tools)
+	var group := ButtonGroup.new()
+	for era in SHEETS:
+		var tab := Workspace.button(tools, String(era).capitalize(), set_sheet.bind(era))
+		tab.toggle_mode = true
+		tab.button_group = group
+		_sheet_buttons.append(tab)
+	tools.add_spacer(false)
+	Workspace.button(tools, "−", func(): _zoom_at(_view.size * 0.5, 0.8), "Zoom out")
+	_zoom_label = _heading(tools, "", 14)
+	_zoom_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_zoom_label.custom_minimum_size.x = 48
+	Workspace.button(tools, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in")
+	Workspace.button(tools, "Fit", _fit, "Fit all rooms in view")
+	Workspace.button(tools, "Center", _center_room, "Center the selected room")
+	_view = Control.new()
+	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_view.clip_contents = true
+	_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	_view.gui_input.connect(_on_view_input)
+	_view.draw.connect(_on_draw)
+	_view.resized.connect(_on_resize)
+	area.add_child(_view)
+	var hint := _heading(area, "Drag to move   ·   Drag corner to resize   ·   Wheel to zoom   ·   Middle drag to pan", 13)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+
+func _build_inspector(body: HBoxContainer) -> void:
+	var details := VBoxContainer.new()
+	details.custom_minimum_size.x = 260
+	details.add_theme_constant_override("separation", 8)
+	body.add_child(details)
+	_room_title = _heading(details, "No room selected")
+	_room_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_room_hint = _heading(details, "", 14)
+	_room_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var grid := GridContainer.new()
+	grid.columns = 2
+	details.add_child(grid)
+	for i in 4:
+		var field := VBoxContainer.new()
+		field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(field)
+		_heading(field, ["Map X", "Map Y", "Width (cells)", "Height (cells)"][i], 14)
+		var box := SpinBox.new()
+		box.min_value = 0 if i < 2 else 1
+		box.max_value = 9999
+		box.allow_greater = true
+		box.get_line_edit().select_all_on_focus = true
+		box.value_changed.connect(_change_field.bind(i))
+		field.add_child(box)
+		_fields.append(box)
+	details.add_child(HSeparator.new())
+	_issue_title = _heading(details, "Issues")
+	var issue_scroll := ScrollContainer.new()
+	issue_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	issue_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	details.add_child(issue_scroll)
+	_issue_list = VBoxContainer.new()
+	_issue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	issue_scroll.add_child(_issue_list)
+	_issue_detail = _heading(details, "", 14)
+	_issue_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+
+func _heading(parent: Container, caption: String, size := 19) -> Label:
+	var label := Label.new()
+	label.text = caption
+	label.add_theme_font_size_override("font_size", size)
+	parent.add_child(label)
+	return label
+
+
+func _name_for(id: String) -> String:
+	return String(_rooms().get(id, {}).get("title", id)).capitalize()
+
+
+func _refresh_rooms() -> void:
+	var query := _search.text.strip_edges().to_lower()
+	var rooms := _rooms()
+	var ids := rooms.keys()
+	ids.sort_custom(func(a, b): return _name_for(a).naturalnocasecmp_to(_name_for(b)) < 0)
+	_list.clear()
+	for id in ids:
+		var title := _name_for(id)
+		var code := String(rooms[id].get("code", id))
+		if not query.is_empty() and not ("%s %s %s" % [title, code, id]).to_lower().contains(query):
+			continue
+		var i := _list.add_item(title)
+		_list.set_item_metadata(i, id)
+		_list.set_item_tooltip(i, "%s (%s)" % [title, code])
+	_room_count.text = "%d rooms" % ids.size() if _list.item_count == ids.size() else "%d of %d rooms" % [_list.item_count, ids.size()]
+	_refresh_selection()
+
+
+func _select_list_room(index: int) -> void:
+	select(String(_list.get_item_metadata(index)))
+	var view_rect := Rect2(Vector2.ZERO, _view.size).grow(-20)
+	var room_rect := _rect(picked)
+	if not view_rect.encloses(Rect2(_to_screen(room_rect.position), room_rect.size * _zoom)):
+		_center_room()
+
+
+func _visible_in_list(id: String) -> bool:
+	for i in _list.item_count:
+		if _list.get_item_metadata(i) == id:
+			return true
+	return false
+
+
+func _change_field(value: float, index: int) -> void:
+	if not _editable():
+		return
+	var next: Array = _rooms()[picked]["cell"].duplicate()
+	next[index] = int(value)
+	if _apply_cell(next):
+		_center_room()
+
+
+func _refresh_selection() -> void:
+	var has_room := picked != ""
+	var room: Dictionary = _rooms().get(picked, {})
+	_room_title.text = _name_for(picked) if has_room else "No room selected"
+	_room_hint.text = "Choose a room by name or click it on the map."
+	if has_room:
+		var code := String(room.get("code", picked))
+		_room_hint.text = "%s · %s era" % [code, sheet.capitalize()]
+		if not _editable():
+			_room_hint.text += "\nEdit its footprint in %s." % _home(picked).capitalize()
+	_edit_button.disabled = not has_room
+	_play_button.disabled = not has_room
+	for i in 4:
+		_fields[i].editable = _editable()
+		_fields[i].set_value_no_signal(room["cell"][i] if has_room else _fields[i].min_value)
+	_list.deselect_all()
+	for i in _list.item_count:
+		if _list.get_item_metadata(i) == picked:
+			_list.select(i)
+			_list.ensure_current_is_visible()
+			break
+	for i in SHEETS.size():
+		_sheet_buttons[i].set_pressed_no_signal(sheet == SHEETS[i])
+	_save_button.disabled = not is_dirty()
+	_undo_button.disabled = _undo.is_empty()
+	_redo_button.disabled = _redo.is_empty()
+	if _status != null:
+		var state := "Map unavailable" if data.is_empty() else "Unsaved map changes" if is_dirty() else "Map saved"
+		_status.text = state if _msg == "" else ("%s   ·   %s" % [state, _msg] if is_dirty() else _msg)
+
+
+func _say(message: String) -> void:
+	_msg = message
+	_refresh_selection()
 
 
 func _recheck() -> void:
 	warnings.clear()
 	var rooms := _rooms()
-	var ids: Array = rooms.keys()
+	var ids := rooms.keys()
 	for i in ids.size():
 		for j in range(i + 1, ids.size()):
-			if _rect(ids[i]).intersects(_rect(ids[j])):
-				warnings.append({"id": ids[i], "text": "%s overlaps %s" % [ids[i], ids[j]]})
-				warnings.append({"id": ids[j], "text": "%s overlaps %s" % [ids[j], ids[i]]})
+			var left: String = ids[i]
+			var right: String = ids[j]
+			if _cell_rect(rooms[left]["cell"]).intersects(_cell_rect(rooms[right]["cell"])):
+				warnings.append({"id": left, "other": right, "kind": "Overlap", "text": "%s overlaps %s" % [left, right]})
+				warnings.append({"id": right, "other": left, "kind": "Overlap", "text": "%s overlaps %s" % [right, left]})
 	for id in ids:
-		for ex in rooms[id].get("exits", []):
-			var to := String(ex.get("to", ""))
-			var kind := String(ex.get("kind", ""))
-			if to == "":
-				if kind != "bricked":
-					warnings.append({"id": id, "text": "%s: an exit (%s) leads nowhere" % [id, kind]})
-			elif not rooms.has(to):
-				warnings.append({"id": id, "text": "%s: exit leads to '%s', which is not on this page" % [id, to]})
-			elif kind == "door":
-				var back := false
-				for ex2 in rooms[to].get("exits", []):
-					if String(ex2.get("to", "")) == id:
-						back = true
-				if not back:
-					warnings.append({"id": id, "text": "%s: door to %s, but %s has no door back" % [id, to, to]})
-	if _view != null:
-		_view.queue_redraw()
-	_update_status()
+		for exit in rooms[id].get("exits", []):
+			var to := String(exit.get("to", ""))
+			var kind := String(exit.get("kind", ""))
+			if to == "" and kind != "bricked":
+				warnings.append({"id": id, "kind": "Broken exit", "text": "%s has an exit that leads nowhere." % _name_for(id)})
+			elif to != "" and not rooms.has(to):
+				warnings.append({"id": id, "kind": "Missing room", "text": "%s has an exit to %s, which is absent from this era." % [_name_for(id), to]})
+			elif kind == "door" and to != "" and not rooms[to].get("exits", []).any(func(e): return e.get("to", "") == id):
+				warnings.append({"id": id, "kind": "One-way door", "text": "%s leads to %s, with no return exit." % [_name_for(id), _name_for(to)]})
+	_refresh_selection()
+	_refresh_issues()
+	_view.queue_redraw()
 
 
-# ---------- editing (also used by the tests) ----------
-
-func select(id: String) -> void:
-	picked = id if _rooms().has(id) else ""
-	_update_status()
-	if _view != null:
-		_view.queue_redraw()
-
-
-func set_sheet(which: String) -> void:
-	if not SHEETS.has(which) or not data["sheets"].has(which):
-		return
-	sheet = which
-	if not _rooms().has(picked):
-		picked = ""
-	_fit()
-	_recheck()
-
-
-## Move the picked room by whole map cells.
-func nudge(dx: int, dy: int) -> bool:
-	return _edit(dx, dy, 0, 0)
-
-
-## Grow or shrink the picked room by whole map cells (never below 1x1).
-func resize_by(dw: int, dh: int) -> bool:
-	return _edit(0, 0, dw, dh)
+func _refresh_issues() -> void:
+	for child in _issue_list.get_children():
+		_issue_list.remove_child(child)
+		child.queue_free()
+	_issue_detail.text = ""
+	var displayed := 0
+	var rooms := _rooms()
+	for issue in warnings:
+		if issue.has("other") and (issue["other"] == picked or (issue["id"] != picked and String(issue["other"]) < String(issue["id"]))):
+			continue
+		var caption := "%s · %s" % [issue["kind"], _name_for(issue["id"])]
+		if issue.has("other"):
+			var left: String = rooms[issue["id"]].get("code", issue["id"])
+			var right: String = rooms[issue["other"]].get("code", issue["other"])
+			caption = "Overlap · %s and %s" % [left, right]
+		var button := Workspace.button(_issue_list, caption, _focus_issue.bind(issue), _issue_text(issue))
+		button.clip_text = true
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		displayed += 1
+	_issue_title.text = "Issues (%d)" % displayed
+	if displayed == 0:
+		_heading(_issue_list, "No map issues on this era.", 14)
 
 
-func _edit(dx: int, dy: int, dw: int, dh: int) -> bool:
-	if picked == "":
-		return false
-	var home := _home(picked)
-	if sheet == "restored" and home != "restored":
-		_say("%s belongs to the BEFORE page: change it there." % picked)
-		return false
-	var cell: Array = _stored(home, picked)["cell"]
-	var n := [maxi(0, int(cell[0]) + dx), maxi(0, int(cell[1]) + dy), maxi(1, int(cell[2]) + dw), maxi(1, int(cell[3]) + dh)]
-	if n == cell:
-		return false
-	_undo.append([home, picked, cell.duplicate()])
-	_stored(home, picked)["cell"] = n
-	_recheck()
-	return true
+func _issue_text(issue: Dictionary) -> String:
+	if issue.has("other"):
+		return "%s overlaps %s." % [_name_for(issue["id"]), _name_for(issue["other"])]
+	return issue["text"]
 
 
-func undo() -> void:
-	if _undo.is_empty():
-		return
-	var u: Array = _undo.pop_back()
-	_stored(String(u[0]), String(u[1]))["cell"] = u[2]
-	_recheck()
+func _focus_issue(issue: Dictionary) -> void:
+	select(issue["id"])
+	_center_room()
+	_issue_detail.text = _issue_text(issue)
 
 
-## Write the changed cells into rooms_meta.json (text patch). Returns true when it saved.
-func save() -> bool:
-	var ch := changed_rooms()
-	if ch.is_empty():
-		_say("Nothing changed.")
-		return true
-	var t := _text
-	for c in ch:
-		t = MetaPatch.set_cell(t, String(c[0]), String(c[1]), c[2])
-		if t == "":
-			_say("Could not find %s in the file: nothing saved." % c[1])
-			return false
-	var path := _meta_path()
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
-		_say("Could not write %s" % path)
-		return false
-	f.store_string(t)
-	f.close()
-	_text = t
-	_orig = data.duplicate(true)
-	# the running game reads the same table: keep it in step so the menu map and jumps agree
-	var live: Dictionary = Db.table("rooms_meta")
-	for c in ch:
-		var rooms: Dictionary = live.get("sheets", {}).get(String(c[0]), {})
-		if String(c[0]) == "restored":
-			rooms = rooms.get("add", {})
-		if rooms.has(String(c[1])):
-			rooms[String(c[1])]["cell"] = (c[2] as Array).duplicate()
-	_undo.clear()
-	_say("Saved %d room(s) to %s" % [ch.size(), path.get_file()])
-	_recheck()
-	return true
+# Map camera and input
 
-
-## Open the picked room in the room builder (F2).
-func open_in_room_builder() -> void:
-	if picked == "":
-		return
-	var pd: String = Dev.project_dir()
-	var text := ""
-	var props := ""
-	if pd != "" and FileAccess.file_exists(pd.path_join("rooms/%s.txt" % picked)):
-		text = FileAccess.get_file_as_string(pd.path_join("rooms/%s.txt" % picked))
-		if FileAccess.file_exists(pd.path_join("rooms/%s.props.json" % picked)):
-			props = FileAccess.get_file_as_string(pd.path_join("rooms/%s.props.json" % picked))
-	elif FileAccess.file_exists("res://rooms/%s.txt" % picked):
-		text = FileAccess.get_file_as_string("res://rooms/%s.txt" % picked)
-		if FileAccess.file_exists("res://rooms/%s.props.json" % picked):
-			props = FileAccess.get_file_as_string("res://rooms/%s.props.json" % picked)
+func _on_resize() -> void:
+	if _view_size == Vector2.ZERO:
+		_fit()
 	else:
-		_say("No room file for %s." % picked)
-		return
-	var doc: RefCounted = RoomDoc.parse(picked, text, props)
-	closed.emit()
-	Dev.open_tool.call_deferred("dev_room", {"doc": doc})
-
-
-## Close the map and play in the picked room.
-func teleport() -> void:
-	if picked == "":
-		return
-	var id := picked
-	var sh := sheet
-	closed.emit()
-	Dev.teleport.call_deferred(id, sh)
-
-
-# ---------- ui ----------
-
-func _make_theme() -> Theme:
-	var t := Theme.new()
-	for cls in ["Button", "Label"]:
-		t.set_font_size("font_size", cls, 7)
-	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = {"normal": Color(0.16, 0.16, 0.24), "hover": Color(0.26, 0.26, 0.4), "pressed": Color(0.5, 0.3, 0.3),
-			"focus": Color(0.16, 0.16, 0.24), "disabled": Color(0.1, 0.1, 0.14)}[st]
-		sb.content_margin_left = 3.0
-		sb.content_margin_right = 3.0
-		sb.content_margin_top = 1.0
-		sb.content_margin_bottom = 1.0
-		t.set_stylebox(st, "Button", sb)
-	t.set_color("font_color", "Label", Color(0.9, 0.9, 0.95))
-	return t
-
-
-func _build_ui() -> void:
-	_view = Control.new()
-	_view.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_view.mouse_filter = Control.MOUSE_FILTER_STOP
-	_view.theme = _theme
-	_view.draw.connect(_on_draw)
-	_view.gui_input.connect(_on_view_input)
-	add_child(_view)
-	var bar := HBoxContainer.new()
-	bar.theme = _theme
-	bar.position = Vector2(2, 1)
-	bar.add_theme_constant_override("separation", 2)
-	add_child(bar)
-	for s in SHEETS:
-		_btn(bar, s.to_upper(), set_sheet.bind(s))
-	_sep(bar)
-	_btn(bar, "UNDO", undo)
-	_btn(bar, "SAVE", save)
-	_sep(bar)
-	_btn(bar, "OPEN IN F2", open_in_room_builder)
-	_btn(bar, "PLAY HERE", teleport)
-	_btn(bar, "X", func(): closed.emit())
-	_status = Label.new()
-	_status.theme = _theme
-	_status.position = Vector2(3, 216 - BOTTOM + 1)
-	_status.size = Vector2(378, 11)
-	_status.clip_text = true
-	add_child(_status)
-	var back := ColorRect.new()
-	back.color = Color(0.06, 0.06, 0.1, 0.9)
-	back.position = Vector2(0, 216 - BOTTOM)
-	back.size = Vector2(384, BOTTOM)
-	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(back)
-	move_child(back, 1)
-
-
-func _btn(parent: Control, text: String, cb: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(cb)
-	parent.add_child(b)
-	return b
-
-
-func _sep(parent: Control) -> void:
-	var l := Label.new()
-	l.text = "|"
-	parent.add_child(l)
-
-
-func _say(text: String) -> void:
-	_msg = text
-	_update_status()
-
-
-func _update_status() -> void:
-	if _status == null:
-		return
-	var s := "%s%s | " % [sheet.to_upper(), "*" if is_dirty() else ""]
-	if picked != "":
-		var c: Array = _rooms()[picked]["cell"]
-		s += "%s (%s) at %d,%d size %dx%d | " % [picked, _rooms()[picked].get("title", ""), c[0], c[1], c[2], c[3]]
-		for w in warnings:
-			if w["id"] == picked:
-				s += "RED: %s | " % w["text"]
-				break
-	if not warnings.is_empty():
-		s += "%d red | " % warnings.size()
-	_status.text = s + _msg
+		_cam += (_view_size - _view.size) / (2 * _zoom)
+		_view.queue_redraw()
+	_view_size = _view.size
 
 
 func _fit() -> void:
 	var rooms := _rooms()
-	if rooms.is_empty() or _view == null:
+	if rooms.is_empty() or _view.size.x <= 4 or _view.size.y <= 4:
 		return
-	var box := Rect2(_rect(rooms.keys()[0]).position, Vector2.ZERO)
-	for id in rooms:
-		box = box.merge(_rect(id))
-	var avail := Vector2(384.0 - 8.0, 216.0 - TOP - BOTTOM - 8.0)
-	_zoom = clampf(minf(avail.x / maxf(1.0, box.size.x), avail.y / maxf(1.0, box.size.y)), 2.0, 24.0)
-	_cam = box.get_center() - Vector2(192.0, TOP + (216.0 - TOP - BOTTOM) * 0.5) / _zoom
+	var box := _cell_rect(rooms.values()[0]["cell"])
+	for room in rooms.values():
+		box = box.merge(_cell_rect(room["cell"]))
+	var avail := (_view.size - Vector2(68, 68)).max(Vector2(4, 4))
+	_zoom = minf(minf(avail.x / box.size.x, avail.y / box.size.y), 56.0)
+	_cam = box.get_center() - _view.size / (2 * _zoom)
+	_refresh_zoom()
+
+
+func _center_room() -> void:
+	if picked != "":
+		_cam = _rect(picked).get_center() - _view.size / (2 * _zoom)
+		_view.queue_redraw()
 
 
 func _to_cell(p: Vector2) -> Vector2:
@@ -393,195 +674,368 @@ func _to_screen(c: Vector2) -> Vector2:
 	return (c - _cam) * _zoom
 
 
-func _room_at(p: Vector2) -> String:
-	var c := _to_cell(p)
-	var hit := ""
-	for id in _rooms():
-		if _rect(id).has_point(c):
-			hit = id            # the last one drawn is on top
-	return hit
+func _zoom_at(p: Vector2, factor: float) -> void:
+	var cell := _to_cell(p)
+	_zoom = clampf(_zoom * factor, minf(_zoom, 0.04), 100.0)
+	_cam = cell - p / _zoom
+	_refresh_zoom()
 
 
-func _on_view_input(ev: InputEvent) -> void:
-	var mb := ev as InputEventMouseButton
-	if mb != null:
-		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			var before := _to_cell(mb.position)
-			_zoom = clampf(_zoom * (1.2 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.2), 2.0, 40.0)
-			_cam += before - _to_cell(mb.position)
-			_view.queue_redraw()
-		elif mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
-			var id := _room_at(mb.position)
-			picked = id
-			_drag = ""
-			if id != "":
-				var r := _rect(id)
-				var corner := _to_screen(r.end)
-				_drag_from = mb.position
-				_drag_cell = Vector2i(_to_cell(mb.position).floor())
-				_drag_start = (_rooms()[id]["cell"] as Array).duplicate()
-				_drag = "size" if mb.position.distance_to(corner) < maxf(4.0, _zoom * 0.45) else "move"
-			_update_status()
-			_view.queue_redraw()
-		elif mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
-			_drag = ""
-		elif (mb.button_index == MOUSE_BUTTON_RIGHT or mb.button_index == MOUSE_BUTTON_MIDDLE) and mb.pressed:
-			_drag = "pan"
-			_drag_from = mb.position
-			_cam_from = _cam
-		elif mb.button_index == MOUSE_BUTTON_RIGHT or mb.button_index == MOUSE_BUTTON_MIDDLE:
-			_drag = ""
+func _refresh_zoom() -> void:
+	_zoom_label.text = "%d%%" % roundi(_zoom * 100.0 / 16.0)
+	_view.queue_redraw()
+
+
+func _rooms_at(p: Vector2) -> Array[String]:
+	var hits: Array[String] = []
+	var cell := _to_cell(p)
+	var rooms := _rooms()
+	for id in rooms:
+		if _cell_rect(rooms[id]["cell"]).has_point(cell):
+			hits.append(id)
+	if not hits.is_empty():
+		return hits
+	var stacks := _stacks(rooms)
+	for rect in stacks:
+		var ids: Array = stacks[rect]
+		if ids.size() > 1:
+			if _badge_rect(_stack_badge_position(rect), "×%d" % ids.size()).has_point(p):
+				hits.assign(ids)
+				break
+		else:
+			var screen := _screen_rect(rect)
+			var id: String = ids[0]
+			var code := String(rooms[id].get("code", id))
+			if _uses_badge(screen) and _badge_rect(screen.position - Vector2(2, 17), code).has_point(p):
+				hits.append(id)
+				break
+	return hits
+
+
+func _stacks(rooms: Dictionary) -> Dictionary:
+	var groups := {}
+	for id in rooms:
+		var rect := _cell_rect(rooms[id]["cell"])
+		if not groups.has(rect):
+			groups[rect] = []
+		groups[rect].append(id)
+	return groups
+
+
+func _screen_rect(rect: Rect2) -> Rect2:
+	return Rect2(_to_screen(rect.position), rect.size * _zoom)
+
+
+func _stack_badge_position(rect: Rect2) -> Vector2:
+	return _to_screen(rect.position + Vector2(rect.size.x, 0)) + Vector2(5, 1)
+
+
+func _handle_rect() -> Rect2:
+	var corner := _to_screen(_rect(picked).end)
+	return Rect2(corner - Vector2(6, 6), Vector2(12, 12))
+
+
+func _has_handle() -> bool:
+	if not _editable():
+		return false
+	var size := _rect(picked).size * _zoom
+	return minf(size.x, size.y) >= 18.0
+
+
+func _on_view_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		_handle_mouse_button(event)
+	elif event is InputEventMouseMotion:
+		if _gesture.is_empty():
+			_update_map_tooltip(event.position)
+		else:
+			_drag_to(event.position)
+
+
+func _update_map_tooltip(point: Vector2) -> void:
+	if _has_handle() and _handle_rect().has_point(point):
+		_view.tooltip_text = "Drag to resize " + _name_for(picked)
 		return
-	var mm := ev as InputEventMouseMotion
-	if mm == null or _drag == "":
+	var hits := _rooms_at(point)
+	var names := PackedStringArray()
+	for id in hits:
+		names.append(_name_for(id))
+	_view.tooltip_text = "\n".join(names)
+
+
+func _handle_mouse_button(event: InputEventMouseButton) -> void:
+	var button := event.button_index
+	if button == MOUSE_BUTTON_WHEEL_UP or button == MOUSE_BUTTON_WHEEL_DOWN:
+		if event.pressed and _gesture.is_empty():
+			_hide_overlap()
+			_zoom_at(event.position, 1.2 if button == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.2)
+		_view.accept_event()
 		return
-	if _drag == "pan":
-		_cam = _cam_from - (mm.position - _drag_from) / _zoom
+	if not event.pressed:
+		if _gesture.get("button") == button:
+			_end_gesture(event.position)
+		return
+	_hide_overlap()
+	if button == MOUSE_BUTTON_MIDDLE or button == MOUSE_BUTTON_RIGHT or (button == MOUSE_BUTTON_LEFT and Input.is_key_pressed(KEY_SPACE)):
+		_gesture = {"mode": "pan", "button": button, "start": event.position, "cam": _cam}
+	elif button == MOUSE_BUTTON_LEFT:
+		_begin_selection(event.position)
+
+
+func _begin_selection(point: Vector2) -> void:
+	var hits := _rooms_at(point)
+	if _has_handle() and _handle_rect().has_point(point):
+		_begin_placement("size", point, [])
+	elif hits.size() > 1:
+		if hits.has(picked) and _editable():
+			_begin_placement("move", point, hits)
+		else:
+			_show_overlap(point, hits)
+	elif hits.size() == 1:
+		select(hits[0])
+		if _editable():
+			_begin_placement("move", point, [])
+	else:
+		select("")
+
+
+func _begin_placement(mode: String, point: Vector2, hits: Array) -> void:
+	_gesture = {"mode": mode, "button": MOUSE_BUTTON_LEFT, "start": point, "hits": hits,
+		"id": picked, "era": _home(picked), "cell": _rooms()[picked]["cell"].duplicate()}
+
+
+func _drag_to(point: Vector2) -> void:
+	var shift: Vector2 = point - _gesture["start"]
+	if _gesture["mode"] == "pan":
+		_cam = _gesture["cam"] - shift / _zoom
 		_view.queue_redraw()
 		return
-	var now := Vector2i(_to_cell(mm.position).floor())
-	var home := _home(picked)
-	if sheet == "restored" and home != "restored":
-		_say("%s belongs to the BEFORE page: change it there." % picked)
-		_drag = ""
-		return
-	var cell: Array = _stored(home, picked)["cell"]
-	var n: Array = _drag_start.duplicate()
-	if _drag == "move":
-		n[0] = maxi(0, int(_drag_start[0]) + now.x - _drag_cell.x)
-		n[1] = maxi(0, int(_drag_start[1]) + now.y - _drag_cell.y)
+	var delta := Vector2i((shift / _zoom).round())
+	var cell: Array = _gesture["cell"]
+	var next := cell.duplicate()
+	if _gesture["mode"] == "move":
+		next[0] = maxi(0, int(cell[0]) + delta.x)
+		next[1] = maxi(0, int(cell[1]) + delta.y)
 	else:
-		n[2] = maxi(1, now.x - int(_drag_start[0]) + 1)
-		n[3] = maxi(1, now.y - int(_drag_start[1]) + 1)
-	if n != cell:
-		# one undo step per drag: the first change of this drag records where it started
-		if _undo.is_empty() or _undo.back()[1] != picked or _undo.back()[2] != _drag_start:
-			_undo.append([home, picked, _drag_start.duplicate()])
-		_stored(home, picked)["cell"] = n
+		next[2] = maxi(1, int(cell[2]) + delta.x)
+		next[3] = maxi(1, int(cell[3]) + delta.y)
+	var room: Dictionary = _stored_rooms(data, _gesture["era"])[_gesture["id"]]
+	if not _same_cell(room["cell"], next):
+		room["cell"] = next
+		_msg = ""
 		_recheck()
 
 
-func _input(ev: InputEvent) -> void:
-	var kev := ev as InputEventKey
-	if kev == null or not kev.pressed or kev.echo:
+func _end_gesture(point: Vector2) -> void:
+	var drag := _gesture
+	_gesture = {}
+	if drag["mode"] == "pan":
 		return
-	var k: int = kev.physical_keycode
-	if kev.ctrl_pressed:
-		if k == KEY_S:
-			save()
-		elif k == KEY_Z:
-			undo()
-		return
-	var d := Vector2i(int(k == KEY_RIGHT) - int(k == KEY_LEFT), int(k == KEY_DOWN) - int(k == KEY_UP))
-	match k:
-		KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
-			if kev.alt_pressed:
-				nudge(d.x, d.y)
-			elif kev.shift_pressed:
-				resize_by(d.x, d.y)
-			else:
-				_cam += Vector2(d) * 4.0
-				_view.queue_redraw()
-		KEY_ENTER, KEY_KP_ENTER:
-			open_in_room_builder()
-		KEY_T:
-			teleport()
-		KEY_1:
-			set_sheet("before")
-		KEY_2:
-			set_sheet("after")
-		KEY_3:
-			set_sheet("restored")
-		KEY_DELETE:
-			pass
+	var cell := _cell_from(data, drag["era"], drag["id"])
+	if not _same_cell(cell, drag["cell"]):
+		_record_edit(drag["era"], drag["id"], drag["cell"], cell)
+		_refresh_selection()
+	elif not drag["hits"].is_empty():
+		_show_overlap(point, drag["hits"])
 
 
-# ---------- drawing ----------
+func _cancel_gesture() -> void:
+	if _gesture.is_empty():
+		return
+	var drag := _gesture
+	_gesture = {}
+	if drag["mode"] != "pan":
+		_stored_rooms(data, drag["era"])[drag["id"]]["cell"] = drag["cell"]
+		_recheck()
+
+
+func _show_overlap(point: Vector2, ids: Array) -> void:
+	_overlap = PanelContainer.new()
+	var surface := StyleBoxFlat.new()
+	surface.bg_color = Color("#20293b")
+	surface.border_color = ACCENT
+	surface.set_border_width_all(1)
+	surface.set_corner_radius_all(6)
+	for edge in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		surface.set_content_margin(edge, 8)
+	_overlap.add_theme_stylebox_override("panel", surface)
+	_view.add_child(_overlap)
+	var rows := VBoxContainer.new()
+	_overlap.add_child(rows)
+	_heading(rows, "Rooms at this position", 16)
+	for id in ids:
+		var room: Dictionary = _rooms()[id]
+		var caption := "%s (%s)" % [_name_for(id), room.get("code", id)]
+		Workspace.button(rows, caption, _choose_overlap.bind(id))
+	Workspace.button(rows, "Cancel", _hide_overlap)
+	_position_overlap.call_deferred(point)
+
+
+func _position_overlap(point: Vector2) -> void:
+	if is_instance_valid(_overlap):
+		var available := (_view.size - _overlap.get_combined_minimum_size()).max(Vector2.ZERO)
+		_overlap.position = point.clamp(Vector2.ZERO, available)
+
+
+func _choose_overlap(id: String) -> void:
+	select(id)
+	_hide_overlap()
+
+
+func _hide_overlap() -> void:
+	if is_instance_valid(_overlap):
+		_overlap.hide()
+		_overlap.queue_free()
+		_overlap = null
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if not visible or key == null or not key.pressed or key.echo:
+		return
+	var code := key.physical_keycode if key.physical_keycode != 0 else key.keycode
+	if key.ctrl_pressed:
+		match code:
+			KEY_S: save()
+			KEY_Z:
+				if key.shift_pressed:
+					redo()
+				else:
+					undo()
+			KEY_Y: redo()
+			_: return
+	else:
+		match code:
+			KEY_ENTER, KEY_KP_ENTER: open_in_room_builder()
+			KEY_T: teleport()
+			KEY_1, KEY_2, KEY_3: set_sheet(SHEETS[code - KEY_1])
+			KEY_ESCAPE:
+				if not _gesture.is_empty():
+					_cancel_gesture()
+				elif is_instance_valid(_overlap):
+					_hide_overlap()
+				else:
+					Dev.request_close()
+			KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
+				var delta := Vector2i(int(code == KEY_RIGHT) - int(code == KEY_LEFT), int(code == KEY_DOWN) - int(code == KEY_UP))
+				if key.alt_pressed:
+					nudge(delta.x, delta.y)
+				elif key.shift_pressed:
+					resize_by(delta.x, delta.y)
+				else:
+					_cam += Vector2(delta) * 4.0
+					_view.queue_redraw()
+			_: return
+	get_viewport().set_input_as_handled()
+
+
+# Map rendering
 
 func _on_draw() -> void:
-	_view.draw_rect(Rect2(0, 0, 384, 216), Color(0.07, 0.07, 0.11))
-	var font := ThemeDB.fallback_font
-	if _zoom >= 8.0:
-		var a := _cam.floor()
-		for gx in range(int(a.x), int(a.x) + int(384.0 / _zoom) + 2):
-			var sx := _to_screen(Vector2(gx, 0)).x
-			_view.draw_line(Vector2(sx, TOP), Vector2(sx, 216 - BOTTOM), Color(1, 1, 1, 0.05))
-		for gy in range(int(a.y), int(a.y) + int(216.0 / _zoom) + 2):
-			var sy := _to_screen(Vector2(0, gy)).y
-			_view.draw_line(Vector2(0, sy), Vector2(384, sy), Color(1, 1, 1, 0.05))
-	var red := {}
-	for w in warnings:
-		red[w["id"]] = true
+	_view.draw_rect(Rect2(Vector2.ZERO, _view.size), Color("#141c2b"))
+	_draw_grid()
 	var rooms := _rooms()
-	var home_only := sheet == "restored"
-	# the picked room's links first (so the boxes sit on top); the others would only be a tangle
+	var room_issues := {}
+	for issue in warnings:
+		var id: String = issue["id"]
+		var advisory: bool = issue["kind"] in ["Overlap", "One-way door"]
+		if not room_issues.has(id) or not advisory:
+			room_issues[id] = WARNING if advisory else ERROR
+	var stacks := _stacks(rooms)
+	if picked != "":
+		var origin := _to_screen(_rect(picked).get_center())
+		for exit in rooms[picked].get("exits", []):
+			var to := String(exit.get("to", ""))
+			if rooms.has(to):
+				_view.draw_line(origin, _to_screen(_rect(to).get_center()), Color(ACCENT, 0.42), 1.5, true)
 	for id in rooms:
 		if id != picked:
-			continue
-		for ex in rooms[id].get("exits", []):
-			var to := String(ex.get("to", ""))
-			if to != "" and rooms.has(to):
-				_view.draw_line(_to_screen(_rect(id).get_center()), _to_screen(_rect(to).get_center()), Color(1.0, 0.9, 0.4, 0.55))
-	for id in rooms:
-		var r := _rect(id)
-		var sr := Rect2(_to_screen(r.position), r.size * _zoom)
-		var base := Color(0.25, 0.32, 0.55, 0.85)
-		if bool(rooms[id].get("save", false)):
-			base = Color(0.25, 0.5, 0.35, 0.85)
-		if String(rooms[id].get("boss", "")) != "":
-			base = Color(0.5, 0.3, 0.45, 0.85)
-		if home_only and _home(id) != "restored":
-			base = base.darkened(0.35)
-		if red.has(id):
-			base = Color(0.65, 0.15, 0.15, 0.9)
-		_view.draw_rect(sr, base)
-		var moved := _moved(id)
-		_view.draw_rect(sr, Color(1.0, 0.9, 0.4) if id == picked else (Color(0.6, 1.0, 0.6) if moved else Color(0.8, 0.8, 0.9, 0.7)), false, 1.0)
-		for ex in rooms[id].get("exits", []):
-			_draw_exit(r, ex)
-		if sr.size.x < 14.0:
-			_view.draw_string(font, sr.position + Vector2(-1, -2), String(rooms[id].get("code", id)), HORIZONTAL_ALIGNMENT_LEFT, 20.0, 6, Color(0.85, 0.85, 0.95))
+			var solo: bool = stacks[_cell_rect(rooms[id]["cell"])].size() == 1
+			_draw_room(id, rooms[id], room_issues.get(id, Color.TRANSPARENT), solo)
+	if picked != "":
+		var solo: bool = stacks[_cell_rect(rooms[picked]["cell"])].size() == 1
+		_draw_room(picked, rooms[picked], room_issues.get(picked, Color.TRANSPARENT), solo)
+		if _has_handle():
+			_view.draw_rect(_handle_rect(), ACCENT)
+	for rect in stacks:
+		var count: int = stacks[rect].size()
+		if count > 1:
+			_draw_badge(_stack_badge_position(rect), "×%d" % count, WARNING)
+
+
+func _draw_grid() -> void:
+	var step := maxi(1, ceili(22.0 / _zoom))
+	var spacing := float(step) * _zoom
+	var origin := Vector2(fposmod(-_cam.x * _zoom, spacing), fposmod(-_cam.y * _zoom, spacing))
+	var line := Color(0.55, 0.64, 0.8, 0.10)
+	for i in ceili(_view.size.x / spacing):
+		var x := origin.x + i * spacing
+		_view.draw_line(Vector2(x, 0), Vector2(x, _view.size.y), line)
+	for i in ceili(_view.size.y / spacing):
+		var y := origin.y + i * spacing
+		_view.draw_line(Vector2(0, y), Vector2(_view.size.x, y), line)
+
+
+func _draw_room(id: String, room: Dictionary, issue_color: Color, show_label: bool) -> void:
+	var rect := _cell_rect(room["cell"])
+	var screen := _screen_rect(rect)
+	var fill := Color("#33496f")
+	if String(room.get("boss", "")) != "":
+		fill = Color("#593c63")
+	elif room.get("save", false):
+		fill = Color("#30534f")
+	elif sheet == "restored" and _home(id) != "restored":
+		fill = fill.darkened(0.25)
+	if id == picked:
+		fill = Color("#5174a2")
+	_view.draw_rect(screen, fill)
+	var outline := ACCENT if id == picked else Color("#8196b5")
+	if issue_color != Color.TRANSPARENT and id != picked:
+		outline = issue_color
+	_view.draw_rect(screen, outline, false, 2.5 if id == picked else 1.25)
+	if id == picked and issue_color != Color.TRANSPARENT:
+		_view.draw_circle(screen.position + Vector2(3, 3), 4.0, issue_color)
+	for exit in room.get("exits", []):
+		_draw_exit(rect, exit)
+	if show_label:
+		var code := String(room.get("code", id))
+		if not _uses_badge(screen):
+			var baseline := screen.get_center().y + 4
+			_view.draw_string(ThemeDB.fallback_font, Vector2(screen.position.x, baseline), code, HORIZONTAL_ALIGNMENT_CENTER, screen.size.x, 13, Color("#f4f7ff"))
 		else:
-			var label := String(rooms[id].get("code", id)) if sr.size.x < 40.0 else "%s %s" % [rooms[id].get("code", ""), id]
-			_view.draw_string(font, sr.position + Vector2(2, 8), label, HORIZONTAL_ALIGNMENT_LEFT, sr.size.x - 3.0, 7, Color(1, 1, 1))
-	if picked != "" and rooms.has(picked):
-		var pr := _rect(picked)
-		_view.draw_rect(Rect2(_to_screen(pr.end) - Vector2(3, 3), Vector2(6, 6)), Color(1.0, 0.9, 0.4))
+			_draw_badge(screen.position - Vector2(2, 17), code, Color("#e0e8f7"))
 
 
-func _moved(id: String) -> bool:
-	for c in changed_rooms():
-		if c[1] == id:
-			return true
-	return false
+func _draw_badge(at: Vector2, caption: String, color: Color) -> void:
+	_view.draw_rect(_badge_rect(at, caption), Color("#232c3e"))
+	_view.draw_string(ThemeDB.fallback_font, at + Vector2(3, 12), caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, color)
 
 
-func _draw_exit(r: Rect2, ex: Dictionary) -> void:
-	var at := float(ex.get("at", 0)) + 0.5
-	var p := Vector2.ZERO
-	var d := Vector2.ZERO
-	match String(ex.get("side", "L")):
-		"L":
-			p = Vector2(r.position.x, r.position.y + at)
-			d = Vector2(-1, 0)
-		"R":
-			p = Vector2(r.end.x, r.position.y + at)
-			d = Vector2(1, 0)
+func _uses_badge(screen: Rect2) -> bool:
+	return screen.size.x < 26 or screen.size.y < 18
+
+
+func _badge_rect(at: Vector2, caption: String) -> Rect2:
+	var font := ThemeDB.fallback_font
+	var size := font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+	return Rect2(at, Vector2(size.x + 6, 15))
+
+
+func _draw_exit(rect: Rect2, exit: Dictionary) -> void:
+	var at := float(exit.get("at", 0)) + 0.5
+	var side := String(exit.get("side", ""))
+	var center := rect.position
+	var direction := Vector2.RIGHT
+	match side:
+		"L": center += Vector2(0, clampf(at, 0.5, rect.size.y - 0.5))
+		"R": center += Vector2(rect.size.x, clampf(at, 0.5, rect.size.y - 0.5))
 		"U":
-			p = Vector2(r.position.x + at, r.position.y)
-			d = Vector2(0, -1)
-		_:
-			p = Vector2(r.position.x + at, r.end.y)
-			d = Vector2(0, 1)
-	var kind := String(ex.get("kind", "door"))
-	var col := Color(1, 1, 1)
-	if kind == "bricked" or kind == "sealed_x":
-		col = Color(0.55, 0.55, 0.55)
-	elif kind != "door" and kind != "open":
-		col = Color(1.0, 0.85, 0.3)
-	var s := _to_screen(p)
-	_view.draw_line(s, s + d * 3.0, col, 1.5)
-
-
-func _exit_tree() -> void:
-	pass
+			center += Vector2(clampf(at, 0.5, rect.size.x - 0.5), 0)
+			direction = Vector2.DOWN
+		"D":
+			center += Vector2(clampf(at, 0.5, rect.size.x - 0.5), rect.size.y)
+			direction = Vector2.DOWN
+		_: return
+	var p := _to_screen(center)
+	var color := Color("#6d788e") if exit.get("kind", "") == "bricked" else Color("#d4deed")
+	_view.draw_line(p - direction * 3.5, p + direction * 3.5, color, 2.0, true)

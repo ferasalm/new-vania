@@ -10,20 +10,27 @@ const EdAssets := preload("res://editor/ed_assets.gd")
 static var override := {}
 
 
-func setup(file_id: String) -> void:
-	var text := ""
+static func read_layout(file_id: String) -> Array:
+	var rel := "rooms/%s.props.json" % file_id
+	var text: String
 	if override.has(file_id):
 		text = String(override[file_id])
-	elif FileAccess.file_exists("res://rooms/%s.props.json" % file_id):
-		text = FileAccess.get_file_as_string("res://rooms/%s.props.json" % file_id)
-	elif Dev.project_dir() != "" and FileAccess.file_exists(Dev.project_dir().path_join("rooms/%s.props.json" % file_id)):
-		text = FileAccess.get_file_as_string(Dev.project_dir().path_join("rooms/%s.props.json" % file_id))
+	else:
+		var linked: String = Dev.project_dir()
+		var path := linked.path_join(rel) if linked != "" else ""
+		text = FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else FileAccess.get_file_as_string("res://" + rel)
 	if text.strip_edges() == "":
-		return
+		return []
 	var parsed = JSON.parse_string(text)
-	if not (parsed is Array):
-		return
-	for p in parsed:
+	return parsed if parsed is Array else []
+
+
+func setup(file_id: String) -> void:
+	setup_props(read_layout(file_id))
+
+
+func setup_props(layout: Array) -> void:
+	for p in layout:
 		if not (p is Dictionary):
 			continue
 		var tex: Texture2D = EdAssets.texture(String(p.get("png", "")))

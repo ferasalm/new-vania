@@ -8,7 +8,10 @@
 extends RefCounted
 
 const TILE := 16
-const FLYERS := ["m", "G"]      # enemy glyphs that hover: spread puts them in open air
+const EdAssets := preload("res://editor/ed_assets.gd")
+const FLYERS := ["m", "G", "C"]
+const CEILING_TRAPS := ["p", "u"]
+const FLOOR_TRAPS := ["f", "i"]
 const UNDO_MAX := 100
 
 var file_id := ""
@@ -158,8 +161,37 @@ func resize(w: int, h: int) -> void:
 
 func add_prop(png: String, x: int, y: int, layer: String, is_tile: bool, flip := false) -> Dictionary:
 	var p := {"png": png, "x": x, "y": y, "flip": flip, "layer": layer, "tile": is_tile}
+	if is_tile and layer == "solid":
+		var footprint := (EdAssets.size_of(png) / TILE).ceil()
+		p["collision_cells"] = [int(footprint.x), int(footprint.y)]
 	props.append(p)
 	return p
+
+
+## Overlay separately owned PNG collision on empty cells. Existing room glyphs and legacy
+## baked-in collision stay intact. Move and erase only need to change the prop itself.
+static func compose_rows(base: Array, pictures: Array) -> Array:
+	var out := base.duplicate()
+	for value in pictures:
+		if not (value is Dictionary):
+			continue
+		var p: Dictionary = value
+		var span = p.get("collision_cells", [])
+		if p.get("layer") != "solid" or not p.get("tile", false) or not (span is Array) or span.size() != 2:
+			continue
+		var x0 := floori(float(p.get("x", 0)) / TILE)
+		var y0 := floori(float(p.get("y", 0)) / TILE)
+		for y in range(maxi(0, y0), mini(out.size(), y0 + int(span[1]))):
+			var row: String = out[y]
+			for x in range(maxi(0, x0), mini(row.length(), x0 + int(span[0]))):
+				if row[x] == ".":
+					row = row.substr(0, x) + "#" + row.substr(x + 1)
+			out[y] = row
+	return out
+
+
+func effective_rows() -> Array:
+	return compose_rows(rows, props)
 
 
 ## The topmost prop whose rectangle holds the pixel (sizes come from the caller, which knows the textures).
@@ -198,45 +230,80 @@ func airy(x: int, y: int) -> bool:
 	return true
 
 
-## Place `count` enemies evenly over the cells of `area` (in cells). `glyphs` are enemy letters,
-## used in turn. Ground kinds go on standable cells, flyers (m, G) into open air. Returns how
-## many were placed: fewer than asked when there is not enough room.
+## Spread the requested enemy or hazard types across legal cells without overwriting any glyphs.
+## Hanging traps need a ceiling and a floor, while spikes and flame vents start above a floor.
 func spread(area: Rect2i, glyphs: Array, count: int) -> int:
 	if glyphs.is_empty() or count <= 0:
 		return 0
-	var ground: Array = []
-	var air: Array = []
-	for y in range(area.position.y, area.end.y):
-		for x in range(area.position.x, area.end.x):
-			if standable(x, y):
-				ground.append(Vector2i(x, y))
-			if airy(x, y):
-				air.append(Vector2i(x, y))
-	ground.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.x < b.x or (a.x == b.x and a.y < b.y))
-	air.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.x < b.x or (a.x == b.x and a.y < b.y))
-	var placed := 0
-	for i in count:
-		var g: String = glyphs[i % glyphs.size()]
-		var pool: Array = air if g in FLYERS else ground
-		if pool.is_empty():
+	var layout := effective_rows()
+	var bounds := area.intersection(Rect2i(0, 0, width(), height()))
+	var pools := {}
+	for glyph in glyphs:
+		if pools.has(glyph):
 			continue
-		# pick evenly along the left-to-right order of what is still free
-		var idx := int((float(i) + 0.5) / float(count) * pool.size())
-		idx = clampi(idx, 0, pool.size() - 1)
-		var c: Vector2i = pool[idx]
-		set_cell(c.x, c.y, g)
-		pool.remove_at(idx)
-		# keep a gap: drop the free cells next to the one just used so enemies are not stacked
-		var keep: Array = []
-		for q in pool:
-			if absi(q.x - c.x) > 2 or absi(q.y - c.y) > 1:
-				keep.append(q)
-		# but never starve the rest: with little room left the gap is given up
-		var left := count - i - 1
-		var next_pool: Array = keep if keep.size() >= left else pool
-		if g in FLYERS:
-			air = next_pool
-		else:
-			ground = next_pool
-		placed += 1
+		var candidates: Array[Vector2i] = []
+		for x in range(bounds.position.x, bounds.end.x):
+			for y in range(bounds.position.y, bounds.end.y):
+				if _spread_supports(layout, glyph, x, y):
+					candidates.append(Vector2i(x, y))
+		pools[glyph] = candidates
+	var placed := 0
+	var occupied: Array[Vector2i] = []
+	for i in count:
+		var glyph: String = glyphs[i % glyphs.size()]
+		var available: Array = pools[glyph].filter(func(c: Vector2i) -> bool:
+			return get_cell(c.x, c.y) == "." and _spread_available(glyph, c))
+		if available.is_empty():
+			continue
+		var spaced := available.filter(func(c: Vector2i) -> bool:
+			return not occupied.any(func(o: Vector2i) -> bool:
+				return absi(c.x - o.x) <= 2 and absi(c.y - o.y) <= 1))
+		var choices := spaced if not spaced.is_empty() else available
+		var wanted_x := bounds.position.x + (float(i) + 0.5) * bounds.size.x / count
+		var best: Vector2i = choices[0]
+		for c: Vector2i in choices:
+			if absf(c.x - wanted_x) < absf(best.x - wanted_x):
+				best = c
+		if placed == 0:
+			push_undo()
+		if set_cell(best.x, best.y, glyph):
+			occupied.append(best)
+			placed += 1
 	return placed
+
+
+func _spread_available(glyph: String, c: Vector2i) -> bool:
+	if glyph == "i":
+		return get_cell(c.x - 1, c.y) != "i" and get_cell(c.x + 1, c.y) != "i"
+	if glyph in FLYERS:
+		return airy(c.x, c.y)
+	return true
+
+
+func _spread_supports(layout: Array, glyph: String, x: int, y: int) -> bool:
+	if _layout_cell(layout, x, y) != ".":
+		return false
+	if glyph in CEILING_TRAPS:
+		if _layout_cell(layout, x, y - 1) != "#":
+			return false
+		for floor_y in range(y + 1, layout.size()):
+			if _layout_cell(layout, x, floor_y) in ["#", "="]:
+				return floor_y - y >= 3
+		return false
+	if glyph in FLYERS:
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				if _layout_cell(layout, x + dx, y + dy) != ".":
+					return false
+		return true
+	if not (_layout_cell(layout, x, y + 1) in ["#", "="]):
+		return false
+	if glyph in FLOOR_TRAPS:
+		return true
+	return _layout_cell(layout, x, y - 1) == "." and _layout_cell(layout, x, y - 2) == "."
+
+
+static func _layout_cell(layout: Array, x: int, y: int) -> String:
+	if y < 0 or y >= layout.size() or x < 0 or x >= String(layout[y]).length():
+		return ""
+	return String(layout[y])[x]

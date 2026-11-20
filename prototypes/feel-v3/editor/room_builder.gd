@@ -1,16 +1,4 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# F2 room builder. Edits the room she is standing in, as a plan view (solid walls, enemies,
-# traps and spots as coloured cells, PNG props drawn as they are). Tab plays the room as it
-# is right now from the cell under the mouse; Tab again comes back. Ctrl+S saves into the
-# project's rooms/ folder (git keeps the old version).
-#
-#   Palette (right)     TERRAIN / ENEMIES / HAZARDS / SPOTS / TILES / PROPS / BACKDROPS;
-#                       PNGs dropped into assets/editor/{tiles,props,backdrops}/ appear here
-#   Left click          place (hold to paint walls and floors)     Right click  erase
-#   Wheel               zoom       Middle drag or Space+drag  pan     Arrow keys  pan
-#   Ctrl+Z / Ctrl+Y     undo / redo     H flip a prop     1 2 3  prop layer back / with room / front
-#   Tools               PLACE, MOVE (drag things), ZONE (drag an area, then SPREAD enemies over it)
-#   Tab                 play from the mouse / back to editing      N (while playing) spawn the picked enemy
 extends CanvasLayer
 
 signal closed
@@ -18,842 +6,1185 @@ signal closed
 const RoomDoc := preload("res://editor/room_doc.gd")
 const EdAssets := preload("res://editor/ed_assets.gd")
 const RoomScript := preload("res://room.gd")
-const PropsLayer := preload("res://editor/props_layer.gd")
+const RoomChecks := preload("res://editor/room_checks.gd")
+const Shell := preload("res://editor/workspace_shell.gd")
+const Files := preload("res://editor/workspace_files.gd")
 const TILE := 16
-const VIEW_TOP := 16.0
-const PANEL_W := 108.0
+const DESIGN_TINT := Color("#ac9bf1")
+const PLAY_TINT := Color("#73e3b7")
+const WARNING_TINT := Color("#ecbd73")
+const ISSUE_TINT := Color("#fb9896")
 
-var doc: RefCounted = null
+var doc: RefCounted
+var room_id := ""
+var sheet := "before"
 var tab := "TERRAIN"
-var sel: Dictionary = {}
-var tool := "PLACE"
+var tool := "SELECT"
 var plane := "back"
-var checks: Array = []          # {rect: Rect2 in room pixels, text: String}; filled by room_checks.gd
+var sel: Dictionary = {}
+var checks: Array = []
+
+var _shell: Control
+var _view: Control
+var _overlay: Control
+var _art: RoomScript
+var _status: Label
+var _title: Label
+var _zoom_label: Label
+var _picked_label: Label
+var _move_btn: Button
+var _delete_btn: Button
+var _flip_btn: Button
+var _issues: VBoxContainer
+var _check_btn: Button
+var _issue_summary: Label
+var _tabs: OptionButton
+var _list: ItemList
+var _count: SpinBox
+var _spread: VBoxContainer
+var _spread_btn: Button
+var _plane_choice: OptionButton
+var _assets_actions: HBoxContainer
+var _empty_palette: Label
+var _width: SpinBox
+var _height: SpinBox
+var _save_btn: Button
+var _undo_btn: Button
+var _redo_btn: Button
+var _tool_buttons := {}
+var _entries: Array = []
+var _markers := {}
 
 var _cam := Vector2.ZERO
 var _zoom := 1.0
-var _view: Control = null
-var _list: ItemList = null
-var _tabs: OptionButton = null
-var _status: Label = null
-var _count: SpinBox = null
-var _entries: Array = []
+var _framing := true
 var _hover := Vector2i(-1, -1)
 var _mouse := Vector2.ZERO
-var _painting := false
-var _erasing := false
+var _has_mouse := false
 var _panning := false
+var _pan_button := 0
 var _pan_from := Vector2.ZERO
 var _cam_from := Vector2.ZERO
+var _painting := false
+var _stroke_snapshot := false
+var _last_brush_cell := Vector2i(-1, -1)
+var _selection: Dictionary = {}
+var _drag: Dictionary = {}
 var _zone := Rect2i()
 var _zone_on := false
 var _zone_drag := false
-var _drag: Dictionary = {}
-var _flip_next := false
+var _zone_start := Vector2i.ZERO
+var _start_cell := Vector2i(-1, -1)
+var _grid := false
+var _collisions := false
+var _issue_focus := Rect2()
 var _playing := false
-var _dirty := false
+var _active := true
 var _msg := ""
-var _ui: Array = []
-var _theme: Theme = null
-var _enemy_glyphs: Array = []
-var _hazard_glyphs: Array = []
-var _spot_glyphs: Array = []
-var _checks_script: GDScript = null
+var _revision := 0
+var _check_revision := 0
+var _check_thread: Thread
+var _refresh_pending := false
+var _saved_text := ""
+var _saved_props := ""
+var _save_root := ""
+var _expected := {}
+var _dirty := false
 
 
 func _ready() -> void:
-	layer = 35
+	layer = 101
 
 
-## info: "room" is read from G.main. Tests may pass "doc" (a RoomDoc) to skip the file loading.
+## Load and retain one room/era draft. The Dev hub keeps this view when switching to the map.
 func begin(info: Dictionary) -> void:
-	EdAssets.ensure_folders()
-	doc = info.get("doc", null)
+	var main = G.main
+	var current_id := String(main.room_name) if main != null else "church"
+	room_id = String(info.get("room", current_id))
+	sheet = String(info.get("sheet", W.sheet))
+	var file: String = info.get("file_id", Dev.room_file_id(room_id, sheet))
+	doc = info.get("doc")
 	if doc == null:
-		doc = _load_doc()
-	for e in EdAssets.entries("ENEMIES"):
-		_enemy_glyphs.append(e["glyph"])
-	for e in EdAssets.entries("HAZARDS"):
-		_hazard_glyphs.append(e["glyph"])
-	for e in EdAssets.entries("SPOTS"):
-		_spot_glyphs.append(e["glyph"])
-	if ResourceLoader.exists("res://editor/room_checks.gd"):
-		_checks_script = load("res://editor/room_checks.gd")
+		doc = RoomDoc.parse(file, RoomScript.read_room_file(file), _props_source(file))
+	elif not info.has("room"):
+		room_id = String(doc.file_id).trim_suffix("_shift").trim_suffix("_restored")
+	EdAssets.ensure_folders()
+	_saved_text = doc.to_text()
+	_saved_props = doc.props_text()
+	_save_root = Dev.project_dir()
+	_expected = _read_expected(_save_root)
 	_build_ui()
-	_fit()
-	_set_tab("TERRAIN")
-	_recheck()
-	_say("F2 room builder: pick something on the right and click the room. Tab plays from the mouse.")
+	_rebuild_markers()
+	_set_tab(tab)
+	_set_tool(tool)
+	_refresh()
+	_fit.call_deferred()
+	_say("Select an object on the canvas, or pick something from the palette.")
 
 
-func _load_doc() -> RefCounted:
-	var id := "church"
-	var m = G.main
-	if m != null and m.room != null:
-		id = String(m.room.file_id)
-	var text := ""
-	var props := ""
-	var pd: String = Dev.project_dir()
-	if pd != "" and FileAccess.file_exists(pd.path_join("rooms/%s.txt" % id)):
-		text = FileAccess.get_file_as_string(pd.path_join("rooms/%s.txt" % id))
-		if FileAccess.file_exists(pd.path_join("rooms/%s.props.json" % id)):
-			props = FileAccess.get_file_as_string(pd.path_join("rooms/%s.props.json" % id))
-	else:
-		text = FileAccess.get_file_as_string("res://rooms/%s.txt" % id)
-		if FileAccess.file_exists("res://rooms/%s.props.json" % id):
-			props = FileAccess.get_file_as_string("res://rooms/%s.props.json" % id)
-	return RoomDoc.parse(id, text, props)
+func _props_source(file: String) -> String:
+	var root: String = Dev.project_dir()
+	var rel := "rooms/%s.props.json" % file
+	var path := root.path_join(rel) if root != "" else ""
+	if path != "" and FileAccess.file_exists(path):
+		return FileAccess.get_file_as_string(path)
+	return FileAccess.get_file_as_string("res://" + rel) if FileAccess.file_exists("res://" + rel) else ""
 
 
-# ---------- ui ----------
-
-func _make_theme() -> Theme:
-	var t := Theme.new()
-	for cls in ["Button", "OptionButton", "Label", "ItemList", "SpinBox", "LineEdit", "CheckButton"]:
-		t.set_font_size("font_size", cls, 7)
-	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = {"normal": Color(0.16, 0.16, 0.24), "hover": Color(0.26, 0.26, 0.4), "pressed": Color(0.5, 0.3, 0.3),
-			"focus": Color(0.16, 0.16, 0.24), "disabled": Color(0.1, 0.1, 0.14)}[st]
-		sb.content_margin_left = 3.0
-		sb.content_margin_right = 3.0
-		sb.content_margin_top = 1.0
-		sb.content_margin_bottom = 1.0
-		t.set_stylebox(st, "Button", sb)
-		t.set_stylebox(st, "OptionButton", sb)
-	t.set_color("font_color", "Label", Color(0.9, 0.9, 0.95))
-	t.set_constant("v_separation", "ItemList", 0)
-	t.set_constant("line_separation", "ItemList", 0)
-	t.set_constant("h_separation", "ItemList", 1)
-	return t
+## Only the active workspace accepts input or shows controls.
+func set_active(active: bool) -> void:
+	_active = active
+	if _shell != null:
+		_shell.visible = active
+	if not active:
+		_end_pointer_actions()
 
 
 func _build_ui() -> void:
-	_theme = _make_theme()
-	var vp := Vector2(384, 216)
-	_view = Control.new()
-	_view.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_view.mouse_filter = Control.MOUSE_FILTER_STOP
-	_view.focus_mode = Control.FOCUS_NONE
-	_view.draw.connect(_on_draw)
-	_view.gui_input.connect(_on_view_input)
-	add_child(_view)
-	# toolbar
-	var bar := HBoxContainer.new()
-	bar.theme = _theme
-	bar.position = Vector2(1, 1)
-	bar.add_theme_constant_override("separation", 1)
-	add_child(bar)
-	_ui.append(bar)
-	for t in ["PLACE", "MOVE", "ZONE"]:
-		var b := _btn(bar, t, func() -> void: _set_tool(t))
-		b.tooltip_text = "tool"
-	_sep(bar)
-	_btn(bar, "UNDO", func() -> void: _undo())
-	_btn(bar, "REDO", func() -> void: _redo())
-	_btn(bar, "SAVE", func() -> void: save())
-	_btn(bar, "PLAY", func() -> void: play())
-	_btn(bar, "CHECK", func() -> void: run_full_check())
-	_sep(bar)
-	_btn(bar, "W+", func() -> void: _resize(1, 0))
-	_btn(bar, "W-", func() -> void: _resize(-1, 0))
-	_btn(bar, "H+", func() -> void: _resize(0, 1))
-	_btn(bar, "H-", func() -> void: _resize(0, -1))
-	_sep(bar)
-	var hit := _btn(bar, "HIT", func() -> void: T.set_v("show_hitboxes", 0.0 if T.v("show_hitboxes") >= 0.5 else 1.0))
-	hit.toggle_mode = true
-	hit.button_pressed = T.v("show_hitboxes") >= 0.5
-	var god := _btn(bar, "GOD", func() -> void: Dev.god = not Dev.god)
-	god.toggle_mode = true
-	god.button_pressed = Dev.god
-	var slow := _btn(bar, "SLOW", func() -> void: Engine.time_scale = 0.5 if Engine.time_scale == 1.0 else 1.0)
-	slow.toggle_mode = true
-	slow.button_pressed = Engine.time_scale < 1.0
-	# palette
-	var panel := PanelContainer.new()
-	panel.theme = _theme
-	panel.position = Vector2(vp.x - PANEL_W, VIEW_TOP)
-	panel.custom_minimum_size = Vector2(PANEL_W, vp.y - VIEW_TOP)
-	panel.size = Vector2(PANEL_W, vp.y - VIEW_TOP)
-	panel.clip_contents = true
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.1, 0.1, 0.15, 0.96)
-	panel.add_theme_stylebox_override("panel", sb)
-	add_child(panel)
-	_ui.append(panel)
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 1)
-	panel.add_child(vb)
+	_shell = Shell.mount(self)
+	var margin := MarginContainer.new()
+	_shell.add_child(margin)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 14)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 8)
+	margin.add_child(layout)
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	layout.add_child(top)
+	Shell.button(top, "Map", func(): Dev.show_map(), "Open the map (F3)")
+	var room_heading := _label(top, "Room", 20)
+	room_heading.modulate = DESIGN_TINT
+	_title = _label(top, "", 19)
+	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_save_btn = Shell.button(top, "Save", save, "Save this room and its PNG placements (Ctrl+S)")
+	Shell.button(top, "Playtest", play, "Play this room with the current edits (Tab)")
+	Shell.button(top, "Close", func(): Dev.request_close(), "Close the builders")
+
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 6)
+	layout.add_child(actions)
+	_tool_button(actions, "SELECT", "Select", "Select an existing object (V)")
+	_tool_button(actions, "PLACE", "Place", "Place the selected palette item (B)")
+	_tool_button(actions, "MOVE", "Move", "Drag an object to a new spot (M)")
+	_tool_button(actions, "ERASE", "Erase", "Erase a glyph or remove a PNG (E)")
+	_tool_button(actions, "ZONE", "Spread", "Draw an area for enemies or traps (S)")
+	_tool_button(actions, "START", "Play from here", "Choose a playtest start on the canvas (P)")
+	_spacer(actions)
+	_undo_btn = Shell.button(actions, "Undo", _undo, "Undo (Ctrl+Z)")
+	_redo_btn = Shell.button(actions, "Redo", _redo, "Redo (Ctrl+Y)")
+	_toggle(actions, "Grid", false, func(value: bool):
+		_grid = value
+		_overlay.queue_redraw())
+	_toggle(actions, "Collision", false, func(value: bool):
+		_collisions = value
+		_overlay.queue_redraw())
+
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 10)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(body)
+	_build_palette(body)
+	_build_canvas(body)
+	_build_inspector(body)
+
+	_status = _label(layout, "", 16)
+	_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+
+
+func _build_palette(parent: HBoxContainer) -> void:
+	var panel := _sidebar(parent, 218)
+	_label(panel, "Palette", 22)
 	_tabs = OptionButton.new()
-	for t in EdAssets.TABS:
-		_tabs.add_item(t)
-	_tabs.item_selected.connect(func(i: int) -> void: _set_tab(EdAssets.TABS[i]))
-	vb.add_child(_tabs)
+	for label in EdAssets.CATEGORY_LABELS:
+		_tabs.add_item(label)
+	_tabs.item_selected.connect(func(index: int): _set_tab(EdAssets.TABS[index]))
+	panel.add_child(_tabs)
 	_list = ItemList.new()
 	_list.select_mode = ItemList.SELECT_MULTI
-	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_list.fixed_icon_size = Vector2i(9, 9)
-	_list.custom_minimum_size = Vector2(0, 30)
+	_list.fixed_icon_size = Vector2i(30, 30)
+	_list.add_theme_constant_override("v_separation", 6)
 	_list.clip_contents = true
-	_list.same_column_width = true
+	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.multi_selected.connect(_on_pick)
-	vb.add_child(_list)
-	var row := HBoxContainer.new()
-	vb.add_child(row)
-	var lb := Label.new()
-	lb.text = "COUNT"
-	row.add_child(lb)
-	_count = SpinBox.new()
-	_count.min_value = 1
-	_count.max_value = 40
-	_count.value = 4
-	_count.custom_minimum_size = Vector2(34, 0)
-	row.add_child(_count)
-	_btn(vb, "SPREAD OVER ZONE", func() -> void: spread_zone())
-	_status = Label.new()
-	_status.position = Vector2(2, vp.y - 11)
-	_status.custom_minimum_size = Vector2(vp.x - PANEL_W - 4.0, 0.0)
-	_status.size = Vector2(vp.x - PANEL_W - 4.0, 9.0)
-	_status.clip_text = true
-	_status.theme = _theme
-	_status.add_theme_color_override("font_outline_color", Color.BLACK)
-	_status.add_theme_constant_override("outline_size", 3)
-	add_child(_status)
-	_ui.append(_status)
+	panel.add_child(_list)
+	_empty_palette = _label(panel, "Add PNGs in the asset folder, then refresh.", 15)
+	_empty_palette.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_assets_actions = HBoxContainer.new()
+	panel.add_child(_assets_actions)
+	Shell.button(_assets_actions, "Asset Folder", _open_assets)
+	Shell.button(_assets_actions, "Refresh", _refresh_assets)
+	_plane_choice = OptionButton.new()
+	for name in ["Behind", "Solid", "In Front"]:
+		_plane_choice.add_item(name)
+	_plane_choice.item_selected.connect(func(index: int): plane = ["back", "solid", "front"][index])
+	panel.add_child(_plane_choice)
+	_spread = VBoxContainer.new()
+	panel.add_child(_spread)
+	var count_line := HBoxContainer.new()
+	_spread.add_child(count_line)
+	_label(count_line, "Count", 16)
+	_count = _spinner(count_line, 1, 40, 4)
+	_spread_btn = Shell.button(_spread, "Apply Spread", spread_zone)
+	_spread_btn.tooltip_text = "Select enemy or trap types, then draw a region with Spread."
 
 
-func _btn(parent: Control, text: String, cb: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.focus_mode = Control.FOCUS_NONE
-	b.pressed.connect(cb)
-	parent.add_child(b)
-	return b
+func _build_canvas(parent: HBoxContainer) -> void:
+	var center := VBoxContainer.new()
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.add_theme_constant_override("separation", 6)
+	parent.add_child(center)
+	var nav := HBoxContainer.new()
+	center.add_child(nav)
+	var help := _label(nav, "Wheel to zoom · Space + drag to pan", 15)
+	help.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	help.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Shell.button(nav, "−", func(): _zoom_at(_view.size * 0.5, 1.0 / 1.25), "Zoom out")
+	_zoom_label = _label(nav, "100%", 15)
+	_zoom_label.custom_minimum_size.x = 56
+	_zoom_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	Shell.button(nav, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in")
+	Shell.button(nav, "Fit", _fit, "Frame the whole room (F)")
+	_view = Control.new()
+	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_view.clip_contents = true
+	_view.draw.connect(func(): _view.draw_rect(Rect2(Vector2.ZERO, _view.size), Color("#101015")))
+	_view.gui_input.connect(_on_view_input)
+	_view.mouse_exited.connect(func():
+		_has_mouse = false
+		_overlay.queue_redraw())
+	center.add_child(_view)
+	_art = RoomScript.new()
+	_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_view.add_child(_art)
+	_overlay = Control.new()
+	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.z_index = 16
+	_view.add_child(_overlay)
+	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_overlay.draw.connect(_on_draw)
+	_view.resized.connect(func():
+		if _framing:
+			_fit()
+		else:
+			_overlay.queue_redraw())
 
 
-func _sep(parent: Control) -> void:
-	var l := Label.new()
-	l.text = "|"
-	parent.add_child(l)
+func _build_inspector(parent: HBoxContainer) -> void:
+	var panel := _sidebar(parent, 288)
+	_label(panel, "Selection", 22)
+	_picked_label = _label(panel, "No object selected", 16)
+	_picked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var picked_actions := HBoxContainer.new()
+	panel.add_child(picked_actions)
+	_move_btn = Shell.button(picked_actions, "Move", func(): _set_tool("MOVE"))
+	_delete_btn = Shell.button(picked_actions, "Delete", _delete_selection)
+	_flip_btn = Shell.button(picked_actions, "Flip", _flip_selection)
+	_label(panel, "Room Size · Tiles", 17)
+	var dimensions := HBoxContainer.new()
+	panel.add_child(dimensions)
+	_width = _spinner(dimensions, 4, 1024, 4)
+	_label(dimensions, "×", 16)
+	_height = _spinner(dimensions, 4, 1024, 4)
+	Shell.button(dimensions, "Apply", _apply_size)
+	_build_playtest_options(panel)
+
+	_label(panel, "Issues", 22)
+	_check_btn = Shell.button(panel, "Check Reachability", run_full_check)
+	_issue_summary = _label(panel, "", 15)
+	_issue_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var list := ScrollContainer.new()
+	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(list)
+	_issues = VBoxContainer.new()
+	_issues.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_child(_issues)
 
 
-func _say(text: String) -> void:
-	_msg = text
+func _build_playtest_options(parent: Container) -> void:
+	var options := MenuButton.new()
+	options.text = "Playtest Options"
+	parent.add_child(options)
+	var menu := options.get_popup()
+	menu.add_check_item("Show hitboxes", 0)
+	menu.add_check_item("Invincible", 1)
+	menu.add_check_item("Half speed", 2)
+	menu.about_to_popup.connect(func():
+		menu.set_item_checked(0, T.v("show_hitboxes") >= 0.5)
+		menu.set_item_checked(1, Dev.god)
+		menu.set_item_checked(2, Engine.time_scale < 1.0))
+	menu.id_pressed.connect(_on_playtest_option)
+
+
+func _on_playtest_option(id: int) -> void:
+	match id:
+		0:
+			T.set_v("show_hitboxes", 0.0 if T.v("show_hitboxes") >= 0.5 else 1.0)
+		1:
+			Dev.god = not Dev.god
+		2:
+			Engine.time_scale = 1.0 if Engine.time_scale < 1.0 else 0.5
+
+
+func _sidebar(parent: HBoxContainer, width: float) -> VBoxContainer:
+	var side := PanelContainer.new()
+	side.custom_minimum_size.x = width
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#22202c")
+	style.content_margin_left = 11
+	style.content_margin_right = 11
+	style.content_margin_top = 11
+	style.content_margin_bottom = 11
+	style.set_corner_radius_all(6)
+	side.add_theme_stylebox_override("panel", style)
+	parent.add_child(side)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 7)
+	side.add_child(content)
+	return content
+
+
+func _label(parent: Container, value: String, size: int) -> Label:
+	var label := Label.new()
+	label.text = value
+	label.add_theme_font_size_override("font_size", size)
+	parent.add_child(label)
+	return label
+
+
+func _spinner(parent: Container, low: int, high: int, value: int) -> SpinBox:
+	var box := SpinBox.new()
+	box.min_value = low
+	box.max_value = high
+	box.value = value
+	box.custom_minimum_size.x = 67
+	parent.add_child(box)
+	return box
+
+
+func _spacer(parent: Container) -> void:
+	var space := Control.new()
+	space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(space)
+
+
+func _toggle(parent: Container, title: String, value: bool, action: Callable) -> void:
+	var button := CheckButton.new()
+	button.text = title
+	button.button_pressed = value
+	button.toggled.connect(action)
+	parent.add_child(button)
+
+
+func _tool_button(parent: Container, mode: String, title: String, hint: String) -> void:
+	var button := Shell.button(parent, title, func(): _set_tool(mode), hint)
+	button.toggle_mode = true
+	_tool_buttons[mode] = button
+
+
+## The same on-disk document can appear on more than one map era.
+func set_room_context(id: String, era: String) -> void:
+	room_id = id
+	sheet = era
+	_update_status()
+
+
+func _rebuild_markers() -> void:
+	_markers.clear()
+	for category in ["ENEMIES", "HAZARDS", "SPOTS"]:
+		for entry: Dictionary in EdAssets.entries(category):
+			var glyph: String = entry["glyph"]
+			var label := String(entry.get("label", entry["name"])).capitalize()
+			_markers[glyph] = {"name": label, "icon": _thumbnail(entry, category), "category": category}
+
+
+func _thumbnail(entry: Dictionary, category: String) -> Texture2D:
+	var theme: Dictionary = RoomScript.THEMES.get(doc.head.get("theme", "church"), RoomScript.THEMES["church"])
+	return EdAssets.thumbnail(entry, category, theme["tiles"])
+
+
+func _set_tab(category: String) -> void:
+	tab = category
+	_tabs.select(EdAssets.TABS.find(category))
+	_entries = EdAssets.entries(category)
+	_list.clear()
+	for entry: Dictionary in _entries:
+		var name := String(entry.get("label", entry["name"])).capitalize()
+		var index := _list.add_item(name, _thumbnail(entry, category))
+		_list.set_item_tooltip(index, name)
+	sel = {}
+	_assets_actions.visible = category in ["TILES", "PROPS", "BACKDROPS"]
+	_empty_palette.visible = _entries.is_empty()
+	_plane_choice.visible = category in ["TILES", "PROPS"]
+	if category == "TILES":
+		plane = "solid"
+	elif category == "PROPS":
+		plane = "back"
+	_plane_choice.select(["back", "solid", "front"].find(plane))
+	_update_spread()
+	_overlay.queue_redraw()
+
+
+func _on_pick(index: int, selected: bool) -> void:
+	if selected:
+		sel = _entries[index]
+		if tool != "ZONE":
+			_set_tool("PLACE")
+	else:
+		var selected_items := _list.get_selected_items()
+		sel = {} if selected_items.is_empty() else _entries[selected_items[0]]
+	_update_spread()
+	_overlay.queue_redraw()
+
+
+func _open_assets() -> void:
+	var path := EdAssets.editor_root()
+	if path != "" and OS.shell_open(ProjectSettings.globalize_path(path)) != OK:
+		_say("Could not open the asset folder.")
+
+
+func _refresh_assets() -> void:
+	EdAssets.clear_cache()
+	_rebuild_markers()
+	_set_tab(tab)
+	_refresh()
+	_say("Asset palette refreshed.")
+
+
+func _set_tool(mode: String) -> void:
+	_end_pointer_actions()
+	tool = mode
+	for key in _tool_buttons:
+		_tool_buttons[key].set_pressed_no_signal(key == tool)
+	if mode == "START":
+		_say("Click a clear tile to set the playtest start.")
+	elif mode == "ZONE":
+		_say("Pick enemies or traps and drag across the area to fill.")
+	elif mode == "MOVE":
+		_say("Drag a room marker, enemy, trap, or PNG to move it.")
+	_update_spread()
+	_overlay.queue_redraw()
+
+
+func _update_spread() -> void:
+	_spread.visible = tool == "ZONE"
+	_spread_btn.disabled = not _zone_on or tab not in ["ENEMIES", "HAZARDS"] or _list.get_selected_items().is_empty()
+
+
+func _say(message: String) -> void:
+	_msg = message
 	_update_status()
 
 
 func _update_status() -> void:
-	if _status == null or doc == null:
+	if _status == null:
 		return
-	var cell := "-"
-	if _hover.x >= 0:
-		cell = "%d,%d '%s'" % [_hover.x, _hover.y, doc.get_cell(_hover.x, _hover.y)]
-	var w: int = doc.width()
-	var h: int = doc.height()
-	var tip := ""
-	if _in_view(_mouse):
-		var mw := _to_world(_mouse)
-		for ck in checks:
-			if ck["rect"].has_point(mw):
-				tip = String(ck["text"])
-	_status.text = "%s%s %dx%d  cell %s  %s  layer %s%s  | %s" % [doc.file_id, "*" if _dirty else "", w, h, cell, tool, plane,
-		"  flip" if _flip_next else "", ("RED: %s" % tip) if tip != "" else (("%d red | %s" % [checks.size(), _msg]) if not checks.is_empty() else _msg)]
-
-
-func _set_ui_visible(v: bool) -> void:
-	for n in _ui:
-		n.visible = v
-	if _view != null:
-		_view.visible = v
+	_dirty = is_dirty()
+	var name := W.title(room_id)
+	if name.is_empty():
+		name = room_id.capitalize()
+	_title.text = "%s  /  %s  ·  %s" % [name, sheet.capitalize(), "Unsaved changes" if _dirty else "Saved"]
+	_save_btn.disabled = not _dirty
+	_undo_btn.disabled = not doc.can_undo()
+	_redo_btn.disabled = not doc.can_redo()
+	_status.text = _msg
+	_status.tooltip_text = _msg
 
 
 func _fit() -> void:
-	var rs: Vector2 = doc.pixel_size()
-	_zoom = clampf(minf((384.0 - PANEL_W - 6.0) / maxf(rs.x, 1.0), (216.0 - VIEW_TOP - 14.0) / maxf(rs.y, 1.0)), 0.25, 4.0)
-	_cam = Vector2(-3.0, -3.0) / _zoom
+	_framing = true
+	if _view.size.x <= 0 or _view.size.y <= 0:
+		return
+	var room_size: Vector2 = doc.pixel_size()
+	var available := (_view.size - Vector2(52, 52)).max(Vector2.ONE)
+	_zoom = clampf(minf(available.x / maxf(room_size.x, 1.0), available.y / maxf(room_size.y, 1.0)), 0.05, 4.0)
+	_cam = room_size * 0.5 - _view.size * 0.5 / _zoom
+	_sync_camera()
 
 
-func _set_tool(t: String) -> void:
-	tool = t
-	_zone_on = tool == "ZONE" and _zone_on
-	_update_status()
-	_view.queue_redraw()
+func _to_world(at: Vector2) -> Vector2:
+	return _cam + at / _zoom
 
 
-func _set_tab(t: String) -> void:
-	tab = t
-	var idx := EdAssets.TABS.find(t)
-	if _tabs != null and idx >= 0 and _tabs.selected != idx:
-		_tabs.select(idx)
-	_entries = EdAssets.entries(t)
-	_list.clear()
-	for e in _entries:
-		var label := String(e["name"])
-		if e.has("glyph"):
-			label = "%s  %s" % [e["glyph"], label]
-		var tex: Texture2D = EdAssets.texture(String(e.get("png", ""))) if e.has("png") else null
-		_list.add_item(label, tex)
-	sel = {}
-	if not _entries.is_empty():
-		_list.select(0)
-		sel = _entries[0]
-	if t == "TILES":
-		plane = "solid"
-	elif t == "PROPS" and plane == "solid":
-		plane = "back"
-	_update_status()
+func _to_screen(at: Vector2) -> Vector2:
+	return (at - _cam) * _zoom
 
 
-func _on_pick(index: int, selected: bool) -> void:
-	if selected and index >= 0 and index < _entries.size():
-		sel = _entries[index]
-		if tool == "MOVE":
-			_set_tool("PLACE")
-		_update_status()
+func _cell_of(at: Vector2) -> Vector2i:
+	return Vector2i((at / TILE).floor())
 
 
-# ---------- coordinates ----------
-
-func _to_world(p: Vector2) -> Vector2:
-	return _cam + (p - Vector2(0, VIEW_TOP)) / _zoom
-
-
-func _to_screen(w: Vector2) -> Vector2:
-	return (w - _cam) * _zoom + Vector2(0, VIEW_TOP)
+func _zoom_at(at: Vector2, factor: float) -> void:
+	_framing = false
+	var world := _to_world(at)
+	_zoom = clampf(_zoom * factor, 0.05, 8.0)
+	_cam = world - at / _zoom
+	_sync_camera()
 
 
-func _cell_of(w: Vector2) -> Vector2i:
-	return Vector2i(int(floorf(w.x / TILE)), int(floorf(w.y / TILE)))
+func _sync_camera() -> void:
+	_art.position = -_cam * _zoom
+	_art.scale = Vector2.ONE * _zoom
+	_zoom_label.text = "%d%%" % roundi(_zoom * 100.0)
+	if _has_mouse:
+		_hover = _cell_of(_to_world(_mouse))
+	_overlay.queue_redraw()
 
-
-func _zoom_at(p: Vector2, f: float) -> void:
-	var before := _to_world(p)
-	_zoom = clampf(_zoom * f, 0.25, 8.0)
-	_cam += before - _to_world(p)
-	_view.queue_redraw()
-
-
-# ---------- editing ----------
 
 func _changed() -> void:
-	_dirty = true
-	_recheck()
+	_revision += 1
+	_issue_focus = Rect2()
 	_update_status()
-	if _view != null:
-		_view.queue_redraw()
+	if not _refresh_pending:
+		_refresh_pending = true
+		_refresh.call_deferred()
+
+
+func _refresh() -> void:
+	_refresh_pending = false
+	_art.preview_document(doc)
+	_width.set_value_no_signal(doc.width())
+	_height.set_value_no_signal(doc.height())
+	_update_selection()
+	_recheck()
+	_sync_camera()
 
 
 func _recheck() -> void:
-	# the quick checks run after every edit; the reach search runs on CHECK and on save
-	checks = []
-	if _checks_script != null and doc != null:
-		checks = _checks_script.new().run(doc)
+	checks = RoomChecks.new().run(doc)
+	_show_issues()
+	_overlay.queue_redraw()
 
 
-## The full check, with the can-she-get-there search (a second or two on a big room).
+## The checker snapshots the draft before work starts, so editing and saving stay available.
 func run_full_check() -> void:
-	if _checks_script == null or doc == null:
+	if _check_thread != null:
 		return
-	_say("checking...")
-	checks = _checks_script.new().run(doc, true)
-	if checks.is_empty():
-		_say("no red warnings: every exit and item can be reached")
+	_recheck()
+	var checker := RoomChecks.new()
+	checker.prepare(doc)
+	_check_revision = _revision
+	_check_thread = Thread.new()
+	if _check_thread.start(checker.run_reach) != OK:
+		_check_thread = null
+		_say("Could not start the reachability check.")
+	_show_issues()
+
+
+func _process(_delta: float) -> void:
+	if _check_thread == null or _check_thread.is_alive():
+		return
+	var result: Array = _check_thread.wait_to_finish()
+	_check_thread = null
+	if _revision == _check_revision:
+		checks.append_array(result)
+		_say("Reachability check complete.")
 	else:
-		_say("%d red warning(s): read the labels in the room" % checks.size())
-	if _view != null:
-		_view.queue_redraw()
+		_say("The room changed during the check. Run it again for the current draft.")
+	_show_issues()
+	_overlay.queue_redraw()
+
+
+func _show_issues() -> void:
+	_check_btn.disabled = _check_thread != null
+	_issue_summary.text = "Checking reachability…" if _check_thread != null else (
+		"No issues in the current check." if checks.is_empty() else "%d issues · select one to locate it" % checks.size())
+	for child in _issues.get_children():
+		_issues.remove_child(child)
+		child.queue_free()
+	for issue: Dictionary in checks:
+		var type := String(issue.get("kind", "route"))
+		var heading: String = {"asset": "Missing Asset", "exit": "Blocked Exit",
+			"clearance": "Low Jump Clearance", "jump": "Jump Advisory"}.get(type, "Reachability")
+		var body := String(issue["text"]).trim_prefix("ceiling trap: ")
+		body = body.left(1).to_upper() + body.substr(1)
+		var button := Shell.button(_issues, heading, _focus_issue.bind(issue["rect"]), body)
+		button.modulate = _issue_color(issue)
+		var detail := _label(_issues, body, 14)
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+
+func _focus_issue(rect: Rect2) -> void:
+	_framing = false
+	_issue_focus = rect
+	_zoom = maxf(_zoom, 1.2)
+	_cam = rect.get_center() - _view.size * 0.5 / _zoom
+	_sync_camera()
+
+
+func _issue_color(issue: Dictionary) -> Color:
+	return WARNING_TINT if issue.get("severity") == "advisory" else ISSUE_TINT
 
 
 func _undo() -> void:
 	if doc.undo():
+		_selection = {}
 		_changed()
-		_say("undo")
+		_say("Undone.")
 
 
 func _redo() -> void:
 	if doc.redo():
+		_selection = {}
 		_changed()
-		_say("redo")
+		_say("Redone.")
 
 
-func _resize(dw: int, dh: int) -> void:
-	var cell_step := Input.is_key_pressed(KEY_SHIFT)      # Shift: a whole map cell (24 x 14 tiles)
-	var w: int = doc.width() + dw * (24 if cell_step else 1)
-	var h: int = doc.height() + dh * (14 if cell_step else 1)
-	doc.push_undo()
-	doc.resize(w, h)
-	_changed()
-	_say("room is now %dx%d tiles (the map cell size in F3 is not changed)" % [doc.width(), doc.height()])
-
-
-func _paint(c: Vector2i) -> void:
-	if not sel.has("glyph") or not doc.in_room(c.x, c.y):
+func _apply_size() -> void:
+	var width := int(_width.value)
+	var height := int(_height.value)
+	if width == doc.width() and height == doc.height():
 		return
-	var g := String(sel["glyph"])
-	if g == "P":
+	doc.push_undo()
+	doc.resize(width, height)
+	_selection = {}
+	if not doc.in_room(_start_cell.x, _start_cell.y):
+		_start_cell = Vector2i(-1, -1)
+	_changed()
+	_fit.call_deferred()
+	_say("Room size is %d × %d tiles. Its map footprint is edited in F3." % [width, height])
+
+
+func _record_stroke() -> void:
+	if not _stroke_snapshot:
+		doc.push_undo()
+		_stroke_snapshot = _painting
+
+
+func _paint(cell: Vector2i) -> void:
+	var glyph := String(sel.get("glyph", ""))
+	if glyph == "" or not doc.in_room(cell.x, cell.y) or doc.get_cell(cell.x, cell.y) == glyph:
+		return
+	_record_stroke()
+	if glyph == "P":
 		for y in doc.height():
 			for x in doc.width():
 				if doc.get_cell(x, y) == "P":
 					doc.set_cell(x, y, ".")
-	if doc.set_cell(c.x, c.y, g):
-		_changed()
-
-
-func _erase_at(w: Vector2) -> void:
-	var i: int = doc.prop_at(w, Callable(EdAssets, "size_of"))
-	if i >= 0:
-		var p: Dictionary = doc.props[i]
-		if bool(p.get("tile", false)) and String(p.get("layer", "")) == "solid":
-			for c in _tile_cells(p):
-				if doc.get_cell(c.x, c.y) == "#":
-					doc.set_cell(c.x, c.y, ".")
-		doc.props.remove_at(i)
-		_changed()
-		return
-	var c := _cell_of(w)
-	if doc.in_room(c.x, c.y) and doc.set_cell(c.x, c.y, "."):
-		_changed()
-
-
-func _tile_cells(p: Dictionary) -> Array:
-	var s: Vector2 = EdAssets.size_of(String(p["png"]))
-	var out: Array = []
-	var c0 := Vector2i(int(p["x"]) / TILE, int(p["y"]) / TILE)
-	for y in int(ceil(s.y / TILE)):
-		for x in int(ceil(s.x / TILE)):
-			out.append(Vector2i(c0.x + x, c0.y + y))
-	return out
-
-
-func _place_picture(w: Vector2) -> void:
-	var rel := String(sel.get("png", ""))
-	if tab == "BACKDROPS":
-		doc.push_undo()
-		if rel == "":
-			doc.head.erase("backdrop")
-			_say("backdrop removed (the theme's own wall is back)")
-		else:
-			doc.head["backdrop"] = rel.get_file()
-			_say("backdrop is now %s (tiles at its real size)" % rel.get_file())
-		_changed()
-		return
-	if rel == "":
-		return
-	var s: Vector2 = EdAssets.size_of(rel)
-	doc.push_undo()
-	if tab == "TILES":
-		var c := _cell_of(w)
-		var p: Dictionary = doc.add_prop(rel, c.x * TILE, c.y * TILE, plane, true, _flip_next)
-		if plane == "solid":
-			for q in _tile_cells(p):
-				doc.set_cell(q.x, q.y, "#")
-	else:
-		var pos := ((w - s * 0.5) / 8.0).round() * 8.0
-		doc.add_prop(rel, int(pos.x), int(pos.y), plane, false, _flip_next)
+	doc.set_cell(cell.x, cell.y, glyph)
 	_changed()
 
 
-func _pick_for_move(w: Vector2) -> void:
-	var i: int = doc.prop_at(w, Callable(EdAssets, "size_of"))
-	doc.push_undo()
-	if i >= 0:
-		var p: Dictionary = doc.props[i]
-		_drag = {"prop": i, "off": w - Vector2(p["x"], p["y"])}
-		return
-	var c := _cell_of(w)
-	var g: String = doc.get_cell(c.x, c.y)
-	if g != "." and g != "#" and g != "=" and g != "":
-		_drag = {"glyph": g, "from": c}
+func _place_picture(at: Vector2) -> void:
+	var png := String(sel.get("png", ""))
+	if tab == "BACKDROPS":
+		var backdrop := png.get_file()
+		if doc.head.get("backdrop", "") == backdrop:
+			return
+		doc.push_undo()
+		if backdrop == "":
+			doc.head.erase("backdrop")
+		else:
+			doc.head["backdrop"] = backdrop
+	elif png != "":
+		var pos := _picture_position(at, png, tab == "TILES")
+		if not doc.in_room(_cell_of(at).x, _cell_of(at).y):
+			return
+		doc.push_undo()
+		doc.add_prop(png, int(pos.x), int(pos.y), plane, tab == "TILES")
 	else:
-		_drag = {}
+		return
+	_changed()
 
 
-func _drop_move(w: Vector2) -> void:
+func _picture_position(at: Vector2, png: String, is_tile: bool) -> Vector2:
+	if is_tile:
+		return Vector2(_cell_of(at)) * TILE
+	return ((at - EdAssets.size_of(png) * 0.5) / 8.0).round() * 8.0
+
+
+func _pick_at(at: Vector2) -> Dictionary:
+	var i: int = doc.prop_at(at, EdAssets.size_of)
+	if i >= 0:
+		return {"prop": i}
+	var cell := _cell_of(at)
+	if doc.in_room(cell.x, cell.y) and doc.get_cell(cell.x, cell.y) != ".":
+		return {"cell": cell}
+	return {}
+
+
+func _update_selection() -> void:
+	var movable := false
+	var label := "No object selected"
+	if _selection.has("prop"):
+		var picture: Dictionary = doc.props[_selection["prop"]]
+		var layer_name := String(picture.get("layer", "back")).capitalize()
+		label = "%s\nPNG · %s" % [String(picture["png"]).get_file(), layer_name]
+		movable = true
+	elif _selection.has("cell"):
+		var c: Vector2i = _selection["cell"]
+		var glyph: String = doc.get_cell(c.x, c.y)
+		label = "%s  ·  Tile %d, %d" % [_glyph_name(glyph), c.x + 1, c.y + 1]
+		movable = glyph not in ["#", "=", ".", "B"]
+	_picked_label.text = label
+	_move_btn.disabled = not movable
+	_delete_btn.disabled = _selection.is_empty()
+	_flip_btn.disabled = not _selection.has("prop")
+
+
+func _glyph_name(glyph: String) -> String:
+	if _markers.has(glyph):
+		return _markers[glyph]["name"]
+	for terrain in EdAssets.TERRAIN:
+		if terrain[0] == glyph:
+			return String(terrain[1]).capitalize()
+	return glyph
+
+
+func _erase_at(at: Vector2) -> void:
+	_erase_object(_pick_at(at))
+
+
+func _erase_object(target: Dictionary) -> void:
+	if target.is_empty():
+		return
+	_record_stroke()
+	if target.has("prop"):
+		doc.props.remove_at(target["prop"])
+	else:
+		var c: Vector2i = target["cell"]
+		doc.set_cell(c.x, c.y, ".")
+	_selection = {}
+	_changed()
+
+
+func _delete_selection() -> void:
+	_erase_object(_selection)
+
+
+func _flip_selection() -> void:
+	if not _selection.has("prop"):
+		return
+	doc.push_undo()
+	var picture: Dictionary = doc.props[_selection["prop"]]
+	picture["flip"] = not bool(picture.get("flip", false))
+	_changed()
+
+
+func _pick_for_move(at: Vector2) -> void:
+	_selection = _pick_at(at)
+	_update_selection()
+	if _move_btn.disabled:
+		return
+	_drag = _selection.duplicate()
+	if _drag.has("prop"):
+		var picture: Dictionary = doc.props[_drag["prop"]]
+		_drag["offset"] = at - Vector2(picture["x"], picture["y"])
+
+
+func _move_preview(at: Vector2) -> Rect2:
+	if _drag.has("prop"):
+		var picture: Dictionary = doc.props[_drag["prop"]]
+		var snap := float(TILE) if picture.get("tile", false) else 8.0
+		var pos: Vector2 = ((at - _drag["offset"]) / snap).round() * snap
+		return Rect2(pos, EdAssets.size_of(picture["png"]))
+	return Rect2(Vector2(_cell_of(at)) * TILE, Vector2.ONE * TILE)
+
+
+func _drop_move(at: Vector2) -> void:
 	if _drag.is_empty():
 		return
-	if _drag.has("glyph"):
-		var c := _cell_of(w)
-		if doc.in_room(c.x, c.y) and doc.get_cell(c.x, c.y) == "." and c != _drag["from"]:
-			doc.set_cell(_drag["from"].x, _drag["from"].y, ".")
-			doc.set_cell(c.x, c.y, String(_drag["glyph"]))
+	var to := _cell_of(at)
+	if not doc.in_room(to.x, to.y):
+		_drag = {}
+		return
+	if _drag.has("prop"):
+		var picture: Dictionary = doc.props[_drag["prop"]]
+		var before := Vector2(picture["x"], picture["y"])
+		var pos := _move_preview(at).position
+		if pos != before:
+			doc.push_undo()
+			picture["x"] = int(pos.x)
+			picture["y"] = int(pos.y)
+			_changed()
+	else:
+		var origin: Vector2i = _drag["cell"]
+		if origin != to and doc.get_cell(to.x, to.y) == ".":
+			var glyph: String = doc.get_cell(origin.x, origin.y)
+			doc.push_undo()
+			doc.set_cell(origin.x, origin.y, ".")
+			doc.set_cell(to.x, to.y, glyph)
+			_selection = {"cell": to}
+			_changed()
 	_drag = {}
-	_changed()
 
 
 func spread_zone() -> void:
 	if not _zone_on:
-		_say("ZONE tool first: drag an area in the room")
+		_say("Use the Spread tool to draw an area first.")
+		return
+	if tab not in ["ENEMIES", "HAZARDS"] or _list.get_selected_items().is_empty():
+		_say("Select types from the Enemies or Traps palette.")
 		return
 	var glyphs: Array = []
-	if tab == "ENEMIES":
-		for i in _list.get_selected_items():
-			glyphs.append(String(_entries[i]["glyph"]))
-	if glyphs.is_empty():
-		_say("open the ENEMIES tab and pick the kinds (Ctrl+click for several)")
-		return
-	var want := int(_count.value)
-	doc.push_undo()
-	var placed: int = doc.spread(_zone, glyphs, want)
-	_changed()
-	if placed == want:
-		_say("placed %d enemies" % placed)
-	else:
-		_say("placed %d of %d: not enough standing room in that zone" % [placed, want])
+	for i in _list.get_selected_items():
+		glyphs.append(_entries[i]["glyph"])
+	var count := int(_count.value)
+	var placed: int = doc.spread(_zone, glyphs, count)
+	if placed > 0:
+		_changed()
+	var kind := "traps" if tab == "HAZARDS" else "enemies"
+	_say("Placed %d %s." % [placed, kind] if placed == count else
+		"Placed %d of %d %s. Choose a larger area with suitable floor or ceiling space." % [placed, count, kind])
 
 
+## Dirty state compares both files, so undoing back to the saved draft clears it.
+func is_dirty() -> bool:
+	return doc != null and (doc.to_text() != _saved_text or doc.props_text() != _saved_props)
+
+
+func _read_expected(root: String) -> Dictionary:
+	var result := {}
+	if root == "":
+		return result
+	for suffix in [".txt", ".props.json"]:
+		var path := root.path_join("rooms/" + doc.file_id + suffix)
+		result[path] = FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else null
+	return result
+
+
+## Save the grid and sidecar as a unit. The draft stays dirty on conflict or write failure.
 func save() -> bool:
-	var pd: String = Dev.project_dir()
-	if pd == "":
-		_say("cannot find the project folder, nothing saved")
+	var root: String = Dev.project_dir()
+	if root == "":
+		_say("The builder workspace is unavailable. Your draft is still open.")
 		return false
-	var path := pd.path_join("rooms/%s.txt" % doc.file_id)
-	if FileAccess.file_exists(path):
-		# a copy of what is there, outside the project, before it is replaced
-		var bdir := ProjectSettings.globalize_path("user://room_backups")
-		DirAccess.make_dir_recursive_absolute(bdir)
-		var stamp := Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
-		var old := FileAccess.get_file_as_string(path)
-		var bf := FileAccess.open(bdir.path_join("%s_%s.txt" % [doc.file_id, stamp]), FileAccess.WRITE)
-		if bf != null:
-			bf.store_string(old)
-			bf.close()
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f == null:
-		_say("could not write " + path)
+	var path := root.path_join("rooms/%s.txt" % doc.file_id)
+	var props_path := root.path_join("rooms/%s.props.json" % doc.file_id)
+	var text: String = doc.to_text()
+	var pictures: String = doc.props_text()
+	var writes := {path: text, props_path: pictures}
+	var expected := _expected if _save_root == root else _read_expected(root)
+	var stamp := Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
+	var backup := "user://room_backups/%s_%s_%d" % [doc.file_id, stamp, Time.get_ticks_usec()]
+	if expected.get(path) != null:
+		writes[backup + ".txt"] = expected[path]
+	if expected.get(props_path) != null:
+		writes[backup + ".props.json"] = expected[props_path]
+	var message := Files.commit(writes, expected)
+	if message != "":
+		_say(message)
 		return false
-	f.store_string(doc.to_text())
-	f.close()
-	var ppath := pd.path_join("rooms/%s.props.json" % doc.file_id)
-	if not doc.props.is_empty() or FileAccess.file_exists(ppath):
-		var pf := FileAccess.open(ppath, FileAccess.WRITE)
-		if pf != null:
-			pf.store_string(doc.props_text())
-			pf.close()
-	_dirty = false
-	_update_status()
-	run_full_check()
-	_say("saved rooms/%s.txt (git keeps the old one); %d red warning(s)" % [doc.file_id, checks.size()])
+	_save_root = root
+	_expected = {path: text, props_path: pictures}
+	_saved_text = text
+	_saved_props = pictures
+	_say("Saved %s and its PNG placements." % doc.file_id)
 	return true
 
 
-# ---------- playing ----------
-
-## Play the room as it is now, from the cell under the mouse (or where she stands).
-func play() -> void:
-	var m = G.main
-	if m == null or m.player == null or _playing:
+func _set_start(cell: Vector2i) -> void:
+	if not doc.in_room(cell.x, cell.y):
 		return
-	RoomScript.override[doc.file_id] = doc.to_text()
-	PropsLayer.override[doc.file_id] = doc.props_text()
-	var feet := Vector2.ZERO
-	var use_cursor: bool = _hover.x >= 0 and doc.in_room(_hover.x, _hover.y)
-	if use_cursor:
-		feet = Vector2((_hover.x + 0.5) * TILE, (_hover.y + 1) * TILE - 0.5)
-	var p = m.player
-	var hp0: float = p.hp
+	for dy in 3:
+		if _art.cell(cell.x, cell.y - dy) in ["#", "|", "%", "B", ":"]:
+			_say("Pick a tile with enough space for Pandora to stand.")
+			return
+	_start_cell = cell
+	_say("Playtest start set. Click Playtest or press Tab.")
+	_overlay.queue_redraw()
+
+
+## Launch the selected draft and sheet through the shared playtest session.
+func play() -> void:
+	if _playing:
+		return
+	var feet = null
+	if doc.in_room(_start_cell.x, _start_cell.y):
+		feet = Vector2((_start_cell.x + 0.5) * TILE, (_start_cell.y + 1) * TILE - 0.5)
 	_playing = true
-	_set_ui_visible(false)
-	get_tree().paused = false
-	await m.debug_enter(m.room_name, "left", G.shifted)
-	for i in 3:
-		await get_tree().physics_frame
-	p = m.player
-	if use_cursor and p != null:
-		p.global_position = feet
-		p.velocity = Vector2.ZERO
-	if p != null:
-		p.hp = clampf(maxf(hp0, 1.0), 1.0, R.max_hp())
+	if not await Dev.play_room_draft(doc, room_id, sheet, feet):
+		_playing = false
+		_say("Could not playtest this room. Your draft is still open.")
 
 
 func edit_again() -> void:
-	if not _playing:
-		return
+	Dev.return_to_builder()
+
+
+func finish_playtest() -> void:
 	_playing = false
-	get_tree().paused = true
-	_set_ui_visible(true)
-	_say("back in the builder")
-	_view.queue_redraw()
+	_say("Back in the draft.")
 
 
 func spawn_picked() -> void:
-	var m = G.main
-	if m == null or m.player == null or not sel.has("glyph") or tab != "ENEMIES":
+	var main = G.main
+	if main == null or main.player == null or tab != "ENEMIES" or not sel.has("glyph"):
 		return
-	var id := String(sel["name"])
-	var at: Vector2 = m.player.global_position + Vector2(40.0 * m.player.facing, -4.0)
-	var en = m.spawner.enemy(id, at)
-	if en != null:
-		m.world.add_child(en)
+	var player = main.player
+	var at: Vector2 = player.global_position + Vector2(40.0 * player.facing, -4.0)
+	var enemy: Node2D = main.spawner.enemy(String(sel["name"]), at)
+	if enemy != null:
+		main.world.add_child(enemy)
+		main.enemies.append(enemy)
 
 
-# ---------- input ----------
-
-func _in_view(p: Vector2) -> bool:
-	return p.x < 384.0 - PANEL_W and p.y > VIEW_TOP
-
-
-func _input(ev: InputEvent) -> void:
-	var kev := ev as InputEventKey
-	if kev == null or not kev.pressed or kev.echo:
+func _input(event: InputEvent) -> void:
+	if not _active or not (event is InputEventKey) or not event.pressed or event.echo:
 		return
-	var k: int = kev.physical_keycode
-	if k == KEY_TAB:
-		get_viewport().set_input_as_handled()
-		if _playing:
-			edit_again()
-		else:
-			play()
-		return
+	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
 	if _playing:
-		if k == KEY_N:
+		if key == KEY_N:
 			spawn_picked()
 		return
-	var typing := get_viewport().gui_get_focus_owner() is LineEdit
-	if kev.ctrl_pressed:
-		if k == KEY_S:
-			save()
-		elif k == KEY_Z:
-			if kev.shift_pressed:
+	if get_viewport().gui_get_focus_owner() is LineEdit:
+		return
+	if event.ctrl_pressed:
+		match key:
+			KEY_S:
+				save()
+			KEY_Z:
+				if event.shift_pressed:
+					_redo()
+				else:
+					_undo()
+			KEY_Y:
 				_redo()
-			else:
-				_undo()
-		elif k == KEY_Y:
-			_redo()
+			_:
+				return
+	else:
+		match key:
+			KEY_TAB:
+				play()
+			KEY_DELETE:
+				_delete_selection()
+			KEY_F:
+				_fit()
+			KEY_V:
+				_set_tool("SELECT")
+			KEY_B:
+				_set_tool("PLACE")
+			KEY_M:
+				_set_tool("MOVE")
+			KEY_E:
+				_set_tool("ERASE")
+			KEY_S:
+				_set_tool("ZONE")
+			KEY_P:
+				_set_tool("START")
+			KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
+				_framing = false
+				var offset := Vector2(int(key == KEY_RIGHT) - int(key == KEY_LEFT), int(key == KEY_DOWN) - int(key == KEY_UP))
+				_cam += offset * 48.0 / _zoom
+				_sync_camera()
+			_:
+				return
+	get_viewport().set_input_as_handled()
+
+
+func _on_view_input(event: InputEvent) -> void:
+	if not _active or _playing:
 		return
-	if typing:
+	if event is InputEventMouseMotion:
+		_on_motion(event.position)
+	elif event is InputEventMouseButton:
+		_on_click(event)
+	else:
 		return
-	match k:
-		KEY_H:
-			_flip_next = not _flip_next
-			var i: int = doc.prop_at(_to_world(_mouse), Callable(EdAssets, "size_of")) if _in_view(_mouse) else -1
-			if i >= 0:
-				doc.push_undo()
-				doc.props[i]["flip"] = not bool(doc.props[i].get("flip", false))
-				_changed()
-			_update_status()
-		KEY_1:
-			plane = "back"
-			_update_status()
-		KEY_2:
-			plane = "solid"
-			_update_status()
-		KEY_3:
-			plane = "front"
-			_update_status()
-		KEY_DELETE:
-			if _in_view(_mouse):
-				doc.push_undo()
-				_erase_at(_to_world(_mouse))
-		KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
-			var d := Vector2(float(k == KEY_RIGHT) - float(k == KEY_LEFT), float(k == KEY_DOWN) - float(k == KEY_UP))
-			_cam += d * 48.0 / _zoom
-			_view.queue_redraw()
+	_overlay.queue_redraw()
+	_view.accept_event()
 
 
-func _on_view_input(ev: InputEvent) -> void:
-	if doc == null or _playing:
+func _on_motion(at: Vector2) -> void:
+	_update_pointer(at)
+	if _panning:
+		_cam = _cam_from - (at - _pan_from) / _zoom
+		_sync_camera()
+	elif _zone_drag:
+		_set_zone(_hover)
+	elif _painting:
+		_apply_brush(_hover)
+
+
+func _update_pointer(at: Vector2) -> void:
+	_mouse = at
+	_has_mouse = Rect2(Vector2.ZERO, _view.size).has_point(at)
+	_hover = _cell_of(_to_world(at))
+
+
+func _on_click(event: InputEventMouseButton) -> void:
+	_update_pointer(event.position)
+	var button := event.button_index
+	if button in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+		if event.pressed:
+			_zoom_at(event.position, 1.2 if button == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.2)
 		return
-	if ev is InputEventMouseMotion:
-		_mouse = ev.position
-		var w := _to_world(_mouse)
-		_hover = _cell_of(w) if doc.in_room(_cell_of(w).x, _cell_of(w).y) else Vector2i(-1, -1)
-		if _panning:
-			_cam = _cam_from - (ev.position - _pan_from) / _zoom
-		elif _painting and tool == "PLACE" and sel.has("glyph") and _hover.x >= 0:
-			_paint(_hover)
-		elif _erasing:
-			_erase_at(w)
-		elif _zone_drag:
-			_zone = _zone_from_cells(_zone_start, _cell_of(w))
-		elif not _drag.is_empty():
-			if _drag.has("prop"):
-				var p: Dictionary = doc.props[_drag["prop"]]
-				var np: Vector2 = ((w - _drag["off"]) / 8.0).round() * 8.0
-				p["x"] = int(np.x)
-				p["y"] = int(np.y)
-		_update_status()
-		_view.queue_redraw()
-	elif ev is InputEventMouseButton:
-		var w2 := _to_world(ev.position)
-		if ev.button_index == MOUSE_BUTTON_WHEEL_UP and ev.pressed:
-			_zoom_at(ev.position, 1.15)
-		elif ev.button_index == MOUSE_BUTTON_WHEEL_DOWN and ev.pressed:
-			_zoom_at(ev.position, 1.0 / 1.15)
-		elif ev.button_index == MOUSE_BUTTON_MIDDLE or (ev.button_index == MOUSE_BUTTON_LEFT and Input.is_key_pressed(KEY_SPACE)):
-			_panning = ev.pressed
-			_pan_from = ev.position
-			_cam_from = _cam
-		elif ev.button_index == MOUSE_BUTTON_LEFT:
-			if ev.pressed:
-				match tool:
-					"PLACE":
-						if sel.has("glyph"):
-							doc.push_undo()
-							_painting = true
-							if _hover.x >= 0:
-								_paint(_hover)
-						else:
-							_place_picture(w2)
-					"MOVE":
-						_pick_for_move(w2)
-					"ZONE":
-						_zone_start = _cell_of(w2)
-						_zone = _zone_from_cells(_zone_start, _zone_start)
-						_zone_drag = true
-						_zone_on = true
+	if _panning and button == _pan_button and not event.pressed:
+		_panning = false
+		return
+	var can_pan := button in [MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT] or (
+		button == MOUSE_BUTTON_LEFT and Input.is_physical_key_pressed(KEY_SPACE))
+	if can_pan and event.pressed:
+		_framing = false
+		_panning = true
+		_pan_button = button
+		_pan_from = event.position
+		_cam_from = _cam
+		return
+	if button != MOUSE_BUTTON_LEFT:
+		return
+	var at := _to_world(event.position)
+	if not event.pressed:
+		if not _drag.is_empty():
+			_drop_move(at)
+		_end_pointer_actions()
+		return
+	match tool:
+		"SELECT":
+			_selection = _pick_at(at)
+			_update_selection()
+		"PLACE":
+			if sel.has("glyph"):
+				_begin_brush()
 			else:
-				_painting = false
-				if _zone_drag:
-					_zone_drag = false
-				if not _drag.is_empty():
-					_drop_move(w2)
-		elif ev.button_index == MOUSE_BUTTON_RIGHT:
-			if ev.pressed:
-				doc.push_undo()
-				_erasing = true
-				_erase_at(w2)
-			else:
-				_erasing = false
-		_view.queue_redraw()
+				_place_picture(at)
+		"ERASE":
+			_begin_brush()
+		"MOVE":
+			_pick_for_move(at)
+		"ZONE":
+			_zone_start = _hover
+			_zone_drag = true
+			_set_zone(_hover)
+		"START":
+			_set_start(_hover)
 
 
-var _zone_start := Vector2i.ZERO
+func _begin_brush() -> void:
+	_painting = true
+	_last_brush_cell = _hover
+	_stroke_snapshot = false
+	if tool == "ERASE":
+		_erase_at(_to_world(_mouse))
+	else:
+		_paint(_hover)
 
 
-func _zone_from_cells(a: Vector2i, b: Vector2i) -> Rect2i:
-	var lo := Vector2i(mini(a.x, b.x), mini(a.y, b.y))
-	var hi := Vector2i(maxi(a.x, b.x), maxi(a.y, b.y))
-	return Rect2i(lo, hi - lo + Vector2i.ONE)
+func _apply_brush(cell: Vector2i) -> void:
+	if tool == "ERASE":
+		if cell != _last_brush_cell:
+			_erase_at(_to_world(_mouse))
+	else:
+		var delta := cell - _last_brush_cell
+		var steps := maxi(absi(delta.x), absi(delta.y))
+		for i in range(1, steps + 1):
+			var c := _last_brush_cell + Vector2i((Vector2(delta) * (float(i) / steps)).round())
+			_paint(c)
+	_last_brush_cell = cell
 
 
-# ---------- drawing ----------
+func _end_pointer_actions() -> void:
+	_panning = false
+	_painting = false
+	_stroke_snapshot = false
+	_zone_drag = false
+	_drag = {}
 
-func _glyph_color(ch: String) -> Color:
-	if ch in _enemy_glyphs:
-		return Color(0.85, 0.2, 0.2)
-	if ch in _hazard_glyphs:
-		return Color(0.95, 0.55, 0.1)
-	match ch:
-		"#":
-			return Color(0.36, 0.36, 0.52)
-		"=":
-			return Color(0.55, 0.55, 0.8)
-		"B":
-			return Color(0.5, 0.3, 0.22)
-		"|":
-			return Color(0.5, 0.5, 0.5)
-		"%":
-			return Color(0.45, 0.4, 0.34)
-		":":
-			return Color(0.25, 0.6, 0.6)
-		"^", "v", "<", ">":
-			return Color(0.6, 0.3, 0.8)
-		"D", "X":
-			return Color(0.9, 0.8, 0.2)
-		"P":
-			return Color(0.2, 0.8, 0.3)
-	if ch in _spot_glyphs:
-		return Color(0.2, 0.7, 0.8)
-	return Color(0.7, 0.7, 0.7)
+
+func _set_zone(cell: Vector2i) -> void:
+	var low := _zone_start.min(cell)
+	var high := _zone_start.max(cell)
+	_zone = Rect2i(low, high - low + Vector2i.ONE).intersection(Rect2i(0, 0, doc.width(), doc.height()))
+	_zone_on = _zone.has_area()
+	_update_spread()
 
 
 func _on_draw() -> void:
-	if doc == null:
+	var pixel_extent: Vector2 = doc.pixel_size()
+	var room_rect := Rect2(_to_screen(Vector2.ZERO), pixel_extent * _zoom)
+	_overlay.draw_rect(room_rect, Color("#777089"), false, 1.5)
+	var first := _cell_of(_cam).max(Vector2i.ZERO)
+	var last := (_cell_of(_to_world(_view.size)) + Vector2i.ONE).min(Vector2i(doc.width(), doc.height()))
+	var tile_size := TILE * _zoom
+	var layout: Array = _art.grid
+	for y in range(first.y, last.y):
+		for x in range(first.x, mini(last.x, String(layout[y]).length())):
+			var rect := Rect2(_to_screen(Vector2(x, y) * TILE), Vector2.ONE * tile_size)
+			var glyph: String = layout[y][x]
+			if _collisions and glyph in ["#", "B", "|", "%", ":", "=", "v"]:
+				var tint := Color("#597eaa") if glyph in ["=", "v"] else Color("#8d69d2")
+				_overlay.draw_rect(rect, Color(tint, 0.55))
+			if _grid and tile_size >= 5.0:
+				_overlay.draw_rect(rect, Color(1.0, 1.0, 1.0, 0.14), false, 1.0)
+			_draw_marker(glyph, rect)
+	for issue: Dictionary in checks:
+		var rect: Rect2 = issue["rect"]
+		var screen := Rect2(_to_screen(rect.position), rect.size * _zoom)
+		var tint := _issue_color(issue)
+		_overlay.draw_rect(screen, Color(tint, 0.12))
+		_overlay.draw_rect(screen, tint, false, 2.0 if rect == _issue_focus else 1.0)
+	if _zone_on and tool == "ZONE":
+		_draw_box(Rect2(Vector2(_zone.position) * TILE, Vector2(_zone.size) * TILE), DESIGN_TINT, 0.18)
+	if doc.in_room(_start_cell.x, _start_cell.y):
+		var rect := _draw_box(Rect2(Vector2(_start_cell) * TILE, Vector2.ONE * TILE), PLAY_TINT, 0.3)
+		_overlay.draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, -5), "PLAY START",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, PLAY_TINT)
+	if _selection.has("prop"):
+		var picture: Dictionary = doc.props[_selection["prop"]]
+		var area := Rect2(Vector2(picture["x"], picture["y"]), EdAssets.size_of(picture["png"]))
+		_draw_box(area, DESIGN_TINT, 0.12)
+	elif _selection.has("cell"):
+		_draw_box(Rect2(Vector2(_selection["cell"]) * TILE, Vector2.ONE * TILE), DESIGN_TINT, 0.12)
+	if _has_mouse and not _panning:
+		_draw_brush_preview()
+
+
+func _draw_marker(glyph: String, rect: Rect2) -> void:
+	if not _markers.has(glyph):
+		if glyph not in [".", "#", "=", "B", "v"]:
+			_overlay.draw_string(ThemeDB.fallback_font, rect.position + Vector2(0, rect.size.y * 0.81), glyph,
+				HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, maxi(9, int(rect.size.y * 0.75)), Color.WHITE)
 		return
-	var s := _view.size
-	var font := ThemeDB.fallback_font
-	_view.draw_rect(Rect2(Vector2.ZERO, s), Color(0.05, 0.05, 0.08))
-	var rs: Vector2 = doc.pixel_size()
-	var top_left := _to_screen(Vector2.ZERO)
-	_view.draw_rect(Rect2(top_left, rs * _zoom), Color(0.1, 0.1, 0.16))
-	# the backdrop, faint, at its real size from the left edge up from the floor
-	var bd := String(doc.head.get("backdrop", ""))
-	if bd != "":
-		var bt := EdAssets.texture("backdrops/" + bd)
-		if bt != null:
-			var bs := bt.get_size()
-			var x := 0.0
-			while x < rs.x:
-				_view.draw_texture_rect(bt, Rect2(_to_screen(Vector2(x, rs.y - bs.y)), bs * _zoom), false, Color(1, 1, 1, 0.35))
-				x += bs.x
-	var cw := TILE * _zoom
-	var w: int = doc.width()
-	var h: int = doc.height()
-	var x0 := maxi(0, int(floorf(_cam.x / TILE)))
-	var x1 := mini(w, int(ceilf((_cam.x + s.x / _zoom) / TILE)))
-	var y0 := maxi(0, int(floorf(_cam.y / TILE)))
-	var y1 := mini(h, int(ceilf((_cam.y + s.y / _zoom) / TILE)))
-	for y in range(y0, y1):
-		for x in range(x0, x1):
-			var ch: String = doc.get_cell(x, y)
-			if ch == ".":
-				continue
-			var r := Rect2(_to_screen(Vector2(x * TILE, y * TILE)), Vector2(cw, cw))
-			var c := _glyph_color(ch)
-			if ch == "=":
-				_view.draw_rect(Rect2(r.position, Vector2(cw, maxf(1.0, cw * 0.4))), c)
-			elif ch == "#":
-				_view.draw_rect(r, c)
-			else:
-				_view.draw_rect(r, Color(c.r, c.g, c.b, 0.85))
-				if cw >= 7.0:
-					_view.draw_string(font, r.position + Vector2(0, cw * 0.82), ch, HORIZONTAL_ALIGNMENT_CENTER, cw,
-						maxi(5, int(cw * 0.75)), Color.WHITE)
-	# PNG props and tiles as they are
-	for p in doc.props:
-		var tex := EdAssets.texture(String(p["png"]))
-		var ps := Vector2(p["x"], p["y"])
-		var rect := Rect2(_to_screen(ps), (tex.get_size() if tex != null else Vector2(TILE, TILE)) * _zoom)
-		var tint := Color(1, 1, 1, 1.0 if String(p.get("layer", "back")) != "front" else 0.8)
-		if tex != null:
-			if bool(p.get("flip", false)):
-				rect = Rect2(rect.position + Vector2(rect.size.x, 0), Vector2(-rect.size.x, rect.size.y))
-			_view.draw_texture_rect(tex, rect, false, tint)
-		else:
-			_view.draw_rect(rect, Color(1, 0, 1, 0.5), false, 1.0)
-		var lay := String(p.get("layer", "back"))
-		_view.draw_rect(Rect2(_to_screen(ps), Vector2(2.0, 2.0)), {"back": Color(0.4, 0.6, 1), "solid": Color(1, 1, 0.3), "front": Color(1, 0.5, 0.5)}.get(lay, Color.WHITE))
-	# grid
-	if cw >= 5.0:
-		var gc := Color(1, 1, 1, 0.07)
-		for x in range(x0, x1 + 1):
-			var a := _to_screen(Vector2(x * TILE, 0))
-			_view.draw_line(a, Vector2(a.x, _to_screen(Vector2(0, h * TILE)).y), gc, 1.0)
-		for y in range(y0, y1 + 1):
-			var b := _to_screen(Vector2(0, y * TILE))
-			_view.draw_line(b, Vector2(_to_screen(Vector2(w * TILE, 0)).x, b.y), gc, 1.0)
-	_view.draw_rect(Rect2(top_left, rs * _zoom), Color(0.7, 0.7, 0.9, 0.6), false, 1.0)
-	# red warnings (room_checks.gd)
-	for ck in checks:
-		var cr: Rect2 = ck["rect"]
-		var sr := Rect2(_to_screen(cr.position), cr.size * _zoom)
-		_view.draw_rect(sr, Color(1, 0.1, 0.1, 0.25), true)
-		_view.draw_rect(sr, Color(1, 0.15, 0.15), false, 1.0)
-		if _zoom >= 0.6:
-			_view.draw_string(font, sr.position + Vector2(1, -1), String(ck["text"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(1, 0.5, 0.5))
-	# the zone
-	if _zone_on:
-		var zr := Rect2(_to_screen(Vector2(_zone.position) * TILE), Vector2(_zone.size) * cw)
-		_view.draw_rect(zr, Color(0.3, 0.8, 1.0, 0.18), true)
-		_view.draw_rect(zr, Color(0.3, 0.8, 1.0), false, 1.0)
-	# the cell under the mouse, with what a click would put there
-	if _hover.x >= 0 and tool == "PLACE" and _in_view(_mouse):
-		var hr := Rect2(_to_screen(Vector2(_hover) * TILE), Vector2(cw, cw))
-		_view.draw_rect(hr, Color(1, 1, 1, 0.9), false, 1.0)
-		if sel.has("glyph") and cw >= 7.0:
-			_view.draw_string(font, hr.position + Vector2(0, cw * 0.82), String(sel["glyph"]), HORIZONTAL_ALIGNMENT_CENTER, cw,
-				maxi(5, int(cw * 0.75)), Color(1, 1, 1, 0.7))
-		elif sel.has("png") and sel["png"] != "" and tab != "BACKDROPS":
-			var tex2 := EdAssets.texture(String(sel["png"]))
-			if tex2 != null:
-				var sz := tex2.get_size() * _zoom
-				var at := hr.position if tab == "TILES" else _to_screen(((_to_world(_mouse) - tex2.get_size() * 0.5) / 8.0).round() * 8.0)
-				_view.draw_texture_rect(tex2, Rect2(at, sz), false, Color(1, 1, 1, 0.55))
+	var marker: Dictionary = _markers[glyph]
+	var icon: Texture2D = marker["icon"]
+	var tint := WARNING_TINT if marker["category"] == "HAZARDS" else DESIGN_TINT
+	var radius := clampf(rect.size.x * 0.4, 3.0, 12.0)
+	_overlay.draw_circle(rect.get_center(), radius, Color("#1c1625"))
+	_overlay.draw_arc(rect.get_center(), radius, 0.0, TAU, 16, tint, 1.3, true)
+	if icon != null and rect.size.x >= 8.0:
+		var extent := icon.get_size()
+		var max_extent := radius * 1.9
+		if marker["category"] == "ENEMIES":
+			max_extent = maxf(max_extent, minf(rect.size.x * 2.1, 45.0))
+		var fitted := extent * (max_extent / maxf(extent.x, extent.y))
+		var pos := rect.get_center() - fitted * 0.5
+		if marker["category"] == "ENEMIES":
+			pos.y = rect.end.y - fitted.y
+		_overlay.draw_texture_rect(icon, Rect2(pos, fitted), false, Color.WHITE)
+
+
+func _draw_brush_preview() -> void:
+	if not _drag.is_empty():
+		_draw_box(_move_preview(_to_world(_mouse)), DESIGN_TINT, 0.2)
+		return
+	if not doc.in_room(_hover.x, _hover.y) or tool in ["ZONE", "MOVE"]:
+		return
+	var color := PLAY_TINT if tool == "START" else ISSUE_TINT if tool == "ERASE" else Color.WHITE
+	var area := Rect2(Vector2(_hover) * TILE, Vector2.ONE * TILE)
+	if tool == "PLACE" and sel.has("png") and tab != "BACKDROPS":
+		var path: String = sel["png"]
+		var art := EdAssets.texture(path)
+		area = Rect2(_picture_position(_to_world(_mouse), path, tab == "TILES"), EdAssets.size_of(path))
+		if art != null:
+			_overlay.draw_texture_rect(art, Rect2(_to_screen(area.position), area.size * _zoom), false, Color(1, 1, 1, 0.55))
+	var rect := _draw_box(area, color, 0.08)
+	if tool == "PLACE" and sel.has("glyph"):
+		_draw_marker(String(sel["glyph"]), rect)
+
+
+func _draw_box(area: Rect2, tint: Color, alpha: float) -> Rect2:
+	var rect := Rect2(_to_screen(area.position), area.size * _zoom)
+	_overlay.draw_rect(rect, Color(tint, alpha))
+	_overlay.draw_rect(rect, tint, false, 1.8)
+	return rect
 
 
 func _exit_tree() -> void:
-	# the unsaved copy must not outlive the builder
-	if doc != null:
-		RoomScript.override.erase(doc.file_id)
-		PropsLayer.override.erase(doc.file_id)
-	Engine.time_scale = 1.0
+	if _check_thread != null and _check_thread.is_started():
+		_check_thread.wait_to_finish()

@@ -19,6 +19,7 @@ const Door := preload("res://door.gd")
 const Props := preload("res://props.gd")
 const Spawner := preload("res://spawner.gd")
 const PropsLayer := preload("res://editor/props_layer.gd")
+const RoomDoc := preload("res://editor/room_doc.gd")
 const TILE := 16
 const STAND := 36.0
 
@@ -97,27 +98,13 @@ func backdrop_rects() -> Array[Rect2]:
 
 func load_room(room_name: String, after_shift: bool = false) -> bool:
 	shifted = after_shift or G.shifted or W.sheet == "after"
-	var file := room_name
-
-	if W.sheet == "restored":
-		if FileAccess.file_exists("res://rooms/%s_restored.txt" % room_name):
-			file = room_name + "_restored"
-		elif room_name == "vault":
-			file = "vault_restored"
-	elif shifted:
-		if FileAccess.file_exists("res://rooms/%s_shift.txt" % room_name):
-			file = room_name + "_shift"
-		elif FileAccess.file_exists("res://rooms/%s.txt" % room_name):
-			file = room_name
-
-	if not FileAccess.file_exists("res://rooms/%s.txt" % file):
-		file = room_name
-
+	var sheet := "restored" if W.sheet == "restored" else ("after" if shifted else "before")
+	var file: String = Dev.room_file_id(room_name, sheet)
 	file_id = file
 	W.mark_visited(file_id)
 	W.mark_visited(room_name)
 
-	var txt := String(override[file]) if override.has(file) else FileAccess.get_file_as_string("res://rooms/%s.txt" % file)
+	var txt := String(override[file]) if override.has(file) else read_room_file(file)
 	if txt == "":
 		push_error("missing room " + file)
 		return false
@@ -142,20 +129,48 @@ func load_room(room_name: String, after_shift: bool = false) -> bool:
 		if glyph != "":
 			_glyphs[glyph] = String(id)
 
-	var lines := txt.replace("\r", "").split("\n", false)
-	for part in lines[0].split(","):
-		var kv := part.strip_edges().split("=")
-		if kv.size() == 2:
-			head[kv[0]] = kv[1]
+	var doc := RoomDoc.parse(file, txt)
+	var pictures := PropsLayer.read_layout(file)
+	head = doc.head
+	grid = RoomDoc.compose_rows(doc.rows, pictures)
+	size = doc.pixel_size()
+	_set_art()
+	_build(pictures)
+	queue_redraw()
+	return true
 
-	var w := 0
-	for i in range(1, lines.size()):
-		var row := lines[i].strip_edges(false, true)
-		grid.append(row)
-		w = maxi(w, row.length())
 
-	size = Vector2(w * TILE, grid.size() * TILE)
+## Read a saved workspace draft first, with the packaged room as the initial content.
+static func read_room_file(id: String) -> String:
+	var root: String = Dev.project_dir()
+	var rel := "rooms/%s.txt" % id
+	var path := root.path_join(rel) if root != "" else ""
+	return FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else FileAccess.get_file_as_string("res://" + rel)
+
+
+## Draw a draft with the gameplay backdrop and tiles, without creating gameplay nodes.
+func preview_document(doc: RefCounted) -> void:
+	head = doc.head.duplicate()
+	grid = doc.effective_rows()
+	size = doc.pixel_size()
+	spawns.clear()
+	for y in grid.size():
+		var x: int = grid[y].find("K")
+		if x >= 0:
+			spawns["K"] = Vector2(x * TILE + TILE / 2.0, (y + 1) * TILE)
+	_set_art()
+	for layer in get_children():
+		remove_child(layer)
+		layer.queue_free()
+	var pictures := PropsLayer.new()
+	pictures.setup_props(doc.props)
+	add_child(pictures)
+	queue_redraw()
+
+
+func _set_art() -> void:
 	theme = THEMES.get(head.get("theme", "church"), THEMES["church"])
+	_point = null
 	if theme["tiles"] != "":
 		_tiles = G.tex("env/%s_tiles.png" % theme["tiles"])
 		_ledge = G.tex("env/%s_ledge.png" % theme["tiles"])
@@ -164,11 +179,6 @@ func load_room(room_name: String, after_shift: bool = false) -> bool:
 		_wall = PropsLayer.backdrop_texture(String(head["backdrop"]), _wall)      # the builder's own wall picture, tiled at real size
 	if theme.has("point"):
 		_point = G.tex(theme["point"])
-
-	_build()
-	queue_redraw()
-	return true
-
 
 func cell(x: int, y: int) -> String:
 	if y < 0 or y >= grid.size() or x < 0 or x >= grid[y].length():
@@ -189,7 +199,7 @@ func clear_cells(r: Rect2) -> void:
 				grid[cy] = row.substr(0, cx) + "." + row.substr(cx + 1)
 
 
-func _build() -> void:
+func _build(pictures: Array) -> void:
 	var solid := StaticBody2D.new()
 	solid.collision_layer = 1
 	solid.collision_mask = 0
@@ -343,7 +353,7 @@ func _build() -> void:
 			enemy_nodes.append(en)
 	# PNG props and tiles from the room builder sit behind everything that moves
 	var pl := PropsLayer.new()
-	pl.setup(file_id)
+	pl.setup_props(pictures)
 	add_child(pl)
 	move_child(pl, 0)
 

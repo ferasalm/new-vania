@@ -27,6 +27,7 @@ const SPOTS := [
 
 ## Tabs, in order.
 const TABS := ["TERRAIN", "ENEMIES", "HAZARDS", "SPOTS", "TILES", "PROPS", "BACKDROPS"]
+const CATEGORY_LABELS := ["Terrain", "Enemies", "Traps", "Room Markers", "PNG Tiles", "PNG Props", "Backdrop"]
 
 
 static func editor_root() -> String:
@@ -88,7 +89,7 @@ static func entries(tab: String) -> Array:
 			for id in defs:
 				var g := String(defs[id].get("glyph", ""))
 				if g != "":
-					out.append({"glyph": g, "name": String(id)})
+					out.append({"glyph": g, "name": String(id), "label": String(defs[id].get("name", id)).capitalize()})
 		"TILES", "PROPS", "BACKDROPS":
 			var kind := tab.to_lower()
 			for f in scan(kind):
@@ -96,6 +97,54 @@ static func entries(tab: String) -> Array:
 			if tab == "BACKDROPS":
 				out.append({"png": "", "name": "(no backdrop)"})
 	return out
+
+
+## Palette thumbnails use actual room/game art where there is a matching sprite.
+static func thumbnail(entry: Dictionary, category: String, theme_tiles: String) -> Texture2D:
+	if entry.has("png"):
+		return texture(String(entry["png"]))
+	var glyph := String(entry.get("glyph", ""))
+	if category == "ENEMIES":
+		var anim := "hang" if glyph == "l" else "fly" if glyph == "m" else "idle"
+		var path := "%s/%s_00.png" % [entry["name"], anim]
+		if ResourceLoader.exists("res://assets/" + path) or FileAccess.file_exists("res://assets/" + path):
+			return G.tex(path)
+	if glyph in ["#", "="]:
+		var atlas := AtlasTexture.new()
+		atlas.atlas = G.tex("env/%s_%s.png" % [theme_tiles, "ledge" if glyph == "=" else "tiles"])
+		atlas.region = Rect2(0, 0, 16, 8 if glyph == "=" else 16)
+		return atlas
+	if glyph in ["D", "X"]:
+		return G.tex("env/door_%s.png" % ("boss" if glyph == "X" else "church"))
+	return _marker_icon(glyph, category)
+
+
+static func _marker_icon(glyph: String, category: String) -> Texture2D:
+	var key := "marker|" + category + "|" + glyph
+	if _cache.has(key):
+		return _cache[key]
+	var img := Image.create_empty(24, 24, false, Image.FORMAT_RGBA8)
+	var ink := Color("#f3ac6f") if category == "HAZARDS" else Color("#b7a9f0")
+	if glyph == "i":
+		for base in [3, 9, 15]:
+			for n in 5:
+				img.fill_rect(Rect2i(base + floori(n * 0.5), 17 - n, 5 - n, 1), ink)
+	elif glyph == "f":
+		img.fill_rect(Rect2i(5, 17, 14, 3), ink)
+		for x in [7, 11, 15]:
+			img.fill_rect(Rect2i(x, 7 + x % 3, 2, 8), ink)
+	elif glyph == "u":
+		img.fill_rect(Rect2i(11, 3, 2, 9), ink)
+		img.fill_rect(Rect2i(5, 12, 14, 7), ink)
+	elif glyph == "p":
+		img.fill_rect(Rect2i(11, 3, 2, 11), ink)
+		img.fill_rect(Rect2i(7, 14, 10, 5), ink)
+	else:
+		img.fill_rect(Rect2i(5, 5, 14, 14), ink.darkened(0.52))
+		img.fill_rect(Rect2i(9, 9, 6, 6), ink)
+	var result := ImageTexture.create_from_image(img)
+	_cache[key] = result
+	return result
 
 
 ## A palette picture, or null. `rel` is "props/x.png". Works for a PNG that Godot has not imported.

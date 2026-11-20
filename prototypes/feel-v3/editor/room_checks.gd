@@ -11,6 +11,7 @@
 # `quick` (default) skips the slow reach search; the builder runs the full one when asked.
 extends RefCounted
 
+const EdAssets := preload("res://editor/ed_assets.gd")
 const TILE := 16
 const STAND := 36.0
 const HEAD_SPARE := 8.0
@@ -34,24 +35,36 @@ var _gates_open := true
 
 ## All the warnings for a room. `reach` adds the can-she-get-there search (slower).
 func run(doc: RefCounted, reach := false) -> Array:
-	head = doc.head
-	g = []
-	W = doc.width()
-	H = doc.height()
-	for y in H:
-		var row: String = doc.rows[y]
-		g.append(row + "#".repeat(maxi(0, W - row.length())))
+	prepare(doc)
 	var out: Array = []
 	if W < 3 or H < 3:
 		return out
+	_clearance_and_jumps(out)
+	_doors(out)
+	_missing_art(out, doc)
+	if reach:
+		_reach(out)
+	return _merge(out)
+
+
+## Snapshot all scene-thread inputs before dispatching run_reach() to a worker.
+func prepare(doc: RefCounted) -> void:
+	head = doc.head.duplicate()
+	g = []
+	W = doc.width()
+	H = doc.height()
+	for row: String in doc.effective_rows():
+		g.append(row + "#".repeat(maxi(0, W - row.length())))
 	var v: float = T.v("jump_velocity")
 	var gr: float = T.v("gravity")
 	apex = v * v / (2.0 * gr)
 	rise_tiles = int(apex / TILE)
-	_clearance_and_jumps(out)
-	_doors(out)
-	_backdrop(out, doc)
-	if reach:
+
+
+## Reachability uses the snapshot only. The worker never touches the scene tree.
+func run_reach() -> Array:
+	var out: Array = []
+	if W >= 3 and H >= 3:
 		_reach(out)
 	return _merge(out)
 
@@ -72,7 +85,7 @@ func _merge(items: Array) -> Array:
 				merged = true
 				break
 		if not merged:
-			out.append({"rect": it["rect"], "text": it["text"]})
+			out.append(it.duplicate())
 	return out
 
 
@@ -135,6 +148,7 @@ func _clearance_and_jumps(out: Array) -> void:
 				var space := (y + 1) * TILE - top
 				if space < jump_need:
 					out.append({"rect": Rect2(x * TILE, top, TILE, (y + 1) * TILE - top),
+						"kind": "clearance", "severity": "advisory",
 						"text": "ceiling trap: %d px of air above this platform, her jump needs %d" % [space, jump_need]})
 	var headroom := {}
 	for surf in plats:
@@ -161,6 +175,7 @@ func _clearance_and_jumps(out: Array) -> void:
 						break
 				if near:
 					out.append({"rect": Rect2(xa * TILE, r2 * TILE - 4, TILE, 8),
+						"kind": "jump", "severity": "advisory",
 						"text": "jump too high: %d px (her limit is %d)" % [rise, int(limit)]})
 
 
@@ -185,18 +200,21 @@ func _doors(out: Array) -> void:
 					if not (xx == x and yy == y) and _solid5(xx, yy):
 						blocked = true
 			if blocked:
-				out.append({"rect": _rect(x, y - 2, 1, 3), "text": "door head blocked"})
+				out.append({"rect": _rect(x, y - 2, 1, 3), "kind": "exit", "text": "door head blocked"})
 			if y + 1 < H and not (_solid5(inner, y + 1) or g[y + 1][inner] == "="):
-				out.append({"rect": _rect(inner, y, 1, 1), "text": "no floor under the door"})
+				out.append({"rect": _rect(inner, y, 1, 1), "kind": "exit", "text": "no floor under the door"})
 
 
-func _backdrop(out: Array, doc: RefCounted) -> void:
+func _missing_art(out: Array, doc: RefCounted) -> void:
 	var bd := String(doc.head.get("backdrop", ""))
-	if bd == "":
-		return
-	var EdAssets = load("res://editor/ed_assets.gd")
-	if EdAssets.texture("backdrops/" + bd) == null:
-		out.append({"rect": _rect(0, 0, mini(W, 6), 1), "text": "backdrop picture '%s' is missing" % bd})
+	if bd != "" and EdAssets.texture("backdrops/" + bd) == null:
+		out.append({"rect": _rect(0, 0, mini(W, 6), 1), "kind": "asset",
+			"text": "backdrop picture '%s' is missing" % bd})
+	for picture: Dictionary in doc.props:
+		var path := String(picture.get("png", ""))
+		if EdAssets.texture(path) == null:
+			var rect := Rect2(Vector2(picture.get("x", 0), picture.get("y", 0)), Vector2(TILE, TILE))
+			out.append({"rect": rect, "kind": "asset", "text": "picture '%s' is missing" % path})
 
 
 # ---------- roomreach: can she get there ----------
