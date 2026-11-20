@@ -50,18 +50,6 @@
         ],
         "codemode": false
       },
-      "blender": {
-        "type": "local",
-        "command": [
-          "C:\\Users\\AUC\\.local\\bin\\uvx.exe",
-          "mcp-for-blender"
-        ],
-        "codemode": false,
-        "environment": {
-          "BLENDER_HOST": "127.0.0.1",
-          "BLENDER_PORT": "9876"
-        }
-      },
       "godot": {
         "type": "local",
         "command": [
@@ -79,10 +67,6 @@
         "command": ["unity", "mcp"],
         "disabled": true,
         "codemode": false
-      },
-      "hyper3d": {
-        "type": "remote",
-        "url": "https://api.hyper3d.com/api/mcp"
       }
     }
   },
