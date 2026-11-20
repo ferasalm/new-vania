@@ -9,6 +9,7 @@ extends RefCounted
 const KINDS := ["tiles", "props", "backdrops"]
 
 static var root_override := ""      # tests point the palette at a temporary folder
+static var library_override := ""   # tests point the asset library at a temporary folder
 static var _cache := {}
 
 ## Built-in grid characters: [character, plain name]. Group names are the palette tabs.
@@ -35,6 +36,73 @@ static func editor_root() -> String:
 		return root_override
 	var pd: String = Dev.project_dir()
 	return pd.path_join("assets/editor") if pd != "" else ""
+
+
+## The asset library folder: the override when set, else <project dir>/studio/library.
+static func library_root() -> String:
+	if library_override != "":
+		return library_override
+	var pd: String = Dev.project_dir()
+	return pd.path_join("studio/library") if pd != "" else ""
+
+
+## The catalog.json written by tools/asset_library.mjs.
+static func catalog_path() -> String:
+	var pd: String = Dev.project_dir()
+	return pd.path_join("studio/catalog.json") if pd != "" else ""
+
+
+## Copy a placeable library picture into the builder's own folder and return
+## "<kind>/<file>"; return "" (and write nothing) when the entry cannot be used.
+static func adopt(entry: Dictionary) -> String:
+	var placeable: Variant = entry.get("placeable", null)
+	if not (placeable is String) or not ((placeable as String) in KINDS):
+		return ""
+	var kind := String(placeable)
+	var rel := String(entry.get("path", ""))
+	if rel.is_empty() or not rel.to_lower().ends_with(".png"):
+		return ""
+	var clean := rel.replace("\\", "/")
+	for part: String in clean.split("/"):
+		if part == "..":
+			return ""
+	var root := library_root()
+	var target_root := editor_root()
+	if root.is_empty() or target_root.is_empty():
+		return ""
+	var source_norm := root.path_join(clean).simplify_path()
+	var root_norm := root.simplify_path().to_lower().trim_suffix("/")
+	if not source_norm.to_lower().begins_with(root_norm + "/"):
+		return ""
+	if not FileAccess.file_exists(source_norm):
+		return ""
+	var bytes := FileAccess.get_file_as_bytes(source_norm)
+	if bytes.is_empty():
+		return ""
+	ensure_folders()
+	var folder := target_root.path_join(kind)
+	DirAccess.make_dir_recursive_absolute(folder)
+	var file_name := clean.get_file()
+	var destination := folder.path_join(file_name)
+	if FileAccess.file_exists(destination):
+		if FileAccess.get_file_as_bytes(destination) == bytes:
+			return "%s/%s" % [kind, file_name]
+		var id := String(entry.get("id", ""))
+		var suffix := id.substr(maxi(0, id.length() - 6)) if not id.is_empty() else "copy"
+		var alternate := "%s_%s.png" % [file_name.get_basename(), suffix]
+		destination = folder.path_join(alternate)
+		if FileAccess.file_exists(destination):
+			if FileAccess.get_file_as_bytes(destination) == bytes:
+				return "%s/%s" % [kind, alternate]
+			return ""
+		file_name = alternate
+	var file := FileAccess.open(destination, FileAccess.WRITE)
+	if file == null:
+		return ""
+	file.store_buffer(bytes)
+	file.close()
+	clear_cache()
+	return "%s/%s" % [kind, file_name]
 
 
 ## Make the three folders (with a short README) when they are missing.

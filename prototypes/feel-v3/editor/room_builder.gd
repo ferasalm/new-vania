@@ -5,6 +5,8 @@ signal closed
 
 const RoomDoc := preload("res://editor/room_doc.gd")
 const EdAssets := preload("res://editor/ed_assets.gd")
+const EdCatalog := preload("res://editor/ed_catalog.gd")
+const EdPalette := preload("res://editor/ed_palette.gd")
 const RoomScript := preload("res://room.gd")
 const RoomChecks := preload("res://editor/room_checks.gd")
 const Shell := preload("res://editor/workspace_shell.gd")
@@ -54,6 +56,10 @@ var _redo_btn: Button
 var _tool_buttons := {}
 var _entries: Array = []
 var _markers := {}
+
+var library_button: Button
+var library_palette: Control = null
+var _library_overlay: Control
 
 var _cam := Vector2.ZERO
 var _zoom := 1.0
@@ -199,6 +205,10 @@ func _build_ui() -> void:
 func _build_palette(parent: HBoxContainer) -> void:
 	var panel := _sidebar(parent, 218)
 	_label(panel, "Palette", 22)
+	var library_row := HBoxContainer.new()
+	panel.add_child(library_row)
+	library_button = Shell.button(library_row, "Library", open_library, "Find any picture in the project: search, categories, preview", "studio.library")
+	library_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tabs = OptionButton.new()
 	for label in EdAssets.CATEGORY_LABELS:
 		_tabs.add_item(label)
@@ -455,6 +465,83 @@ func _refresh_assets() -> void:
 	_set_tab(tab)
 	_refresh()
 	_say("Asset palette refreshed.")
+
+
+## Open the searchable asset-library overlay; opening it again keeps the same one.
+func open_library() -> void:
+	if library_palette != null and is_instance_valid(library_palette):
+		return
+	if EdCatalog.entry_count() == 0:
+		EdCatalog.load_file(EdAssets.catalog_path())
+	var overlay := Control.new()
+	overlay.z_index = 64   # above the room overlay (z_index 16)
+	_shell.add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_library_overlay = overlay
+	var dim := ColorRect.new()
+	dim.color = Color(Shell.BACKGROUND, 0.72)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(dim)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var center := CenterContainer.new()
+	overlay.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(940, 600)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Shell.SURFACE
+	style.border_color = Shell.ACCENT
+	style.set_border_width_all(1)
+	style.set_content_margin_all(16)
+	panel.add_theme_stylebox_override("panel", style)
+	center.add_child(panel)
+	var column := VBoxContainer.new()
+	panel.add_child(column)
+	var palette := EdPalette.new()
+	palette.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	palette.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(palette)
+	library_palette = palette
+	palette.entry_used.connect(func(entry: Dictionary) -> void:
+		if use_library_entry(entry):
+			close_library())
+	var footer := HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGNMENT_END
+	column.add_child(footer)
+	Shell.button(footer, "Close", close_library)
+
+
+## Close the library overlay at once; harmless when it is already closed.
+func close_library() -> void:
+	var overlay := _library_overlay
+	_library_overlay = null
+	library_palette = null
+	if overlay != null and is_instance_valid(overlay):
+		overlay.queue_free()
+
+
+## Copy a library picture into the builder, switch to its tab and arm placing.
+func use_library_entry(entry: Dictionary) -> bool:
+	var reason := EdCatalog.placeable_reason(entry)
+	if not reason.is_empty():
+		_say(reason)
+		return false
+	var rel := EdAssets.adopt(entry)
+	if rel.is_empty():
+		_say("Could not copy that picture into the builder's folder.")
+		return false
+	EdAssets.clear_cache()
+	_set_tab(String(entry.get("placeable", "")).to_upper())
+	var index := -1
+	for i in _entries.size():
+		if String((_entries[i] as Dictionary).get("png", "")) == rel:
+			index = i
+			break
+	if index >= 0:
+		_list.select(index)
+		_on_pick(index, true)
+	_say("Ready to place %s. Click in the room." % String(entry.get("name", "")))
+	return true
 
 
 func _set_tool(mode: String) -> void:
