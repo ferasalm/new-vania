@@ -1,17 +1,13 @@
 # PROTOTYPE - NOT FOR PRODUCTION
-# Things that stand in a room and answer to her: the two levers (the library lever
-# that opens the church's lower door, the lever behind the iron bars), the iron bars,
-# the cracked wall, the time machine (the organ), and the scythe the boss leaves behind.
-# Each one is drawn by code, so no art is needed. A "cut" prop has prop_rect() and
-# prop_cut(): main.player_cut() feeds it her weapon's blade points. The blade wave
-# (the Dirge special) never reaches a prop.
+# Things that stand in a room and answer to her: levers, iron bars, the cracked wall,
+# candles, the winch, shutters, decor cues, and the time machine (the organ).
+# Levers, candles and the winch register with G.main.interact.
 extends RefCounted
 
 const TILE := 16.0
 
 
 static func has_tex(rel: String) -> bool:
-	# true when a picture exists (so a missing one stays silent and a placeholder is drawn)
 	return ResourceLoader.exists("res://assets/2x/" + rel) or ResourceLoader.exists("res://assets/" + rel) \
 		or FileAccess.file_exists("res://assets/2x/" + rel) or FileAccess.file_exists("res://assets/" + rel)
 
@@ -19,9 +15,9 @@ static func has_tex(rel: String) -> bool:
 # A lever on a floor. "library": any cut or Up pulls it. "bars": only an Elegy cut moves it.
 class Lever extends Node2D:
 	var kind := "library"
-	var cut_only := false          # true: only the Elegy cut moves it
+	var cut_only := false
 	var pulled := false
-	var _angle := -0.75            # handle angle: up-left (not pulled) .. down-right (pulled)
+	var _angle := -0.75
 	var _t := 0.0
 
 	func setup(k: String, is_pulled: bool) -> void:
@@ -30,6 +26,11 @@ class Lever extends Node2D:
 		pulled = is_pulled
 		_angle = 0.75 if pulled else -0.75
 		z_index = 2
+		_register()
+
+	func _register() -> void:
+		if not pulled and G.main != null and G.main.get("interact") != null:
+			G.main.get("interact").register(self, "lever", "PULL", Callable(self, "pull"), 24.0)
 
 	func prop_rect() -> Rect2:
 		return Rect2(global_position + Vector2(-8, -28), Vector2(16, 28))
@@ -44,16 +45,20 @@ class Lever extends Node2D:
 		if pulled:
 			return
 		pulled = true
+		if G.main != null and G.main.get("interact") != null:
+			G.main.get("interact").unregister(self)
 		var tw := create_tween()
 		tw.tween_property(self, "_angle", 0.75, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		Sfx.play_file("sfx/world/lever.wav", -4.0)
-		G.main.shake(2.0, 0.35)
-		G.main.fx("spark", global_position + Vector2(0, -16))
-		if kind == "library":
-			G.main.lever_library = true
-			G.main.hud.toast("Far below, a door grinds open.", 3.5)
-		else:
-			G.main.open_bars()
+		if G.main != null:
+			G.main.shake(2.0, 0.35)
+			G.main.fx("spark", global_position + Vector2(0, -16))
+			if kind == "library":
+				G.main.lever_library = true
+				if G.main.get("ambience") != null and G.main.get("ambience").has_method("cue"):
+					G.main.get("ambience").cue("chain_boom", global_position)
+			else:
+				G.main.open_bars()
 
 	func _process(delta: float) -> void:
 		_t += delta
@@ -76,8 +81,8 @@ class Lever extends Node2D:
 
 # Iron bars across an opening. They block her until a lever lifts them out of the way.
 class Bars extends Node2D:
-	var rect := Rect2()            # local to the room
-	var open_t := 0.0              # 0 shut .. 1 gone
+	var rect := Rect2()
+	var open_t := 0.0
 	var _shape: CollisionShape2D
 
 	func setup(r: Rect2, already_open: bool) -> void:
@@ -98,49 +103,51 @@ class Bars extends Node2D:
 			_shape.disabled = true
 
 	func raise() -> void:
+		if open_t >= 1.0:
+			return
+		_shape.disabled = true
+		Sfx.play_file("sfx/world/lever.wav", -2.0)
 		var tw := create_tween()
-		tw.tween_property(self, "open_t", 1.0, T.v("bars_rise_time"))
-		Sfx.play_file("sfx/world/bars_open.wav", -3.0)
-		G.main.shake(2.5, T.v("bars_rise_time"))
+		tw.tween_property(self, "open_t", 1.0, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_callback(func():
+			if G.main != null:
+				G.main.room_opened(rect)
+		)
 
 	func _process(_delta: float) -> void:
-		if open_t > 0.75 and not _shape.disabled:
-			_shape.set_deferred("disabled", true)
-			G.main.room_opened(rect)
 		queue_redraw()
 
 	func _draw() -> void:
-		var drop := rect.size.y * open_t
-		var bottom := rect.end.y - drop
-		if bottom <= rect.position.y + 1.0:
+		if open_t >= 1.0:
 			return
-		draw_rect(Rect2(rect.position, Vector2(rect.size.x, bottom - rect.position.y)), Color(0, 0, 0, 0.55))
-		var x := rect.position.x + 2.0
-		while x < rect.end.x - 1.0:
-			draw_rect(Rect2(x, rect.position.y, 3, bottom - rect.position.y), Color(0.16, 0.15, 0.17))
-			draw_rect(Rect2(x, rect.position.y, 1, bottom - rect.position.y), Color(0.5, 0.48, 0.52))
-			x += 6.0
-		draw_rect(Rect2(rect.position.x, bottom - 3.0, rect.size.x, 3), Color(0.22, 0.2, 0.23))
-		draw_rect(Rect2(rect.position.x, bottom - 3.0, rect.size.x, 1), Color(0.55, 0.5, 0.45))
-		draw_rect(Rect2(rect.position.x, rect.position.y, rect.size.x, 3), Color(0.22, 0.2, 0.23))
+		var lift := rect.size.y * open_t
+		var iron := Color(0.28, 0.27, 0.3)
+		var edge := Color(0.5, 0.48, 0.55)
+		var count := maxi(1, int(rect.size.x / 8.0))
+		for i in count:
+			var x := rect.position.x + (i + 0.5) * (rect.size.x / count)
+			var top := rect.position.y - lift
+			var bot := rect.end.y - lift
+			draw_line(Vector2(x, top), Vector2(x, bot), iron, 2.0)
+			draw_line(Vector2(x - 0.5, top), Vector2(x - 0.5, bot), edge, 0.5)
 
 
-# A wall that gives way after a few cuts: drawn like the stone around it, with cracks.
+# A cracked wall: breaks when struck 3 times with any weapon.
 class CrackWall extends Node2D:
 	var rect := Rect2()
-	var hits := 0
 	var broken := false
-	var tiles: Texture2D
-	var tint := Color.WHITE
+	var hits := 0
+	var _tiles: Texture2D
+	var _tint: Color
 	var _shape: CollisionShape2D
-	var _flash := 0.0
+	var _dust_t := 0.0
 
-	func setup(r: Rect2, tile_tex: Texture2D, tile_tint: Color, is_broken: bool) -> void:
+	func setup(r: Rect2, tiles: Texture2D, tint: Color, is_broken: bool) -> void:
 		rect = r
-		tiles = tile_tex
-		tint = tile_tint
+		_tiles = tiles
+		_tint = tint
 		broken = is_broken
-		z_index = 1
+		z_index = 2
 		var body := StaticBody2D.new()
 		body.collision_layer = 1
 		body.collision_mask = 0
@@ -151,80 +158,206 @@ class CrackWall extends Node2D:
 		_shape.position = r.get_center()
 		body.add_child(_shape)
 		add_child(body)
-		_shape.disabled = broken
+		if broken:
+			_shape.disabled = true
 
 	func prop_rect() -> Rect2:
-		return rect
+		return Rect2(global_position + rect.position, rect.size)
 
 	func prop_cut(_dmg: float, _elegy: bool) -> bool:
 		if broken:
 			return false
 		hits += 1
-		_flash = 0.15
-		var at := global_position + rect.get_center()
-		G.main.dust(at, 6)
-		G.main.fx("spark", at)
-		G.main.shake(2.0, 0.15)
-		if hits >= int(T.v("crack_hits")):
-			broken = true
-			_shape.set_deferred("disabled", true)
-			Sfx.play_file("sfx/world/wall_crumble.wav", -2.0)
-			G.main.shake(4.0, 0.5)
-			G.main.dust(at, 16)
-			G.main.wall_broke(rect)
-			_rubble()
+		if hits >= 3:
+			break_wall()
 		else:
-			Sfx.play_file("sfx/world/wall_crack.wav", -3.0, 0.92 + 0.08 * hits)
+			Sfx.play_file("sfx/world/locked.wav", -6.0)
+			if G.main != null:
+				G.main.shake(1.2, 0.15)
+				G.main.dust(global_position + rect.get_center(), 6)
+			queue_redraw()
 		return true
 
-	func _rubble() -> void:
-		for i in 14:
-			var p := ColorRect.new()
-			p.color = Color(0.45, 0.4, 0.35)
-			p.size = Vector2(3, 3)
-			p.position = rect.position + Vector2(randf() * rect.size.x, randf() * rect.size.y)
-			add_child(p)
-			var tw := p.create_tween().set_parallel(true)
-			tw.tween_property(p, "position:y", rect.end.y - 3.0, 0.4 + randf() * 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-			tw.tween_property(p, "color:a", 0.0, 0.9)
-			tw.chain().tween_callback(p.queue_free)
+	func break_wall() -> void:
+		if broken:
+			return
+		broken = true
+		_shape.disabled = true
+		Sfx.play_file("sfx/world/boom.wav", -2.0)
+		if G.main != null:
+			G.main.shake(3.0, 0.4)
+			G.main.dust(global_position + rect.get_center(), 18)
+			G.main.wall_broke(rect)
+		queue_redraw()
 
 	func _process(delta: float) -> void:
-		_flash = maxf(0.0, _flash - delta)
-		queue_redraw()
+		if not broken:
+			_dust_t += delta
+			if _dust_t >= 2.5:
+				_dust_t = 0.0
+				if G.main != null and G.main.get("ambience") != null and G.main.get("ambience").has_method("cue"):
+					G.main.get("ambience").cue("dust", global_position + rect.get_center())
 
 	func _draw() -> void:
 		if broken:
 			return
-		var cols := int(rect.size.x / TILE)
-		var rows := int(rect.size.y / TILE)
-		for cy in rows:
-			for cx in cols:
-				var dst := Rect2(rect.position + Vector2(cx * TILE, cy * TILE), Vector2(TILE, TILE))
-				if tiles != null:
-					draw_texture_rect_region(tiles, dst, Rect2((cx % 4) * TILE, 0, TILE, TILE), tint * Color(1.15, 1.05, 0.95))
-				else:
-					draw_rect(dst, Color(0.4, 0.36, 0.3))
-		# the cracks grow with every hit; a few hairlines show from the start
-		var c := Color(0.02, 0.02, 0.04, 0.9)
-		var mid := rect.get_center()
-		draw_line(mid + Vector2(-5, -10), mid + Vector2(-2, -3), c, 1.0)
-		draw_line(mid + Vector2(-2, -3), mid + Vector2(-6, 4), c, 1.0)
-		if hits >= 1:
-			draw_line(mid + Vector2(-2, -3), mid + Vector2(5, 0), c, 1.0)
-			draw_line(mid + Vector2(5, 0), mid + Vector2(4, 9), c, 1.0)
-			draw_line(mid + Vector2(-6, 4), mid + Vector2(-4, 12), c, 1.0)
-		if hits >= 2:
-			draw_line(mid + Vector2(-5, -10), mid + Vector2(1, -15), c, 1.0)
-			draw_line(mid + Vector2(5, 0), mid + Vector2(7, -8), c, 1.0)
-			draw_line(mid + Vector2(1, -15), mid + Vector2(4, -12), c, 1.0)
-		# a faint pulse says "this one gives"
-		var pulse := 0.06 + 0.04 * sin(Time.get_ticks_msec() / 260.0)
-		draw_rect(rect, Color(1.0, 0.85, 0.5, pulse + (0.5 if _flash > 0.0 else 0.0)))
+		draw_rect(rect, Color(0.1, 0.08, 0.1))
+		var cx := rect.get_center().x
+		var cy := rect.get_center().y
+		var crack_col := Color(0.9, 0.7, 0.4, 0.7)
+		draw_line(Vector2(cx, rect.position.y), Vector2(cx + (hits * 2.0), cy), crack_col, 1.0)
+		draw_line(Vector2(cx + (hits * 2.0), cy), Vector2(cx - 3.0, rect.end.y), crack_col, 1.0)
 
 
-# The time machine: a pipe organ the height of two rooms. Uses organ/idle_NN.png when it
-# exists (anchored bottom-centre on its feet), a drawn placeholder otherwise.
+# A candle stand. Lighting it tolls a bell, sets W.flag("candle_n"), and lights a sconce on the X door.
+class Candle extends Node2D:
+	var num := 1
+	var lit := false
+	var _flicker := 0.0
+
+	func setup(n: int, is_lit: bool) -> void:
+		num = n
+		lit = is_lit
+		z_index = 2
+		_register()
+
+	func _register() -> void:
+		if not lit and G.main != null and G.main.get("interact") != null:
+			G.main.get("interact").register(self, "candle", "LIGHT", Callable(self, "light"), 24.0)
+
+	func light() -> void:
+		if lit:
+			return
+		lit = true
+		W.set_flag("candle_%d" % num, true)
+		if G.main != null and G.main.get("interact") != null:
+			G.main.get("interact").unregister(self)
+		if G.main != null and G.main.get("ambience") != null and G.main.get("ambience").has_method("cue"):
+			G.main.get("ambience").cue("candle", global_position)
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		_flicker += delta * 12.0
+		queue_redraw()
+
+	func _draw() -> void:
+		# Stand
+		draw_rect(Rect2(-4, -2, 8, 2), Color(0.2, 0.18, 0.16))
+		draw_line(Vector2(0, -2), Vector2(0, -14), Color(0.35, 0.3, 0.25), 1.5)
+		draw_circle(Vector2(0, -14), 2.0, Color(0.4, 0.35, 0.3))
+		# Candle wax
+		draw_rect(Rect2(-2, -22, 4, 8), Color(0.85, 0.82, 0.75))
+		if lit:
+			var fl := sin(_flicker) * 0.8
+			draw_circle(Vector2(fl * 0.5, -25), 3.0, Color(1.0, 0.7, 0.2, 0.8))
+			draw_circle(Vector2(fl * 0.5, -25), 1.5, Color(1.0, 0.95, 0.6))
+			draw_circle(Vector2(0, -24), 8.0, Color(1.0, 0.6, 0.1, 0.15))
+
+
+# A winch. Turning it stops every HZ trap for good.
+class Winch extends Node2D:
+	var turned := false
+	var _angle := 0.0
+
+	func setup(is_turned: bool) -> void:
+		turned = is_turned
+		_angle = PI * 0.5 if turned else 0.0
+		z_index = 2
+		_register()
+
+	func _register() -> void:
+		if not turned and G.main != null and G.main.get("interact") != null:
+			G.main.get("interact").register(self, "winch", "TURN", Callable(self, "turn"), 24.0)
+
+	func turn() -> void:
+		if turned:
+			return
+		turned = true
+		W.set_flag("winch_turned", true)
+		if G.main != null and G.main.get("interact") != null:
+			G.main.get("interact").unregister(self)
+		var tw := create_tween()
+		tw.tween_property(self, "_angle", PI * 2.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		if G.main != null and G.main.get("ambience") != null and G.main.get("ambience").has_method("cue"):
+			G.main.get("ambience").cue("winch", global_position)
+		queue_redraw()
+
+	func _draw() -> void:
+		# Wheel and chain spool
+		draw_circle(Vector2(0, -16), 10.0, Color(0.3, 0.28, 0.32))
+		draw_circle(Vector2(0, -16), 7.0, Color(0.15, 0.14, 0.16))
+		for i in 4:
+			var a := _angle + i * (PI / 2.0)
+			draw_line(Vector2(0, -16), Vector2(cos(a) * 9.0, -16 + sin(a) * 9.0), Color(0.6, 0.55, 0.5), 1.5)
+		draw_rect(Rect2(-3, -8, 6, 8), Color(0.2, 0.18, 0.2))
+
+
+# One-way shutter: opens only from HZ~ toward OR~.
+class Shutter extends Node2D:
+	var open := false
+	var file_id := ""
+	var _shape: CollisionShape2D
+	var _open_t := 0.0
+
+	func setup(r: Rect2, fid: String, is_open: bool) -> void:
+		file_id = fid
+		open = is_open
+		_open_t = 1.0 if open else 0.0
+		z_index = 2
+		var body := StaticBody2D.new()
+		body.collision_layer = 1
+		body.collision_mask = 0
+		_shape = CollisionShape2D.new()
+		var rs := RectangleShape2D.new()
+		rs.size = r.size
+		_shape.shape = rs
+		_shape.position = r.get_center()
+		body.add_child(_shape)
+		add_child(body)
+		if open:
+			_shape.disabled = true
+
+	func open_shutter() -> void:
+		if open:
+			return
+		open = true
+		_shape.disabled = true
+		W.set_flag("shutter_" + file_id, true)
+		var tw := create_tween()
+		tw.tween_property(self, "_open_t", 1.0, 0.4)
+
+	func _process(_delta: float) -> void:
+		queue_redraw()
+
+	func _draw() -> void:
+		if _open_t >= 1.0:
+			return
+		var h := 32.0 * (1.0 - _open_t)
+		draw_rect(Rect2(-4, -h, 8, h), Color(0.4, 0.38, 0.42))
+		for i in int(h / 6.0):
+			draw_line(Vector2(-3, -h + i * 6.0), Vector2(3, -h + i * 6.0), Color(0.2, 0.18, 0.2), 1.0)
+
+
+# Decor: visual cues placed in the world (claw marks, fur, cold air markers).
+class Decor extends Node2D:
+	var kind := "claws"
+
+	func setup(k: String) -> void:
+		kind = k
+		z_index = 1
+
+	func _draw() -> void:
+		if kind == "claws":
+			var c := Color(0.15, 0.12, 0.18, 0.8)
+			for i in 3:
+				var ox := -4.0 + i * 3.5
+				draw_line(Vector2(ox, -6), Vector2(ox + 3.0, 6), c, 1.0)
+		elif kind == "cold_air":
+			var c := Color(0.6, 0.8, 1.0, 0.25)
+			draw_arc(Vector2.ZERO, 6.0, 0.0, PI, 8, c, 0.5)
+
+
+# The Organ of Hours (time machine). Up at the "T" marker (interact.gd) asks the question.
 class Organ extends Node2D:
 	var dead := false              # after the shift it is silent
 	var _frames: Array = []
@@ -292,30 +425,3 @@ class Organ extends Node2D:
 		draw_circle(Vector2(0, -52), 9.0 + pulse * 2.0 + _glow * 6.0, Color(0.75, 0.4, 1.0, (0.12 + 0.12 * pulse) * (1.0 + _glow)))
 		draw_circle(Vector2(0, -52), 3.0, Color(0.9, 0.7, 1.0, 0.4 + 0.5 * pulse))
 
-
-# The scythe the Pallbearer drops: it floats at the spot where the body fell. Touch it.
-class Scythe extends Node2D:
-	var _t := 0.0
-	var _base := Vector2.ZERO
-	var _target_y := 0.0
-
-	func setup(at: Vector2, rest_y: float) -> void:
-		# it starts at "at" (where the body was) and falls to rest_y, then floats there
-		position = at
-		_base = at
-		_target_y = rest_y
-		z_index = 6
-
-	func _process(delta: float) -> void:
-		_t += delta
-		_base.y = move_toward(_base.y, _target_y, 150.0 * delta)
-		position = Vector2(_base.x, _base.y + sin(_t * 2.6) * 3.0)
-		queue_redraw()
-
-	func _draw() -> void:
-		var tex := G.tex("weapon/elegy.png")
-		draw_circle(Vector2.ZERO, 16.0 + sin(_t * 5.0) * 2.0, Color(0.5, 0.9, 1.0, 0.16))
-		draw_circle(Vector2.ZERO, 9.0, Color(0.7, 1.0, 1.0, 0.12))
-		draw_set_transform(Vector2.ZERO, -0.5, Vector2(0.8, 0.8))
-		draw_texture(tex, -tex.get_size() / 2.0, Color(0.85, 1.0, 1.0))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

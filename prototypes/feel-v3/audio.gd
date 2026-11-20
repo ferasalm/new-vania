@@ -5,13 +5,15 @@
 extends Node
 
 const BASE := "res://assets/audio/"
+# the same fixed part list as tuning.gd: a fixed list works in an Android export
+const PARTS := ["rpg", "world", "items", "ui", "machines", "pallbearer", "unmuzzled", "arnetria", "recall", "anim", "voice"]
 const LABELS := {"footstep": "Footstep", "jump": "Jump", "land": "Landing", "swing": "Attack swing",
 	"swing_heavy": "Heavy swing", "hit": "Hit connects", "hurt": "She gets hit", "enemy_die": "Enemy dies",
 	"backdash": "Backdash", "door": "Door", "special": "Special attack", "pickup": "Orb pickup",
 	"no_energy": "No energy", "music_church": "Music: church", "music_library": "Music: library",
 	"music_lab": "Music: lab", "music_save": "Music: save room", "music_boss": "Music: boss"}
 
-var raw := {}      # events.json as loaded
+var raw := {}      # events.json as loaded (plus the part files)
 var ev := {}       # name -> {group, options: [{file, gain_db, stream}], index, volume_db, pitch_random}
 var missing: Array = []
 var _pool: Array = []
@@ -19,6 +21,8 @@ var _next := 0
 var _music: AudioStreamPlayer
 var _music_name := ""
 var _music_held := false
+var _part_names := {}   # event name -> the part file it came from (never saved back to events.json)
+var _warned := {}       # unknown names already warned about
 
 
 func _ready() -> void:
@@ -30,10 +34,29 @@ func _ready() -> void:
 	_music = AudioStreamPlayer.new()
 	add_child(_music)
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(BASE + "events.json"))
-	if typeof(parsed) != TYPE_DICTIONARY:
+	if typeof(parsed) == TYPE_DICTIONARY:
+		raw = parsed
+	else:
 		push_warning("assets/audio/events.json not found: the prototype runs silent")
-		return
-	raw = parsed
+	for part in PARTS:
+		var path: String = BASE + "events.d/" + String(part) + ".json"
+		if not FileAccess.file_exists(path):
+			continue
+		var extra = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if typeof(extra) != TYPE_DICTIONARY:
+			push_error("sound part is broken: " + path)
+			continue
+		for group in ["sfx", "music"]:
+			if not (extra.has(group) and extra[group] is Dictionary):
+				continue
+			if not raw.has(group):
+				raw[group] = {}
+			for name in extra[group]:
+				if raw[group].has(name):
+					push_error("sound event appears twice: " + String(name))
+					continue
+				raw[group][name] = extra[group][name]
+				_part_names[name] = part
 	for group in ["sfx", "music"]:
 		for name in raw.get(group, {}):
 			var e: Dictionary = raw[group][name]
@@ -84,6 +107,9 @@ func count(group: String) -> int:
 
 func play(name: String, pitch: float = 1.0) -> void:
 	if not ev.has(name) or ev[name]["group"] != "sfx":
+		if not _warned.has(name):
+			_warned[name] = true
+			push_warning("unknown sound: " + name)
 		return
 	var e: Dictionary = ev[name]
 	var o: Dictionary = e["options"][e["index"]]
@@ -219,14 +245,20 @@ func save() -> bool:
 	var backup: Dictionary = raw.duplicate(true)
 	for name in ev:
 		var e: Dictionary = ev[name]
+		if _part_names.has(name):
+			continue      # a part event is saved back to its own file, never to events.json
 		var target: Dictionary = raw[e["group"]][name]
 		target["file"] = e["options"][e["index"]]["file"]
 		target["volume_db"] = e["volume_db"]
 		target["pitch_random"] = e["pitch_random"]
+	var out: Dictionary = raw.duplicate(true)
+	for name in _part_names:      # part events came from their own files: keep them out of events.json
+		if ev.has(name) and out.has(ev[name]["group"]):
+			out[ev[name]["group"]].erase(name)
 	var f := FileAccess.open(ProjectSettings.globalize_path(BASE + "events.json"), FileAccess.WRITE)
 	if f == null:
 		raw = backup
 		return false
-	f.store_string(JSON.stringify(raw, "  ", false) + "\n")
+	f.store_string(JSON.stringify(out, "  ", false) + "\n")
 	f.close()
 	return true

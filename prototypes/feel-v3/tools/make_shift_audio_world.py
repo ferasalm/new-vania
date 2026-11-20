@@ -478,6 +478,81 @@ def build_leech_drop():
     return finish(cv.buf, fout=40.0)
 
 
+# ------------------------------------------------------------------ S1 world cues (2026-11-19)
+def build_door_lamp():
+    """A door's lamp changes: a relay tick and a short glass hum."""
+    D.seed(610)
+    cv = D.Canvas(0.45)
+    cv.add(D.noise_burst(0.015, 0.003, 2000, 6000) * 0.7, 0.0)
+    hum = D.sine(D.glide(220, 330, D.n_of(0.3))) * D.ar_env(D.n_of(0.3), 0.01, 0.25)
+    cv.add(0.35 * hum + 0.15 * D.modal([660, 1320], [1, 0.4], [0.08, 0.05], 0.3), 0.02)
+    return finish(cv.buf, peak_db=-4.0)
+
+
+def build_chain_run():
+    """A long chain runs through a pulley: a fast heavy rattle that slows down."""
+    D.seed(611)
+    return finish(chain(1.4, 90, 14, heavy=True, decay=0.9), fout=60.0)
+
+
+def build_boom():
+    """A deep stone boom far off: a low thump and a stone rumble."""
+    D.seed(612)
+    cv = D.Canvas(1.6)
+    cv.add(D.thump(70, 32, 1.2, 0.35, 2.0), 0.0)
+    cv.add(0.5 * D.lp(D.pink(D.n_of(1.5)), 300) * D.exp_env(D.n_of(1.5), 0.45), 0.02)
+    return finish(cv.buf, peak_db=-1.5, fout=80.0)
+
+
+def build_dust():
+    """Dust and grit trickle down: a soft dry crackle."""
+    D.seed(613)
+    return finish(0.6 * crackle(0.9, 70, 4, 2500, 9000), peak_db=-8.0, fout=60.0)
+
+
+def build_cold_air():
+    """A breath of cold air: a filtered noise swell."""
+    D.seed(614)
+    n = D.n_of(1.6)
+    y = D.bp(D.pink(n), 300, 1400) * D.bell_env(n, 0.45, 0.3)
+    return finish(y, peak_db=-8.0, fin=60.0, fout=200.0)
+
+
+def build_candle():
+    """A candle catches: a soft whoosh and a tiny crackle."""
+    D.seed(615)
+    cv = D.Canvas(0.8)
+    n = D.n_of(0.35)
+    cv.add(D.bp(D.white(n), 500, 2500) * D.ar_env(n, 0.06, 0.25) * 0.8, 0.0)
+    cv.add(0.4 * crackle(0.6, 30, 6, 2000, 7000), 0.12)
+    return finish(cv.buf, peak_db=-5.0)
+
+
+def build_rattle():
+    """Something shut rattles in its frame: a short chain shake and a knock."""
+    D.seed(616)
+    cv = D.Canvas(0.5)
+    cv.add(chain(0.35, 120, 60, heavy=True), 0.0)
+    cv.add(0.6 * D.thump(150, 80, 0.12, 0.04), 0.05)
+    return finish(cv.buf, peak_db=-4.0)
+
+
+def build_winch():
+    """The winch turns: ratchet clicks, a groaning drum, a chain hauled in."""
+    D.seed(617)
+    cv = D.Canvas(1.5)
+    t = 0.0
+    for gap in [0.11, 0.1, 0.095, 0.09, 0.09, 0.095, 0.1, 0.12]:
+        click = D.mix(D.noise_burst(0.02, 0.004, 1200, 3600) * 0.8, D.modal([700, 1450], [1, 0.5], [0.012, 0.007], 0.05))
+        cv.add(click, t, 0.7)
+        t += gap
+    n = D.n_of(1.0)
+    groan = D.bp(D.white(n), 90, 400) * stick_slip(n, 9.0) * 0.6
+    cv.add(groan, 0.05)
+    cv.add(0.5 * chain(1.1, 40, 20, heavy=True, decay=0.8), 0.15)
+    return finish(cv.buf, peak_db=-2.0, fout=60.0)
+
+
 BUILDERS = {
     "lever": build_lever,
     "bars_open": build_bars_open,
@@ -503,4 +578,12 @@ BUILDERS = {
     "ink_drip": build_ink_drip,
     "leech_squelch": build_leech_squelch,
     "leech_drop": build_leech_drop,
+    "door_lamp": build_door_lamp,
+    "chain_run": build_chain_run,
+    "boom": build_boom,
+    "dust": build_dust,
+    "cold_air": build_cold_air,
+    "candle": build_candle,
+    "rattle": build_rattle,
+    "winch": build_winch,
 }

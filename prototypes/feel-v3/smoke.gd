@@ -99,8 +99,11 @@ func _run() -> void:
 		looks[r.head.get("theme", "")] = true
 		_check("room '%s' loads, doors sit in the room edge" % name, ok, "size=%s doors=%s" % [str(r.size), str(r.doors.keys())])
 		r.queue_free()
-	_check("nine enemy kinds are placed in the rooms", kinds.size() == 9, str(kinds.keys()))
-	_check("every area has its own look", looks.size() == 8, str(looks.keys()))
+	# map.md section 2 (before sheet): hound, ghost, moth, scribe, crab, leech; trolley and orderly come with S4 (then 8)
+	_check("the six enemy kinds map.md places before S4 are in the rooms", kinds.size() == 6 and kinds.has("hound") and kinds.has("ghost")
+		and kinds.has("moth") and kinds.has("scribe") and kinds.has("crab") and kinds.has("leech"), str(kinds.keys()))
+	# map.md line 236: save2 is off the map, so its own look goes; the 15 before rooms use seven looks
+	_check("every area has its own look", looks.size() == 7, str(looks.keys()))
 	await _shot("1_church_start")
 
 	var x0 := p.global_position.x
@@ -330,13 +333,30 @@ func _run() -> void:
 			await _frames(6)
 			await _shot("14_lab_%d" % i)
 	var bd = main.room.doors.get("right")
-	_check("the lab leads to the second save room", bd != null and bd.to == "save2", "")
-	_check("the wall-latch relic waits in the lab, before the warden", main._relic != null and main.room.spawns.has("A"), "")
-	p.global_position = main.room.spawns["A"] + Vector2(0, 0)
-	await _frames(4)
-	_check("walking into the relic gives the wall latch", main.has_latch, "")
-	# the wall latch: jump at the tall wall, cling, kick off
-	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
+	var boss_door: Node2D = null
+	for d in main.room.doors_all:
+		if String(d.side) == "right" and d.boss and String(d.to) == "ordnance":
+			boss_door = d
+	_check("the lab leads on to the hallway, and its upper floor to the ordnance ward",
+		bd != null and bd.to == "hallway" and boss_door != null,
+		"right=%s ordnance_door=%s" % [bd.to if bd != null else "none", str(boss_door != null)])
+	_check("the lab's left door leads back to the cache station", main.room.doors.get("left") != null and main.room.doors["left"].to == "save", "")
+	_check("the lab holds no wall-jump relic any more (GRIP SERVOS moved to the kennel)", not main.room.spawns.has("A") and main._relic == null, "")
+	# the wall jump waits in the kennel (map.md: GRIP SERVOS in KN, from THE UNMUZZLED)
+	await _goto("kennel", "1")
+	p = main.player
+	var kn_mark: Dictionary = main.room.meta.get("marks", {}).get("1", {})
+	_check("GRIP SERVOS waits in the kennel as a plain wall-jump marker", main.room.spawns.has("1") and String(kn_mark.get("item", "")) == "wall_jump", "")
+	p.global_position = main.room.spawns["1"]
+	await _frames(6)
+	await _tap("up", 2)
+	await _frames(6)
+	_check("Up at the GRIP SERVOS marker gives the wall latch", main.has_latch, "")
+	main.has_latch = true      # the movement checks below test the latch itself, not the marker
+	# the wall latch: jump at the well's wall, cling, kick off
+	await _goto("shaft", "right")
+	p = main.player
+	p.global_position = Vector2(14 * 16 - 7.0, main.room.size.y - 32.0 - 120.0)
 	p.velocity = Vector2.ZERO
 	Input.action_press("right")
 	await _frames(6)
@@ -350,7 +370,7 @@ func _run() -> void:
 	await _frames(40)
 	Input.action_release("right")
 	# one latch per jump: back at the same wall in the air, she cannot grab again
-	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
+	p.global_position = Vector2(14 * 16 - 7.0, main.room.size.y - 32.0 - 120.0)
 	p.velocity = Vector2(0, 20.0)
 	Input.action_press("right")
 	await _frames(6)
@@ -358,22 +378,27 @@ func _run() -> void:
 	Input.action_release("right")
 	await _frames(90)
 	_check("landing gives the wall latch back", p._air_latches == 0, "latches=%d on_floor=%s" % [p._air_latches, str(p.is_on_floor())])
-	p.global_position = Vector2(55 * 16 - 7.0, main.room.size.y - 32.0 - 60.0)
+	p.global_position = Vector2(14 * 16 - 7.0, main.room.size.y - 32.0 - 120.0)
 	p.velocity = Vector2.ZERO
 	Input.action_press("right")
 	await _frames(int(T.v("wall_latch_time") * 60.0) + 20)
 	Input.action_release("right")
 	_check("the latch gives out by itself", p.state != "wall", "state=%s" % p.state)
-	await _goto("save2", "left")
+	# the second cache station and the boss door (map.md: S2 and VA are the saves; HW ends in PB)
+	await _goto("vault", "left")
 	p = main.player
-	bd = main.room.doors.get("right")
-	_check("the second save room ends in the boss door", bd != null and bd.boss and bd.to == "boss" and main.room.spawns.has("K") and main.room.spawns.has("M"), "")
+	_check("the second cache station has a capsule and a terminal", main.room.spawns.has("K") and main.room.spawns.has("M"), "")
 	p.global_position.x = main.room.spawns["M"].x
 	await _frames(10)
 	await _tap("up", 2)
 	await _frames(4)
-	_check("the second save room saves too", main.saved_room == "save2", main.saved_room)
+	_check("the second cache station saves too", main.saved_room == "vault", main.saved_room)
 	await _shot("15_save2")
+	# the hallway ends in the boss door (map.md: HW right boss door to PB)
+	await _goto("hallway", "left")
+	p = main.player
+	bd = main.room.doors.get("right")
+	_check("the hallway ends in the boss door", bd != null and bd.boss and bd.to == "boss", "")
 	# death: SYSTEM OFFLINE, then RECONSTRUCT rebuilds her at the capsule as the next Pandora
 	G.peace = false
 	p.take_hit(9999.0, 0.0)
@@ -387,15 +412,18 @@ func _run() -> void:
 	await _frames(200)
 	G.peace = true
 	p = main.player
-	_check("RECONSTRUCT rebuilds her at the capsule of the last save room", main.room_name == "save2" and not main.offline.visible and p.hp == T.v("player_hp")
+	_check("RECONSTRUCT rebuilds her at the capsule of the last save room", main.room_name == "vault" and not main.offline.visible and p.hp == T.v("player_hp")
 		and absf(p.global_position.x - main.room.spawns["K"].x) < 40.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
 	_check("she is the next Pandora", main.unit == 2 and main.hud._name.text == "PANDORA-002", main.hud._name.text)
 	await _shot("15_reconstructed")
 	await _goto("lab", "left")
 	p = main.player
-	bd = main.room.doors.get("right")
-	if bd != null:
-		p.global_position = Vector2(main.room.size.x - 70.0, bd.feet().y)
+	var shot_door: Node2D = null
+	for d in main.room.doors_all:
+		if String(d.side) == "right" and d.boss:
+			shot_door = d
+	if shot_door != null:
+		p.global_position = Vector2(main.room.size.x - 70.0, shot_door.feet().y)
 		await _frames(30)
 		await _shot("15_boss_door")
 
@@ -615,7 +643,7 @@ func _climb_hop(p: CharacterBody2D, target_top: float, start_x: float) -> bool:
 	await _frames(55)
 	Input.action_release("left")
 	await _frames(10)
-	var ok: bool = p.is_on_floor() and absf(p.global_position.y - target_top) < 3.0 and p.global_position.x < 180.0
+	var ok: bool = p.is_on_floor() and absf(p.global_position.y - target_top) < 3.0 and p.global_position.x < 192.0      # the ledge and its lip end at x 192
 	print("      hop to y=%.0f: latched=%s now x=%.0f y=%.0f floor=%s" % [target_top, str(latched), p.global_position.x, p.global_position.y, str(p.is_on_floor())])
 	return ok
 
@@ -640,7 +668,19 @@ func _new_area() -> void:
 	await _frames(100)
 	p.global_position = Vector2(main._scythe.global_position.x, main.room.spawns["O"].y)
 	await _frames(8)
-	_check("touching the scythe gives ELEGY-013", main.has_elegy and main._scythe == null and main.hud._toast.text.begins_with("ELEGY-013"), main.hud._toast.text.left(30))
+	# user ask C5 (2026-11-18): every pickup with Up, never by touch; the card shows it
+	_check("touching the scythe does not take it", not main.has_elegy and main._scythe != null, "")
+	await _tap("up", 2)
+	var card_shown := false
+	for i in 120:      # a special pickup plays its show first, then the card opens
+		await _frames(1)
+		if main.card != null and main.card.active:
+			card_shown = true
+			break
+	_check("Up at the scythe gives ELEGY-013 and shows its card", main.has_elegy and main._scythe == null and card_shown, "")
+	await _frames(60)
+	await _tap("up", 2)
+	await _frames(8)
 	await _tap("swap", 2)
 	_check("E swaps once the scythe is hers", int(T.v("weapon")) == 1, "")
 	T.set_v("weapon", 0.0)
@@ -657,8 +697,8 @@ func _new_area() -> void:
 	Input.action_press("left")
 	await _frames(70)
 	Input.action_release("left")
-	_check("walking into it says SEALED and the door stays shut", cd.open < 0.1 and main.room_name == "church" and main.hud._toast.text.begins_with("SEALED"),
-		"open=%.2f toast=%s" % [cd.open, main.hud._toast.text.left(20)])
+	_check("walking into it leaves it shut, with its lamp red", cd.open < 0.1 and main.room_name == "church" and cd.lamp == "red",
+		"open=%.2f lamp=%s" % [cd.open, cd.lamp])
 	await _goto("library", "left")
 	p = main.player
 	var lever: Node2D = null
@@ -668,10 +708,10 @@ func _new_area() -> void:
 	_check("the library has a lever on the climb", lever != null and not lever.pulled, "")
 	p.global_position = lever.global_position + Vector2(-30.0, 0.0)
 	p.facing = 1
-	await _frames(8)
+	await _frames(25)      # the lever's feet sit one tile above the floor: let her land first
 	await _tap("attack", 2)
 	await _frames(25)
-	_check("a cut pulls the library lever and says so", lever.pulled and main.lever_library and main.hud._toast.text.begins_with("Far below"), main.hud._toast.text.left(20))
+	_check("a cut pulls the library lever", lever.pulled and main.lever_library, "pulled=%s flag=%s" % [str(lever.pulled), str(main.lever_library)])
 	main.lever_library = false
 	await _goto("library", "left")
 	p = main.player
@@ -686,7 +726,7 @@ func _new_area() -> void:
 	await _goto("church", "P")
 	p = main.player
 	cd = main.room.doors["left"]
-	_check("after the lever the church door is not locked", not cd.locked, "")
+	_check("after the lever the church door is not locked, and its lamp is pale", not cd.locked and cd.lamp == "pale", "lamp=%s" % cd.lamp)
 	p.global_position = Vector2(60.0, cd.feet().y)
 	await _frames(6)
 	Input.action_press("left")
@@ -734,20 +774,20 @@ func _new_area() -> void:
 	_check("Down + Jump on the hole ledge drops her back into the top of the shaft, still falling", main.room_name == "shaft" and p.global_position.y < 80.0 and p.velocity.y > 0.0,
 		"room=%s y=%.0f vy=%.0f" % [main.room_name, p.global_position.y, p.velocity.y])
 
-	# ---- the ledges: 96 apart, so a plain jump cannot do it ----
+	# ---- the ledges: 80 apart with a one-way lip (user decision 2026-11-19), so a plain jump cannot do it ----
 	await _goto_from("shaft", "right", "church")
 	main.has_latch = false
 	p = main.player
 	var ledges: Array = []
 	for y in main.room.grid.size():
-		if main.room.cell(9, y) == "#" and main.room.cell(10, y) == "#" and main.room.cell(11, y) == "." and y < 27:
+		if main.room.cell(9, y) == "#" and main.room.cell(10, y) == "#" and (main.room.cell(11, y) == "." or main.room.cell(11, y) == "=") and main.room.cell(9, y - 1) == "." and y < 27:
 			ledges.append(float(y * 16))
 	ledges.reverse()
 	var jump_up: float = T.v("jump_velocity") * T.v("jump_velocity") / (2.0 * T.v("gravity"))
-	var spacing_ok := ledges.size() == 4
+	var spacing_ok := ledges.size() == 5
 	for i in range(ledges.size() - 1):
-		spacing_ok = spacing_ok and absf(ledges[i] - ledges[i + 1] - 96.0) < 0.1
-	_check("four ledges, 96 apart, more than a jump rises (%.0f)" % jump_up, spacing_ok and 96.0 > jump_up + 10.0, str(ledges))
+		spacing_ok = spacing_ok and absf(ledges[i] - ledges[i + 1] - 80.0) < 0.1
+	_check("five ledges, 80 apart, more than a jump rises (%.0f)" % jump_up, spacing_ok and 80.0 > jump_up + 10.0, str(ledges))
 	var best := 9999.0
 	for variant in ["", "right", "left"]:
 		p.global_position = Vector2(160.0, ledges[0] - 1.0)
@@ -763,20 +803,20 @@ func _new_area() -> void:
 		if variant != "":
 			Input.action_release(variant)
 		await _frames(70)
-	_check("without the grip a plain jump from ledge 1 stays below ledge 2", best > ledges[1] + 20.0, "highest feet y=%.0f, ledge 2 top=%.0f" % [best, ledges[1]])
-	# with the grip: floor -> ledge 1 -> 2 -> 3 -> 4, then out through the top
+	_check("without the grip a plain jump from ledge 1 stays below ledge 2", best > ledges[1] + 8.0, "highest feet y=%.0f, ledge 2 top=%.0f" % [best, ledges[1]])
+	# with the grip: floor -> ledge 1 -> ... -> 5, then out through the top
 	main.has_latch = true
 	p.global_position = Vector2(180.0, 447.0)
 	p.velocity = Vector2.ZERO
 	await _frames(15)
 	var hops: Array = []
-	for k in 4:
+	for k in ledges.size():
 		var hop_ok: bool = await _climb_hop(p, float(ledges[k]), 180.0 if k == 0 else 172.0)
 		hops.append(hop_ok)
 		if not hop_ok:
 			break
-	_check("with the grip she climbs floor -> 4 ledges (latch the right wall, kick up and left)", hops.size() == 4 and not hops.has(false), str(hops))
-	if hops.size() == 4 and not hops.has(false):
+	_check("with the grip she climbs floor -> 5 ledges (latch the right wall, kick up and left)", hops.size() == 5 and not hops.has(false), str(hops))
+	if hops.size() == 5 and not hops.has(false):
 		Input.action_press("jump")
 		await _until_room("vault", 60)
 		Input.action_release("jump")
@@ -785,21 +825,18 @@ func _new_area() -> void:
 		_check("and out through the top into the vault", false, "climb failed")
 	main.has_latch = true
 
-	# ---- the threshing chapel: counts and safe floor ----
+	# ---- the threshing chapel: map.md's two enemy kinds and two traps ----
 	var hz := Room.new()
 	hz.position = Vector2(0, -9000)
 	add_child(hz)
 	hz.load_room("hazard")
 	var cnt := {}
 	for h in hz.hazards:
-		if h[1].position.x >= 48.0 * 16.0:
-			cnt[h[0]] = int(cnt.get(h[0], 0)) + 1
+		cnt[h[0]] = int(cnt.get(h[0], 0)) + 1
 	for e in hz.enemies:
-		if e[1].x >= 48.0 * 16.0:
-			cnt[e[0]] = int(cnt.get(e[0], 0)) + 1
-	_check("the right half has 2 crabs, 2 moths, 1 scribe, 2 leeches, 2 pendulums, 2 crushers, 3 vents, 2 spike strips",
-		cnt.get("crab", 0) == 2 and cnt.get("moth", 0) == 2 and cnt.get("scribe", 0) == 1 and cnt.get("leech", 0) == 2
-		and cnt.get("pendulum", 0) == 2 and cnt.get("crusher", 0) == 2 and cnt.get("flame", 0) == 3 and cnt.get("spikes", 0) == 2, str(cnt))
+		cnt[e[0]] = int(cnt.get(e[0], 0)) + 1
+	_check("the threshing chapel holds 2 crabs, 2 leeches, 2 pendulums and 2 crushers", cnt.size() == 4
+		and cnt.get("crab", 0) == 2 and cnt.get("leech", 0) == 2 and cnt.get("pendulum", 0) == 2 and cnt.get("crusher", 0) == 2, str(cnt))
 	var floor_h: Array = []
 	for h in hz.hazards:
 		if h[1].end.y >= 14.0 * 16.0 - 0.1:
@@ -811,7 +848,7 @@ func _new_area() -> void:
 		var gap: float = floor_h[i + 1].position.x - floor_h[i].end.x
 		min_gap = minf(min_gap, gap)
 		gaps_ok = gaps_ok and gap >= 3.0 * 16.0 - 0.1
-	_check("at least 3 tiles of safe floor between the floor hazards", gaps_ok and floor_h.size() >= 7, "hazards=%d smallest gap=%.0f px" % [floor_h.size(), min_gap])
+	_check("at least 3 tiles of safe floor between the floor hazards", gaps_ok, "floor hazards=%d smallest gap=%.0f px" % [floor_h.size(), min_gap])
 	hz.queue_free()
 
 	# ---- bars, the lever behind them, the cracked wall, the tunnel ----
@@ -869,32 +906,36 @@ func _new_area() -> void:
 	await _frames(45)
 	_check("an Elegy cut reaches it: the bars rise", ylever.pulled and main.bars_opened, "pulled=%s" % str(ylever.pulled))
 	await _frames(int(T.v("bars_rise_time") * 60.0) + 30)
-	_check("the bars are gone and the way through is open", bars._shape.disabled and main.room.cell(46, 12) == ".", "")
+	var bar_cell := Vector2i(int(bars.rect.position.x / 16.0), int(bars.rect.position.y / 16.0))
+	_check("the bars are gone and the way through is open", bars._shape.disabled and main.room.cell(bar_cell.x, bar_cell.y) == ".", "cell=%s" % str(bar_cell))
 	Input.action_press("left")
 	await _frames(70)
 	Input.action_release("left")
 	_check("she walks through the opening to the left half", p.global_position.x < bars.rect.position.x - 8.0, "x=%.0f" % p.global_position.x)
 	T.set_v("weapon", 0.0)
-	# the cracked wall
+	# the cracked wall at the west end (map.md: 3 hits, any weapon)
 	await _goto("hazard", "right")
 	p = main.player
 	for pr in main.room.props:
 		if pr.has_method("prop_cut") and not pr.has_method("pull"):
 			wall = pr
-	var wall_end_x: float = wall.rect.end.x
-	p.global_position = Vector2(wall.rect.end.x + 8.0, wall.rect.end.y - 1.0)
-	p.facing = -1
-	await _frames(6)
-	Input.action_press("left")
-	await _frames(15)
-	Input.action_release("left")
-	var hits: Array = []
-	for k in 3:
-		p.energy = T.v("energy_max")
-		await _tap("attack", 2)
-		await _frames(30)
-		hits.append(wall.hits)
-	_check("the cracked wall breaks on the third cut, not before", hits == [1, 2, 3] and wall.broken and main.wall_broken, str(hits))
+	var wall_end_x: float = wall.rect.end.x if wall != null else 0.0
+	if wall != null:
+		p.global_position = Vector2(wall.rect.end.x + 8.0, wall.rect.end.y - 1.0)
+		p.facing = -1
+		await _frames(6)
+		Input.action_press("left")
+		await _frames(15)
+		Input.action_release("left")
+		var hits: Array = []
+		for k in 3:
+			p.energy = T.v("energy_max")
+			await _tap("attack", 2)
+			await _frames(30)
+			hits.append(wall.hits)
+		_check("the cracked wall breaks on the third cut, not before", hits == [1, 2, 3] and wall.broken and main.wall_broken, str(hits))
+	else:
+		_check("the cracked wall breaks on the third cut, not before", false, "no cracked wall in rooms/hazard.txt")
 	Input.action_press("left")
 	await _frames(90)
 	Input.action_release("left")
@@ -912,7 +953,7 @@ func _new_area() -> void:
 	await _frames(20)
 	p = main.player
 	_check("a slide passes the tunnel and leaves by the open edge into the time machine room",
-		slide_ok and main.room_name == "timemachine" and p.global_position.x > main.room.size.x - 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
+		slide_ok and main.room_name == "timemachine" and p.global_position.x > main.room.size.x - 120.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])      # her arrival slide carries her about 4 tiles in (user decision 2026-11-19)
 	main.enter("hazard", "left", "timemachine")
 	await _frames(4)
 	_check("arriving at the low tunnel puts her into a slide", main.player.state == "slide" and main.room.tunnels.get("left", false), "state=%s" % main.player.state)
@@ -923,8 +964,9 @@ func _new_area() -> void:
 	await _goto("timemachine", "K")
 	p = main.player
 	var tpos: Vector2 = main.room.spawns["T"]
-	_check("the organ stands in the room; the way back is a tall open edge", main.room.organ != null and main.room.open_edges.has("right")
-		and not main.room.tunnels.get("right", false), "")
+	# map.md line 61: OR R0 `~` HZ, so the way back to the chapel is the low crawl (slide), no longer a tall edge
+	_check("the organ stands in the room; the way back is the low crawl", main.room.organ != null and main.room.open_edges.has("right")
+		and main.room.tunnels.get("right", false), "")
 	p.global_position = Vector2(tpos.x, tpos.y - 1.0)
 	await _frames(10)
 	var saved_before: String = main.saved_room
@@ -957,105 +999,121 @@ func _new_area() -> void:
 			break
 	await _frames(20)
 	p = main.player
+	var wake: Vector2 = main.room.spawns.get("K", Vector2(-9999, -9999))
 	_check("YES: the world is shifted, and she wakes next to the machine", G.shifted and main.saved_room == "timemachine" and main.room_name == "timemachine"
-		and absf(p.global_position.x - main.room.spawns["K"].x) < 6.0, "shifted=%s room=%s" % [str(G.shifted), main.room_name])
+		and main.room.spawns.has("K") and absf(p.global_position.x - wake.x) < 6.0,
+		"shifted=%s room=%s K=%s" % [str(G.shifted), main.room_name, str(main.room.spawns.has("K"))])
 	_check("the filter is on and the voices are scheduled", main.shift.visible and main._whisper_t > 0.0 and main._whisper_t <= T.v("shift_whisper_max") + 0.5,
 		"visible=%s next=%.1f" % [str(main.shift.visible), main._whisper_t])
 	_check("the shift tears the picture, then settles", main.shift.mode == 6, "mode=%d" % main.shift.mode)
 
 	# ---- after the shift ----
-	main.player.hp = 0.0
-	await main.reconstruct()
-	_check("death keeps the world shifted and wakes her at the time machine", G.shifted and main.room_name == "timemachine" and main.player.hp == T.v("player_hp"), main.room_name)
-	await _goto("vault", "left")
-	p = main.player
-	_check("the shifted vault has a locked special door on the right", main.room.doors.has("right") and main.room.doors["right"].boss and main.room.doors["right"].to == "", "")
-	p.hp = 20.0
-	p.global_position.x = main.room.spawns["M"].x
-	await _frames(10)
-	await _tap("up", 2)
-	await _frames(6)
-	_check("a shifted terminal heals and saves nothing: NO SIGNAL", p.hp == 20.0 and main.saved_room == "timemachine" and main.hud._toast.text == "NO SIGNAL", main.hud._toast.text)
-	var xd = main.room.doors["right"]
-	p.global_position = Vector2(main.room.size.x - 90.0, xd.feet().y)
-	await _frames(6)
-	Input.action_press("right")
-	await _frames(90)
-	Input.action_release("right")
-	_check("the special door stays locked: LOCKED - UNTIL THE NEXT UPDATE", xd.open < 0.1 and main.room_name == "vault" and main.hud._toast.text.begins_with("LOCKED"), main.hud._toast.text)
-	# mirrored rooms and the new doors
-	var mc := Room.new()
-	mc.position = Vector2(0, -9000)
-	add_child(mc)
-	mc.load_room("church", true)
-	var oc := Room.new()
-	oc.position = Vector2(0, -9000)
-	add_child(oc)
-	oc.load_room("church", false)
-	var diff := 0
-	for y in oc.grid.size():
-		for x in oc.grid[y].length():
-			if oc.cell(x, y) != mc.cell(oc.grid[y].length() - 1 - x, y):
-				diff += 1
-	_check("the church is mirrored: every cell flipped, doors swapped", diff == 0 and mc.head["left"] == "library" and mc.head["right"] == "shaft"
-		and mc.doors["left"].to == "library" and mc.doors["right"].to == "shaft", "differences=%d" % diff)
-	var ml := Room.new()
-	ml.position = Vector2(0, -9000)
-	add_child(ml)
-	ml.load_room("library", true)
-	_check("the library is mirrored: top-left door to the hazard room, bottom-right door to the church",
-		ml.head["left"] == "hazard" and ml.head["right"] == "church" and ml.doors["left"].position.y == 96.0 and ml.doors["right"].position.y == 512.0,
-		"left=%s right=%s" % [ml.head["left"], ml.head["right"]])
-	var mh := Room.new()
-	mh.position = Vector2(0, -9000)
-	add_child(mh)
-	mh.load_room("hazard", true)
-	_check("the hazard room's right door leads to the library after the shift", mh.head["right"] == "library" and mh.doors["right"].to == "library", "")
-	for r in [mc, oc, ml, mh]:
-		r.queue_free()
-	# the shifted way back: hazard -> library -> church -> shaft -> vault
-	await _goto("hazard", "right")
-	p = main.player
-	var d = main.room.doors["right"]
-	p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
-	await _frames(6)
-	Input.action_press("right")
-	await _until_room("library", 300)
-	Input.action_release("right")
-	await _frames(30)
-	p = main.player
-	_check("hazard -> mirrored library, arriving at its top-left door", main.room_name == "library" and p.global_position.x < 60.0 and p.global_position.y < 120.0,
-		"room=%s x=%.0f y=%.0f" % [main.room_name, p.global_position.x, p.global_position.y])
-	d = main.room.doors["right"]
-	p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
-	p.velocity = Vector2.ZERO
-	await _frames(20)
-	Input.action_press("right")
-	await _until_room("church", 300)
-	Input.action_release("right")
-	await _frames(30)
-	p = main.player
-	_check("library -> mirrored church, arriving at its bottom-left door", main.room_name == "church" and p.global_position.x < 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
-	d = main.room.doors["right"]
-	p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
-	await _frames(10)
-	Input.action_press("right")
-	await _until_room("shaft", 300)
-	Input.action_release("right")
-	await _frames(30)
-	p = main.player
-	_check("church -> shaft, arriving at the bottom right (the shaft itself is unchanged)", main.room_name == "shaft" and p.global_position.x > main.room.size.x - 60.0, "room=%s x=%.0f" % [main.room_name, p.global_position.x])
-	up_span = main.room.up_span
-	p.global_position = Vector2((up_span.x + up_span.y) / 2.0, 6.0)
-	p.velocity = Vector2(0.0, -250.0)
-	await _frames(5)
-	_check("shaft -> the shifted vault", main.room_name == "vault" and main.room.doors.has("right"), main.room_name)
+	if G.shifted:
+		main.player.hp = 0.0
+		await main.reconstruct()
+		_check("death keeps the world shifted and wakes her at the time machine", G.shifted and main.room_name == "timemachine" and main.player.hp == T.v("player_hp"), main.room_name)
+		await _goto("vault", "left")
+		p = main.player
+		_check("the shifted vault has a sealed door on the right, to Arnetria's room", main.room.doors.has("right") and main.room.doors["right"].boss
+			and main.room.doors["right"].to == "arnetria" and main.room.doors["right"].locked, "")
+		p.hp = 20.0
+		p.global_position.x = main.room.spawns["M"].x
+		await _frames(10)
+		await _tap("up", 2)
+		await _frames(6)
+		_check("a shifted terminal heals and saves nothing: NO SIGNAL", p.hp == 20.0 and main.saved_room == "timemachine" and main.hud._toast.text == "NO SIGNAL", main.hud._toast.text)
+		var xd = main.room.doors["right"]
+		p.global_position = Vector2(main.room.size.x - 90.0, xd.feet().y)
+		await _frames(6)
+		Input.action_press("right")
+		await _frames(90)
+		Input.action_release("right")
+		_check("the sealed door stays shut with no candles lit, and its lamp is red", xd.open < 0.1 and main.room_name == "vault" and xd.locked and xd.lamp == "red"
+			and not (W.flag("candle_1") or W.flag("candle_2") or W.flag("candle_3")), "open=%.2f lamp=%s" % [xd.open, xd.lamp])
+		# the shifted rooms are their own files now (map.md section 5)
+		var mc := Room.new()
+		mc.position = Vector2(0, -9000)
+		add_child(mc)
+		mc.load_room("church", true)
+		_check("the shifted church is church_shift: the library on the left, the lab on the right, the bier hole above",
+			mc.file_id == "church_shift" and mc.head.get("left", "") == "library_shift" and mc.head.get("right", "") == "lab_shift"
+			and mc.head.get("up", "") == "boss_shift", "file=%s head=%s" % [mc.file_id, str(mc.head)])
+		var ml := Room.new()
+		ml.position = Vector2(0, -9000)
+		add_child(ml)
+		ml.load_room("library", true)
+		_check("the shifted library is library_shift: the scriptorium crawl on the left, the chapel on the right",
+			ml.file_id == "library_shift" and ml.head.get("left", "") == "scriptorium_shift" and ml.tunnels.get("left", false)
+			and ml.head.get("right", "") == "hazard_shift", "file=%s left=%s right=%s" % [ml.file_id, ml.head.get("left", ""), ml.head.get("right", "")])
+		var mh := Room.new()
+		mh.position = Vector2(0, -9000)
+		add_child(mh)
+		mh.load_room("hazard", true)
+		_check("the shifted chapel is hazard_shift: the library on the left, the one-way shutter to the organ on the right",
+			mh.file_id == "hazard_shift" and mh.head.get("left", "") == "library_shift" and mh.head.get("right", "") == "timemachine_shift", "file=%s" % mh.file_id)
+		for r in [mc, ml, mh]:
+			r.queue_free()
+		# the shifted way back: chapel -> library -> church -> lab -> well -> vault (map.md section 4)
+		await _goto("hazard", "right")
+		p = main.player
+		var d = main.room.doors["left"]
+		p.global_position = Vector2(70.0, d.feet().y)
+		await _frames(6)
+		Input.action_press("left")
+		await _until_room("library", 300)
+		Input.action_release("left")
+		await _frames(30)
+		p = main.player
+		_check("chapel -> shifted library, arriving at its top-right door", main.room_name == "library" and main.room.file_id == "library_shift"
+			and p.global_position.x > main.room.size.x - 60.0 and p.global_position.y < 220.0,
+			"room=%s file=%s x=%.0f y=%.0f" % [main.room_name, main.room.file_id, p.global_position.x, p.global_position.y])
+		d = main.room.doors["right"]
+		_check("the shifted library's bottom-right door leads to the shifted church", d.to == "church_shift", d.to)
+		p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
+		p.velocity = Vector2.ZERO
+		await _frames(20)
+		Input.action_press("right")
+		await _until_room("church", 300)
+		Input.action_release("right")
+		await _frames(30)
+		p = main.player
+		_check("library -> shifted church, arriving at its left door", main.room_name == "church" and main.room.file_id == "church_shift" and p.global_position.x < 60.0,
+			"room=%s x=%.0f" % [main.room_name, p.global_position.x])
+		d = main.room.doors["right"]
+		p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
+		await _frames(10)
+		Input.action_press("right")
+		await _until_room("lab", 300)
+		Input.action_release("right")
+		await _frames(30)
+		p = main.player
+		_check("church -> shifted lab, arriving at its left door", main.room_name == "lab" and main.room.file_id == "lab_shift" and p.global_position.x < 60.0,
+			"room=%s x=%.0f" % [main.room_name, p.global_position.x])
+		d = main.room.doors["right"]
+		p.global_position = Vector2(main.room.size.x - 90.0, d.feet().y)
+		await _frames(10)
+		Input.action_press("right")
+		await _until_room("shaft", 300)
+		Input.action_release("right")
+		await _frames(30)
+		p = main.player
+		_check("lab -> the drained well, arriving at its left door", main.room_name == "shaft" and main.room.file_id == "shaft_shift" and p.global_position.x < 60.0,
+			"room=%s x=%.0f" % [main.room_name, p.global_position.x])
+		up_span = main.room.up_span
+		p.global_position = Vector2((up_span.x + up_span.y) / 2.0, 6.0)
+		p.velocity = Vector2(0.0, -250.0)
+		await _frames(5)
+		_check("the drained well -> the sealed station", main.room_name == "vault" and main.room.file_id == "vault_shift", main.room.file_id)
 
-	# ---- the tester keys 7, 8, 9, 0 ----
+	else:
+		_check("the shift runs and the after-shift rooms can be walked", false, "the world did not shift (see the YES check above)")
+
+	# ---- the tester keys 7, 8, 9, 0 (map.md section 2 rows 7-10) ----
 	var seen: Array = []
 	for k in ["room7", "room8", "room9", "room10"]:
 		await _tap(k, 2)
 		await _frames(4)
 		seen.append(main.room_name)
-	_check("keys 7, 8, 9, 0 go to the shaft, vault, hazard room and time machine", seen == ["shaft", "vault", "hazard", "timemachine"], str(seen))
-	_check("the pause menu lists all ten rooms", main.touch.ROOM_LABELS.size() == 10, "")
+	_check("keys 7, 8, 9, 0 go to the ordnance ward, the hallway, the Pallbearer and the reliquary",
+		seen == ["ordnance", "hallway", "boss", "gallery"], str(seen))
+	_check("the pause menu lists all fifteen before-shift rooms", main.touch.ROOM_LABELS.size() == 15, "")

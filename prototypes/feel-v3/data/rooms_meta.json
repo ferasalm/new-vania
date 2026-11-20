@@ -1,0 +1,523 @@
+{
+  "cell_tiles": [24, 14],
+  "sheets": {
+    "before": {
+      "church": {
+        "code": "CH",
+        "title": "THE NAVE OF ASH",
+        "cell": [48, 18, 3, 1],
+        "entry": "P",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_church",
+        "exits": [
+          {"side": "L", "at": 0, "to": "shaft", "kind": "lever_door"},
+          {"side": "R", "at": 0, "to": "library", "kind": "door"}
+        ],
+        "marks": {},
+        "decor": []
+      },
+      "library": {
+        "code": "LB",
+        "title": "THE UNREAD STACKS",
+        "cell": [32, 48, 2, 3],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_library",
+        "exits": [
+          {"side": "L", "at": 2, "to": "church", "kind": "door"},
+          {"side": "L", "at": 0, "to": "scriptorium", "kind": "door"},
+          {"side": "R", "at": 0, "to": "save", "kind": "door"},
+          {"side": "L", "at": 1, "to": "", "kind": "bricked"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"},
+          "L": {"type": "lever", "flag": "lever_library"}
+        },
+        "decor": []
+      },
+      "scriptorium": {
+        "code": "SC",
+        "title": "THE SCRIPTORIUM",
+        "cell": [16, 16, 1, 1],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_library",
+        "exits": [
+          {"side": "R", "at": 0, "to": "library", "kind": "door"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "lexicon_core"}
+        },
+        "decor": []
+      },
+      "save": {
+        "code": "S2",
+        "title": "CACHE STATION 002",
+        "cell": [20, 16, 1, 1],
+        "entry": "left",
+        "save": true,
+        "boss": "",
+        "respawn": false,
+        "music": "music_save",
+        "exits": [
+          {"side": "L", "at": 0, "to": "library", "kind": "door"},
+          {"side": "R", "at": 0, "to": "lab", "kind": "door"}
+        ],
+        "marks": {
+          "M": {"type": "terminal"}
+        },
+        "decor": []
+      },
+      "lab": {
+        "code": "LA",
+        "title": "SPECIMEN HALL",
+        "cell": [48, 32, 3, 2],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "L", "at": 1, "to": "save", "kind": "door"},
+          {"side": "R", "at": 1, "to": "hallway", "kind": "door"},
+          {"side": "U", "at": 0, "to": "kennel", "kind": "hole"},
+          {"side": "R", "at": 0, "to": "ordnance", "kind": "boss_door"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "coupler_034"}
+        },
+        "decor": []
+      },
+      "kennel": {
+        "code": "KN",
+        "title": "THE KENNEL",
+        "cell": [16, 16, 1, 1],
+        "entry": "down",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_lab",
+        "exits": [
+          {"side": "D", "at": 0, "to": "lab", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "wall_jump"}
+        },
+        "decor": []
+      },
+      "ordnance": {
+        "code": "OW",
+        "title": "THE ORDNANCE WARD",
+        "cell": [16, 16, 1, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_lab",
+        "exits": [
+          {"side": "L", "at": 0, "to": "lab", "kind": "boss_door"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "bolt_pistol"}
+        },
+        "decor": []
+      },
+      "hallway": {
+        "code": "HW",
+        "title": "THE PROCESSIONAL",
+        "cell": [32, 16, 2, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "L", "at": 0, "to": "lab", "kind": "door"},
+          {"side": "R", "at": 0, "to": "boss", "kind": "boss_door"},
+          {"side": "D", "at": 1, "to": "gallery", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"}
+        },
+        "decor": []
+      },
+      "boss": {
+        "code": "PB",
+        "title": "THE PALLBEARER",
+        "cell": [20, 16, 1, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "pallbearer",
+        "respawn": false,
+        "music": "music_boss",
+        "exits": [
+          {"side": "L", "at": 0, "to": "hallway", "kind": "boss_door"}
+        ],
+        "marks": {
+          "O": {"type": "boss", "boss": "pallbearer"}
+        },
+        "decor": []
+      },
+      "gallery": {
+        "code": "GA",
+        "title": "THE RELIQUARY OF SHELLS",
+        "cell": [48, 16, 3, 1],
+        "entry": "up",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "U", "at": 0, "to": "hallway", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "cerement_112"}
+        },
+        "decor": []
+      },
+      "shaft": {
+        "code": "SH",
+        "title": "THE MARROW WELL",
+        "cell": [16, 34, 1, 2],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 1, "to": "church", "kind": "lever_door"},
+          {"side": "U", "at": 0, "to": "vault", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"}
+        },
+        "decor": []
+      },
+      "vault": {
+        "code": "VA",
+        "title": "CACHE STATION 004",
+        "cell": [20, 17, 1, 1],
+        "entry": "left",
+        "save": true,
+        "boss": "",
+        "respawn": false,
+        "music": "music_save",
+        "exits": [
+          {"side": "L", "at": 0, "to": "hazard", "kind": "door"},
+          {"side": "D", "at": 0, "to": "shaft", "kind": "hole"}
+        ],
+        "marks": {
+          "M": {"type": "terminal"}
+        },
+        "decor": []
+      },
+      "hazard": {
+        "code": "HZ",
+        "title": "THE THRESHING CHAPEL",
+        "cell": [64, 18, 4, 1],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 0, "to": "vault", "kind": "door"},
+          {"side": "U", "at": 2, "to": "loft", "kind": "hole"},
+          {"side": "L", "at": 0, "to": "timemachine", "kind": "tunnel"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "governor_207"},
+          "2": {"type": "item", "item": "suture"},
+          "Y": {"type": "lever", "flag": "bars_opened"}
+        },
+        "decor": []
+      },
+      "loft": {
+        "code": "WL",
+        "title": "THE WINCH LOFT",
+        "cell": [16, 16, 1, 1],
+        "entry": "down",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "D", "at": 0, "to": "hazard", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "winch"},
+          "2": {"type": "item", "item": "restore_module"}
+        },
+        "decor": []
+      },
+      "timemachine": {
+        "code": "OR",
+        "title": "THE ORGAN OF HOURS",
+        "cell": [32, 18, 2, 1],
+        "entry": "K",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 0, "to": "hazard", "kind": "open"}
+        ],
+        "marks": {
+          "T": {"type": "organ"}
+        },
+        "decor": []
+      }
+    },
+    "after": {
+      "timemachine_shift": {
+        "code": "OR~",
+        "title": "THE HOUR UNWOUND",
+        "cell": [32, 18, 2, 1],
+        "entry": "K",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 0, "to": "vault_shift", "kind": "door"},
+          {"side": "L", "at": 0, "to": "hazard_shift", "kind": "shutter"}
+        ],
+        "marks": {
+          "T": {"type": "organ"}
+        },
+        "decor": []
+      },
+      "vault_shift": {
+        "code": "VA~",
+        "title": "THE SEALED STATION",
+        "cell": [20, 17, 1, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_save",
+        "exits": [
+          {"side": "L", "at": 0, "to": "timemachine_shift", "kind": "door"},
+          {"side": "D", "at": 0, "to": "shaft_shift", "kind": "hole"},
+          {"side": "R", "at": 0, "to": "arnetria", "kind": "sealed_x"}
+        ],
+        "marks": {
+          "M": {"type": "terminal"}
+        },
+        "decor": []
+      },
+      "shaft_shift": {
+        "code": "SH~",
+        "title": "THE DRAINED WELL",
+        "cell": [16, 34, 1, 2],
+        "entry": "up",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "U", "at": 0, "to": "vault_shift", "kind": "hole"},
+          {"side": "L", "at": 1, "to": "lab_shift", "kind": "door"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"}
+        },
+        "decor": []
+      },
+      "lab_shift": {
+        "code": "LA~",
+        "title": "THE WAKING HALL",
+        "cell": [48, 32, 3, 2],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "R", "at": 1, "to": "shaft_shift", "kind": "door"},
+          {"side": "L", "at": 1, "to": "church_shift", "kind": "door"},
+          {"side": "D", "at": 1, "to": "kennel_shift", "kind": "hole"}
+        ],
+        "marks": {},
+        "decor": []
+      },
+      "kennel_shift": {
+        "code": "KN~",
+        "title": "THE SUNKEN KENNEL",
+        "cell": [16, 32, 1, 2],
+        "entry": "up",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "U", "at": 0, "to": "lab_shift", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "candle", "candle": 1},
+          "2": {"type": "item", "item": "tether_06"}
+        },
+        "decor": []
+      },
+      "church_shift": {
+        "code": "CH~",
+        "title": "THE NAVE UNBURNED",
+        "cell": [48, 18, 3, 1],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_church",
+        "exits": [
+          {"side": "R", "at": 0, "to": "lab_shift", "kind": "door"},
+          {"side": "L", "at": 0, "to": "library_shift", "kind": "door"},
+          {"side": "U", "at": 1, "to": "boss_shift", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"}
+        },
+        "decor": []
+      },
+      "boss_shift": {
+        "code": "BI",
+        "title": "THE EMPTY BIER",
+        "cell": [20, 16, 1, 1],
+        "entry": "down",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_boss",
+        "exits": [
+          {"side": "D", "at": 0, "to": "church_shift", "kind": "hole"}
+        ],
+        "marks": {
+          "1": {"type": "candle", "candle": 2},
+          "2": {"type": "item", "item": "pall_090"},
+          "Y": {"type": "lever", "flag": "bars_bier"}
+        },
+        "decor": []
+      },
+      "library_shift": {
+        "code": "LB~",
+        "title": "THE STACKS THAT READ",
+        "cell": [32, 48, 2, 3],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_library",
+        "exits": [
+          {"side": "R", "at": 2, "to": "church_shift", "kind": "door"},
+          {"side": "L", "at": 1, "to": "scriptorium_shift", "kind": "tunnel"},
+          {"side": "R", "at": 0, "to": "hazard_shift", "kind": "door"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"}
+        },
+        "decor": []
+      },
+      "scriptorium_shift": {
+        "code": "SC~",
+        "title": "THE BLOTTED SCRIPTORIUM",
+        "cell": [16, 16, 1, 1],
+        "entry": "right",
+        "save": false,
+        "boss": "",
+        "respawn": false,
+        "music": "music_library",
+        "exits": [
+          {"side": "R", "at": 0, "to": "library_shift", "kind": "tunnel"}
+        ],
+        "marks": {
+          "1": {"type": "candle", "candle": 3},
+          "2": {"type": "item", "item": "regulator_000"}
+        },
+        "decor": []
+      },
+      "hazard_shift": {
+        "code": "HZ~",
+        "title": "THE KINDLED CHAPEL",
+        "cell": [64, 18, 4, 1],
+        "entry": "left",
+        "save": false,
+        "boss": "",
+        "respawn": true,
+        "music": "music_lab",
+        "exits": [
+          {"side": "L", "at": 0, "to": "library_shift", "kind": "door"},
+          {"side": "R", "at": 0, "to": "timemachine_shift", "kind": "shutter"}
+        ],
+        "marks": {
+          "1": {"type": "item", "item": "suture"},
+          "Y": {"type": "lever", "flag": "shutter_hazard_shift"}
+        },
+        "decor": []
+      },
+      "arnetria": {
+        "code": "AR",
+        "title": "THE QUIET RING",
+        "cell": [32, 32, 2, 2],
+        "entry": "left",
+        "save": false,
+        "boss": "arnetria",
+        "respawn": false,
+        "music": "music_boss",
+        "exits": [
+          {"side": "L", "at": 0, "to": "vault_shift", "kind": "sealed_x"}
+        ],
+        "marks": {
+          "O": {"type": "boss", "boss": "arnetria"},
+          "1": {"type": "visor"}
+        },
+        "decor": []
+      }
+    },
+    "restored": {
+      "base": "before",
+      "add": {
+        "arnetria": {
+          "code": "AR",
+          "title": "THE QUIET RING",
+          "cell": [32, 32, 2, 2],
+          "entry": "left",
+          "save": false,
+          "boss": "",
+          "respawn": false,
+          "music": "music_boss",
+          "exits": [
+            {"side": "L", "at": 0, "to": "vault", "kind": "door"}
+          ],
+          "marks": {
+            "1": {"type": "visor"}
+          },
+          "decor": []
+        },
+        "vault": {
+          "code": "VA",
+          "title": "CACHE STATION 004",
+          "cell": [20, 17, 1, 1],
+          "entry": "left",
+          "save": true,
+          "boss": "",
+          "respawn": false,
+          "music": "music_save",
+          "exits": [
+            {"side": "L", "at": 0, "to": "hazard", "kind": "door"},
+            {"side": "D", "at": 0, "to": "shaft", "kind": "hole"},
+            {"side": "R", "at": 0, "to": "arnetria", "kind": "door"}
+          ],
+          "marks": {
+            "M": {"type": "terminal"}
+          },
+          "decor": []
+        }
+      }
+    }
+  }
+}

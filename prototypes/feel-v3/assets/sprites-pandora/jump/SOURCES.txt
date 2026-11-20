@@ -1,0 +1,5 @@
+The user's own AI-made jump clips of Pandora (135 x 240, green screen, 80 frames each), 2026-11-19.
+j1 = Pixel_art_character_jumping_80d81185.gif        (standing jump)
+j2 = Woman_jumping_upward_and_right_cb3e9a95.gif     (power jump with arm raised, then a leap right)
+j3 = Pixel_art_character_jumping_twice_5fefdfa0.gif  (deep crouch, straight rise, then a forward jump)
+The jump proof takes its poses from these: tools/gif_to_palette.py PICKS.

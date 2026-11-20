@@ -127,6 +127,30 @@
     "label": "Chain speed (J then I)",
     "help": "How soon the next swing can start when you alternate the two attack buttons."
   },
+  "weapon_vanish": {
+    "value": 0.22,
+    "min": 0.05,
+    "max": 0.6,
+    "step": 0.01,
+    "label": "Weapon fade-out",
+    "help": "How long the weapon takes to break into sparks after a swing, in seconds."
+  },
+  "builder_jump_clear": {
+    "value": 0.9,
+    "min": 0.5,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Room builder: jump headroom warning",
+    "help": "The room builder (F2) draws a red ceiling warning over a platform with less air above it than this share of her jump height. 0.9 = she must be able to jump nearly to the top. Lower = fewer warnings."
+  },
+  "weapon_level_flat": {
+    "value": 0.45,
+    "min": 0.2,
+    "max": 1.0,
+    "step": 0.05,
+    "label": "Scythe head flatness in level swings",
+    "help": "How flat the scythe's curved head is drawn in the sideways swing. 1.0 = upright as in the picture, lower = lies along the swing."
+  },
   "attack_damage": {
     "value": 10.0,
     "min": 2.0,
@@ -340,12 +364,28 @@
     "help": "How fast a blue orb flies to her."
   },
   "orb_hang": {
-    "value": 0.35,
+    "value": 0.3,
     "min": 0.0,
     "max": 1.5,
     "step": 0.05,
     "label": "Orb hang",
-    "help": "Seconds a blue orb hangs in the air before it flies to her."
+    "help": "Seconds an orb pops out in place before it flies to her."
+  },
+  "orb_accel": {
+    "value": 600.0,
+    "min": 0.0,
+    "max": 2000.0,
+    "step": 50.0,
+    "label": "Orb speed-up",
+    "help": "How much faster an orb gets every second it flies to her."
+  },
+  "orb_speed_max": {
+    "value": 480.0,
+    "min": 160.0,
+    "max": 900.0,
+    "step": 20.0,
+    "label": "Orb top speed",
+    "help": "The fastest an orb flies to her, however far away it was."
   },
   "coyote_time": {
     "value": 0.09,
@@ -1156,8 +1196,8 @@
     "help": "Damage when she touches a smoke cloud."
   },
   "moth_cloud_life": {
-    "value": 6.0,
-    "min": 2.0,
+    "value": 3.0,
+    "min": 1.0,
     "max": 12.0,
     "step": 0.5,
     "label": "Censer Moth: smoke lasts",
@@ -1205,7 +1245,7 @@
   },
   "moth_dive_time": {
     "value": 1.1,
-    "min": 0.5,
+    "min": 0.2,
     "max": 2.5,
     "step": 0.1,
     "label": "Censer Moth: dive length",
@@ -1226,6 +1266,14 @@
     "step": 0.1,
     "label": "Censer Moth: ember burn time",
     "help": "Seconds an ember keeps burning on the floor."
+  },
+  "moth_ember_every": {
+    "value": 0.14,
+    "min": 0.04,
+    "max": 0.4,
+    "step": 0.01,
+    "label": "Censer Moth: ember drop interval",
+    "help": "Seconds between two embers dropping during the dive."
   },
   "moth_wait": {
     "value": 1.6,

@@ -1,4 +1,4 @@
-theme=ossuary_save,music=music_save,left=hazard,down=shaft
+theme=ossuary_save,music=music_save,left=timemachine_shift,right=arnetria,down=shaft_shift
 ##############################
 #............................#
 #............................#

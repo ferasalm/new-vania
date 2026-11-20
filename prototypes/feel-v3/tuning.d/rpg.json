@@ -1,0 +1,306 @@
+{
+  "xp_curve_step": {
+    "value": 10.0,
+    "min": 4.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "Levels: XP curve",
+    "help": "XP for the next level is this times (level + 1). 10: level 2 at 20 XP, 5 at 140, 10 at 540."
+  },
+  "level_cap": {
+    "value": 10.0,
+    "min": 5.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "Levels: highest level",
+    "help": "She stops gaining XP here."
+  },
+  "start_level": {
+    "value": 1.0,
+    "min": 1.0,
+    "max": 10.0,
+    "step": 1.0,
+    "label": "Test: start at level",
+    "help": "For testing; the points are spent by AUTO."
+  },
+  "points_per_level": {
+    "value": 2.0,
+    "min": 1.0,
+    "max": 4.0,
+    "step": 1.0,
+    "label": "Levels: points per level",
+    "help": "Points she gets at each level-up."
+  },
+  "vigor_hp": {
+    "value": 10.0,
+    "min": 0.0,
+    "max": 30.0,
+    "step": 1.0,
+    "label": "One VIGOR point: health +",
+    "help": "10 is about two more ghost touches before she falls."
+  },
+  "power_atk": {
+    "value": 8.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "One POWER point: weapon damage %",
+    "help": "8 means a level 1 Dirge hit of 10 grows by almost 1."
+  },
+  "guard_def": {
+    "value": 3.0,
+    "min": 0.0,
+    "max": 8.0,
+    "step": 1.0,
+    "label": "One GUARD point: less damage %",
+    "help": "Enemy hits only, not traps."
+  },
+  "stamina_en": {
+    "value": 8.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "One STAMINA point: energy +",
+    "help": "A swing costs 12 energy."
+  },
+  "magic_special": {
+    "value": 8.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "One MAGIC point: special damage %",
+    "help": "The blade wave of 30 becomes 32.4 with one point."
+  },
+  "magic_mp": {
+    "value": 6.0,
+    "min": 0.0,
+    "max": 15.0,
+    "step": 1.0,
+    "label": "One MAGIC point: MP +",
+    "help": "A blade wave costs 15 MP."
+  },
+  "def_cap": {
+    "value": 40.0,
+    "min": 0.0,
+    "max": 60.0,
+    "step": 5.0,
+    "label": "Defence: most",
+    "help": "DEF never goes above this percent."
+  },
+  "max_hp_floor": {
+    "value": 50.0,
+    "min": 20.0,
+    "max": 100.0,
+    "step": 5.0,
+    "label": "Health: lowest maximum",
+    "help": "Even with the COUPLER fitted her maximum health never drops below this."
+  },
+  "levelup_refill": {
+    "value": 1.0,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 1.0,
+    "label": "Level up: refill health, energy and MP",
+    "help": "1 refills all three bars at once; 0 gives the points only."
+  },
+  "area_damage_mult": {
+    "value": 0.75,
+    "min": 0.25,
+    "max": 1.5,
+    "step": 0.05,
+    "label": "Area enemies: damage times",
+    "help": "Ordinary enemies and their shots. Not bosses and not traps."
+  },
+  "xp_respawn_mult": {
+    "value": 0.5,
+    "min": 0.0,
+    "max": 1.0,
+    "step": 0.1,
+    "label": "XP: enemies that came back times",
+    "help": "0.5 gives half, rounded up."
+  },
+  "xp_hound": {
+    "value": 3.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: CHAINBITE HOUND",
+    "help": "XP for beating it."
+  },
+  "xp_ghost": {
+    "value": 3.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: GRAVE STATIC",
+    "help": "XP for beating it."
+  },
+  "xp_spitter": {
+    "value": 3.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: BILE CANTOR",
+    "help": "XP for beating it."
+  },
+  "xp_leech": {
+    "value": 4.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: TITHE LEECH",
+    "help": "XP for beating it."
+  },
+  "xp_choir": {
+    "value": 6.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: HOLLOW CHOIR",
+    "help": "XP for beating it."
+  },
+  "xp_moth": {
+    "value": 7.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: CENSER MOTH",
+    "help": "XP for beating it."
+  },
+  "xp_scribe": {
+    "value": 10.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: NEEDLE SCRIBE",
+    "help": "XP for beating it."
+  },
+  "xp_crab": {
+    "value": 12.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: RELIQUARY CRAB",
+    "help": "XP for beating it."
+  },
+  "xp_warden": {
+    "value": 14.0,
+    "min": 0.0,
+    "max": 50.0,
+    "step": 1.0,
+    "label": "XP: OSSUARY WARDEN",
+    "help": "XP for beating it."
+  },
+  "xp_boss": {
+    "value": 50.0,
+    "min": 0.0,
+    "max": 200.0,
+    "step": 5.0,
+    "label": "XP: THE PALLBEARER",
+    "help": "Takes her from about level 4 to 5."
+  },
+  "xp_unmuzzled": {
+    "value": 30.0,
+    "min": 0.0,
+    "max": 150.0,
+    "step": 5.0,
+    "label": "XP: THE UNMUZZLED",
+    "help": "Takes her from about level 3 toward 4."
+  },
+  "xp_arnetria": {
+    "value": 80.0,
+    "min": 0.0,
+    "max": 300.0,
+    "step": 5.0,
+    "label": "XP: ARNETRIA",
+    "help": "The last fight of the shift."
+  },
+  "suture_heal": {
+    "value": 40.0,
+    "min": 10.0,
+    "max": 100.0,
+    "step": 5.0,
+    "label": "Suture: heals",
+    "help": "Eight ghost touches worth of health."
+  },
+  "suture_max": {
+    "value": 9.0,
+    "min": 1.0,
+    "max": 9.0,
+    "step": 1.0,
+    "label": "Suture: most carried",
+    "help": "Only 8 exist in the world and they are never refilled."
+  },
+  "coupler_damage": {
+    "value": 5.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "COUPLER-034: damage +",
+    "help": "Flat damage added to every weapon hit."
+  },
+  "coupler_hp": {
+    "value": -40.0,
+    "min": -80.0,
+    "max": 0.0,
+    "step": 5.0,
+    "label": "COUPLER-034: health change",
+    "help": "The price of the extra damage."
+  },
+  "governor_hp": {
+    "value": 10.0,
+    "min": 0.0,
+    "max": 40.0,
+    "step": 5.0,
+    "label": "GOVERNOR-207: health +",
+    "help": "Raise it if it feels small."
+  },
+  "regulator_damage": {
+    "value": 5.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "REGULATOR-000: damage +",
+    "help": "Flat damage added to every weapon hit, with no price."
+  },
+  "cerement_def": {
+    "value": 8.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "CEREMENT-112: defence +",
+    "help": "Percent less damage from enemy hits."
+  },
+  "pall_mp": {
+    "value": 15.0,
+    "min": 0.0,
+    "max": 40.0,
+    "step": 5.0,
+    "label": "PALL-090: MP +",
+    "help": "One more blade wave's worth of magic."
+  },
+  "pall_orb_mult": {
+    "value": 1.5,
+    "min": 1.0,
+    "max": 3.0,
+    "step": 0.1,
+    "label": "PALL-090: soul orb times",
+    "help": "1.5 gives half again the MP from every orb."
+  },
+  "tether_scrap": {
+    "value": 4.0,
+    "min": 0.0,
+    "max": 10.0,
+    "step": 1.0,
+    "label": "TETHER-06: scrap gauge +",
+    "help": "How much more scrap she can carry."
+  },
+  "tether_repair": {
+    "value": 2.0,
+    "min": 0.0,
+    "max": 10.0,
+    "step": 1.0,
+    "label": "TETHER-06: health per scrap +",
+    "help": "Every self-repair tick heals this much more."
+  }
+}

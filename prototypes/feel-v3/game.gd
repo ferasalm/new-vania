@@ -17,8 +17,13 @@ const KEYS := {
 	"tuning": [KEY_F1],
 	"restart": [KEY_R],
 	"pause": [KEY_ESCAPE, KEY_P],
+	"quick": [KEY_H],
+	"repair": [KEY_G],
+	"map": [KEY_M],
 	"room1": [KEY_1], "room2": [KEY_2], "room3": [KEY_3], "room4": [KEY_4], "room5": [KEY_5], "room6": [KEY_6],
 	"room7": [KEY_7], "room8": [KEY_8], "room9": [KEY_9], "room10": [KEY_0],
+	"room11": [KEY_MINUS], "room12": [KEY_EQUAL], "room13": [KEY_BRACKETLEFT], "room14": [KEY_BRACKETRIGHT],
+	"room15": [KEY_BACKSLASH],
 }
 const PAD := {
 	"left": [JOY_BUTTON_DPAD_LEFT], "right": [JOY_BUTTON_DPAD_RIGHT],
@@ -27,6 +32,8 @@ const PAD := {
 	"backdash_left": [JOY_BUTTON_LEFT_SHOULDER], "backdash_right": [JOY_BUTTON_RIGHT_SHOULDER],
 	"swap": [JOY_BUTTON_B],
 	"pause": [JOY_BUTTON_START],
+	"quick": [JOY_BUTTON_BACK],
+	"repair": [JOY_BUTTON_Y],
 }
 
 var hitstop := 0.0
@@ -101,14 +108,15 @@ func tex(rel: String) -> Texture2D:
 	return t
 
 
-func sprite(set_name: String, fps: Dictionary, no_loop: Array = []) -> AnimatedSprite2D:
+func sprite(set_name: String, fps: Dictionary, no_loop: Array = [], dir_override: String = "") -> AnimatedSprite2D:
 	# Builds an animated sprite from assets/<set_name>/<anim>_NN.png.
+	# dir_override reads the same frames from another folder (Pandora's skin B: pandora_b).
 	var s := AnimatedSprite2D.new()
 	var sf := SpriteFrames.new()
 	sf.remove_animation("default")
 	var anims: Dictionary = frames[set_name]["anims"]
 	# "dir" lets a set live in another folder (the hero set is chosen by tools/use_hero_set.py)
-	var dir: String = frames[set_name].get("dir", set_name)
+	var dir: String = dir_override if dir_override != "" else frames[set_name].get("dir", set_name)
 	for anim in anims:
 		sf.add_animation(anim)
 		sf.set_animation_speed(anim, float(fps.get(anim, 10.0)))

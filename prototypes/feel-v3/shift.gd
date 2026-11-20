@@ -7,7 +7,16 @@
 # the picture rips for a couple of seconds and goes white.
 extends CanvasLayer
 
-const MODES := {"hazard": 1, "library": 2, "church": 3, "shaft": 4, "vault": 5, "timemachine": 6}
+const MODES := {
+	"hazard": 1, "hazard_shift": 1,
+	"library": 2, "library_shift": 2,
+	"church": 3, "church_shift": 3,
+	"shaft": 4, "shaft_shift": 4,
+	"vault": 5, "vault_shift": 5,
+	"timemachine": 6, "timemachine_shift": 6,
+	"arnetria": 6,
+}
+
 const SHADER := """
 shader_type canvas_item;
 uniform sampler2D screen : hint_screen_texture, filter_nearest;
@@ -17,6 +26,7 @@ uniform float boost = 0.0;
 uniform float flash = 0.0;
 uniform float noise = 0.12;
 uniform float tear_chance = 0.2;
+uniform float library_strength = 0.45;
 
 float rnd(float x) {
 	return fract(sin(x * 12.9898) * 43758.5453);
@@ -25,7 +35,6 @@ float rnd(float x) {
 void fragment() {
 	vec2 uv = SCREEN_UV;
 	float tick = floor(t * 12.0);
-	// now and then a band of the picture slips sideways; during the shift it never stops
 	float band = floor(uv.y * 54.0);
 	float on = step(1.0 - tear_chance, rnd(floor(t * 1.3) * 3.7)) + boost;
 	float n = rnd(band * 1.7 + tick * 5.13);
@@ -43,25 +52,22 @@ void fragment() {
 	if (mode == 1) {
 		o = mix(vec3(lum) * vec3(1.35, 0.16, 0.1), c * vec3(1.1, 0.3, 0.25), 0.25);
 	} else if (mode == 2) {
-		vec3 inv = vec3(1.0) - c;
-		float il = dot(inv, vec3(0.299, 0.587, 0.114));
-		// a dark blood-red negative: the dark room turns deep red, light things turn black
-		o = vec3(il * il * il) * vec3(0.75, 0.07, 0.06) + vec3(0.02, 0.0, 0.0);
+		// red, but readable (user ask C2): not inverted, the picture keeps its brightness
+		o = vec3(lum * library_strength) * vec3(1.3, 0.5, 0.45) + vec3(0.03, 0.0, 0.0);
 	} else if (mode == 3) {
 		o = vec3(lum) * vec3(0.55, 1.1, 0.4) + vec3(0.02, 0.07, 0.0);
 	} else if (mode == 4) {
-		o = vec3(lum) * vec3(0.3, 0.5, 1.2) + vec3(0.0, 0.01, 0.05);
+		o = vec3(lum) * vec3(0.55, 0.75, 1.25) + vec3(0.0, 0.01, 0.05);
 		rim = 1.0;
 	} else if (mode == 5) {
-		float fl = 0.55 + 0.45 * step(0.5, rnd(floor(t * 9.0)));
-		o = vec3(lum * lum * 1.6) * vec3(1.4, 0.1, 0.08) * fl;
+		float fl = 0.82 + 0.18 * step(0.5, rnd(floor(t * 9.0)));
+		o = vec3(lum * 1.15) * vec3(1.35, 0.3, 0.25) * fl;
 	} else if (mode == 6) {
 		o = vec3(lum) * vec3(0.9, 0.4, 1.2) + vec3(0.04, 0.0, 0.07);
 	} else {
 		o = mix(vec3(lum), c, 0.3) * vec3(0.95, 0.95, 1.0);
 	}
-	float d = length(SCREEN_UV - vec2(0.5)) * 1.25;
-	o *= 1.0 - smoothstep(0.45, 1.0, d) * (rim > 0.5 ? 0.85 : 0.35);
+	// no dark vignette at the screen edges (user ask C2: no filter that makes things harder to see)
 	o += (rnd(uv.y * 91.0 + uv.x * 13.0 + t) - 0.5) * noise;
 	float tear = step(0.997 - boost * 0.06, rnd(floor(uv.y * 108.0) + tick * 3.1));
 	o = mix(o, vec3(0.9), tear * 0.5 * clamp(on, 0.0, 1.0));
@@ -91,19 +97,27 @@ func _ready() -> void:
 	_mat.shader = sh
 	_rect.material = _mat
 	add_child(_rect)
-	_mat.set_shader_parameter("noise", T.v("shift_noise"))
-	_mat.set_shader_parameter("tear_chance", T.v("shift_tear_chance"))
+	_mat.set_shader_parameter("noise", T.v("shift_noise") if T.data.has("shift_noise") else 0.12)
+	_mat.set_shader_parameter("tear_chance", T.v("shift_tear_chance") if T.data.has("shift_tear_chance") else 0.2)
+	var str_val: float = T.v("shift_library_strength") if T.data.has("shift_library_strength") else 0.45
+	_mat.set_shader_parameter("library_strength", str_val)
 
 
 func set_room(room_name: String) -> void:
-	# picks the colour of this room; the filter is only on after the shift
 	mode = MODES.get(room_name, 0)
-	_mat.set_shader_parameter("mode", mode)
+	if _mat != null:
+		_mat.set_shader_parameter("mode", mode)
 	visible = G.shifted or boost > 0.0 or flash > 0.0
 
 
+func mode_params(file_id: String) -> Dictionary:
+	var strength: float = T.v("shift_library_strength") if T.data.has("shift_library_strength") else 0.45
+	if file_id.begins_with("library"):
+		return {"brightness": strength, "mode": 2}
+	return {"brightness": 1.0, "mode": MODES.get(file_id, 0)}
+
+
 func tear(seconds: float) -> void:
-	# the shift: the picture rips harder and harder, goes white, and settles into the new colour
 	visible = true
 	var tw := create_tween()
 	tw.tween_property(self, "boost", 1.0, seconds * 0.55)
@@ -113,6 +127,18 @@ func tear(seconds: float) -> void:
 	tw.tween_callback(func(): visible = G.shifted)
 
 
+func restore(seconds: float) -> void:
+	visible = true
+	var dur := seconds if seconds > 0.0 else (T.v("shift_restore_time") if T.data.has("shift_restore_time") else 12.0)
+	var tw := create_tween()
+	tw.tween_property(self, "boost", 1.0, dur * 0.45)
+	tw.parallel().tween_property(self, "flash", 1.0, dur * 0.45)
+	tw.tween_property(self, "flash", 0.0, dur * 0.55).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(self, "boost", 0.0, dur * 0.55)
+	tw.tween_callback(func(): visible = G.shifted)
+	await tw.finished
+
+
 func _process(delta: float) -> void:
 	if not visible:
 		return
@@ -120,5 +146,7 @@ func _process(delta: float) -> void:
 	_mat.set_shader_parameter("t", _t)
 	_mat.set_shader_parameter("boost", boost)
 	_mat.set_shader_parameter("flash", flash)
-	_mat.set_shader_parameter("noise", T.v("shift_noise"))
-	_mat.set_shader_parameter("tear_chance", T.v("shift_tear_chance"))
+	_mat.set_shader_parameter("noise", T.v("shift_noise") if T.data.has("shift_noise") else 0.12)
+	_mat.set_shader_parameter("tear_chance", T.v("shift_tear_chance") if T.data.has("shift_tear_chance") else 0.2)
+	var str_val: float = T.v("shift_library_strength") if T.data.has("shift_library_strength") else 0.45
+	_mat.set_shader_parameter("library_strength", str_val)

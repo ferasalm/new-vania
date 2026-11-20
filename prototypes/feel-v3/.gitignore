@@ -15,3 +15,7 @@ __pycache__/
 # scratch renders and helper scratch files
 tools/models/_probe/
 tools/_v2_scratch/
+
+# harmonize_pandora.py intermediates (rebuilt from art_proof/harmony/original by the tool)
+art_proof/harmony/a/
+art_proof/harmony/b/

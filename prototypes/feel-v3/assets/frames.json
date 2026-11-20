@@ -4,8 +4,8 @@
     "anims": {
       "idle": 22,
       "run": 11,
-      "jump": 4,
-      "land": 1,
+      "jump": 5,
+      "land": 2,
       "crouch": 5,
       "attack": 5,
       "attack2": 5,
@@ -32,7 +32,133 @@
       76
     ],
     "dir": "pandora",
-    "density": 2
+    "density": 2,
+    "weapon": {
+      "attack": [
+        {
+          "hand": [
+            65,
+            92
+          ],
+          "angle": 172.0,
+          "len": 1.0,
+          "yaw": 180,
+          "tilt": -8,
+          "front": true,
+          "trail": true
+        },
+        {
+          "hand": [
+            113,
+            91
+          ],
+          "angle": 142.4,
+          "len": 0.432,
+          "yaw": 110,
+          "tilt": 0,
+          "front": true,
+          "trail": true
+        },
+        {
+          "hand": [
+            167,
+            97
+          ],
+          "angle": 6.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 6,
+          "front": true,
+          "trail": true
+        },
+        {
+          "hand": [
+            164,
+            107
+          ],
+          "angle": -9.2,
+          "len": 0.787,
+          "yaw": -40,
+          "tilt": 4,
+          "front": true,
+          "trail": true
+        },
+        {
+          "hand": [
+            134,
+            99
+          ],
+          "angle": 30.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 30,
+          "front": true,
+          "trail": false
+        }
+      ],
+      "attack2": [
+        {
+          "hand": [
+            65,
+            92
+          ],
+          "angle": 172.0,
+          "len": 1.0,
+          "yaw": 180,
+          "tilt": -8,
+          "front": false,
+          "trail": true
+        },
+        {
+          "hand": [
+            113,
+            91
+          ],
+          "angle": -142.4,
+          "len": 0.432,
+          "yaw": -110,
+          "tilt": 0,
+          "front": false,
+          "trail": true
+        },
+        {
+          "hand": [
+            167,
+            97
+          ],
+          "angle": 6.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 6,
+          "front": true,
+          "trail": true
+        },
+        {
+          "hand": [
+            164,
+            107
+          ],
+          "angle": 17.2,
+          "len": 0.787,
+          "yaw": 40,
+          "tilt": 4,
+          "front": true,
+          "trail": true
+        },
+        {
+          "hand": [
+            132,
+            98
+          ],
+          "angle": 30.0,
+          "len": 1.0,
+          "yaw": 0,
+          "tilt": 30,
+          "front": true,
+          "trail": false
+        }
+      ]
+    }
   },
   "hound": {
     "faces": "left",

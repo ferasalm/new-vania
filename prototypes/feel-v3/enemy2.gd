@@ -27,6 +27,7 @@ const GONE := Rect2(Vector2(-9999.0, -9999.0), Vector2.ZERO)
 static var _hinted := false
 
 var kind := "crab"
+var respawned := false    # it came back from the weak-respawn system
 var hp := 1.0
 var facing := -1
 var state := "idle"
@@ -323,6 +324,8 @@ func take_hit(amount: float, dir: int) -> void:
 			return
 	elif kind == "scribe" and state == "puddle":
 		return
+	elif kind == "leech" and state == "latched":
+		return    # it clings to her: her swings shake it off (see _latched), they do not cut it
 	if _fake:
 		_pop()
 		return
@@ -733,7 +736,7 @@ func _moth(delta: float, to: Vector2) -> void:
 			if absf(step.x) > 0.5:
 				facing = 1 if step.x > 0.0 else -1
 			_tick += delta
-			if _tick >= 0.14:
+			if _tick >= T.v("moth_ember_every"):
 				_tick = 0.0
 				_drop_ember()
 			if u >= 1.0 or _blocked(q):
@@ -1033,9 +1036,7 @@ func _latch() -> void:
 	_rising = p.velocity.y < -150.0
 	_prev_at = float(p.get("_attack_t"))
 	_pstate = String(p.state)
-	if not _hinted and G.main.hud != null:
-		_hinted = true
-		G.main.hud.toast("A LEECH CLINGS TO HER  -  jump or strike to shake it off", 4.0)
+	_hinted = true      # no tip on screen (user ask C8)
 
 
 func _latched(delta: float, p: Node2D) -> void:
@@ -1527,7 +1528,8 @@ class Cloud extends Node2D:
 				player.take_hit(dmg, global_position.x)
 
 	func _draw() -> void:
-		var fade := clampf(life / 1.5, 0.0, 1.0) * clampf(_t / 0.4, 0.0, 1.0)
+		var fade_len := minf(1.5, max_life * 0.5)    # a short-lived cloud still fades smoothly
+		var fade := clampf(life / fade_len, 0.0, 1.0) * clampf(_t / 0.4, 0.0, 1.0)
 		for i in 7:
 			var a := _seed + i * 0.9 + _t * 0.25
 			var o := Vector2(cos(a), sin(a * 1.3)) * r * 0.45

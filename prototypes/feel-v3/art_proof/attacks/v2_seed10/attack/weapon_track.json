@@ -1,0 +1,82 @@
+[
+ {
+  "hand": [
+   65,
+   92
+  ],
+  "angle": 172.0,
+  "len": 1.0,
+  "yaw": 180,
+  "tilt": -8,
+  "front": true,
+  "trail": true,
+  "shoulder": [
+   92,
+   87
+  ]
+ },
+ {
+  "hand": [
+   113,
+   91
+  ],
+  "angle": 142.4,
+  "len": 0.432,
+  "yaw": 110,
+  "tilt": 0,
+  "front": true,
+  "trail": true,
+  "shoulder": [
+   110,
+   83
+  ]
+ },
+ {
+  "hand": [
+   167,
+   97
+  ],
+  "angle": 6.0,
+  "len": 1.0,
+  "yaw": 0,
+  "tilt": 6,
+  "front": true,
+  "trail": true,
+  "shoulder": [
+   139,
+   102
+  ]
+ },
+ {
+  "hand": [
+   164,
+   107
+  ],
+  "angle": -9.2,
+  "len": 0.787,
+  "yaw": -40,
+  "tilt": 4,
+  "front": true,
+  "trail": true,
+  "shoulder": [
+   141,
+   101
+  ]
+ },
+ {
+  "hand": [
+   134,
+   99
+  ],
+  "angle": 30.0,
+  "len": 1.0,
+  "yaw": 0,
+  "tilt": 30,
+  "front": true,
+  "trail": false,
+  "shoulder": [
+   113,
+   82
+  ]
+ }
+]

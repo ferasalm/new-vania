@@ -34,15 +34,18 @@ func _ready() -> void:
 	_root.add_child(col)
 	var top := HBoxContainer.new()
 	col.add_child(top)
-	_tabs = [_button("FEEL", _page.bind(0)), _button("WEAPONS", _page.bind(1)), _button("SOUNDS", _page.bind(2))]
-	top.add_child(_tabs[0])
-	top.add_child(_tabs[1])
-	top.add_child(_tabs[2])
-	top.add_child(_text("  F1 closes"))
 	_pages = [_feel_page(), _weapon_page(), _sound_page()]
-	col.add_child(_pages[0])
-	col.add_child(_pages[1])
-	col.add_child(_pages[2])
+	_tabs = [_button("FEEL", _page.bind(0)), _button("WEAPONS", _page.bind(1)), _button("SOUNDS", _page.bind(2))]
+	var part_index := _pages.size()
+	for part in _parts_loaded():
+		_tabs.append(_button(String(part).to_upper(), _page.bind(part_index)))
+		_pages.append(_part_page(part))
+		part_index += 1
+	for t in _tabs:
+		top.add_child(t)
+	top.add_child(_text("  F1 closes"))
+	for pg in _pages:
+		col.add_child(pg)
 	_help = _text("Point at a slider to see what it does.")
 	_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_help.custom_minimum_size = Vector2(226, 24)
@@ -87,9 +90,29 @@ func _slider_row(key: String) -> HBoxContainer:
 func _feel_page() -> Control:
 	var made := _scroll()
 	for key in T.data:
-		if WEAPON_KEYS.has(key):
+		if WEAPON_KEYS.has(key) or String(T.source.get(key, "")) != "":
 			continue
 		made[1].add_child(_slider_row(key))
+	return made[0]
+
+
+func _parts_loaded() -> Array:
+	# every tuning.d part that loaded, in the fixed order (one tab each)
+	var out: Array = []
+	for part in T.PARTS:
+		for key in T.source:
+			if String(T.source[key]) == String(part):
+				out.append(part)
+				break
+	return out
+
+
+func _part_page(part: String) -> Control:
+	# the sliders of one tuning.d part file
+	var made := _scroll()
+	for key in T.data:
+		if String(T.source.get(key, "")) == part:
+			made[1].add_child(_slider_row(key))
 	return made[0]
 
 
@@ -184,11 +207,14 @@ func _page(i: int) -> void:
 	for n in _pages.size():
 		_pages[n].visible = n == i
 		_tabs[n].modulate = Color.WHITE if n == i else Color(0.6, 0.6, 0.6)
-	_help.text = [
-		"Point at a slider to see what it does.",
-		"Pick what she swings with < and >. The sliders change the two-handed feel at once.",
-		"< and > try other sounds. The small sliders are its loudness and its pitch variety.",
-	][i]
+	if i < 3:
+		_help.text = [
+			"Point at a slider to see what it does.",
+			"Pick what she swings with < and >. The sliders change the two-handed feel at once.",
+			"< and > try other sounds. The small sliders are its loudness and its pitch variety.",
+		][i]
+	else:
+		_help.text = "The sliders of the %s page. They change the game at once." % String(_tabs[i].text)
 
 
 func _wpick(step: int) -> void:

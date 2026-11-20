@@ -3,37 +3,33 @@
 # Line 1 is the header: theme=<look>,music=<event>,left=<room>,right=<room>,up=<room>,down=<room>
 #   #  solid          =  thin ledge (jump up through it, Down + Jump to drop)
 #   P  start          D  door (only in the first or last column: the edge of the room)
-#   X  the boss door  M  the save terminal       O  where the boss waits
-#   K  the empty capsule she is rebuilt in       A  the wall-latch relic
+#   X  boss/sealed door  M  save terminal       O  boss spawn
+#   K  empty capsule     A  relic               B  bricked arch
+#   :  one-way shutter   1-9 markers (items, candles, winch)
 #   H hound  G ghost  C choir  S spitter  W warden
-#   c crab  m moth  n scribe  l leech  (the marsh enemies, enemy2.gd)
-#   ^  an opening in the top row (header up=)      v  an opening in the bottom row (header down=)
-#   <  >  an open edge with no door: walking off it goes to header left= / right=
-#   L  the library lever   Y  the lever behind the iron bars   |  iron bars   %  a cracked wall
-#   T  the time machine (feet position)
-#   p pendulum, u crusher (ceiling cells)   f flame vent, i spikes (floor cells; a run of i is one strip)
-# Each theme has its own wall art, tiles, door and music, so no two areas look alike.
-# After the reality shift (load_room(name, true)) a room can be mirrored, use its <name>_shift.txt,
-# and have other doors (SHIFT_ROUTES).
+#   c crab   m moth   n scribe l leech
+#   ^  opening in top row (header up=)      v  opening in bottom row (header down=)
+#   <  >  open edge with no door: walking off goes to header left= / right=
+#   L  library lever   Y  lever behind iron bars   |  iron bars   %  cracked wall
+#   T  time machine (organ)
+#   p pendulum, u crusher, f flame vent, i spikes
 extends Node2D
 
 const Door := preload("res://door.gd")
 const Props := preload("res://props.gd")
+const Spawner := preload("res://spawner.gd")
+const PropsLayer := preload("res://editor/props_layer.gd")
+const RoomDoc := preload("res://editor/room_doc.gd")
 const TILE := 16
-const STAND := 36.0           # her standing height: a tunnel lower than this is a crawl
-const ENEMY := {"H": "hound", "G": "ghost", "C": "choir", "S": "spitter", "W": "warden",
-	"c": "crab", "m": "moth", "n": "scribe", "l": "leech"}
+const STAND := 36.0
+
 const HAZARD := {"p": "pendulum", "u": "crusher", "f": "flame", "i": "spikes"}
-# rooms drawn back to front after the shift, and the doors that lead somewhere else then
-const MIRRORED := ["library", "church"]
-const SHIFT_ROUTES := {
-	"hazard": {"right": "library"},
-	"library": {"left": "hazard", "right": "church"},
-	"church": {"left": "library", "right": "shaft"},
-}
-# pieces of assets/env/church_backgrounds.png (the church and sanctum back wall)
-const PANELS := [Rect2(0, 0, 160, 192), Rect2(176, 0, 128, 192), Rect2(320, 0, 128, 192),
-	Rect2(464, 0, 80, 192), Rect2(560, 0, 64, 192)]
+
+const PANELS := [
+	Rect2(0, 0, 160, 192), Rect2(176, 0, 128, 192), Rect2(320, 0, 128, 192),
+	Rect2(464, 0, 80, 192), Rect2(560, 0, 64, 192)
+]
+
 const THEMES := {
 	"church": {"tiles": "church", "wall": "panels", "tint": Color(0.8, 0.8, 0.9), "tile_tint": Color.WHITE,
 		"clear": Color("#16141f"), "door": "church", "dust": Color(0.75, 0.7, 1.0, 0.5)},
@@ -41,101 +37,148 @@ const THEMES := {
 		"clear": Color("#1a0a0e"), "door": "library", "dust": Color(1.0, 0.85, 0.55, 0.55)},
 	"lab": {"tiles": "lab", "wall": "env/lab_wall.png", "tint": Color.WHITE, "tile_tint": Color.WHITE,
 		"clear": Color("#03080f"), "door": "lab", "dust": Color(0.5, 1.0, 1.0, 0.55)},
-	# a save room is an ordinary room; the save point (capsules, brain, terminal) stands in it.
-	# "point" is drawn so its empty capsule (POINT_K px from its left edge) stands on K.
 	"save": {"tiles": "lab", "wall": "env/save_wall.png", "tint": Color.WHITE, "tile_tint": Color(0.8, 0.95, 1.0),
 		"clear": Color("#020608"), "door": "save", "dust": Color(0.6, 1.0, 0.95, 0.5), "point": "env/save_point.png"},
 	"save2": {"tiles": "lab", "wall": "env/save_wall2.png", "tint": Color.WHITE, "tile_tint": Color(0.85, 0.7, 1.0),
 		"clear": Color("#070310"), "door": "save", "dust": Color(0.85, 0.7, 1.0, 0.5), "point": "env/save_point2.png"},
 	"sanctum": {"tiles": "church", "wall": "panels", "tint": Color(0.62, 0.3, 0.85), "tile_tint": Color(0.75, 0.5, 1.0),
 		"clear": Color("#0c0416"), "door": "boss", "dust": Color(1.0, 0.8, 0.3, 0.6)},
-	# the marsh under the church: bone and brass stone, a dark bronze wall behind
 	"ossuary": {"tiles": "church", "wall": "env/library_wall.png", "tint": Color(0.5, 0.34, 0.2), "tile_tint": Color(0.95, 0.85, 0.65),
 		"clear": Color("#0f0a07"), "door": "church", "dust": Color(0.95, 0.75, 0.4, 0.5)},
 	"ossuary_save": {"tiles": "church", "wall": "env/save_wall2.png", "tint": Color(1.0, 0.78, 0.5), "tile_tint": Color(0.95, 0.85, 0.65),
 		"clear": Color("#0d0805"), "door": "save", "dust": Color(0.95, 0.75, 0.4, 0.5), "point": "env/save_point2.png"},
 }
 
-var grid: Array = []          # rows of strings
-var head := {}                # the header line: theme, music, left, right, up, down
+const POINT_K := 39.0
+
+## The room builder's live copy of a room that is not saved yet: file id -> room text.
+static var override := {}
+
+var file_id := ""
+var grid: Array = []
+var head := {}
 var theme := {}
-var size := Vector2.ZERO      # in pixels
-var spawns := {}              # "P"/"left"/"right"/"M"/"O"/"T"/"hole_up"/"hole_down" -> feet position
-var enemies: Array = []       # [kind, feet position]
-var hazards: Array = []       # [kind, Rect2 in world units]
-var doors := {}               # "left"/"right" -> Door
-var open_edges := {}          # "left"/"right" -> true when the edge has no door (< or >)
-var tunnels := {}             # "left"/"right" -> true when that open edge is too low to stand in
-var up_span := Vector2(-1.0, -1.0)    # x range (px) of the ^ cells in the top row
-var down_span := Vector2(-1.0, -1.0)  # x range (px) of the v cells in the bottom row
-var props: Array = []         # things a weapon cut can reach: levers, the cracked wall (prop_rect / prop_cut)
-var organ: Node2D             # the time machine, if the room has one
+var size := Vector2.ZERO
+var spawns := {}
+var enemies: Array = []       # [kind, feet position], from the enemies.json glyphs
+var enemy_nodes: Array = []   # the enemy nodes this room owns
+var hazards: Array = []
+var doors := {}               # one primary door per side, for the map and the old callers
+var doors_all: Array = []     # every door, when a side holds two
+var open_edges := {}
+var tunnels := {}
+var up_span := Vector2(-1.0, -1.0)
+var down_span := Vector2(-1.0, -1.0)
+var props: Array = []
+var organ: Node2D
 var bars: Node2D
 var shifted := false
+var marks: Dictionary = {}
+
+var meta: Dictionary:
+	get: return W.meta(file_id)
+
 var _tiles: Texture2D
 var _ledge: Texture2D
 var _wall: Texture2D
 var _point: Texture2D
-const POINT_K := 39.0     # tools/build_save_point.py prints it: the empty capsule's centre
+var _glyphs := {}             # enemy letter -> enemies.json id
+
+
+func backdrop_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var px := 0.0
+	var pw := 160.0
+	while px < size.x:
+		var w := minf(pw, size.x - px)
+		out.append(Rect2(px, 0.0, w, size.y))
+		px += w
+	return out
 
 
 func load_room(room_name: String, after_shift: bool = false) -> bool:
-	shifted = after_shift
-	var file := room_name
-	if after_shift and FileAccess.file_exists("res://rooms/%s_shift.txt" % room_name):
-		file = room_name + "_shift"
-	var txt := FileAccess.get_file_as_string("res://rooms/%s.txt" % file)
+	shifted = after_shift or G.shifted or W.sheet == "after"
+	var sheet := "restored" if W.sheet == "restored" else ("after" if shifted else "before")
+	var file: String = Dev.room_file_id(room_name, sheet)
+	file_id = file
+	W.mark_visited(file_id)
+	W.mark_visited(room_name)
+
+	var txt := String(override[file]) if override.has(file) else read_room_file(file)
 	if txt == "":
-		push_error("missing room " + room_name)
+		push_error("missing room " + file)
 		return false
-	var lines := txt.replace("\r", "").split("\n", false)
-	for part in lines[0].split(","):
-		var kv := part.strip_edges().split("=")
-		if kv.size() == 2:
-			head[kv[0]] = kv[1]
-	var w := 0
-	for i in range(1, lines.size()):
-		var row := lines[i].strip_edges(false, true)
-		grid.append(row)
-		w = maxi(w, row.length())
-	if after_shift and MIRRORED.has(room_name):
-		_mirror(w)
-	if after_shift and SHIFT_ROUTES.has(room_name):
-		for side in SHIFT_ROUTES[room_name]:
-			head[side] = SHIFT_ROUTES[room_name][side]
-	size = Vector2(w * TILE, grid.size() * TILE)
-	theme = THEMES.get(head.get("theme", "church"), THEMES["church"])
-	if theme["tiles"] != "":
-		_tiles = G.tex("env/%s_tiles.png" % theme["tiles"])
-		_ledge = G.tex("env/%s_ledge.png" % theme["tiles"])
-	_wall = G.tex("env/church_backgrounds.png" if theme["wall"] == "panels" else theme["wall"])
-	if theme.has("point"):
-		_point = G.tex(theme["point"])
-	_build()
+
+	grid.clear()
+	head.clear()
+	spawns.clear()
+	enemies.clear()
+	enemy_nodes.clear()
+	hazards.clear()
+	doors.clear()
+	doors_all.clear()
+	open_edges.clear()
+	tunnels.clear()
+	props.clear()
+	marks.clear()
+
+	_glyphs.clear()
+	var enemy_defs: Dictionary = Db.table("enemies")
+	for id in enemy_defs:
+		var glyph := String(enemy_defs[id].get("glyph", ""))
+		if glyph != "":
+			_glyphs[glyph] = String(id)
+
+	var doc := RoomDoc.parse(file, txt)
+	var pictures := PropsLayer.read_layout(file)
+	head = doc.head
+	grid = RoomDoc.compose_rows(doc.rows, pictures)
+	size = doc.pixel_size()
+	_set_art()
+	_build(pictures)
 	queue_redraw()
 	return true
 
 
-func _mirror(w: int) -> void:
-	# the world turned back to front: every row reversed, left and right swapped
-	for y in grid.size():
-		var row: String = grid[y]
-		while row.length() < w:
-			row += "#"
-		var flipped := ""
-		for x in range(row.length() - 1, -1, -1):
-			var ch := row[x]
-			flipped += ">" if ch == "<" else ("<" if ch == ">" else ch)
-		grid[y] = flipped
-	var l: String = head.get("left", "")
-	var r: String = head.get("right", "")
-	head["left"] = r
-	head["right"] = l
-	if l == "":
-		head.erase("right")
-	if r == "":
-		head.erase("left")
+## Read a saved workspace draft first, with the packaged room as the initial content.
+static func read_room_file(id: String) -> String:
+	var root: String = Dev.project_dir()
+	var rel := "rooms/%s.txt" % id
+	var path := root.path_join(rel) if root != "" else ""
+	return FileAccess.get_file_as_string(path) if FileAccess.file_exists(path) else FileAccess.get_file_as_string("res://" + rel)
 
+
+## Draw a draft with the gameplay backdrop and tiles, without creating gameplay nodes.
+func preview_document(doc: RefCounted) -> void:
+	head = doc.head.duplicate()
+	grid = doc.effective_rows()
+	size = doc.pixel_size()
+	spawns.clear()
+	for y in grid.size():
+		var x: int = grid[y].find("K")
+		if x >= 0:
+			spawns["K"] = Vector2(x * TILE + TILE / 2.0, (y + 1) * TILE)
+	_set_art()
+	for layer in get_children():
+		remove_child(layer)
+		layer.queue_free()
+	var pictures := PropsLayer.new()
+	pictures.setup_props(doc.props)
+	add_child(pictures)
+	queue_redraw()
+
+
+func _set_art() -> void:
+	theme = THEMES.get(head.get("theme", "church"), THEMES["church"])
+	_point = null
+	if theme["tiles"] != "":
+		_tiles = G.tex("env/%s_tiles.png" % theme["tiles"])
+		_ledge = G.tex("env/%s_ledge.png" % theme["tiles"])
+	_wall = G.tex("env/church_backgrounds.png" if theme["wall"] == "panels" else theme["wall"])
+	if head.has("backdrop"):
+		_wall = PropsLayer.backdrop_texture(String(head["backdrop"]), _wall)      # the builder's own wall picture, tiled at real size
+	if theme.has("point"):
+		_point = G.tex(theme["point"])
 
 func cell(x: int, y: int) -> String:
 	if y < 0 or y >= grid.size() or x < 0 or x >= grid[y].length():
@@ -144,13 +187,11 @@ func cell(x: int, y: int) -> String:
 
 
 func is_solid(x: int, y: int) -> bool:
-	# for shots: stone, bars and a wall that has not broken yet
 	var c := cell(x, y)
-	return c == "#" or c == "|" or c == "%"
+	return c == "#" or c == "|" or c == "%" or c == "B" or c == ":"
 
 
 func clear_cells(r: Rect2) -> void:
-	# bars lifted or a wall broken: those cells are open air now
 	for cy in range(int(r.position.y / TILE), int(r.end.y / TILE)):
 		for cx in range(int(r.position.x / TILE), int(r.end.x / TILE)):
 			if cy >= 0 and cy < grid.size() and cx >= 0 and cx < grid[cy].length():
@@ -158,36 +199,37 @@ func clear_cells(r: Rect2) -> void:
 				grid[cy] = row.substr(0, cx) + "." + row.substr(cx + 1)
 
 
-func _flags() -> Object:
-	return G.main if G.main != null else null
-
-
-func _build() -> void:
+func _build(pictures: Array) -> void:
 	var solid := StaticBody2D.new()
 	solid.collision_layer = 1
 	solid.collision_mask = 0
 	add_child(solid)
+
 	var ledge := StaticBody2D.new()
 	ledge.collision_layer = 2
 	ledge.collision_mask = 0
 	add_child(ledge)
+
 	var bar_cells: Array = []
 	var crack_cells: Array = []
+	var shutter_cells: Array = []
 	var up_cells: Array = []
 	var down_cells: Array = []
+	var enemy_spawns: Array = []
 	var last_row := grid.size() - 1
+
 	for y in grid.size():
 		var x := 0
 		var row: String = grid[y]
 		while x < row.length():
 			var ch := row[x]
-			if ch == "#" or ch == "=":
+			if ch == "#" or ch == "=" or ch == "B":
 				var start := x
-				while x < row.length() and row[x] == ch:
+				while x < row.length() and (row[x] == ch or (ch == "#" and row[x] == "B") or (ch == "B" and row[x] == "#")):
 					x += 1
 				var shape := CollisionShape2D.new()
 				var rect := RectangleShape2D.new()
-				var h := float(TILE) if ch == "#" else 6.0
+				var h := float(TILE) if ch != "=" else 6.0
 				rect.size = Vector2((x - start) * TILE, h)
 				shape.shape = rect
 				shape.position = Vector2((start + x) * TILE / 2.0, y * TILE + h / 2.0)
@@ -197,12 +239,13 @@ func _build() -> void:
 				else:
 					solid.add_child(shape)
 				continue
+
 			var feet := Vector2(x * TILE + TILE / 2.0, (y + 1) * TILE)
-			if ENEMY.has(ch):
-				enemies.append([ENEMY[ch], feet])
+
+			if _glyphs.has(ch):
+				enemy_spawns.append([_glyphs[ch], feet])
 			elif HAZARD.has(ch):
 				if ch == "i":
-					# a run of spikes is one strip
 					var start2 := x
 					while x + 1 < row.length() and row[x + 1] == "i":
 						x += 1
@@ -211,18 +254,22 @@ func _build() -> void:
 					hazards.append([HAZARD[ch], Rect2(x * TILE, y * TILE, TILE, TILE)])
 			elif ch == "P" or ch == "M" or ch == "O" or ch == "K" or ch == "A" or ch == "T":
 				spawns[ch] = feet
+			elif ch >= "1" and ch <= "9":
+				marks[ch] = feet
+				spawns[ch] = feet
+				_add_marked_prop(ch, feet)
 			elif ch == "L" or ch == "Y":
 				_add_lever(feet, "library" if ch == "L" else "bars")
 			elif ch == "|":
 				bar_cells.append(Vector2i(x, y))
 			elif ch == "%":
 				crack_cells.append(Vector2i(x, y))
+			elif ch == ":":
+				shutter_cells.append(Vector2i(x, y))
 			elif ch == "^" and y == 0:
 				up_cells.append(x)
 			elif ch == "v" and y == last_row:
 				down_cells.append(x)
-				# a thin ledge covers the hole: she pops up through it and lands on it,
-				# and Down + Jump drops her back down (no falling in by accident)
 				var cover := CollisionShape2D.new()
 				var cover_rect := RectangleShape2D.new()
 				cover_rect.size = Vector2(TILE, 6.0)
@@ -233,39 +280,52 @@ func _build() -> void:
 			elif ch == "<" or ch == ">":
 				_open_edge(x, y, ch)
 			elif ch == "D" or ch == "X":
-				# a door lives in the edge column; she walks off the screen through it
 				var side := "left" if x == 0 else "right"
 				var d := Door.new()
-				d.setup(side, ch == "X", theme["door"] if ch == "D" else "boss", head.get(side, ""))
+				var door_theme: String = theme["door"] if ch == "D" else "boss"
+				d.setup(side, ch == "X", door_theme, _door_target(side, y))
 				d.position = Vector2(0.0 if side == "left" else size.x - TILE, feet.y)
-				if d.to == "":
-					d.sealed_msg = "LOCKED - UNTIL THE NEXT UPDATE"
 				add_child(d)
 				doors[side] = d
+				doors_all.append(d)
 				spawns[side] = Vector2(26.0 if side == "left" else size.x - 26.0, feet.y)
 			x += 1
+
 	if not up_cells.is_empty():
 		up_span = Vector2(up_cells.min() * TILE, (up_cells.max() + 1) * TILE)
 		spawns["hole_up"] = Vector2((up_span.x + up_span.y) / 2.0, 6.0)
 	if not down_cells.is_empty():
 		down_span = Vector2(down_cells.min() * TILE, (down_cells.max() + 1) * TILE)
 		spawns["hole_down"] = Vector2((down_span.x + down_span.y) / 2.0, size.y)
-	var main: Object = _flags()
+
+	var main_obj: Object = G.main if G.main != null else null
 	for group in _groups(bar_cells):
 		var b := Props.Bars.new()
-		b.setup(group, main != null and main.bars_opened)
+		var bars_done: bool = main_obj != null and main_obj.get("bars_opened")
+		b.setup(group, bars_done)
 		add_child(b)
 		bars = b
-		if main != null and main.bars_opened:
+		if bars_done:
 			clear_cells(group)
+
 	for group in _groups(crack_cells):
 		var cw := Props.CrackWall.new()
-		cw.setup(group, _tiles, theme["tile_tint"], main != null and main.wall_broken)
+		var wall_done: bool = main_obj != null and main_obj.get("wall_broken")
+		cw.setup(group, _tiles, theme["tile_tint"], wall_done)
 		add_child(cw)
-		if main != null and main.wall_broken:
+		if wall_done:
 			clear_cells(group)
 		else:
 			props.append(cw)
+
+	for group in _groups(shutter_cells):
+		var sh := Props.Shutter.new()
+		var shutter_done: bool = W.flag("shutter_" + file_id)
+		sh.setup(group, file_id, shutter_done)
+		add_child(sh)
+		if shutter_done:
+			clear_cells(group)
+
 	if spawns.has("T"):
 		organ = Props.Organ.new()
 		organ.position = spawns["T"]
@@ -273,13 +333,73 @@ func _build() -> void:
 		organ.setup()
 		add_child(organ)
 
+	# Build decor from rooms_meta
+	var decor_list: Array = meta.get("decor", [])
+	for dec in decor_list:
+		if dec is Dictionary:
+			var d_type: String = dec.get("type", "claws")
+			var d_tile: Array = dec.get("tile", [0, 0])
+			var d_node := Props.Decor.new()
+			d_node.setup(d_type)
+			d_node.position = Vector2(d_tile[0] * TILE + 8, d_tile[1] * TILE + 8)
+			add_child(d_node)
+
+	# Record and place every enemy: the room owns the nodes, main only lists them
+	for e in enemy_spawns:
+		enemies.append(e)
+		var en: Node2D = Spawner.enemy(e[0], e[1])
+		if en != null:
+			add_child(en)
+			enemy_nodes.append(en)
+	# PNG props and tiles from the room builder sit behind everything that moves
+	var pl := PropsLayer.new()
+	pl.setup_props(pictures)
+	add_child(pl)
+	move_child(pl, 0)
+
+
+func _door_target(side: String, y: int) -> String:
+	# the header names the room's main door; a second door on the same side takes
+	# its target from the meta exit in the same cell row
+	var fallback := String(head.get(side, ""))
+	var at := int(floor(float(y) / 14.0))
+	var letter := "L" if side == "left" else "R"
+	var m: Dictionary = meta
+	for ex in m.get("exits", []):
+		if ex is Dictionary and String(ex.get("side", "")) == letter and int(ex.get("at", 0)) == at:
+			return String(ex.get("to", fallback))
+	return fallback
+
+
+func _add_marked_prop(marker_char: String, feet: Vector2) -> void:
+	var m_meta: Dictionary = meta.get("marks", {}).get(marker_char, {})
+	var m_type: String = m_meta.get("type", "")
+	match m_type:
+		"candle":
+			var c_num: int = int(m_meta.get("candle", 1))
+			var candle_prop := Props.Candle.new()
+			candle_prop.setup(c_num, W.flag("candle_%d" % c_num))
+			candle_prop.position = feet
+			add_child(candle_prop)
+			props.append(candle_prop)
+		"winch":
+			var winch_prop := Props.Winch.new()
+			winch_prop.setup(W.flag("winch_turned"))
+			winch_prop.position = feet
+			add_child(winch_prop)
+			props.append(winch_prop)
+		"lever":
+			var l_flag: String = m_meta.get("flag", "lever_library")
+			_add_lever(feet, "library" if l_flag == "lever_library" else "bars")
+
 
 func _add_lever(feet: Vector2, kind: String) -> void:
 	var lv := Props.Lever.new()
-	var main: Object = _flags()
 	var done := false
-	if main != null:
-		done = main.lever_library if kind == "library" else main.bars_opened
+	if G.main != null:
+		done = G.main.lever_library if kind == "library" else G.main.bars_opened
+	else:
+		done = W.flag("lever_library" if kind == "library" else "bars_opened")
 	lv.setup(kind, done)
 	lv.position = feet
 	add_child(lv)
@@ -287,14 +407,12 @@ func _add_lever(feet: Vector2, kind: String) -> void:
 
 
 func _open_edge(x: int, y: int, ch: String) -> void:
-	# a gap in the side wall with no door: she walks off the edge into the next room
 	var side := "left" if ch == "<" else "right"
 	if (side == "left" and x != 0) or (side == "right" and x != grid[y].length() - 1):
 		return
 	open_edges[side] = true
 	if cell(x, y + 1) == ch:
-		return          # not the lowest cell of this opening
-	# the lowest cell is where she stands; count the open cells above it
+		return
 	var open_h := 0
 	var yy := y
 	while yy >= 0 and cell(x, yy) == ch:
@@ -305,7 +423,6 @@ func _open_edge(x: int, y: int, ch: String) -> void:
 
 
 func _groups(cells: Array) -> Array:
-	# neighbouring cells make one rectangle (bars, a cracked wall): the bounding box of each group
 	var out: Array = []
 	var left: Array = cells.duplicate()
 	while not left.is_empty():
@@ -327,34 +444,22 @@ func _groups(cells: Array) -> Array:
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), theme["clear"])
 	var tint: Color = theme["tint"]
-	if theme["wall"] == "panels":
-		# the church panels, dimmed, tiled over the whole room
-		var i := 0
-		var py := size.y - TILE * 2 - 192.0
-		while py > -192.0:
-			var px := 24.0
-			while px < size.x:
-				var src: Rect2 = PANELS[i % PANELS.size()]
-				draw_texture_rect_region(_wall, Rect2(px, py, src.size.x, src.size.y), src, tint)
-				px += src.size.x + 40.0
-				i += 1
-			py -= 200.0
-	elif _wall != null:
-		# one wall picture repeated sideways (and upward in a tall room), standing on the floor
-		var ws := _wall.get_size()
-		var bottom := size.y if theme["tiles"] == "" else size.y - TILE
-		var y := bottom - ws.y
-		while y > -ws.y:
-			var x := 0.0
-			while x < size.x:
-				draw_texture(_wall, Vector2(x, y), tint)
-				x += ws.x
-			y -= ws.y
+
+	# Draw the backdrop wall behind the whole room: the picture keeps its
+	# real size and is repeated to fill, so it is never squeezed or stretched
+	for rect in backdrop_rects():
+		if _wall != null:
+			_draw_wall(rect, tint)
+		else:
+			draw_rect(rect, theme["clear"] * Color(1.2, 1.2, 1.2))
+
 	if _point != null and spawns.has("K") and theme.has("point"):
 		var k: Vector2 = spawns["K"]
 		draw_texture(_point, Vector2(round(k.x - POINT_K), k.y - _point.get_size().y))
+
 	if _tiles == null:
 		return
+
 	var tt: Color = theme["tile_tint"]
 	for y in grid.size():
 		var row: String = grid[y]
@@ -366,6 +471,35 @@ func _draw() -> void:
 					depth = 1 if cell(x, y - 2) != "#" else 2
 				draw_texture_rect_region(_tiles, Rect2(x * TILE, y * TILE, TILE, TILE),
 					Rect2((x % 4) * TILE, depth * TILE, TILE, TILE), tt)
+			elif ch == "B":
+				# Bricked arch (dark amber/reddish brick)
+				draw_rect(Rect2(x * TILE, y * TILE, TILE, TILE), Color(0.35, 0.2, 0.18))
+				draw_rect(Rect2(x * TILE + 1, y * TILE + 1, TILE - 2, TILE - 2), Color(0.48, 0.28, 0.22))
 			elif ch == "=" or ch == "v":
 				draw_texture_rect_region(_ledge, Rect2(x * TILE, y * TILE, TILE, 8),
 					Rect2((x % 4) * TILE, 0, TILE, 8), tt)
+
+
+# The backdrop wall is painted with copies of the picture at its real size,
+# so it is never stretched out of shape. Copies repeat across the room from
+# its left edge, and on rooms taller than the picture more copies stack
+# upwards from the floor, so the picture always sits on the ground line.
+func _draw_wall(rect: Rect2, tint: Color) -> void:
+	var tw := _wall.get_size().x
+	var th := _wall.get_size().y
+	if tw <= 0.0 or th <= 0.0:
+		return
+	var j0 := int(floorf(rect.position.x / tw))
+	var j1 := int(floorf((rect.position.x + rect.size.x - 0.01) / tw))
+	var k := 0
+	while size.y - k * th > rect.position.y:
+		var y := size.y - (k + 1) * th
+		if y < rect.end.y:
+			for j in range(j0, j1 + 1):
+				var where := Rect2(j * tw, y, tw, th)
+				var vis := where.intersection(rect)
+				if vis.size.x <= 0.0 or vis.size.y <= 0.0:
+					continue
+				draw_texture_rect_region(_wall, vis,
+					Rect2(vis.position - where.position, vis.size), tint)
+		k += 1

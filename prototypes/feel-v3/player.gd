@@ -17,6 +17,7 @@ extends CharacterBody2D
 const BODY := Vector2(12, 36)
 const STEP_EVERY := 0.27
 const KICK_SHOW := 0.3      # seconds the kick-off picture stays after a wall jump
+const WL := preload("res://weapon_layer.gd")   # the weapon drawn from per-frame keys
 const WEAPONS := [
 	{"name": "DIRGE-042", "tex": "weapon/dirge.png", "grip": Vector2(6, 5)},
 	{"name": "ELEGY-013", "tex": "weapon/elegy.png", "grip": Vector2(10, 10)},
@@ -75,17 +76,25 @@ var _shape: CollisionShape2D
 var _rect: RectangleShape2D
 var _steer_lock := 0.0      # after a wall jump she cannot steer back at once
 var _kick_t := 0.0          # seconds left of the kick-off picture after a wall jump
+var _air_t := 0.0           # seconds since she left the floor (the push-off picture shows first)
+var _land_t := 0.0          # seconds left of the landing picture
+var _land_hard := false     # she fell from high up: the deep lean-in crouch instead of soft knees
+var _apex_y := 0.0          # highest point (smallest y) since she left the floor
 var _kicked := false        # rising from a wall jump: letting go of jump does not cut it short
 var _swings := {}           # SWINGS, with shoulder and hand distance read from the hero frames
 var _prev_ang := 0.0        # where the blade was last tick (the cut sweeps from there)
 var _spin_hits := 0
+var _keys: Array = []        # this swing's weapon keys, one per body frame ([] = the old shoulder sweep)
+var _key_at := -1            # the body frame the weapon was last posed for (at key count = it already broke up)
+var _cut_from := {}          # the key the blade swept from on this frame's first tick
+var _key_trail: Node2D
 var hit_pts := PackedVector2Array()   # where the blade cut this tick (shown by "show hit areas")
 
 
 func _ready() -> void:
-	hp = T.v("player_hp")
-	energy = T.v("energy_max")
-	mp = T.v("mp_max")
+	hp = R.max_hp()
+	energy = R.max_en()
+	mp = R.max_mp()
 	collision_layer = 4
 	collision_mask = 1 | 2
 	var shape := CollisionShape2D.new()
@@ -96,10 +105,15 @@ func _ready() -> void:
 	add_child(shape)
 	_shape = shape
 	_rect = rect
+	# skin B (tuning pandora_skin = 1) reads the same frames from the baked oxblood folder (design/skins.md)
+	var skin_dir := ""
+	if T.v("pandora_skin") >= 0.5 and String(G.frames["hero"].get("dir", "")) == "pandora":
+		skin_dir = "pandora_b"
 	_spr = G.sprite("hero", {"idle": 7.0, "run": 10.0, "crouch": 18.0, "backdash": 16.0, "slide": 14.0, "hurt": 8.0,
 		"cast": 12.0, "dead": 7.0, "rise": 8.0, "turn": 16.0, "dash": 16.0},
 		["jump", "land", "crouch", "attack", "attack2", "crouchatk", "crouchatk2",
-		"airatk", "airatk2", "backdash", "slide", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"])
+		"airatk", "airatk2", "backdash", "slide", "hurt", "cast", "dead", "wall", "walljump", "turn", "rise", "dash"],
+		skin_dir)
 	_fit_swings()
 	var feet: Array = G.frames["hero"]["feet"]
 	_spr.position = -Vector2(feet[0], feet[1])   # her feet sit on this node
@@ -114,8 +128,15 @@ func _ready() -> void:
 	_arm.add_child(_trail)
 	_blade = Sprite2D.new()
 	_blade.centered = false
+	_blade.material = WL.material()
 	_arm.add_child(_blade)
 	_arm.visible = false
+	move_child(_arm, _spr.get_index())     # z 0 = behind her, z 1 = in front
+	_key_trail = WL.KeyTrail.new()
+	_key_trail.z_index = 1
+	add_child(_key_trail)
+	move_child(_key_trail, _spr.get_index())   # like the arm: z 0 = behind her, z 1 = in front
+	_spr.frame_changed.connect(_sync_keyed_weapon)
 	floor_snap_length = 4.0
 
 
@@ -145,6 +166,15 @@ func blade_points(from_ang: float, to_ang: float) -> PackedVector2Array:
 	# The cut is exactly what you see: points along the weapon, from her hand to
 	# its tip, for every angle the weapon passed through since the last tick.
 	# "Weapon reach" stretches or shrinks it; 1.0 = the picture.
+	if not _keys.is_empty() and _key_at >= 0:
+		if _key_at >= _keys.size():
+			return PackedVector2Array()
+		# keyed swing: the frame's blade, swept from the last frame's on the first tick of a frame
+		var cut := WL.cut_points(_cut_from, _keys[_key_at], facing, _blade_len * T.v("hit_reach"))
+		_cut_from = {}
+		for i in cut.size():
+			cut[i] += global_position
+		return cut
 	var pts := PackedVector2Array()
 	var r: float = _blade.position.length()
 	var tip: float = r + _blade_len * T.v("hit_reach")
@@ -170,15 +200,16 @@ func _physics_process(delta: float) -> void:
 	_latch_cd = maxf(0.0, _latch_cd - delta)
 	_steer_lock = maxf(0.0, _steer_lock - delta)
 	_kick_t = maxf(0.0, _kick_t - delta)
+	_land_t = maxf(0.0, _land_t - delta)
 	hit_pts = PackedVector2Array()
 	var hold_y := false
 	_jump_buf = maxf(0.0, _jump_buf - delta)
 	if _energy_wait > 0.0:
 		_energy_wait -= delta
 	else:
-		energy = minf(T.v("energy_max"), energy + T.v("energy_refill") * delta)
-	energy = minf(energy, T.v("energy_max"))
-	mp = minf(mp, T.v("mp_max"))
+		energy = minf(R.max_en(), energy + T.v("energy_refill") * delta)
+	energy = minf(energy, R.max_en())
+	mp = minf(mp, R.max_mp())
 	if _drop_t > 0.0:
 		_drop_t -= delta
 		if _drop_t <= 0.0:
@@ -298,7 +329,8 @@ func _physics_process(delta: float) -> void:
 				_fx_t = 0.045
 				Vfx.slide_tick(global_position, facing)
 				if int(_slide_t / 0.045) % 2 == 0:
-					Vfx.ghost(_spr, Color(Vfx.CYAN.r, Vfx.CYAN.g, Vfx.CYAN.b, 0.45), 0.22)
+					var g := Vfx.her()
+					Vfx.ghost(_spr, Color(g.r, g.g, g.b, 0.45), 0.22)
 			var total := T.v("slide_time")
 			velocity.x = facing * T.v("slide_speed") * (1.0 - 0.5 * minf(_slide_t, total) / total)
 			if _slide_t >= 0.08 and _jump_buf > 0.0 and on_floor and _room_to_stand():
@@ -333,6 +365,9 @@ func _physics_process(delta: float) -> void:
 			_hurt_t -= delta
 			if _hurt_t <= 0.0:
 				state = "move"
+		"locked":
+			# no input; gravity still pulls her down and she keeps her picture
+			velocity.x = 0.0
 
 	# letting go of jump early cuts the rise: tap = hop, hold = full jump
 	if Input.is_action_just_released("jump") and velocity.y < 0.0 and not _kicked:
@@ -345,6 +380,15 @@ func _physics_process(delta: float) -> void:
 	if now_floor and not _was_floor:
 		Sfx.play("land")
 		G.main.dust(global_position, 4)
+		# the landing picture: soft knees, or the deep crouch after a long fall
+		_land_hard = global_position.y - _apex_y >= T.v("land_hard_drop")
+		_land_t = T.v("land_hard_show") if _land_hard else T.v("land_show")
+	if now_floor:
+		_air_t = 0.0
+		_apex_y = global_position.y
+	else:
+		_air_t += delta
+		_apex_y = minf(_apex_y, global_position.y)
 	_was_floor = now_floor
 	if now_floor and state == "move" and absf(velocity.x) > 10.0:
 		_step_t -= delta
@@ -487,6 +531,8 @@ func _attack_total() -> float:
 
 
 func _start_attack(btn: String, kind: String) -> void:
+	if _arm.visible and not _keys.is_empty():
+		_vanish_weapon()                    # a chained swing: the last weapon breaks up where it was
 	_attack_elegy = int(T.v("weapon")) == 1
 	state = "attack"
 	_attack_t = 0.0
@@ -502,20 +548,28 @@ func _start_attack(btn: String, kind: String) -> void:
 	var anim: String = {"stand": "attack", "crouch": "crouchatk", "air": "airatk"}[pose] + ("" if hand == "j" else "2")
 	if kind == "special":
 		anim = "cast"
+	_keys = []         # play() can emit frame_changed before this swing's blade is initialized
 	_spr.sprite_frames.set_animation_speed(anim, 5.0 / _attack_total())
 	_spr.play(anim)
 	_spr.frame = 0
 	_spin_hits = 0
+	_keys = [] if kind == "special" else WL.keys_for(anim, _spr.sprite_frames.get_frame_count(anim))
+	_key_at = -1
+	_cut_from = {}
 	if kind == "special" and not _is_elegy():
 		_arm.visible = false
 		Sfx.play("special")
 		Vfx.cast_gather(global_position + Vector2(facing * 14.0, -22.0), _attack_total() * 0.3)
 		return
 	var w: Dictionary = WEAPONS[1 if _is_elegy() else 0]
-	_blade.texture = G.tex(w["tex"])
-	_blade.offset = -w["grip"]
+	var tg: Array = WL.texture(w)           # the glowing version for her skin, when there is one
+	_blade.texture = tg[0]
+	_blade.offset = -tg[1]
 	_blade.scale = Vector2.ONE
-	_blade_len = _blade.texture.get_width() - w["grip"].x
+	_blade_len = _blade.texture.get_width() - tg[1].x
+	_arm.z_index = 1
+	_blade.visible = true                   # the last swing hid it when it broke into sparks
+	WL.set_phase(_blade, 0, 1.0)
 	_swing = _swings[pose + "_" + hand].duplicate()
 	if kind == "special":
 		# Elegy's special, the Requiem: the scythe turns twice all the way round her,
@@ -531,7 +585,7 @@ func _start_attack(btn: String, kind: String) -> void:
 		Vfx.requiem_start(global_position, _attack_total(), _spr)
 		Sfx.play("special", 0.8)
 		return
-	if _is_elegy():
+	if _is_elegy() and _keys.is_empty():
 		# the two-handed scythe takes a wider arc
 		var down: bool = _swing["a0"] < 0.0
 		_swing["a0"] += -25.0 if down else 25.0
@@ -546,6 +600,9 @@ func _start_attack(btn: String, kind: String) -> void:
 
 
 func _pose_weapon() -> void:
+	if not _keys.is_empty():
+		_pose_keyed()
+		return
 	# materialize -> sweep through the cut -> hold at the end of the arc -> fade
 	var u := clampf(_attack_t / _attack_total(), 0.0, 1.0)
 	var s := _sweep()
@@ -570,12 +627,67 @@ func _pose_weapon() -> void:
 	_trail.set_arc(from, ang, r + _blade_len * 0.3, r + _blade_len, glow)
 
 
+func _sync_keyed_weapon() -> void:
+	# AnimatedSprite2D advances between physics ticks. Pose the blade with that change.
+	if state == "attack" and _arm.visible and not _keys.is_empty():
+		_pose_keyed()
+
+
+func _pose_keyed() -> void:
+	# The weapon sits in the hand of the body frame on screen, at that frame's angle.
+	# It is hidden during wind-up and breaks into sparks at the start of the last frame.
+	if _key_at >= _keys.size():
+		return      # the weapon already broke up when the last frame started
+	var k := clampi(_spr.frame, 0, _keys.size() - 1)
+	if k == _keys.size() - 1 and _key_at >= 0:
+		_vanish_weapon()
+		_blade.visible = false      # the last frame draws no sword at all
+		_key_at = _keys.size()      # remembers the weapon is gone, so this runs once
+		return
+	var key: Dictionary = _keys[k]
+	var step := _attack_total() / float(_keys.size())
+	_arm.position = WL.hand(key, facing)
+	_arm.scale.x = facing
+	_arm.z_index = 1 if key["front"] else 0
+	_key_trail.z_index = _arm.z_index
+	var v := WL.vec(key)                     # a blade pointing toward or away from the camera looks shorter
+	_blade.position = Vector2.ZERO
+	_blade.rotation = v.angle()
+	# the scythe's curved head stays upright in the picture; in a level swing it is drawn
+	# flatter so it lies along the swing (the sword is drawn as it is)
+	var flat := T.v("weapon_level_flat") if (key.has("yaw") and _is_elegy()) else 1.0
+	_blade.scale = Vector2(maxf(0.15, v.length()), flat)
+	_blade.modulate = Color.WHITE
+	_trail.set_arc(0.0, 0.0, 0.0, 0.0, 0.0)
+	# the wind-up frame holds no weapon (it used to gather out of pixels in the old
+	# vertical orientation); the blade first shows on the next frame, fully drawn
+	_blade.visible = k > 0
+	WL.set_phase(_blade, 0, 1.0)
+	if k != _key_at:
+		if _key_at >= 0:
+			_cut_from = _keys[_key_at]
+			if key.get("trail", true) and WL.turn(_keys[_key_at], key) > 30.0:
+				_key_trail.show_band(WL.band(_keys[_key_at], key, facing, _blade_len), step * 1.6)
+		_key_at = k
+
+
+func _vanish_weapon() -> void:
+	# after a keyed swing the weapon stays where it was and breaks into rising sparks
+	if _key_at >= _keys.size():
+		return      # it already broke up when the last frame started
+	if not _blade.visible:
+		return      # the wind-up frame holds no weapon, so there is nothing to break up
+	var last := _key_at >= _keys.size() - 1
+	WL.vanish(_blade, get_parent(), 0.45 if last else 0.0, T.v("weapon_vanish"))
+	_key_trail.clear()
+
+
 func _hide_weapons() -> void:
 	_arm.visible = false
 
 
 func weapon_showing() -> bool:
-	return _arm.visible and _blade.modulate.a > 0.5
+	return _arm.visible and _blade.visible and _blade.modulate.a > 0.5
 
 
 func swap_weapon() -> void:
@@ -612,7 +724,7 @@ func _attack_step() -> void:
 				_attack_hit.clear()
 				Sfx.play("swing_heavy", 1.1)
 			hit_pts = blade_points(_prev_ang, ang)
-			G.main.player_cut(hit_pts, T.v("elegy_special_damage"), facing, _attack_hit)
+			G.main.player_cut(hit_pts, R.hit_damage(T.v("elegy_special_damage"), true), facing, _attack_hit)
 			_fx_t -= get_physics_process_delta_time()
 			if _fx_t <= 0.0:
 				_fx_t = 0.035
@@ -621,7 +733,7 @@ func _attack_step() -> void:
 				Vfx.requiem_tick(tip, atan2(cos(ang), -sin(ang) * facing))
 	# the cut hurts exactly where the weapon is: through the sweep, then held out
 	elif _attack_t >= total * 0.1 and _attack_t <= total * 0.65:
-		var dmg := T.v("attack_damage") * (T.v("elegy_damage_mult") if _is_elegy() else 1.0)
+		var dmg := R.hit_damage(T.v("attack_damage") * (T.v("elegy_damage_mult") if _is_elegy() else 1.0), false)
 		hit_pts = blade_points(_prev_ang, ang)
 		G.main.player_cut(hit_pts, dmg, facing, _attack_hit)
 	_prev_ang = ang
@@ -690,18 +802,60 @@ func _start_slide() -> void:
 	G.main.dust(global_position, 2)
 
 
-func gain_mp(amount: float) -> void:
-	mp = minf(T.v("mp_max"), mp + amount)
-
-
-func take_hit(damage: float, from_x: float) -> void:
-	if invuln > 0.0 or state == "dead":
+func lock(anim := "") -> void:
+	# no input and no swing; gravity still pulls her down. The special show,
+	# the pickup card and the dialogs hold her this way.
+	if state == "dead":
 		return
-	hp -= damage
+	state = "locked"
+	velocity.x = 0.0
+	if anim != "" and _spr.sprite_frames.has_animation(anim):
+		_spr.play(anim)
+
+
+func unlock() -> void:
+	# give the controls back
+	if state == "locked":
+		state = "move"
+
+
+func is_locked() -> bool:
+	# true while something holds her
+	return state == "locked"
+
+
+func debug_set(d: Dictionary) -> void:
+	# the test hook: set only the fields that are named
+	for k in d:
+		match String(k):
+			"hp":
+				hp = float(d[k])
+			"energy":
+				energy = float(d[k])
+			"mp":
+				mp = float(d[k])
+			"facing":
+				facing = int(d[k])
+			"state":
+				state = String(d[k])
+			"pos":
+				global_position = d[k]
+
+
+func gain_mp(amount: float) -> void:
+	mp = minf(R.max_mp(), mp + amount)
+
+
+func take_hit(damage: float, from_x: float, src := "enemy") -> void:
+	if invuln > 0.0 or state == "dead" or Dev.god:      # Dev.god: the room builder's invincible toggle
+		return
+	var dmg := R.taken(damage, src)
+	hp -= dmg
 	invuln = T.v("hurt_safe")
 	Sfx.play("hurt")
-	G.main.number(global_position + Vector2(0, -44), int(damage), Color("#E8A94A"))
+	G.main.number(global_position + Vector2(0, -44), int(dmg), Color("#E8A94A"))
 	G.main.shake(T.v("shake") * 1.5, 0.16)
+	W.player_hurt.emit(int(dmg), src)
 	var casting := state == "attack" and _attack_kind == "special"
 	if not casting or hp <= 0.0:
 		_hide_weapons()
@@ -711,6 +865,7 @@ func take_hit(damage: float, from_x: float) -> void:
 		velocity = Vector2.ZERO
 		_spr.visible = true
 		_spr.play("dead")
+		W.player_down.emit()
 		G.main.player_died()
 		return
 	if casting:
@@ -725,16 +880,20 @@ func take_hit(damage: float, from_x: float) -> void:
 func _afterimage() -> void:
 	# glowing copies left along the dash, cyan at the start turning violet
 	var k := clampf(_dash_t / maxf(0.05, T.v("backdash_time")), 0.0, 1.0)
-	var c := Vfx.CYAN.lerp(Vfx.VIOLET, k)
+	var c := Vfx.her().lerp(Vfx.her_alt(), k)
 	c.a = 0.8
 	Vfx.ghost(_spr, c, 0.3)
 
 
 func _animate(on_floor: bool) -> void:
 	_spr.flip_h = facing < 0
+	if state == "locked":
+		return
 	# blink while she cannot be hurt after a hit
 	_spr.visible = not (invuln > 0.0 and state != "backdash" and int(invuln * 20.0) % 2 == 0)
 	if state != "attack":
+		if _arm.visible and not _keys.is_empty():
+			_vanish_weapon()
 		_arm.visible = false
 	if state == "wall":
 		if _spr.sprite_frames.has_animation("wall"):
@@ -757,14 +916,21 @@ func _animate(on_floor: bool) -> void:
 	if state == "attack" or state == "backdash" or state == "hurt" or state == "crouch":
 		return
 	if not on_floor:
-		var f := 0
-		if velocity.y > 120.0:
-			f = 3
-		elif velocity.y > 0.0:
-			f = 2
-		elif velocity.y > -150.0:
+		# push-off just after takeoff, then the leap by speed: split leap, knees gather, tuck at the
+		# top, long glide down (design/decisions.md row 26). A set with fewer frames uses its last one.
+		var f := 4
+		if velocity.y < 0.0 and _air_t < T.v("jump_push_show"):
+			f = 0
+		elif velocity.y < -150.0:
 			f = 1
-		_show("jump", f)
+		elif velocity.y < 0.0:
+			f = 2
+		elif velocity.y <= 120.0:
+			f = 3
+		_show("jump", mini(f, _spr.sprite_frames.get_frame_count("jump") - 1))
+	elif _land_t > 0.0 and (absf(velocity.x) <= 10.0 or not _land_hard):
+		# touchdown: soft knees (a hard landing only when she lands standing still)
+		_show("land", mini(1 if _land_hard else 0, _spr.sprite_frames.get_frame_count("land") - 1))
 	elif absf(velocity.x) > 10.0:
 		if _spr.animation != "run" or not _spr.is_playing():
 			_spr.play("run")
@@ -833,6 +999,10 @@ class Swoosh extends Node2D:
 	func _draw() -> void:
 		if _alpha <= 0.01 or absf(_to - _from) < 0.05:
 			return
+		# the strike follows her skin (design/skins.md): cyan for A, red for B
+		var skin_b := T.v("pandora_skin") >= 0.5
+		var _arc := Color(1.0, 0.3, 0.36) if skin_b else Color(0.45, 0.95, 1.0)
+		var _edge := Color(1.0, 0.82, 0.85) if skin_b else Color(0.9, 1.0, 1.0)
 		var n := 10
 		for i in n:
 			var a := lerpf(_from, _to, float(i) / n)
@@ -841,5 +1011,5 @@ class Swoosh extends Node2D:
 			var inner := lerpf(_r1 - 3.0, _r0, k * k)
 			var pts := PackedVector2Array([Vector2(cos(a), sin(a)) * inner, Vector2(cos(a), sin(a)) * _r1,
 				Vector2(cos(b), sin(b)) * _r1, Vector2(cos(b), sin(b)) * inner])
-			draw_colored_polygon(pts, Color(0.45, 0.95, 1.0, _alpha * k * 0.75))
-			draw_line(pts[1], pts[2], Color(0.9, 1.0, 1.0, _alpha * k), 1.0)
+			draw_colored_polygon(pts, Color(_arc.r, _arc.g, _arc.b, _alpha * k * 0.75))
+			draw_line(pts[1], pts[2], Color(_edge.r, _edge.g, _edge.b, _alpha * k), 1.0)
