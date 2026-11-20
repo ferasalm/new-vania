@@ -134,8 +134,8 @@ Hand-offs: production/session-state/handoff-2026-11-19-opencode-quick.md and han
 | N19 | Option to reset level (progression) points | not planned | no points exist any more: stats grow automatically (PR #107) |
 | N20 | Remove magic as a stat: MP and magic attacks do not grow with levels; magic attacks scale with ATK | waiting on user | built in PR #107; the locked checks were replaced with the user's approval |
 | N21 | Show every stat the RPG GDDs decided (the menu shows only some) | waiting on user | built in PR #107: CHARACTER shows LV, XP, NEXT, HP, EN, MP, ATK, DEF, SPC |
-| N22 | One folder with every asset in the repo (generated library of copies plus a catalog; originals stay put) | in progress: script and catalog built and tested (S1, branch feat/proto-v4-studio `7c93c2b`); not yet shown inside the builder (S3) | Studio, plan T4 (2026-11-20) |
-| N23 | A thumbnail on every asset and on every room in the map builder | planned | Studio, plan T4 |
+| N22 | One folder with every asset in the repo (generated library of copies plus a catalog; originals stay put) | done for the library and its use in the room builder (S1 `7c93c2b`, S3 `905010c`): a Library button searches 24,010 entries and copies a picked picture into the builder folders before placing; the 3D bank and inbox are listed only | Studio, plan T4 (2026-11-20) |
+| N23 | A thumbnail on every asset and on every room in the map builder | in progress: asset thumbnails done (48 px, in the Library overlay, S3); room thumbnails in the map builder (S4) not started | Studio, plan T4 |
 | N24 | A "?" help on every builder function and asset, with its limits | in progress: the popup, the "?" button and 5 seed entries are built and tested (S2, `474e086`); help text for every function and asset (S8) and putting a "?" on every control (S9) are not done | Studio, plan T4 to T6 |
 | N25 | Moveable terrain and assets: select, move, copy, paste, duplicate, resize, rotate, free placement for decor | planned | Studio, plan T5 |
 | N26 | Builders and assets easy to reach from one place (launcher and README) | planned | Studio, plan T6 |
