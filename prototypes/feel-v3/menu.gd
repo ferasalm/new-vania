@@ -1,7 +1,7 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # The pause menu. Esc, P or Start opens it (the corner button on a phone does
 # the same), and the world stops while it is up. Five tabs sit across the top:
-#   MAP       the rooms she has walked through, newest last
+#   MAP       the current sheet's rooms and Pandora's location
 #   CHARACTER her level, her stat points, and what each stat does right now
 #   ITEMS     what she carries; things that can be used show USE
 #   EQUIPMENT what she wears: hand, core, two torso straps, two drive slots,
@@ -22,6 +22,7 @@ extends CanvasLayer
 const VIEW := Vector2(384, 216)
 const ROW_W := 358.0
 const ROW_H := 15.0
+const PauseMap := preload("res://pause_map.gd")
 
 var TABS: Array = ["MAP", "CHARACTER", "ITEMS", "EQUIPMENT", "SYSTEM"]
 var is_open := false
@@ -32,6 +33,10 @@ var _row_btns: Array = []      # the row buttons, same order
 var _tab_btns: Array = []
 var _scroll: ScrollContainer
 var _list: VBoxContainer
+var _map_view: PauseMap
+var _map_dev := false
+var _gear_scroll: ScrollContainer
+var _gear_list: VBoxContainer
 var _swallow := 0.0            # seconds left of the after-close hold
 var _holding := false          # the hold is on her right now
 var _had_invuln := false       # she was already untouchable when the hold began
@@ -69,6 +74,19 @@ func _ready() -> void:
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 2)
 	_scroll.add_child(_list)
+	_map_view = PauseMap.new()
+	_map_view.name = "map_view"
+	_map_view.position = Vector2(4, 18)
+	_map_view.size = Vector2(376, 109)
+	_map_view.room_selected.connect(_select_map_room)
+	add_child(_map_view)
+	_gear_scroll = ScrollContainer.new()
+	_gear_scroll.position = Vector2(202, 18)
+	_gear_scroll.size = Vector2(178, 184)
+	_gear_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_gear_scroll)
+	_gear_list = VBoxContainer.new()
+	_gear_scroll.add_child(_gear_list)
 	var foot := Label.new()
 	foot.text = "ARROWS: PICK   LEFT/RIGHT: TAB   JUMP: OK   ESC: BACK"
 	foot.position = Vector2(6, 204)
@@ -94,6 +112,7 @@ func open(tab_name: String = "") -> void:
 	if tab_name != "" and TABS.has(tab_name):
 		tab = tab_name
 	is_open = true
+	_map_dev = false
 	visible = true
 	if _holding:
 		_hold_end()
@@ -253,6 +272,9 @@ func _open_tab(tab_name: String) -> void:
 
 func _on_row(i: int) -> void:
 	_sel = i
+	if _rows[i].has("slot") or _rows[i].get("cb") == null:
+		_show_sel()
+		return
 	_activate(i)
 
 
@@ -268,6 +290,13 @@ func _activate(i: int) -> void:
 
 func _refresh() -> void:
 	_rows = _rows_for(tab)
+	_map_view.visible = tab == "MAP"
+	_gear_scroll.visible = tab == "EQUIPMENT"
+	_scroll.position.y = 130 if _map_view.visible else 18
+	_scroll.size = Vector2(196 if _gear_scroll.visible else 376, 202 - _scroll.position.y)
+	if _map_view.visible:
+		var current := String(G.main.room_name) if G.main != null else ""
+		_map_view.show_rooms(_map_ids(), current)
 	for c in _list.get_children():
 		_list.remove_child(c)
 		c.queue_free()
@@ -275,11 +304,11 @@ func _refresh() -> void:
 	for i in _rows.size():
 		var b := Button.new()
 		b.text = " " + String(_rows[i]["text"])
-		b.custom_minimum_size = Vector2(ROW_W, ROW_H)
+		b.custom_minimum_size = Vector2(180.0 if _gear_scroll.visible else ROW_W, ROW_H)
 		b.add_theme_font_size_override("font_size", 8)
 		b.focus_mode = Control.FOCUS_NONE
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		if _rows[i].get("cb") != null:
+		if _rows[i].get("cb") != null or _rows[i].has("slot") or _rows[i].has("room"):
 			b.pressed.connect(_on_row.bind(i))
 		_list.add_child(b)
 		_row_btns.append(b)
@@ -294,6 +323,10 @@ func _show_sel() -> void:
 		_row_btns[i].modulate = Color(1, 1, 1) if i == _sel else Color(0.68, 0.68, 0.68, 0.92)
 	if _sel >= 0 and _sel < _row_btns.size():
 		_scroll.ensure_control_visible(_row_btns[_sel])
+		if tab == "MAP":
+			_map_view.select_room(String(_rows[_sel].get("room", "")))
+	if tab == "EQUIPMENT":
+		_refresh_gear_choices()
 
 
 # ---- what each tab shows ----
@@ -314,18 +347,45 @@ func _rows_for(which: String) -> Array:
 
 
 func _map_rows() -> Array:
-	# the rooms she has seen on the current sheet, in the order she saw them
 	var out: Array = []
-	var m = G.main
-	var seen: Dictionary = W.visited.get(W.sheet, {})
-	for id in seen:
-		var t := W.title(String(id))
-		if t == "" and m != null:
-			t = String(m.TITLES.get(String(id), ""))
-		out.append({"text": String(id).to_upper() + ("  " + t if t != "" else ""), "cb": null})
+	for room in _map_ids():
+		var id := String(room)
+		var title := W.title(id)
+		out.append({"text": id.to_upper() + ("  " + title if title != "" else "") +
+			("   [JUMP HERE]" if _map_dev else ""), "room": id,
+			"cb": _teleport.bind(id) if _map_dev else null})
 	if out.is_empty():
 		out.append({"text": "(NO MAP YET)", "cb": null})
+	if OS.is_debug_build():
+		out.append({"text": "DEV   RETURN TO VISITED ROOMS" if _map_dev else "DEV   SHOW ROOMS FOR PLAYTEST",
+			"cb": _toggle_map_dev})
 	return out
+
+
+func _map_ids() -> Array:
+	var seen: Dictionary = W.visited.get(W.sheet, {})
+	return W.room_list(W.sheet) if _map_dev else seen.keys()
+
+
+func _toggle_map_dev() -> void:
+	_map_dev = not _map_dev
+	_sel = 0
+
+
+func _select_map_room(id: String) -> void:
+	for i in _rows.size():
+		if _rows[i].get("room") == id:
+			_sel = i
+			_show_sel()
+			return
+
+
+func _teleport(id: String) -> void:
+	if not OS.is_debug_build() or not _map_dev or G.main == null:
+		return
+	close()
+	_swallow = 0.0
+	Dev.teleport(id, W.sheet)
 
 
 func _character_rows() -> Array:
@@ -391,7 +451,7 @@ func _equipment_rows() -> Array:
 	for slot in ["harness1", "harness2", "module1", "module2"]:
 		var tag := "TORSO-1" if slot == "harness1" else ("TORSO-2" if slot == "harness2" \
 			else ("DRIVE-1" if slot == "module1" else "DRIVE-2"))
-		out.append({"text": "%-7s %s" % [tag, _slot_text(slot)], "cb": _cycle_slot.bind(slot)})
+		out.append({"text": "%-7s %s" % [tag, _slot_text(slot)], "slot": slot, "cb": _cycle_slot.bind(slot)})
 	out.append({"text": "ATK %d%%  DEF %d%%  HP %d  EN %d  MP %d" % [int(R.atk()), int(R.def()),
 		int(R.max_hp()), int(R.max_en()), int(R.max_mp())], "cb": null})
 	return out
@@ -408,14 +468,7 @@ func _slot_text(slot: String) -> String:
 func _cycle_slot(slot: String) -> void:
 	# tap an empty slot to fit the first piece she owns, tap again for the next
 	# one, and round to empty: one tap is one step, the stat line follows
-	var kind := "harness" if slot.begins_with("harness") else "module"
-	var cands: Array = [""]
-	var gear: Dictionary = Db.table("gear")
-	for id in gear:
-		var d: Dictionary = gear[id]
-		var sid := String(id)
-		if String(d.get("slot", "")) == kind and (R.owned_gear.has(sid) or String(R.equip.get(slot, "")) == sid):
-			cands.append(sid)
+	var cands := _gear_choices(slot)
 	if cands.size() <= 1:
 		return      # nothing she owns fits here
 	var cur := String(R.equip.get(slot, ""))
@@ -423,6 +476,54 @@ func _cycle_slot(slot: String) -> void:
 	if i < 0:
 		i = 0
 	R.equip_gear(slot, String(cands[wrapi(i + 1, 0, cands.size())]))
+
+
+func _gear_choices(slot: String) -> Array[String]:
+	var kind := "harness" if slot.begins_with("harness") else "module"
+	var choices: Array[String] = [""]
+	var gear: Dictionary = Db.table("gear")
+	for owned in R.owned_gear:
+		var id := String(owned)
+		if String(gear.get(id, {}).get("slot", "")) != kind:
+			continue
+		var blocked := false
+		for other_slot in R.SLOTS:
+			if other_slot == slot:
+				continue
+			var other := String(R.equip.get(other_slot, ""))
+			if other == id or (R.DRIVE.has(id) and R.DRIVE.has(other)):
+				blocked = true
+				break
+		if not blocked:
+			choices.append(id)
+	return choices
+
+
+func _refresh_gear_choices() -> void:
+	for child in _gear_list.get_children():
+		_gear_list.remove_child(child)
+		child.queue_free()
+	var slot := String(_rows[_sel].get("slot", "")) if _sel < _rows.size() else ""
+	var hint := Label.new()
+	hint.text = "SELECT A TORSO OR DRIVE SLOT" if slot.is_empty() else "GEAR FOR THIS SLOT"
+	hint.add_theme_font_size_override("font_size", 8)
+	_gear_list.add_child(hint)
+	if slot.is_empty():
+		return
+	for id in _gear_choices(slot):
+		var button := Button.new()
+		var name_text := "(EMPTY)" if id.is_empty() else String(Db.table("gear")[id].get("name", id))
+		button.text = name_text + ("  [ON]" if R.equip.get(slot, "") == id else "")
+		button.custom_minimum_size = Vector2(160, ROW_H)
+		button.add_theme_font_size_override("font_size", 8)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_choose_gear.bind(slot, id))
+		_gear_list.add_child(button)
+
+
+func _choose_gear(slot: String, id: String) -> void:
+	if R.equip_gear(slot, id):
+		_refresh()
 
 
 func _system_rows() -> Array:
