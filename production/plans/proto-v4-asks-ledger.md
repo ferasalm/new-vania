@@ -8,6 +8,13 @@ bbe3ffd1), checked against the code by a read-only audit on the area branch (the
 from this file.** Status words: done | in progress | planned | not planned | waiting on user.
 "Played?" = was it in the 2026-11-19 harmony build (yes / part / no).
 
+**Library builder draft (N8).** The user's two-cell Library layout is preserved in commit `6554c96`.
+Recover it with `git show 6554c96:prototypes/feel-v3/rooms/library.txt` and open it as a builder draft.
+Gameplay uses the restored three-cell layout from `d44227e` (smoke 145/145). Before shipping the draft,
+update the Library height and exit rows in `prototypes/feel-v3/data/rooms_meta.json` and playtest both
+directions between Church and Library. The shorter layout puts the lower door on row 1 (zero-based),
+which the current metadata marks as bricked. The Church exit is on row 2.
+
 ## A. Movement and her frames (2026-11-17)
 
 | # | Ask | Played? | Status | Where it stands |
