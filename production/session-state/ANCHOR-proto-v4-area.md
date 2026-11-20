@@ -17,7 +17,7 @@ Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3
 - DONE OpenCode quick fixes Q1-Q7 (N1-N7), build `playable-history/2026-11-19-proto-v4-quick-fixes/`. WAITING ON USER: play.
 - DONE Claude B1 chat (2026-11-19): moth smoke 3.0 s (N12), scrap+orbs wait-then-fly (N13), weapon frames (N14), F4 notes (N15),
   F2 room builder + red warnings + F3 map builder (N8). Tests d0-d6 in tests_dev/. WAITING ON USER: play it.
-  NEXT: menus + stats chat (ledger N16-N21; N20 needs the user's ruling), then B2 art (handoff-2026-11-19-next.md).
+  NEXT: the menus (N16-N18) are in PR #105 and the leveling ruling (N19-N21) is settled in PR #107 (automatic growth, no points). Remaining: the user's verdicts on PRs #105-#107, then B2 art (N9-N11, handoff-2026-11-19-next.md), then the Studio (N22-N26).
 - Room guards: `prototypes/feel-v3/tools/roomreach.py .` (can she reach every item and exit; run from feel-v3)
   and `tools/roomcheck.py .` (door headroom, low spots). Run both after any room edit.
 - RULING (S0, accepted): R.taken keeps src "enemy" at mult 1.0; area_damage_mult 0.75 applies to NAMED sources.
