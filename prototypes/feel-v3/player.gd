@@ -136,6 +136,7 @@ func _ready() -> void:
 	_key_trail.z_index = 1
 	add_child(_key_trail)
 	move_child(_key_trail, _spr.get_index())   # like the arm: z 0 = behind her, z 1 = in front
+	_spr.frame_changed.connect(_sync_keyed_weapon)
 	floor_snap_length = 4.0
 
 
@@ -166,6 +167,8 @@ func blade_points(from_ang: float, to_ang: float) -> PackedVector2Array:
 	# its tip, for every angle the weapon passed through since the last tick.
 	# "Weapon reach" stretches or shrinks it; 1.0 = the picture.
 	if not _keys.is_empty() and _key_at >= 0:
+		if _key_at >= _keys.size():
+			return PackedVector2Array()
 		# keyed swing: the frame's blade, swept from the last frame's on the first tick of a frame
 		var cut := WL.cut_points(_cut_from, _keys[_key_at], facing, _blade_len * T.v("hit_reach"))
 		_cut_from = {}
@@ -545,6 +548,7 @@ func _start_attack(btn: String, kind: String) -> void:
 	var anim: String = {"stand": "attack", "crouch": "crouchatk", "air": "airatk"}[pose] + ("" if hand == "j" else "2")
 	if kind == "special":
 		anim = "cast"
+	_keys = []         # play() can emit frame_changed before this swing's blade is initialized
 	_spr.sprite_frames.set_animation_speed(anim, 5.0 / _attack_total())
 	_spr.play(anim)
 	_spr.frame = 0
@@ -623,11 +627,15 @@ func _pose_weapon() -> void:
 	_trail.set_arc(from, ang, r + _blade_len * 0.3, r + _blade_len, glow)
 
 
+func _sync_keyed_weapon() -> void:
+	# AnimatedSprite2D advances between physics ticks. Pose the blade with that change.
+	if state == "attack" and _arm.visible and not _keys.is_empty():
+		_pose_keyed()
+
+
 func _pose_keyed() -> void:
 	# The weapon sits in the hand of the body frame on screen, at that frame's angle.
-	# It gathers out of glowing pixels on the first frame. When the last frame starts
-	# the sword does not move on to that key: it breaks into sparks right where the
-	# follow-through left it, so her hand holds nothing on the last frame.
+	# It is hidden during wind-up and breaks into sparks at the start of the last frame.
 	if _key_at >= _keys.size():
 		return      # the weapon already broke up when the last frame started
 	var k := clampi(_spr.frame, 0, _keys.size() - 1)
@@ -638,7 +646,6 @@ func _pose_keyed() -> void:
 		return
 	var key: Dictionary = _keys[k]
 	var step := _attack_total() / float(_keys.size())
-	var u := clampf((_attack_t - k * step) / step, 0.0, 1.0)
 	_arm.position = WL.hand(key, facing)
 	_arm.scale.x = facing
 	_arm.z_index = 1 if key["front"] else 0

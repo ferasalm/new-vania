@@ -6,6 +6,8 @@
 # Run: godot --headless --path . res://tests_quick/q3_weapon_frames.tscn
 extends Node
 
+const WeaponLayer := preload("res://weapon_layer.gd")
+
 var main: Node = null
 var passed := 0
 var failed := 0
@@ -39,6 +41,21 @@ func _swing(p: Node2D, w: int, btn: String) -> void:
 	var base := _ghosts(world)
 	var spr: AnimatedSprite2D = p.get("_spr")
 	var blade: Sprite2D = p.get("_blade")
+	var arm: Node2D = p.get("_arm")
+	var middle_changes: Array[int] = []
+	var stale_frames: Array[int] = []
+	var check_changed_frame := func() -> void:
+		var keys: Array = p.get("_keys")
+		var frame := spr.frame
+		if p.get("state") != "attack" or keys.is_empty() or frame <= 0 or frame >= keys.size():
+			return
+		var should_show := frame < keys.size() - 1
+		var grip := WeaponLayer.hand(keys[frame], int(p.get("facing")))
+		if should_show:
+			middle_changes.append(frame)
+		if blade.visible != should_show or (should_show and not arm.position.is_equal_approx(grip)):
+			stale_frames.append(frame)
+	spr.frame_changed.connect(check_changed_frame)
 	var total := T.v("elegy_time") if w == 1 else T.v("attack_time")
 	Input.action_press(btn)
 	await _frames(2)
@@ -50,6 +67,10 @@ func _swing(p: Node2D, w: int, btn: String) -> void:
 		if String(spr.animation) in ["attack", "attack2"]:
 			by_frame[spr.frame] = [blade.visible, blade.scale.y]
 		most_ghosts = maxi(most_ghosts, _ghosts(world))
+	spr.frame_changed.disconnect(check_changed_frame)
+	_check("%s: the weapon follows each body frame immediately" % tag,
+		middle_changes.size() >= 2 and stale_frames.is_empty(),
+		"middle frame changes=%s, stale frames=%s" % [middle_changes, stale_frames])
 	var n := by_frame.size()
 	_check("%s: the swing ran through its frames" % tag, n >= 4, "frames seen=%s" % str(by_frame.keys()))
 	if n < 4:
