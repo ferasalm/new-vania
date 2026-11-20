@@ -5,7 +5,7 @@ Godot `C:/Users/AUC/opencode-workspace/tools/Godot/Godot_v4.7.2-stable_win64_con
 Plan: `production/plans/proto-v4-area-plan.md`. Build rules: `prototypes/feel-v3/design/contract.md` (section 8 overrides). User decisions: `design/decisions.md`.
 
 ## Now
-- Way of working (user, 2026-11-20 rule): Claude Code builds directly, one task per chat, hand off at ~220k.
+- Way of working (user, 2026-11-20, SUPERSEDES the older "Claude builds directly" rule): route by cost. Sonnet leads and executes; workers build; gates are written by a stronger model than the builder. Read `production/orchestration/ROUTING-PLAYBOOK.md` and `production/plans/2026-11-20-execution-plan.md` first. One task per chat; hand off at ~220k.
   Task order and every ask with its status: `production/plans/proto-v4-asks-ledger.md` (read it first).
 - DONE task 1 (rooms fix + merge, XP, orb pull, hint text), commits 951957e..b48567a on feat/proto-v4-area, pushed.
   Build `playable-history/2026-11-19-proto-v4-rooms/` (exe + APK + ABOUT), tag `proto-v4-rooms-2026-11-19`.

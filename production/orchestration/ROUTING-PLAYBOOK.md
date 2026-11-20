@@ -147,3 +147,5 @@ Same step fails twice: stop and ask, recommended option first. Weekly 96%: finis
 | Python Pillow | 12.0.0 | available for the icon slicer |
 | Network | slow at probe time (github 8 s) | explains the Codex timeouts; recheck before long Codex runs |
 Codex calls used in T0: 4 (Terra 1, Sol 3; two of them timed out). Ask the user for the Codex weekly % before the next Sol call.
+
+**Update 2026-11-20 (T3):** Codex Sol with `--ignore-user-config` runs in a **read-only sandbox** even with `-s workspace-write`: it answers but cannot write files or run shell. One gate-writing call changed nothing and cost about 201k tokens and 647 s. Until `-c windows.sandbox=elevated` (untested) is proven on a one-line write probe, Sol is chat-only (review text, drafting) and **Sonnet writes the gates**. Library lessons: before swapping a room, grep the locked tests for its name and for the size rule (`t_world`: `cell[0] = round(px_w/24)`, `cell[1] = round(px_h/14)`), and run smoke early (it watches each new enemy for 420 frames). Android: use `--export-debug "Android"` (release has no keystore).

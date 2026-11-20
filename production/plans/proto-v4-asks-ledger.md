@@ -58,7 +58,7 @@ which the current metadata marks as bricked. The Church exit is on row 2.
 | C11 | ITEMS and EQUIPMENT menus | no | planned | session 2 |
 | C12 | A room off the hazard room turns the traps off (winch loft) | no | done | task 1: climb two lipped ledges to the loft; the winch stops the traps |
 | C13 | Post-shift map reorganised a lot | old version | done | 11 shifted rooms merged (task 1) |
-| C14 | RPG: XP, levels, 2 points, AUTO, 5 stats with MAGIC, full refill on level-up, orbs, scrap, self-repair, Sutures, rare drops (one strong) | part | in progress | task 1: kills give XP (gold number), LV and XP in the top bar, orbs drift to her again; spending points (CHARACTER): session 3 |
+| C14 | RPG: XP, levels, 2 points, AUTO, 5 stats with MAGIC, full refill on level-up, orbs, scrap, self-repair, Sutures, rare drops (one strong) | part | waiting on user | task 1: kills give XP (gold number), LV and XP in the top bar, orbs drift to her again; spending points (CHARACTER): session 3; levels are automatic, no points (PR #107, 2026-11-20) |
 | C15 | Arnetria: three candles, dialogue, her death ends the shift, cracked visor | no | planned | session 3; S1 has her room and the candle door |
 | C16 | RECALL boss refights at the terminal (best time + some XP) | no | planned | session 2 |
 
@@ -72,7 +72,7 @@ which the current metadata marks as bricked. The Church exit is on row 2.
 | D4 | RESTORE MODULE: stand up where she fell, from SYSTEM OFFLINE | no | in progress | task 1: lies in the winch loft (Up); not yet checked in a run |
 | D5 | Harness and modules, both, in different places; 2 + 2 slots | no | in progress | task 1: pieces placed (lab, reliquary, chapel, shifted rooms); EQUIPMENT menu session 3 |
 | D6 | Sutures: only the ones you find | part | done | task 1: Sutures 1-4 (LB, HW, SH, HZ) and 5-8 after the shift placed |
-| D7 | Level-up: offer CHARACTER at once, full HP/EN/MP, 2 points, AUTO, MAGIC raises special damage and max MP | part | in progress | logic only |
+| D7 | Level-up: offer CHARACTER at once, full HP/EN/MP, 2 points, AUTO, MAGIC raises special damage and max MP | part | waiting on user | automatic growth and refill, no menu opens (PR #107) |
 | D8 | SEXTON-19 (cyborg mini-boss) drops the BOLT PISTOL: off hand, with Dirge, uses EN | no | planned | session 2 |
 | D9 | Elegy gets its own two-handed moves | no | planned | sprites |
 | D10 | Her voice (ElevenLabs, your yes on 3 samples first) | no | planned | session 3 |
@@ -115,7 +115,7 @@ which the current metadata marks as bricked. The Church exit is on row 2.
 | N5 | Stretched backdrops; rooms balanced, not too big | done (backdrops) | OpenCode Q5 (2e27fdc): walls tile at real size, never stretched; room sizes stay with B1 |
 | N6 | Library and lab platforms too hard; top platform traps her under the ceiling | done (stop-gap) | OpenCode Q6 (5de277a): headroom 44 px rule met (top platforms now 64 px), every climb step 48 px or less (max jump 67.7, 80% = 54.2); roomreach all 29 rooms ok, roomcheck clean, q6_audit zero violations |
 | N7 | Every picked-up item has an image; a doc listing all items; a folder for the images | done | OpenCode Q7 (f6f0ec3): shared item_icons.gd lookup; room + pick-up card show assets/items/&lt;id&gt;.png, kind-coloured placeholder with first letter when missing; assets/items/README.txt + 26-row design/items/item-list.md; no real art yet (every row placeholder); menu icons later with the menus |
-| N8 | Dev tools: room and map builder usable live like F1; tiles and assets from PNG folders; place and spread enemies and traps | done for F2 room builder (palette, PNG folders, spread, Tab play, red warnings) and F3 map builder (move/resize rooms, red overlaps, open in F2, jump into a room); waiting on user to play. NOT done: placing items/marks, editing exits (F3 only shows them), changing a room map size from F2, WYSIWYG view, mobile | Claude B1 | (a9d065d, 20d3833, F3 commit)
+| N8 | Dev tools: room and map builder usable live like F1; tiles and assets from PNG folders; place and spread enemies and traps | done for F2 room builder (palette, PNG folders, spread, Tab play, red warnings) and F3 map builder (move/resize rooms, red overlaps, open in F2, jump into a room); waiting on user to play. NOT done: placing items/marks, editing exits (F3 only shows them), changing a room map size from F2, WYSIWYG view, mobile | Claude B1 | (a9d065d, 20d3833, F3 commit); the user's two-cell Library is in PR #106 (waiting on user to play) |
 | N9 | Crouch attack as a level slash like standing; air attacks stay as they are | planned | Claude B2 |
 | N10 | Hair and scarf flow behind her in the attacks (fix the last frames, add frames) | planned | Claude B2 |
 | N11 | Fix the wall latch sprites | planned | Claude B2 |
@@ -128,12 +128,12 @@ Hand-offs: production/session-state/handoff-2026-11-19-opencode-quick.md and han
 | N13 | Scrap flies to her like MP orbs; MP orbs and scrap wait on the floor when her bar is full, then fly to her | done, waiting on user to play | Claude B1 chat | (1d5cc47)
 | N14 | Remove the weapon wind-up (materialize) and end (dematerialize) frames that look like the old vertical swing; scythe head lies flat | done, waiting on user to play (Elegy head flattened; an old one-tick pose lag is not fixed) | Claude B1 chat | (a29a500)
 | N15 | In-game screenshot tool: mark it, add a comment, written to a text file for Claude to read (F4) | done, waiting on user to play | Claude B1 chat | (95ceb58)
-| N16 | Menu MAP tab: draw the map and let her move around it | planned | next Claude chat (task 3 menus) |
-| N17 | Teleport to areas from the map, for testing | planned | next Claude chat (partly covered by the F3 map builder) |
-| N18 | Equipment tab: a side list of the gear she can wear and choose from | planned | next Claude chat |
-| N19 | Option to reset level (progression) points | planned | next Claude chat |
-| N20 | Remove magic as a stat: MP and magic attacks do not grow with levels; magic attacks scale with ATK | waiting on user: ruling needed; it conflicts with locked checks (t_data.gd 12-13 and 155-156, t_rpg.gd 184-188) | next Claude chat |
-| N21 | Show every stat the RPG GDDs decided (the menu shows only some) | planned | next Claude chat |
+| N16 | Menu MAP tab: draw the map and let her move around it | done in PR #105 (pause MAP tab); waiting on user to play | pause_tabs 7/7, d6 map 32/32 |
+| N17 | Teleport to areas from the map, for testing | done in PR #105 (dev teleport from the pause MAP tab); waiting on user to play | the F3 map builder also jumps into a room |
+| N18 | Equipment tab: a side list of the gear she can wear and choose from | done in PR #105 (EQUIPMENT gear list); waiting on user to play | |
+| N19 | Option to reset level (progression) points | not planned | no points exist any more: stats grow automatically (PR #107) |
+| N20 | Remove magic as a stat: MP and magic attacks do not grow with levels; magic attacks scale with ATK | waiting on user | built in PR #107; the locked checks were replaced with the user's approval |
+| N21 | Show every stat the RPG GDDs decided (the menu shows only some) | waiting on user | built in PR #107: CHARACTER shows LV, XP, NEXT, HP, EN, MP, ATK, DEF, SPC |
 | N22 | One folder with every asset in the repo (generated library of copies plus a catalog; originals stay put) | planned | Studio, plan T4 (2026-11-20) |
 | N23 | A thumbnail on every asset and on every room in the map builder | planned | Studio, plan T4 |
 | N24 | A "?" help on every builder function and asset, with its limits | planned | Studio, plan T4 to T6 |
