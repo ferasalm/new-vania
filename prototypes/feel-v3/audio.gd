@@ -251,10 +251,14 @@ func save() -> bool:
 		target["file"] = e["options"][e["index"]]["file"]
 		target["volume_db"] = e["volume_db"]
 		target["pitch_random"] = e["pitch_random"]
+	var out: Dictionary = raw.duplicate(true)
+	for name in _part_names:      # part events came from their own files: keep them out of events.json
+		if ev.has(name) and out.has(ev[name]["group"]):
+			out[ev[name]["group"]].erase(name)
 	var f := FileAccess.open(ProjectSettings.globalize_path(BASE + "events.json"), FileAccess.WRITE)
 	if f == null:
 		raw = backup
 		return false
-	f.store_string(JSON.stringify(raw, "  ", false) + "\n")
+	f.store_string(JSON.stringify(out, "  ", false) + "\n")
 	f.close()
 	return true

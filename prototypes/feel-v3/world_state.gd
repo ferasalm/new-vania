@@ -131,7 +131,7 @@ func restore(d: Dictionary) -> void:
 	saved_room = String(d.get("saved_room", ""))
 	unit = int(d.get("unit", 1))
 	best_times = d.get("best_times", {}).duplicate(true)
-	G.shifted = sheet != "before"
+	G.shifted = sheet == "after"      # "restored" is the world after the shift ended
 	shift_changed.emit(G.shifted)
 
 
