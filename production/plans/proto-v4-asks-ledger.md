@@ -134,3 +134,8 @@ Hand-offs: production/session-state/handoff-2026-11-19-opencode-quick.md and han
 | N19 | Option to reset level (progression) points | planned | next Claude chat |
 | N20 | Remove magic as a stat: MP and magic attacks do not grow with levels; magic attacks scale with ATK | waiting on user: ruling needed; it conflicts with locked checks (t_data.gd 12-13 and 155-156, t_rpg.gd 184-188) | next Claude chat |
 | N21 | Show every stat the RPG GDDs decided (the menu shows only some) | planned | next Claude chat |
+| N22 | One folder with every asset in the repo (generated library of copies plus a catalog; originals stay put) | planned | Studio, plan T4 (2026-11-20) |
+| N23 | A thumbnail on every asset and on every room in the map builder | planned | Studio, plan T4 |
+| N24 | A "?" help on every builder function and asset, with its limits | planned | Studio, plan T4 to T6 |
+| N25 | Moveable terrain and assets: select, move, copy, paste, duplicate, resize, rotate, free placement for decor | planned | Studio, plan T5 |
+| N26 | Builders and assets easy to reach from one place (launcher and README) | planned | Studio, plan T6 |
