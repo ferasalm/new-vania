@@ -54,6 +54,10 @@ func _run() -> void:
 	_check("MP orb waits on the floor while her MP is full",
 		is_instance_valid(orb_c) and orb_c.global_position.distance_to(start_c) < 4.0,
 		"moved %.0f px" % (orb_c.global_position.distance_to(start_c) if is_instance_valid(orb_c) else -1.0))
+	_player().call("debug_set", {"mp": maxmp - _tv("mp_pickup") * 0.5})
+	await _frames(70)
+	_check("the MP orb stays put until its whole charge fits",
+		is_instance_valid(orb_c) and orb_c.global_position.distance_to(start_c) < 4.0, "")
 	_player().call("debug_set", {"mp": 10.0})
 	var got_c := await _wait_collected(orb_c, 150)
 	_check("the waiting MP orb flies to her once she has room", got_c, "")
@@ -77,6 +81,10 @@ func _run() -> void:
 	_check("scrap waits on the floor while her scrap bar is full",
 		is_instance_valid(scrap_c) and scrap_c.global_position.distance_to(start_s) < 4.0,
 		"moved %.0f px" % (scrap_c.global_position.distance_to(start_s) if is_instance_valid(scrap_c) else -1.0))
+	_r().call("add_scrap", -_tv("scrap_per_pickup") * 0.5)
+	await _frames(70)
+	_check("the scrap stays put until the whole piece fits",
+		is_instance_valid(scrap_c) and scrap_c.global_position.distance_to(start_s) < 4.0, "")
 	_r().call("add_scrap", -40.0)
 	var got_sc := await _wait_collected(scrap_c, 150)
 	_check("the waiting scrap flies to her once she has room", got_sc, "")

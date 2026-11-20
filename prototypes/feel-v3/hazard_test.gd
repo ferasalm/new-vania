@@ -418,12 +418,6 @@ func _leech() -> void:
 	_check("leech hangs from the nearest solid cell above", absf(l._ceil.y - 80.0) < 0.5 and absf(l.global_position.y - (80.0 + T.v("leech_hang"))) < 1.0, "ceil=%s pos=%s" % [str(l._ceil), str(l.global_position)])
 	var states := {}
 	p.invuln = 0.0
-	# an orb left over from an earlier check waits at full MP and would refill her
-	# as soon as the leech drains her, so clear stray pickups first
-	for pk in main.loot.live.duplicate():
-		if is_instance_valid(pk):
-			pk.queue_free()
-	main.loot.live.clear()
 	var mp0: float = p.mp
 	var latched_at := -1
 	for i in 240:

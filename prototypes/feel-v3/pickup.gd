@@ -65,9 +65,10 @@ func _physics_process(delta: float) -> void:
 	var p = null
 	if m != null:
 		p = m.player
-	# a flying pickup (orb, scrap) whose bar is full waits on the floor: its life
-	# does not run down, so nothing is wasted, and it flies to her once there is room
-	_waiting = p != null and _flies() and _full(p)
+	# Wait until the complete pickup fits. A tiny gap in a gauge would waste the rest.
+	# The lifetime is suspended while waiting so the drop can still be used later.
+	var flies := _flies()
+	_waiting = p != null and flies and _needs_space(p)
 	if not _waiting:
 		_life -= delta
 	if _life <= 0.0:
@@ -80,7 +81,7 @@ func _physics_process(delta: float) -> void:
 	if _waiting:
 		_fly_t = 0.0      # pops out again when it starts flying
 		return
-	if _flies():
+	if flies:
 		_fly_to(chest, delta)
 	if touch_take:
 		if chest.distance_to(global_position) <= T.v("pickup_reach") * 0.66:
@@ -110,15 +111,26 @@ func _fly_to(chest: Vector2, delta: float) -> void:
 		take()
 
 
-func _full(p) -> bool:
-	if item_id == "soul_orb":
-		return float(p.mp) >= R.max_mp() - 0.01
-	if item_id == "scrap":
-		var m = G.main
-		if m == null or m.loot == null:
-			return true
-		return R.scrap >= m.loot.scrap_cap() - 0.01
-	return false
+func _needs_space(p) -> bool:
+	var cap: float
+	var filled: float
+	var amount: float
+	match item_id:
+		"soul_orb":
+			cap = R.max_mp()
+			filled = p.mp
+			amount = T.v("mp_pickup")
+		"scrap":
+			var m = G.main
+			if m == null or m.loot == null:
+				return true
+			cap = m.loot.scrap_cap()
+			filled = R.scrap
+			amount = T.v("scrap_per_pickup")
+		_:
+			return false
+	# Tuning can make a drop larger than the gauge. It can still refill an empty gauge.
+	return cap <= 0.0 or cap - filled + 0.001 < minf(amount, cap)
 
 
 func take(silent := false) -> bool:
@@ -128,6 +140,8 @@ func take(silent := false) -> bool:
 		return false
 	var m = G.main
 	if m == null or m.loot == null:
+		return false
+	if _flies() and (m.player == null or _needs_space(m.player)):
 		return false
 	if not bool(m.loot.grant(item_id, rare)):
 		Sfx.play("pickup_refuse")
