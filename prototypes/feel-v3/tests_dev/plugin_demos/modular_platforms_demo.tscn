@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://gx71gw4435i3"]
+
+[ext_resource type="PackedScene" uid="uid://b15n3doltmgcf" path="res://addons/ModularPlatforms/PlatformFramework/BasePlatform/BasePlatform.tscn" id="1_24xtm"]
+[ext_resource type="PackedScene" uid="uid://boxcy5m6k1suf" path="res://addons/ModularPlatforms/PlatformFramework/MovingPlatform/MovingPlatform.tscn" id="2_qvfmk"]
+[ext_resource type="PackedScene" uid="uid://bywrwg0oldeq1" path="res://addons/ModularPlatforms/PlatformFramework/BreakPlatform/BreakPlatform.tscn" id="3_rrqib"]
+[ext_resource type="PackedScene" uid="uid://b3341ujv0qhec" path="res://addons/ModularPlatforms/PlatformFramework/PropOrHazard/Hazard/Hazard.tscn" id="4_aasqv"]
+[ext_resource type="PackedScene" uid="uid://cct6mp33cxj0x" path="res://addons/ModularPlatforms/PlatformFramework/Fan/Fan.tscn" id="5_nbif4"]
+
+[node name="ModularPlatformsDemo" type="Node2D" unique_id=1908003679]
+
+[node name="Floor" parent="." unique_id=722095568 instance=ExtResource("1_24xtm")]
+position = Vector2(60, 170)
+
+[node name="Moving" parent="." unique_id=1770235352 instance=ExtResource("2_qvfmk")]
+position = Vector2(150, 120)
+
+[node name="Breaking" parent="." unique_id=589806351 instance=ExtResource("3_rrqib")]
+position = Vector2(240, 90)
+
+[node name="Spikes" parent="." unique_id=238295592 instance=ExtResource("4_aasqv")]
+position = Vector2(320, 170)
+
+[node name="Fan" parent="." unique_id=420411396 instance=ExtResource("5_nbif4")]
+position = Vector2(100, 60)

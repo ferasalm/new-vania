@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://cqln4cwl65s3l"]
+
+[ext_resource type="Script" uid="uid://du8depdxha8jo" path="res://addons/physical_liquids_2d/liquid_2d.gd" id="1_xmb71"]
+
+[node name="Liquid2DDemo" type="Node2D" unique_id=1930192596]
+
+[node name="Water" type="Area2D" parent="." unique_id=1883689047]
+position = Vector2(40, 140)
+script = ExtResource("1_xmb71")
+preset = "Water"
+height = 60.0
+width = 300.0
+
+[node name="Lava" type="Area2D" parent="." unique_id=1687519137]
+position = Vector2(40, 40)
+script = ExtResource("1_xmb71")
+preset = "Lava"
+color = Color(1, 0.15, 0, 1)
+height = 40.0
+width = 120.0
+wave_speed = 0.5
+wave_frequency = 0.2
+wave_amplitude = 0.04
+stiffness = 0.005
+power = 0.01
+spread = 0.002
