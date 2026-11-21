@@ -55,6 +55,9 @@ class Lever extends Node2D:
 			G.main.fx("spark", global_position + Vector2(0, -16))
 			if kind == "library":
 				G.main.lever_library = true
+				# the door it opens is in another room: say where, or the pull looks like it did nothing
+				if G.main.get("hud") != null:
+					G.main.hud.toast("A DOOR GRINDS OPEN BELOW - THE NAVE OF ASH", 4.0)
 				if G.main.get("ambience") != null and G.main.get("ambience").has_method("cue"):
 					G.main.get("ambience").cue("chain_boom", global_position)
 			else:

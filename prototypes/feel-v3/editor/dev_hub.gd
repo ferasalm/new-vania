@@ -34,8 +34,32 @@ var _studio_query: LineEdit
 var _studio_results: ItemList
 
 
+## The last few hits she took, newest last: {dmg, src, room, msec}. The F4 note lists them,
+## so a note like "I lost 40 health here" says where the hits really came from.
+var recent_hits: Array = []
+
+
+func _record_hit(dmg: int, src: String) -> void:
+	var room := "?"
+	if G.main != null and G.main.get("room_name") != null:
+		room = String(G.main.room_name)
+	recent_hits.append({"dmg": dmg, "src": src, "room": room, "msec": Time.get_ticks_msec()})
+	if recent_hits.size() > 3:
+		recent_hits.pop_front()
+
+
+## The recent hits in plain words, e.g. "20 from trap in gallery 4s ago", or "" when none.
+func recent_hits_text() -> String:
+	var parts: Array = []
+	var now := Time.get_ticks_msec()
+	for h in recent_hits:
+		parts.append("%d from %s in %s %ds ago" % [h["dmg"], h["src"], h["room"], int((now - int(h["msec"])) / 1000)])
+	return "; ".join(parts)
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	W.player_hurt.connect(_record_hit)
 	if OS.has_feature("mobile") or OS.has_feature("web"):
 		set_process_input(false)
 		return

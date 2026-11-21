@@ -168,6 +168,9 @@ func _save(comment: String) -> bool:
 	var clean := comment.strip_edges().replace("|", "/").replace("\n", " ")
 	if clean == "":
 		clean = "(no comment)"
+	var hits: String = Dev.recent_hits_text() if Dev.has_method("recent_hits_text") else ""
+	if hits != "":
+		clean += " [last hits: %s]" % hits
 	f.store_line("- %s | room %s | pos (%d, %d) | %s | hp %d | boxes %d | %s | ![](%s.png)" % [
 		human, String(_info.get("room", "?")), int(pos.x), int(pos.y),
 		String(_info.get("state", "?")), int(_info.get("hp", 0.0)), _boxes.size(), clean, base])
