@@ -16,7 +16,7 @@ static var _cache := {}
 const TERRAIN := [
 	["#", "solid wall"], ["=", "thin ledge"], ["B", "bricked arch"], ["|", "iron bars"], ["%", "cracked wall"],
 	[":", "shutter"], [".", "empty (erase)"], ["^", "opening up"], ["v", "opening down"],
-	["<", "open edge left"], [">", "open edge right"],
+	["<", "open edge left"], [">", "open edge right"], ["/", "stair rising right"], ["\\", "stair rising left"],
 ]
 const HAZARDS := [["p", "pendulum"], ["u", "crusher"], ["f", "flame vent"], ["i", "spikes"]]
 const SPOTS := [
@@ -182,6 +182,8 @@ static func thumbnail(entry: Dictionary, category: String, theme_tiles: String) 
 		atlas.atlas = G.tex("env/%s_%s.png" % [theme_tiles, "ledge" if glyph == "=" else "tiles"])
 		atlas.region = Rect2(0, 0, 16, 8 if glyph == "=" else 16)
 		return atlas
+	if glyph in ["/", "\\"]:
+		return _stair_icon(glyph)
 	if glyph in ["D", "X"]:
 		return G.tex("env/door_%s.png" % ("boss" if glyph == "X" else "church"))
 	return _marker_icon(glyph, category)
@@ -213,6 +215,17 @@ static func _marker_icon(glyph: String, category: String) -> Texture2D:
 	var result := ImageTexture.create_from_image(img)
 	_cache[key] = result
 	return result
+
+
+## Draw a small directional ramp for the room-builder's terrain palette.
+static func _stair_icon(glyph: String) -> Texture2D:
+	var img := Image.create_empty(24, 24, false, Image.FORMAT_RGBA8)
+	var ink := Color("#b7a9f0")
+	img.fill_rect(Rect2i(3, 19, 18, 2), ink.darkened(0.45))
+	for i in range(4, 20):
+		var y := 20 - i if glyph == "/" else i
+		img.fill_rect(Rect2i(i - 1, y - 1, 3, 3), ink)
+	return ImageTexture.create_from_image(img)
 
 
 ## A palette picture, or null. `rel` is "props/x.png". Works for a PNG that Godot has not imported.

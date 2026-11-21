@@ -137,6 +137,8 @@ func _ready() -> void:
 	add_child(_key_trail)
 	move_child(_key_trail, _spr.get_index())   # like the arm: z 0 = behind her, z 1 = in front
 	_spr.frame_changed.connect(_sync_keyed_weapon)
+	# The room's explicit stair ramps use a 45-degree walkable surface.
+	floor_max_angle = deg_to_rad(50.0)
 	floor_snap_length = 4.0
 
 
