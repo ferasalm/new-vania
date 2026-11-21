@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests_dev/plugin_demos/limbo_console_demo.gd" id="1"]
+
+[node name="limbo_consoleDemo" type="Node"]
+script = ExtResource("1")

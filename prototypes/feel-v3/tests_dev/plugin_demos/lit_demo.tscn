@@ -1,0 +1,44 @@
+[gd_scene format=4 uid="uid://btlf2tvnao24l"]
+
+[ext_resource type="Script" uid="uid://dtbtq2iowg33y" path="res://addons/lit/nodes/lit_canvas_modulate.gd" id="1_tw2j3"]
+[ext_resource type="Shader" uid="uid://cadnte8s5ipk7" path="res://addons/lit/shaders/receiver/lit_receiver_fast.gdshader" id="2_jtmo1"]
+[ext_resource type="Texture2D" uid="uid://dxhfrnpinrfys" path="res://tests_dev/plugin_demos/aseprite_out/pandora_idle_base.png" id="3_jqwjn"]
+[ext_resource type="Script" uid="uid://drrhypxeb6nsg" path="res://addons/lit/nodes/lit_sprite_2d.gd" id="4_8bfm4"]
+[ext_resource type="Script" uid="uid://cpa2qb3trjq4k" path="res://addons/lit/nodes/lit_point_light_2d.gd" id="5_qtlgx"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w3oaw"]
+shader = ExtResource("2_jtmo1")
+shader_parameter/emissive_strength = 0.0
+shader_parameter/receiver_mask = 1
+shader_parameter/receiver_z = 0
+shader_parameter/receiver_layer = 0
+shader_parameter/self_shadow = false
+shader_parameter/self_rect_count = 0
+shader_parameter/self_rects = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/specular_strength = 0.5
+shader_parameter/specular_k = 32.0
+shader_parameter/has_specular_map = false
+shader_parameter/metallic_value = 0.0
+shader_parameter/roughness_value = 1.0
+shader_parameter/shadow_steps = 64
+shader_parameter/shadow_min_step = 0.2
+shader_parameter/shadow_ramp = 0.0
+shader_parameter/directional_horizontal_scale = 32.0
+
+[node name="LitDemo" type="Node2D" unique_id=1192567923]
+
+[node name="Dark" type="Node2D" parent="." unique_id=794303227]
+script = ExtResource("1_tw2j3")
+color = Color(0.12, 0.12, 0.18, 1)
+
+[node name="Pandora" type="Sprite2D" parent="." unique_id=29075617]
+texture_filter = 1
+material = SubResource("ShaderMaterial_w3oaw")
+position = Vector2(192, 120)
+texture = ExtResource("3_jqwjn")
+script = ExtResource("4_8bfm4")
+
+[node name="Torch" type="Node2D" parent="." unique_id=798643164]
+position = Vector2(150, 100)
+script = ExtResource("5_qtlgx")
+color = Color(1, 0.7, 0.4, 1)

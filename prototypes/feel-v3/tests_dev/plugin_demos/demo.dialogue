@@ -1,0 +1,7 @@
+~ start
+Warden: You came back for the Kennel key?
+- Yes
+	Warden: Then take it, and mind the wolf.
+- No
+	Warden: Suit yourself.
+=> END
