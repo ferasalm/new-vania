@@ -139,6 +139,9 @@ func _ready() -> void:
 	_spr.frame_changed.connect(_sync_keyed_weapon)
 	# The room's explicit stair ramps use a 45-degree walkable surface.
 	floor_max_angle = deg_to_rad(50.0)
+	# Same walking speed up and down a stair as on flat floor; without it the slope eats her
+	# speed uphill and she crawls (d15_stairs, 2026-11-21).
+	floor_constant_speed = true
 	floor_snap_length = 4.0
 
 
