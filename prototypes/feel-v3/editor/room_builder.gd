@@ -567,6 +567,7 @@ func use_library_entry(entry: Dictionary) -> bool:
 	if index >= 0:
 		_list.select(index)
 		_on_pick(index, true)
+		_set_tool("PLACE")
 	_say("Ready to place %s. Click in the room." % String(entry.get("name", "")))
 	return true
 
@@ -1180,7 +1181,7 @@ func spawn_picked() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not _active or not (event is InputEventKey) or not event.pressed or event.echo:
+	if not _active or is_instance_valid(library_palette) or not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
 	if _playing:

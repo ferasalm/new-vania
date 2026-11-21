@@ -2,6 +2,7 @@
 extends Node
 
 const WorkspaceShell := preload("res://editor/workspace_shell.gd")
+const EdHelp := preload("res://editor/ed_help.gd")
 const TOOLS := {
 	KEY_F2: ["dev_room", "res://editor/room_builder.gd"],
 	KEY_F3: ["dev_map", "res://editor/map_builder.gd"],
@@ -34,6 +35,7 @@ func _ready() -> void:
 	if OS.has_feature("mobile") or OS.has_feature("web"):
 		set_process_input(false)
 		return
+	EdHelp.load_file("res://studio/help/help.json")
 	if DisplayServer.get_name() != "headless":
 		_add_launcher()
 	_linked_project = _find_project()

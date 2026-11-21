@@ -101,7 +101,7 @@ static func show(key: String) -> void:
 	if tree == null or tree.root == null:
 		return
 	var layer := HelpLayer.new()
-	layer.layer = 100
+	layer.layer = 110
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	tree.root.add_child(layer)
 	layer.add_to_group("ed_help_popup")
@@ -303,7 +303,7 @@ class HelpLayer extends CanvasLayer:
 		queue_free()
 
 	## Close the popup when Escape is pressed.
-	func _unhandled_input(event: InputEvent) -> void:
+	func _input(event: InputEvent) -> void:
 		if not event.is_action_pressed("ui_cancel"):
 			return
 		get_tree().root.set_input_as_handled()

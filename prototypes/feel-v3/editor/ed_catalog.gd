@@ -11,6 +11,7 @@ const PLACEABLE := ["tiles", "props", "backdrops"]
 static var _table: Dictionary = {}
 ## Lower-case search haystacks keyed by id.
 static var _hay: Dictionary = {}
+static var _whitespace := RegEx.create_from_string("(*UCP)\\s+")
 
 
 ## Replace the table with the valid entries of a catalog.json; return how many were kept.
@@ -87,7 +88,7 @@ static func categories() -> Array:
 ## Entries matching every whitespace-separated word of text (name, category, sub, tags),
 ## optionally limited to one category, sorted by name then id. limit 0 means no limit.
 static func search(text: String, category := "", limit := 0) -> Array:
-	var words := text.to_lower().strip_edges().split(" ", false)
+	var words := _whitespace.sub(text.to_lower(), " ", true).split(" ", false)
 	var out: Array = []
 	for id: Variant in _table:
 		var entry: Dictionary = _table[id]
@@ -116,7 +117,9 @@ static func search(text: String, category := "", limit := 0) -> Array:
 static func placeable_reason(entry: Dictionary) -> String:
 	var placeable: Variant = entry.get("placeable", null)
 	if placeable is String and (placeable as String) in PLACEABLE:
-		return ""
+		if String(entry.get("path", "")).get_extension().to_lower() == "png":
+			return ""
+		return "Only PNG pictures can be placed in a room."
 	match String(entry.get("kind", "")):
 		"audio":
 			return "Sounds cannot be placed in a room."

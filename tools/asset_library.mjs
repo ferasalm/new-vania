@@ -142,19 +142,15 @@ function walkFiles(rootAbs) {
   let stat;
   try {
     stat = fs.statSync(rootAbs);
-  } catch {
-    return files;
+  } catch (error) {
+    if (error.code === "ENOENT") return files;
+    throw error;
   }
-  if (!stat.isDirectory()) return files;
+  if (!stat.isDirectory()) throw new Error(`asset source is not a directory: ${rootAbs}`);
   const stack = [rootAbs];
   while (stack.length > 0) {
     const dir = stack.pop();
-    let entries;
-    try {
-      entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      continue;
-    }
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
     entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
     for (const entry of entries) {
       if (entry.isSymbolicLink()) continue; // never follow links out of the source folders
@@ -334,8 +330,8 @@ function mapCategory(sourceRel) {
  * @param {number|null} h image height, when known
  * @returns {"tiles"|"props"|"backdrops"|null} the placement guess
  */
-function placeableFor(category, kind, w, h) {
-  if (kind !== "image") return null;
+function placeableFor(category, kind, w, h, ext) {
+  if (kind !== "image" || ext !== ".png") return null;
   if (category === "environment") {
     if (w !== null && h !== null && w <= 32 && h <= 32) return "tiles";
     if (w !== null && w >= 384) return "backdrops";
@@ -377,8 +373,9 @@ function makeId(sourceRel, used) {
  * @returns {string} a free library path
  */
 function claimPath(candidate, sourceRel, used) {
-  if (!used.has(candidate)) {
-    used.set(candidate, sourceRel);
+  const key = candidate.toLowerCase();
+  if (!used.has(key)) {
+    used.set(key, sourceRel);
     return candidate;
   }
   const ext = path.posix.extname(candidate);
@@ -386,11 +383,11 @@ function claimPath(candidate, sourceRel, used) {
   const tag = crypto.createHash("sha1").update(sourceRel).digest("hex").slice(0, 6);
   let next = `${stem}-${tag}${ext}`;
   let suffix = 2;
-  while (used.has(next)) {
+  while (used.has(next.toLowerCase())) {
     next = `${stem}-${tag}-${suffix}${ext}`;
     suffix += 1;
   }
-  used.set(next, sourceRel);
+  used.set(next.toLowerCase(), sourceRel);
   return next;
 }
 
@@ -405,12 +402,7 @@ function collectFiles(opts, rootRel, forcedKind, out) {
   const rootAbs = path.join(opts.src, ...rootRel.split("/"));
   for (const abs of walkFiles(rootAbs)) {
     if (isInside(opts.out, abs)) continue;
-    let stat;
-    try {
-      stat = fs.statSync(abs);
-    } catch {
-      continue;
-    }
+    const stat = fs.statSync(abs);
     if (!stat.isFile()) continue;
     const rel = toPosix(path.relative(opts.src, abs));
     const ext = path.extname(rel).toLowerCase();
@@ -457,7 +449,7 @@ function makeEntry(file, usedIds, usedPaths) {
     h,
     bytes: file.bytes,
     tags: buildTags(file.rel),
-    placeable: placeableFor(category, file.kind, w, h),
+    placeable: placeableFor(category, file.kind, w, h, file.ext),
     help_key: `asset:${id}`,
   };
 }
@@ -539,13 +531,29 @@ function copyIfChanged(srcAbs, destAbs) {
 }
 
 /**
+ * Refuse symbolic links and junctions at the output root or below it.
+ * Check each component in order before traversing into the next one.
+ */
+function assertUnlinkedOutput(root, dest) {
+  let current = root;
+  const relative = path.relative(root, dest);
+  for (const component of ["", ...relative.split(path.sep).filter(Boolean)]) {
+    current = path.join(current, component);
+    const stat = fs.lstatSync(current, { throwIfNoEntry: false });
+    if (stat?.isSymbolicLink()) throw new Error(`refusing linked output path: ${current}`);
+  }
+}
+
+/**
  * Copy every copied entry into the library.
  * @param {{src: string, out: string}} opts resolved options
  * @param {object} catalog the catalog to materialise
  * @returns {{copied: number, unchanged: number, catalogOnly: number}} copy counts
  */
 function writeLibrary(opts, catalog) {
-  fs.mkdirSync(path.join(opts.out, "library"), { recursive: true });
+  const library = path.join(opts.out, "library");
+  assertUnlinkedOutput(opts.out, library);
+  fs.mkdirSync(library, { recursive: true });
   let copied = 0;
   let unchanged = 0;
   let catalogOnly = 0;
@@ -555,8 +563,9 @@ function writeLibrary(opts, catalog) {
       continue;
     }
     const srcAbs = path.join(opts.src, ...entry.source.split("/"));
-    const destAbs = path.join(opts.out, "library", ...entry.path.split("/"));
-    if (!isInside(path.join(opts.out, "library"), destAbs)) throw new Error(`refusing to write outside the library: ${entry.path}`);
+    const destAbs = path.join(library, ...entry.path.split("/"));
+    if (!isInside(library, destAbs)) throw new Error(`refusing to write outside the library: ${entry.path}`);
+    assertUnlinkedOutput(opts.out, destAbs);
     if (copyIfChanged(srcAbs, destAbs)) copied += 1;
     else unchanged += 1;
   }
@@ -573,10 +582,11 @@ function main() {
     process.stdout.write(`${JSON.stringify(catalog, null, 2)}\n`);
     return;
   }
+  const catalogPath = path.join(opts.out, "catalog.json");
+  assertUnlinkedOutput(opts.out, catalogPath);
   const stats = writeLibrary(opts, catalog);
-  fs.mkdirSync(opts.out, { recursive: true });
   fs.writeFileSync(
-    path.join(opts.out, "catalog.json"),
+    catalogPath,
     `${JSON.stringify(catalog, null, 2)}\n`,
   );
   console.log(
