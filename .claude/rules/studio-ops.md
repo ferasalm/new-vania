@@ -22,6 +22,7 @@ Keep it short: it is loaded in every session.
 - Claude subagents (`builder`, `scout`, `test-writer`) are the fallback when the worker exits 3.
   Set `model` on every `Agent` call; never Opus.
 - Workers write only inside a task worktree. Review the diff and run the tests before any PR.
+- For proto-v4 work the roster and gate rules in `production/orchestration/ROUTING-PLAYBOOK.md` override the routing lines above.
 - Hermes is an optional builder: `hermes chat -Q --oneshot` (see `setup/HARNESS-MAP.md`).
   Limit it with `-t` toolsets or the Docker backend, never with prompt text.
 
