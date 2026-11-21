@@ -69,7 +69,7 @@ func _lever_checks() -> void:
 	_check("Up pulls the library lever", lv.pulled and W.flag("lever_library"),
 		"pulled=%s flag=%s" % [str(lv.pulled), str(W.flag("lever_library"))])
 	var said: String = main.hud.get("_toast").text
-	_check("the pull says which door opened and where", said.contains("NAVE OF ASH"), "toast=%s" % said)
+	_check("the pull stays a mystery: no message names the door", not said.contains("DOOR"), "toast=%s" % said)
 	# the door it opens: the church's lower door to the Marrow Well must now be unlocked
 	await main.debug_enter("church", "right", false)
 	await _frames(10)
@@ -122,6 +122,44 @@ func _touch_lever_check() -> void:
 var _hits: Array = []
 
 
+# The real cause: on the frame she leaves the Gallery, its crushers still run once and test the
+# NEW Pandora (in the hallway) at the same coordinates. Recreate that frame on purpose.
+func _old_room_trap_check() -> void:
+	await main.debug_enter("gallery", "left", false)
+	await _frames(10)
+	var hz: Node2D = null
+	for c in main.world.get_children():
+		if c.get("kind") == "crusher":
+			hz = c
+			break
+	if hz == null:
+		_check("the Gallery has a crusher", false, "none")
+		return
+	var pl: Node2D = main.player
+	pl.invuln = 9999.0      # the old Pandora must not be the one hit
+	var probe := Rect2()
+	var down := false
+	for i in 900:
+		await _frames(1)
+		if hz.dangerous():
+			var blk: Rect2 = hz._block_rect()
+			var sz: Vector2 = pl.body_rect().size
+			probe = Rect2(blk.get_center() - sz / 2.0, sz)
+			down = hz.hits(probe)
+			if down:
+				break
+	_check("the Gallery crusher comes down", down, "never hit a probe")
+	if not down:
+		return
+	_hits.clear()
+	main.enter("hallway", "hole_down", "gallery")      # the same frame, like _vertical does
+	var np: Node2D = main.player
+	np.invuln = 0.0
+	np.global_position += probe.position - np.body_rect().position
+	await _frames(3)
+	_check("a trap in the room she just left cannot hit her in the new room", _hits.is_empty(), "hits=%s" % str(_hits))
+
+
 func _on_hurt(dmg: int, src: String) -> void:
 	_hits.append("%d from %s in %s at %s" % [dmg, src, main.room_name, str(main.player.global_position.round())])
 
@@ -156,6 +194,7 @@ func _hallway_checks() -> void:
 	_hits.clear()
 	await _frames(120)
 	_check("standing in the hallway after arriving costs no health", _hits.is_empty(), "hits=%s" % str(_hits))
+	await _old_room_trap_check()
 	W.player_hurt.disconnect(_on_hurt)
 	G.peace = true
 	# the F4 note now lists the last hits, so the next "I lost health here" says where from

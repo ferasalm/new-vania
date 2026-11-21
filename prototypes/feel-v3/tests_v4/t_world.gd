@@ -331,14 +331,16 @@ func _check_sheet(w: Node, ids: Array, sheet: String) -> void:
 		if not ok:
 			load_bad.append(String(fid))
 		else:
-			# tile size matches the meta cell (cell = round(tiles / 24 and / 14))
+			# room size matches the meta cell. cell = [map x, map y, width, height] in map cells of
+			# 24 x 14 tiles (384 x 224 px). Fixed 2026-11-21 with the user's yes: the old check read
+			# cell[0..1] (the map position) as the size and broke once the map builder moved rooms.
 			var cell: Array = []
 			if w.has_method("meta"):
 				var m = w.call("meta", String(fid))
 				if m is Dictionary and m.has("cell"):
 					cell = m["cell"]
 			if cell.size() == 4:
-				if int(roundf(r.size.x / 24.0)) != int(cell[0]) or int(roundf(r.size.y / 14.0)) != int(cell[1]):
+				if int(roundf(r.size.x / 384.0)) != int(cell[2]) or int(roundf(r.size.y / 224.0)) != int(cell[3]):
 					size_bad.append("%s %s vs cell %s" % [loaded_fid, str(r.size), str(cell)])
 			else:
 				size_bad.append(loaded_fid + " no meta cell")

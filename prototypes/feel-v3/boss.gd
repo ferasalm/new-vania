@@ -120,7 +120,7 @@ func hit(amount: float, part: int) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if G.frozen():
+	if G.frozen() or G.leaving(self):
 		return
 	_t += delta
 	_flash = maxf(0.0, _flash - delta)

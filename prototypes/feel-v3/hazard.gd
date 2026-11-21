@@ -202,7 +202,7 @@ func _enter(s: String) -> void:
 # ---------- the beat ----------
 
 func _physics_process(delta: float) -> void:
-	if G.frozen() or G.main == null or G.main.player == null or stopped:
+	if G.frozen() or G.main == null or G.main.player == null or stopped or G.leaving(self):
 		return
 	_clock += delta
 	_step(delta)
