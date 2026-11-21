@@ -74,6 +74,19 @@ func _press(b: Button) -> void:
 	b.pressed.emit()
 
 
+## Press and release Escape through the real input path.
+func _escape() -> void:
+	var event := InputEventKey.new()
+	event.keycode = KEY_ESCAPE
+	event.physical_keycode = KEY_ESCAPE
+	event.pressed = true
+	Input.parse_input_event(event)
+	await _frames(2)
+	event.pressed = false
+	Input.parse_input_event(event)
+	await _frames(2)
+
+
 func _run() -> void:
 	EdHelp.clear()
 	panel = TuningPanel.new()
@@ -358,6 +371,12 @@ func _run() -> void:
 	# ---- the popup closes on Escape and leaves the panel working
 	_press(panel.help_button("run_speed"))
 	_check("the popup is open before closing", EdHelp.is_open(), "")
+	await _escape()
+	_check("pressing Escape closes it", not EdHelp.is_open(), "")
+	_check("Escape leaves the panel there and visible", is_instance_valid(panel) and panel._root.visible, "")
+	EdHelp.hide()
+	_press(panel.help_button("run_speed"))
+	_check("the popup opens again", EdHelp.is_open(), "")
 	EdHelp.hide()
 	_check("hide closes it", not EdHelp.is_open(), "")
 	_check("the panel is still there and visible", is_instance_valid(panel) and panel._root.visible, "")
