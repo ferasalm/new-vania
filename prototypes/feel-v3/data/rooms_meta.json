@@ -21,17 +21,16 @@
       "library": {
         "code": "LB",
         "title": "THE UNREAD STACKS",
-        "cell": [32, 48, 2, 3],
+        "cell": [32, 32, 2, 2],
         "entry": "left",
         "save": false,
         "boss": "",
         "respawn": true,
         "music": "music_library",
         "exits": [
-          {"side": "L", "at": 2, "to": "church", "kind": "door"},
+          {"side": "L", "at": 1, "to": "church", "kind": "door"},
           {"side": "L", "at": 0, "to": "scriptorium", "kind": "door"},
-          {"side": "R", "at": 0, "to": "save", "kind": "door"},
-          {"side": "L", "at": 1, "to": "", "kind": "bricked"}
+          {"side": "R", "at": 0, "to": "save", "kind": "door"}
         ],
         "marks": {
           "1": {"type": "item", "item": "suture"},
