@@ -333,7 +333,7 @@ func _process(delta: float) -> void:
 		return
 	hud.refresh(player, kills)
 	if boss != null and is_instance_valid(boss) and boss.started and boss.alive:
-		hud.boss_bar(TITLES["boss"], boss.hp / maxf(1.0, T.v("boss_hp")))
+		hud.boss_bar(arena.bar_name(TITLES["boss"]), arena.bar_fill())
 
 
 func interact_target() -> Dictionary:

@@ -99,14 +99,14 @@
         "cell": [26, 20, 1, 1],
         "entry": "down",
         "save": false,
-        "boss": "",
+        "boss": "unmuzzled",
         "respawn": false,
         "music": "music_lab",
         "exits": [
           {"side": "D", "at": 0, "to": "lab", "kind": "hole"}
         ],
         "marks": {
-          "1": {"type": "item", "item": "wall_jump"}
+          "O": {"type": "boss", "boss": "unmuzzled"}
         },
         "decor": []
       },
