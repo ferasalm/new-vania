@@ -30,7 +30,11 @@ func _ready() -> void:
 	_root = PanelContainer.new()
 	_root.position = Vector2(4, 4)
 	_root.size = Vector2(236, 208)
-	_root.self_modulate = Color(1, 1, 1, 0.92)
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color("#1d2130")
+	background.set_corner_radius_all(3)
+	background.set_content_margin_all(4)
+	_root.add_theme_stylebox_override("panel", background)
 	add_child(_root)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 1)
@@ -77,10 +81,7 @@ func _slider_row(key: String) -> HBoxContainer:
 	# one label + slider + value + help row, used by the FEEL and WEAPONS pages
 	var d: Dictionary = T.data[key]
 	var row := HBoxContainer.new()
-	var name := _text(String(d["label"]))
-	name.custom_minimum_size = Vector2(80, 0)
-	name.clip_text = true
-	row.add_child(name)
+	row.add_child(_row_label(String(d["label"]), 122))
 	var s := _slider(float(d["min"]), float(d["max"]), float(d["step"]), float(d["value"]), 64)
 	row.add_child(s)
 	var val := _text(_fmt(float(d["value"])))
@@ -130,14 +131,9 @@ func _weapon_page() -> Control:
 	var d: Dictionary = T.data["weapon"]
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 1)
-	var name := _text(String(d["label"]))
-	name.custom_minimum_size = Vector2(80, 0)
-	name.clip_text = true
-	row.add_child(name)
+	row.add_child(_row_label(String(d["label"]), 122))
 	row.add_child(_button("<", _wpick.bind(-1)))
-	_wopt = _text(String(d["options"][int(d["value"])]))
-	_wopt.custom_minimum_size = Vector2(60, 0)
-	_wopt.clip_text = true
+	_wopt = _row_label(String(d["options"][int(d["value"])]), 104)
 	row.add_child(_wopt)
 	row.add_child(_button(">", _wpick.bind(1)))
 	var q := _help_button("Help: " + String(d["label"]), _show_picker_help.bind("weapon"))
@@ -155,14 +151,9 @@ func _sound_page() -> Control:
 	for name in Sfx.pickable():
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 1)
-		var label := _text(String(Sfx.LABELS[name]))
-		label.custom_minimum_size = Vector2(48, 0)
-		label.clip_text = true
-		row.add_child(label)
+		row.add_child(_row_label(String(Sfx.LABELS[name]), 66))
 		row.add_child(_button("<", _pick.bind(name, -1)))
-		var opt := _text(Sfx.option_text(name))
-		opt.custom_minimum_size = Vector2(64, 0)
-		opt.clip_text = true
+		var opt := _row_label(Sfx.option_text(name), 110)
 		row.add_child(opt)
 		row.add_child(_button(">", _pick.bind(name, 1)))
 		var s := _slider(-30.0, 6.0, 1.0, float(Sfx.ev[name]["volume_db"]), 32)
@@ -202,6 +193,13 @@ func _text(t: String) -> Label:
 	return l
 
 
+func _row_label(text: String, width: float) -> Label:
+	var label := _text(text)
+	label.custom_minimum_size.x = width
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return label
+
+
 func _button(t: String, fn: Callable) -> Button:
 	var b := Button.new()
 	b.text = t
@@ -239,14 +237,12 @@ func sound_help_button(name: String) -> Button:
 	return null
 
 
-## A tiny "?" with no padding, so it fits at the end of a row.
+## A framed "?" control at the end of each setting row.
 func _help_button(tip: String, fn: Callable) -> Button:
 	var b := _button("?", fn)
 	b.tooltip_text = tip
-	b.custom_minimum_size = Vector2(11, 8)
-	var empty := StyleBoxEmpty.new()
-	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
-		b.add_theme_stylebox_override(state, empty)
+	b.custom_minimum_size = Vector2(16, 12)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return b
 
 

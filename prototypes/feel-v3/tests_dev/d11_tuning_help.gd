@@ -143,6 +143,7 @@ func _run() -> void:
 	var page_total: int = panel._pages.size()
 	_check("the panel has at least 3 pages (FEEL, WEAPONS, SOUNDS)", page_total >= 3, "pages=%d" % page_total)
 	var bad_text := 0
+	var hidden := 0
 	var bad_tip := 0
 	var bad_focus := 0
 	var bad_size := 0
@@ -162,6 +163,8 @@ func _run() -> void:
 			var b: Button = panel.help_button(String(k))
 			if _scroll_of(b) != page:
 				continue
+			if not b.is_visible_in_tree():
+				hidden += 1
 			if b.text != "?":
 				bad_text += 1
 			if b.tooltip_text != "Help: " + String(T.data[k]["label"]):
@@ -183,6 +186,8 @@ func _run() -> void:
 			var sb: Button = panel.sound_help_button(String(n))
 			if _scroll_of(sb) != page:
 				continue
+			if not sb.is_visible_in_tree():
+				hidden += 1
 			if sb.text != "?":
 				bad_text += 1
 			if not sb.tooltip_text.begins_with("Help: ") or not sb.tooltip_text.contains(String(Sfx.LABELS[n])):
@@ -197,6 +202,7 @@ func _run() -> void:
 				if first_bad == "":
 					first_bad = "sound %s outside page %d: %s in %s" % [String(n), i, str(sr), str(prect)]
 	_check("every '?' reads exactly ?", bad_text == 0, "bad=%d" % bad_text)
+	_check("every help button is visible on its own page", hidden == 0, "hidden=%d" % hidden)
 	_check("every tuning '?' tooltip is 'Help: <label>' and every sound one names the sound", bad_tip == 0, "bad=%d %s" % [bad_tip, first_bad])
 	_check("no '?' takes keyboard focus", bad_focus == 0, "bad=%d" % bad_focus)
 	_check("every '?' is at least 8 x 8 on screen", bad_size == 0, "bad=%d %s" % [bad_size, first_bad])
