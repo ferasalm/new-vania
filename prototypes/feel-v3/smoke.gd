@@ -342,16 +342,28 @@ func _run() -> void:
 		"right=%s ordnance_door=%s" % [bd.to if bd != null else "none", str(boss_door != null)])
 	_check("the lab's left door leads back to the cache station", main.room.doors.get("left") != null and main.room.doors["left"].to == "save", "")
 	_check("the lab holds no wall-jump relic any more (GRIP SERVOS moved to the kennel)", not main.room.spawns.has("A") and main._relic == null, "")
-	# the wall jump waits in the kennel (map.md: GRIP SERVOS in KN, from THE UNMUZZLED)
-	await _goto("kennel", "1")
+	# the wall jump is THE UNMUZZLED's: he guards the kennel and drops GRIP SERVOS when he
+	# falls (user yes 2026-11-21, lane 06; the full fight is in tests_dev/d19_kennel_wolf)
+	await _goto("kennel", "O")
 	p = main.player
-	var kn_mark: Dictionary = main.room.meta.get("marks", {}).get("1", {})
-	_check("GRIP SERVOS waits in the kennel as a plain wall-jump marker", main.room.spawns.has("1") and String(kn_mark.get("item", "")) == "wall_jump", "")
-	p.global_position = main.room.spawns["1"]
+	var kn_wolf = main.boss
+	var kn_loose := false
+	for it in main.loot.live:
+		if is_instance_valid(it) and String(it.get("item_id")) == "wall_jump":
+			kn_loose = true
+	_check("THE UNMUZZLED guards the kennel and no wall jump lies loose", kn_wolf != null and String(kn_wolf.get("boss_id")) == "unmuzzled" and not kn_loose,
+		"room=%s boss=%s loose=%s latch=%s beaten=%s" % [main.room_name, str(kn_wolf), str(kn_loose), str(main.has_latch), str(W.flag("beaten_unmuzzled"))])
+	main.arena.debug_win()
+	await _frames(6)
+	var kn_drop: Node2D = null
+	for it in main.loot.live:
+		if is_instance_valid(it) and String(it.get("item_id")) == "wall_jump":
+			kn_drop = it
+	p.global_position = kn_drop.global_position + Vector2(0, 8) if kn_drop != null else p.global_position
 	await _frames(6)
 	await _tap("up", 2)
 	await _frames(6)
-	_check("Up at the GRIP SERVOS marker gives the wall latch", main.has_latch, "")
+	_check("Up at the wall jump he drops gives the wall latch", W.flag("beaten_unmuzzled") and main.has_latch, "")
 	main.has_latch = true      # the movement checks below test the latch itself, not the marker
 	# the wall latch: jump at the well's wall, cling, kick off
 	await _goto("shaft", "right")
