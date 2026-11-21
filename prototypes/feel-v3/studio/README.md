@@ -46,3 +46,19 @@ Without it the game export would grow by the size of the whole archive.
 
 The builder code stays in `prototypes/feel-v3/editor/` because Godot
 needs it inside the project.
+
+
+## Open Studio on Windows
+
+Double-click `open-studio.cmd` in this folder, then click **Studio** in
+the top right of the game. The launcher uses the milestone 3 Windows build
+when it exists. Otherwise it uses the workspace's Godot installation or
+the executable set in `GODOT_EXE`.
+
+The launcher builds the library with Node.js if the catalog or library folder is missing.
+Turn on **Recent** beside the Library category menu to find pictures you used in this session.
+
+Studio shows the full library path. Search for an activity such as
+`map resize`, select the result, and press **Open selected help**.
+Use F2 for the room builder, F3 for the map, and F1 for tuning. Press
+a **?** button or right-click a builder control to read its help.

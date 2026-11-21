@@ -18,17 +18,20 @@ static func mount(layer: CanvasLayer) -> Control:
 
 
 ## Create a keyboard-focusable toolbar or panel action, with an optional "?" help button.
-static func button(parent: Container, label: String, action: Callable, tooltip := "", help_key := "") -> Button:
+static func button(parent: Container, label: String, action: Callable, tooltip := "", help_key := "", show_question := true) -> Button:
 	var control := Button.new()
 	control.text = label
 	control.tooltip_text = tooltip
 	control.pressed.connect(action)
 	parent.add_child(control)
 	if not help_key.is_empty():
+		EdHelp.attach(control, help_key)
+	if not help_key.is_empty() and show_question:
 		var help := Button.new()
 		help.text = "?"
 		help.tooltip_text = "Help: %s" % label
 		help.custom_minimum_size = Vector2(28, 0)
+		EdHelp.attach(help, help_key)
 		help.pressed.connect(func() -> void: EdHelp.show(help_key))
 		parent.add_child(help)
 	return control

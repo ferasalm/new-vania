@@ -1,6 +1,8 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 extends CanvasLayer
 
+const EdHelp := preload("res://editor/ed_help.gd")
+
 signal closed
 
 const RoomDoc := preload("res://editor/room_doc.gd")
@@ -172,16 +174,16 @@ func _build_ui() -> void:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
 	layout.add_child(top)
-	Shell.button(top, "Map", func(): Dev.show_map(), "Open the map (F3)")
-	var room_heading := _label(top, "Room", 20)
+	Shell.button(top, "Map", func(): Dev.show_map(), "Open the map (F3)", "builder.map", false)
+	var room_heading := _label(top, "Room · Right-click for help", 16)
 	room_heading.modulate = DESIGN_TINT
 	_title = _label(top, "", 19)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_save_btn = Shell.button(top, "Save", save, "Save this room and its PNG placements (Ctrl+S)")
-	Shell.button(top, "Playtest", play, "Play this room with the current edits (Tab)")
-	Shell.button(top, "Close", func(): Dev.request_close(), "Close the builders")
+	_save_btn = Shell.button(top, "Save", save, "Save this room and its PNG placements (Ctrl+S)", "builder.save", false)
+	Shell.button(top, "Playtest", play, "Play this room with the current edits (Tab)", "builder.playtest", false)
+	Shell.button(top, "Close", func(): Dev.request_close(), "Close the builders", "builder.close", false)
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 6)
@@ -193,8 +195,8 @@ func _build_ui() -> void:
 	_tool_button(actions, "ZONE", "Spread", "Draw an area for enemies or traps (S)")
 	_tool_button(actions, "START", "Play from here", "Choose a playtest start on the canvas (P)")
 	_spacer(actions)
-	_undo_btn = Shell.button(actions, "Undo", _undo, "Undo (Ctrl+Z)")
-	_redo_btn = Shell.button(actions, "Redo", _redo, "Redo (Ctrl+Y)")
+	_undo_btn = Shell.button(actions, "Undo", _undo, "Undo (Ctrl+Z)", "builder.undo", false)
+	_redo_btn = Shell.button(actions, "Redo", _redo, "Redo (Ctrl+Y)", "builder.undo", false)
 	_toggle(actions, "Grid", false, func(value: bool):
 		_grid = value
 		_overlay.queue_redraw())
@@ -222,11 +224,14 @@ func _build_palette(parent: HBoxContainer) -> void:
 	library_button = Shell.button(library_row, "Library", open_library, "Find any picture in the project: search, categories, preview", "studio.library")
 	library_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tabs = OptionButton.new()
+	EdHelp.attach(_tabs, "builder.tabs", func(_mouse: InputEventMouseButton):
+		EdHelp.show("palette." + tab.to_lower()))
 	for label in EdAssets.CATEGORY_LABELS:
 		_tabs.add_item(label)
 	_tabs.item_selected.connect(func(index: int): _set_tab(EdAssets.TABS[index]))
 	panel.add_child(_tabs)
 	_list = ItemList.new()
+	EdHelp.attach(_list, "builder.palette", _show_palette_help)
 	_list.select_mode = ItemList.SELECT_MULTI
 	_list.fixed_icon_size = Vector2i(30, 30)
 	_list.add_theme_constant_override("v_separation", 6)
@@ -238,9 +243,10 @@ func _build_palette(parent: HBoxContainer) -> void:
 	_empty_palette.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_assets_actions = HBoxContainer.new()
 	panel.add_child(_assets_actions)
-	Shell.button(_assets_actions, "Asset Folder", _open_assets)
-	Shell.button(_assets_actions, "Refresh", _refresh_assets)
+	Shell.button(_assets_actions, "Asset Folder", _open_assets, "", "builder.asset_folder", false)
+	Shell.button(_assets_actions, "Refresh", _refresh_assets, "", "builder.refresh", false)
 	_plane_choice = OptionButton.new()
+	EdHelp.attach(_plane_choice, "builder.plane")
 	for name in ["Behind", "Solid", "In Front"]:
 		_plane_choice.add_item(name)
 	_plane_choice.item_selected.connect(func(index: int): plane = ["back", "solid", "front"][index])
@@ -250,8 +256,8 @@ func _build_palette(parent: HBoxContainer) -> void:
 	var count_line := HBoxContainer.new()
 	_spread.add_child(count_line)
 	_label(count_line, "Count", 16)
-	_count = _spinner(count_line, 1, 40, 4)
-	_spread_btn = Shell.button(_spread, "Apply Spread", spread_zone)
+	_count = _spinner(count_line, 1, 40, 4, "builder.count")
+	_spread_btn = Shell.button(_spread, "Apply Spread", spread_zone, "", "builder.apply_spread", false)
 	_spread_btn.tooltip_text = "Select enemy or trap types, then draw a region with Spread."
 
 
@@ -265,12 +271,12 @@ func _build_canvas(parent: HBoxContainer) -> void:
 	var help := _label(nav, "Wheel to zoom · Space + drag to pan", 15)
 	help.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	help.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Shell.button(nav, "−", func(): _zoom_at(_view.size * 0.5, 1.0 / 1.25), "Zoom out")
+	Shell.button(nav, "−", func(): _zoom_at(_view.size * 0.5, 1.0 / 1.25), "Zoom out", "builder.zoom_out", false)
 	_zoom_label = _label(nav, "100%", 15)
 	_zoom_label.custom_minimum_size.x = 56
 	_zoom_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Shell.button(nav, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in")
-	Shell.button(nav, "Fit", _fit, "Frame the whole room (F)")
+	Shell.button(nav, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in", "builder.zoom_in", false)
+	Shell.button(nav, "Fit", _fit, "Frame the whole room (F)", "builder.fit", false)
 	_view = Control.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -304,35 +310,35 @@ func _build_inspector(parent: HBoxContainer) -> void:
 	_picked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var picked_actions := HBoxContainer.new()
 	panel.add_child(picked_actions)
-	_move_btn = Shell.button(picked_actions, "Move", func(): _set_tool("MOVE"))
-	_delete_btn = Shell.button(picked_actions, "Delete", _delete_selection)
-	_flip_btn = Shell.button(picked_actions, "Flip", _flip_selection)
+	_move_btn = Shell.button(picked_actions, "Move", func(): _set_tool("MOVE"), "", "builder.move", false)
+	_delete_btn = Shell.button(picked_actions, "Delete", _delete_selection, "", "builder.delete", false)
+	_flip_btn = Shell.button(picked_actions, "Flip", _flip_selection, "", "builder.flip", false)
 	var clipboard_actions := HBoxContainer.new()
 	panel.add_child(clipboard_actions)
-	_copy_btn = Shell.button(clipboard_actions, "Copy", _copy_region, "Copy the box (Ctrl+C)")
-	_cut_btn = Shell.button(clipboard_actions, "Cut", _cut_region, "Cut the box (Ctrl+X)")
-	_paste_btn = Shell.button(clipboard_actions, "Paste", _paste_clipboard, "Paste at the last tile pointed to (Ctrl+V)")
-	_dup_btn = Shell.button(clipboard_actions, "Duplicate", _duplicate_region, "Make a second copy (Ctrl+D)")
+	_copy_btn = Shell.button(clipboard_actions, "Copy", _copy_region, "Copy the box (Ctrl+C)", "builder.copy", false)
+	_cut_btn = Shell.button(clipboard_actions, "Cut", _cut_region, "Cut the box (Ctrl+X)", "builder.cut", false)
+	_paste_btn = Shell.button(clipboard_actions, "Paste", _paste_clipboard, "Paste at the last tile pointed to (Ctrl+V)", "builder.paste", false)
+	_dup_btn = Shell.button(clipboard_actions, "Duplicate", _duplicate_region, "Make a second copy (Ctrl+D)", "builder.duplicate", false)
 	var picture_actions := HBoxContainer.new()
 	panel.add_child(picture_actions)
 	_transform_buttons = [
-		Shell.button(picture_actions, "Rotate", _rotate_prop, "Turn a decorative picture by 15° (R)"),
-		Shell.button(picture_actions, "− Size", _scale_prop.bind(-0.25), "Shrink a decorative picture ([)"),
-		Shell.button(picture_actions, "+ Size", _scale_prop.bind(0.25), "Grow a decorative picture (])"),
+		Shell.button(picture_actions, "Rotate", _rotate_prop, "Turn a decorative picture by 15° (R)", "builder.rotate", false),
+		Shell.button(picture_actions, "− Size", _scale_prop.bind(-0.25), "Shrink a decorative picture ([)", "builder.shrink", false),
+		Shell.button(picture_actions, "+ Size", _scale_prop.bind(0.25), "Grow a decorative picture (])", "builder.grow", false),
 	]
-	_free_btn = Shell.button(picture_actions, "Free", _say_free_placement, "Place and move decorative pictures without snapping")
+	_free_btn = Shell.button(picture_actions, "Free", _say_free_placement, "Place and move decorative pictures without snapping", "builder.free", false)
 	_free_btn.toggle_mode = true
 	_label(panel, "Room Size · Tiles", 17)
 	var dimensions := HBoxContainer.new()
 	panel.add_child(dimensions)
-	_width = _spinner(dimensions, 4, 1024, 4)
+	_width = _spinner(dimensions, 4, 1024, 4, "builder.width")
 	_label(dimensions, "×", 16)
-	_height = _spinner(dimensions, 4, 1024, 4)
-	Shell.button(dimensions, "Apply", _apply_size)
+	_height = _spinner(dimensions, 4, 1024, 4, "builder.height")
+	Shell.button(dimensions, "Apply", _apply_size, "", "builder.resize", false)
 	_build_playtest_options(panel)
 
 	_label(panel, "Issues", 22)
-	_check_btn = Shell.button(panel, "Check Reachability", run_full_check)
+	_check_btn = Shell.button(panel, "Check Reachability", run_full_check, "", "builder.check", false)
 	_issue_summary = _label(panel, "", 15)
 	_issue_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var list := ScrollContainer.new()
@@ -346,7 +352,9 @@ func _build_inspector(parent: HBoxContainer) -> void:
 
 func _build_playtest_options(parent: Container) -> void:
 	var options := MenuButton.new()
+	EdHelp.attach(options, "builder.options")
 	options.text = "Playtest Options"
+	options.tooltip_text = "Show hitboxes, Invincible, Half speed"
 	parent.add_child(options)
 	var menu := options.get_popup()
 	menu.add_check_item("Show hitboxes", 0)
@@ -395,8 +403,10 @@ func _label(parent: Container, value: String, size: int) -> Label:
 	return label
 
 
-func _spinner(parent: Container, low: int, high: int, value: int) -> SpinBox:
+func _spinner(parent: Container, low: int, high: int, value: int, help_key: String) -> SpinBox:
 	var box := SpinBox.new()
+	EdHelp.attach(box, help_key)
+	EdHelp.attach(box.get_line_edit(), help_key)
 	box.min_value = low
 	box.max_value = high
 	box.value = value
@@ -413,6 +423,7 @@ func _spacer(parent: Container) -> void:
 
 func _toggle(parent: Container, title: String, value: bool, action: Callable) -> void:
 	var button := CheckButton.new()
+	EdHelp.attach(button, "builder." + title.to_lower())
 	button.text = title
 	button.button_pressed = value
 	button.toggled.connect(action)
@@ -420,7 +431,7 @@ func _toggle(parent: Container, title: String, value: bool, action: Callable) ->
 
 
 func _tool_button(parent: Container, mode: String, title: String, hint: String) -> void:
-	var button := Shell.button(parent, title, func(): _set_tool(mode), hint)
+	var button := Shell.button(parent, title, func(): _set_tool(mode), hint, "builder." + mode.to_lower(), false)
 	button.toggle_mode = true
 	_tool_buttons[mode] = button
 
@@ -466,6 +477,19 @@ func _set_tab(category: String) -> void:
 	_plane_choice.select(["back", "solid", "front"].find(plane))
 	_update_spread()
 	_overlay.queue_redraw()
+
+
+func _show_palette_help(mouse: InputEventMouseButton) -> void:
+	var index := _list.get_item_at_position(mouse.position, true)
+	if index < 0:
+		EdHelp.show("builder.palette")
+		return
+	var entry: Dictionary = _entries[index]
+	var glyph := str(entry.get("glyph", ""))
+	var key := "glyph." + glyph
+	if not EdHelp.has(key):
+		key = "palette." + tab.to_lower()
+	EdHelp.show(key)
 
 
 func _on_pick(index: int, selected: bool) -> void:
@@ -531,11 +555,12 @@ func open_library() -> void:
 	library_palette = palette
 	palette.entry_used.connect(func(entry: Dictionary) -> void:
 		if use_library_entry(entry):
+			EdPalette.record_recent(str(entry.get("id", "")))
 			close_library())
 	var footer := HBoxContainer.new()
 	footer.alignment = BoxContainer.ALIGNMENT_END
 	column.add_child(footer)
-	Shell.button(footer, "Close", close_library)
+	Shell.button(footer, "Close", close_library, "", "library.close", false)
 
 
 ## Close the library overlay at once; harmless when it is already closed.
@@ -722,7 +747,7 @@ func _show_issues() -> void:
 			"clearance": "Low Jump Clearance", "jump": "Jump Advisory"}.get(type, "Reachability")
 		var body := String(issue["text"]).trim_prefix("ceiling trap: ")
 		body = body.left(1).to_upper() + body.substr(1)
-		var button := Shell.button(_issues, heading, _focus_issue.bind(issue["rect"]), body)
+		var button := Shell.button(_issues, heading, _focus_issue.bind(issue["rect"]), body, "builder.issue", false)
 		button.modulate = _issue_color(issue)
 		var detail := _label(_issues, body, 14)
 		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

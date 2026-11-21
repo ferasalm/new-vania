@@ -94,23 +94,34 @@ static func search(text: String, category := "", limit := 0) -> Array:
 		var entry: Dictionary = _table[id]
 		if not category.is_empty() and String(entry.get("category", "")) != category:
 			continue
-		var hay := String(_hay.get(id, ""))
-		var matches := true
-		for word: String in words:
-			if not hay.contains(word):
-				matches = false
-				break
-		if matches:
+		if _contains_words(String(_hay.get(id, "")), words):
 			out.append(entry)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var an := String(a.get("name", ""))
-		var bn := String(b.get("name", ""))
+		var an := String(a.get("name", "")).to_lower()
+		var bn := String(b.get("name", "")).to_lower()
 		if an == bn:
 			return String(a.get("id", "")) < String(b.get("id", ""))
 		return an < bn)
 	if limit > 0 and out.size() > limit:
 		out.resize(limit)
 	return out
+
+
+## Search a short ordered list of known IDs without sorting or scanning the entire catalog.
+static func search_ids(text: String, ids: Array[String]) -> Array:
+	var words := _whitespace.sub(text.to_lower(), " ", true).split(" ", false)
+	var found: Array = []
+	for id in ids:
+		if _table.has(id) and _contains_words(String(_hay[id]), words):
+			found.append(_table[id])
+	return found
+
+
+static func _contains_words(hay: String, words: PackedStringArray) -> bool:
+	for word in words:
+		if not hay.contains(word):
+			return false
+	return true
 
 
 ## An empty string when the entry can be placed in a room, otherwise one plain sentence why not.

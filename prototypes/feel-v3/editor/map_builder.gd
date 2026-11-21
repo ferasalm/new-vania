@@ -361,8 +361,6 @@ func teleport() -> void:
 
 func _map_button(parent: Container, label: String, action: Callable, tip: String, id: String) -> Button:
 	var key := "map." + id
-	if not EdHelp.has(key):
-		EdHelp.entries[key] = {"title": label, "what": tip}
 	var button := Workspace.button(parent, label, action, tip, key)
 	var help := parent.get_child(button.get_index() + 1) as Button
 	help.custom_minimum_size.x = 22
@@ -419,11 +417,13 @@ func _build_room_list(body: HBoxContainer) -> void:
 	body.add_child(sidebar)
 	_heading(sidebar, "Rooms")
 	_search = LineEdit.new()
+	EdHelp.attach(_search, "map.search")
 	_search.placeholder_text = "Search name or code"
 	_search.clear_button_enabled = true
 	_search.text_changed.connect(func(_query: String): _refresh_rooms())
 	sidebar.add_child(_search)
 	_list = ItemList.new()
+	EdHelp.attach(_list, "map.rooms")
 	_list.fixed_icon_size = Vector2i(56, 30)
 	_list.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -488,6 +488,9 @@ func _build_inspector(body: HBoxContainer) -> void:
 		box.min_value = 0 if i < 2 else 1
 		box.max_value = 9999
 		box.allow_greater = true
+		var help_key: String = ["map.x", "map.y", "map.width", "map.height"][i]
+		EdHelp.attach(box, help_key)
+		EdHelp.attach(box.get_line_edit(), help_key)
 		box.get_line_edit().select_all_on_focus = true
 		box.value_changed.connect(_change_field.bind(i))
 		field.add_child(box)

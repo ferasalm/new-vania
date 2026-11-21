@@ -144,19 +144,36 @@ static func shown_text() -> String:
 	return popup_text
 
 
-## Let a right mouse click on the control open help for a key.
-static func attach(control: Control, key: String) -> void:
+## Find static or registered help by matching all words across the visible wording.
+static func search(query: String) -> Array[String]:
+	var words := query.to_lower().replace("\t", " ").replace("\n", " ").replace("\r", " ").split(" ", false)
+	var matches: Array[String] = []
+	for key: String in entries:
+		var wording := text_for(key).to_lower()
+		var found := true
+		for word in words:
+			if not wording.contains(word):
+				found = false
+				break
+		if found:
+			matches.append(key)
+	matches.sort()
+	return matches
+
+
+## Let a right mouse click open help, optionally building it for the current selection.
+static func attach(control: Control, key: String, open := Callable()) -> void:
 	if control == null:
 		return
 	control.set_meta("help_key", key)
 	if control.has_meta("help_bound"):
 		return
 	control.set_meta("help_bound", true)
-	control.gui_input.connect(_on_control_gui_input.bind(control))
+	control.gui_input.connect(_on_control_gui_input.bind(control, open))
 
 
 ## Open help when the bound control gets a right mouse button press.
-static func _on_control_gui_input(event: InputEvent, control: Control) -> void:
+static func _on_control_gui_input(event: InputEvent, control: Control, open: Callable) -> void:
 	if not (event is InputEventMouseButton):
 		return
 	var mouse := event as InputEventMouseButton
@@ -164,7 +181,10 @@ static func _on_control_gui_input(event: InputEvent, control: Control) -> void:
 		return
 	if control == null or not is_instance_valid(control):
 		return
-	show(String(control.get_meta("help_key", "")))
+	if open.is_valid():
+		open.call(mouse)
+	else:
+		show(String(control.get_meta("help_key", "")))
 
 
 ## Read a text field from an entry, trimmed; missing or non-text fields read as empty.

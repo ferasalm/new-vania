@@ -11,6 +11,10 @@ signal entry_used(entry: Dictionary)
 const EdCatalog := preload("res://editor/ed_catalog.gd")
 const EdAssets := preload("res://editor/ed_assets.gd")
 const EdHelp := preload("res://editor/ed_help.gd")
+const RECENT_LIMIT := 12
+const RECENT_CATEGORY := "Recent"
+
+static var _recent_ids: Array[String] = []
 const Shell := preload("res://editor/workspace_shell.gd")
 
 ## The most rows shown at once; a broader search says so and asks for more text.
@@ -25,6 +29,7 @@ static var _thumbs: Dictionary = {}
 
 var search_box: LineEdit
 var category_box: OptionButton
+var recent_button: CheckButton
 var help_button: Button
 var use_button: Button
 
@@ -48,18 +53,26 @@ func _ready() -> void:
 	var top := HBoxContainer.new()
 	root.add_child(top)
 	search_box = LineEdit.new()
+	EdHelp.attach(search_box, "library.search")
 	search_box.placeholder_text = "Search pictures, sounds, tags"
 	search_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	search_box.text_changed.connect(_on_search_changed)
 	top.add_child(search_box)
 	category_box = OptionButton.new()
+	EdHelp.attach(category_box, "library.categories", _show_category_help)
 	category_box.item_selected.connect(_on_category_selected)
 	top.add_child(category_box)
+	recent_button = CheckButton.new()
+	recent_button.text = RECENT_CATEGORY
+	EdHelp.attach(recent_button, "library.recent")
+	recent_button.toggled.connect(func(on: bool): set_category(RECENT_CATEGORY if on else ""))
+	top.add_child(recent_button)
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(body)
 	_list = ItemList.new()
+	EdHelp.attach(_list, "library.results")
 	_list.select_mode = ItemList.SELECT_SINGLE
 	_list.fixed_icon_size = Vector2i(THUMB, THUMB)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -85,12 +98,14 @@ func _ready() -> void:
 	var bottom := HBoxContainer.new()
 	root.add_child(bottom)
 	help_button = Button.new()
+	EdHelp.attach(help_button, "library.asset_help")
 	help_button.text = "?"
 	help_button.tooltip_text = "Help for this asset"
 	help_button.custom_minimum_size = Vector2(28, 0)
 	help_button.pressed.connect(_on_help)
 	bottom.add_child(help_button)
 	use_button = Button.new()
+	EdHelp.attach(use_button, "library.use")
 	use_button.text = "Use this picture"
 	use_button.tooltip_text = "Copy it into the builder and place it"
 	use_button.disabled = true
@@ -108,7 +123,7 @@ func search_text(text: String) -> void:
 	refresh()
 
 
-## Filter to one category id ("" means all) and show it in the category box.
+## Filter to one category id, Recent, or "" for all, and show it in the category box.
 func set_category(id: String) -> void:
 	_category = id
 	_select_category_item()
@@ -118,7 +133,7 @@ func set_category(id: String) -> void:
 ## Rebuild the category box and the result list from the catalog.
 func refresh() -> void:
 	_refresh_categories()
-	var found := EdCatalog.search(_query, _category, MAX_RESULTS + 1)
+	var found := EdCatalog.search_ids(_query, _recent_ids) if _category == RECENT_CATEGORY else EdCatalog.search(_query, _category, MAX_RESULTS + 1)
 	_truncated = found.size() > MAX_RESULTS
 	if _truncated:
 		found.resize(MAX_RESULTS)
@@ -132,6 +147,8 @@ func refresh() -> void:
 	use_button.disabled = true
 	if EdCatalog.entry_count() == 0:
 		_info.text = "The library is empty. Run: node tools/asset_library.mjs"
+	elif _category == RECENT_CATEGORY and _recent_ids.is_empty():
+		_info.text = "Pictures you use from the library will appear here."
 	else:
 		_info.text = "Pick an entry to see it here."
 
@@ -195,6 +212,16 @@ func use_selected() -> bool:
 	return true
 
 
+## Remember a picture after it was copied into the room builder.
+static func record_recent(id: String) -> void:
+	if id.is_empty():
+		return
+	_recent_ids.erase(id)
+	_recent_ids.push_front(id)
+	if _recent_ids.size() > RECENT_LIMIT:
+		_recent_ids.pop_back()
+
+
 ## The thumbnail for row i, or null for non-pictures and pictures missing from the library.
 func result_icon(i: int) -> Texture2D:
 	if i < 0 or i >= _results.size():
@@ -250,7 +277,7 @@ func _refresh_categories() -> void:
 		var index := category_box.item_count
 		category_box.add_item("%s (%d)" % [String(c["id"]), int(c["count"])])
 		category_box.set_item_metadata(index, String(c["id"]))
-	if not _category.is_empty():
+	if not _category.is_empty() and _category != RECENT_CATEGORY:
 		var known := false
 		for c: Dictionary in cats:
 			if String(c["id"]) == _category:
@@ -263,6 +290,7 @@ func _refresh_categories() -> void:
 
 ## Show the current category in the category box without emitting item_selected.
 func _select_category_item() -> void:
+	recent_button.set_pressed_no_signal(_category == RECENT_CATEGORY)
 	for i in category_box.item_count:
 		var value: Variant = category_box.get_item_metadata(i)
 		if String(value) == _category:
@@ -349,8 +377,12 @@ func _on_item_activated(_index: int) -> void:
 	use_selected()
 
 
+func _show_category_help(_event: InputEventMouseButton) -> void:
+	var key := "library.recent" if _category == RECENT_CATEGORY else "catalog." + _category
+	EdHelp.show(key if EdHelp.has(key) else "library.categories")
+
+
 ## The "?" button: open help for the picked asset.
 func _on_help() -> void:
 	var key := help_key()
-	if not key.is_empty():
-		EdHelp.show(key)
+	EdHelp.show(key if not key.is_empty() else "library.asset_help")

@@ -42,10 +42,10 @@ func _ready() -> void:
 	var top := HBoxContainer.new()
 	col.add_child(top)
 	_pages = [_feel_page(), _weapon_page(), _sound_page()]
-	_tabs = [_button("FEEL", _page.bind(0)), _button("WEAPONS", _page.bind(1)), _button("SOUNDS", _page.bind(2))]
+	_tabs = [_button("FEEL", _page.bind(0), "tuning.feel"), _button("WEAPONS", _page.bind(1), "tuning.weapons"), _button("SOUNDS", _page.bind(2), "tuning.sounds")]
 	var part_index := _pages.size()
 	for part in _parts_loaded():
-		_tabs.append(_button(String(part).to_upper(), _page.bind(part_index)))
+		_tabs.append(_button(String(part).to_upper(), _page.bind(part_index), "tuning.part"))
 		_pages.append(_part_page(part))
 		part_index += 1
 	for t in _tabs:
@@ -59,8 +59,8 @@ func _ready() -> void:
 	col.add_child(_help)
 	var buttons := HBoxContainer.new()
 	col.add_child(buttons)
-	buttons.add_child(_button("Save", _save))
-	buttons.add_child(_button("Reset", _reset))
+	buttons.add_child(_button("Save", _save, "tuning.save"))
+	buttons.add_child(_button("Reset", _reset, "tuning.reset"))
 	_status = _text("")
 	buttons.add_child(_status)
 	_page(0)
@@ -88,7 +88,10 @@ func _slider_row(key: String) -> HBoxContainer:
 	val.custom_minimum_size = Vector2(34, 0)
 	val.clip_text = true
 	row.add_child(val)
-	var q := _help_button("Help: " + String(d["label"]), _show_slider_help.bind(key))
+	_register_slider_help(key)
+	var open := _show_slider_help.bind(key)
+	EdHelp.attach(s, help_key(key), open.unbind(1))
+	var q := _help_button("Help: " + String(d["label"]), open, help_key(key))
 	row.add_child(q)
 	_help_buttons[key] = q
 	_rows[key] = [s, val]
@@ -132,18 +135,27 @@ func _weapon_page() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 1)
 	row.add_child(_row_label(String(d["label"]), 122))
-	row.add_child(_button("<", _wpick.bind(-1)))
+	_register_picker_help("weapon")
+	var key := help_key("weapon")
+	var open := _show_picker_help.bind("weapon")
+	_weapon_arrow(row, "<", -1, key, open)
 	_wopt = _row_label(String(d["options"][int(d["value"])]), 104)
 	row.add_child(_wopt)
-	row.add_child(_button(">", _wpick.bind(1)))
-	var q := _help_button("Help: " + String(d["label"]), _show_picker_help.bind("weapon"))
+	_weapon_arrow(row, ">", 1, key, open)
+	var q := _help_button("Help: " + String(d["label"]), open, key)
 	row.add_child(q)
 	_help_buttons["weapon"] = q
 	row.mouse_entered.connect(_hover.bind(String(d["help"])))
 	made[1].add_child(row)
-	for key in WEAPON_KEYS.slice(1):
-		made[1].add_child(_slider_row(key))
+	for weapon_key in WEAPON_KEYS.slice(1):
+		made[1].add_child(_slider_row(weapon_key))
 	return made[0]
+
+
+func _weapon_arrow(row: HBoxContainer, label: String, step: int, key: String, open: Callable) -> void:
+	var button := _button(label, _wpick.bind(step))
+	EdHelp.attach(button, key, open.unbind(1))
+	row.add_child(button)
 
 
 func _sound_page() -> Control:
@@ -152,20 +164,29 @@ func _sound_page() -> Control:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 1)
 		row.add_child(_row_label(String(Sfx.LABELS[name]), 66))
-		row.add_child(_button("<", _pick.bind(name, -1)))
+		_register_sound_help(name)
+		var key := sound_help_key(name)
+		var open := _show_sound_help.bind(name)
+		var previous := _button("<", _pick.bind(name, -1))
+		EdHelp.attach(previous, key, open.unbind(1))
+		row.add_child(previous)
 		var opt := _row_label(Sfx.option_text(name), 110)
 		row.add_child(opt)
-		row.add_child(_button(">", _pick.bind(name, 1)))
+		var next := _button(">", _pick.bind(name, 1))
+		EdHelp.attach(next, key, open.unbind(1))
+		row.add_child(next)
 		var s := _slider(-30.0, 6.0, 1.0, float(Sfx.ev[name]["volume_db"]), 32)
+		EdHelp.attach(s, key, open.unbind(1))
 		row.add_child(s)
 		s.value_changed.connect(_volume.bind(name))
 		if Sfx.ev[name]["group"] == "sfx":
 			# music ignores pitch variation, so it gets no dead slider
 			var ps := _slider(0.0, 0.25, 0.01, float(Sfx.ev[name]["pitch_random"]), 20)
+			EdHelp.attach(ps, key, open.unbind(1))
 			row.add_child(ps)
 			ps.value_changed.connect(_pitch.bind(name))
 			_pitches[name] = ps
-		var q := _help_button("Help: " + String(Sfx.LABELS[name]), _show_sound_help.bind(String(name)))
+		var q := _help_button("Help: " + String(Sfx.LABELS[name]), open, key)
 		row.add_child(q)
 		_sound_help_buttons[String(name)] = q
 		s.mouse_entered.connect(_hover.bind("< and > try the other sounds for this moment. The sliders are its loudness and its pitch variety."))
@@ -200,8 +221,10 @@ func _row_label(text: String, width: float) -> Label:
 	return label
 
 
-func _button(t: String, fn: Callable) -> Button:
+func _button(t: String, fn: Callable, key := "") -> Button:
 	var b := Button.new()
+	if not key.is_empty():
+		EdHelp.attach(b, key)
 	b.text = t
 	b.add_theme_font_size_override("font_size", 8)
 	b.focus_mode = Control.FOCUS_NONE
@@ -238,8 +261,9 @@ func sound_help_button(name: String) -> Button:
 
 
 ## A framed "?" control at the end of each setting row.
-func _help_button(tip: String, fn: Callable) -> Button:
+func _help_button(tip: String, fn: Callable, key: String) -> Button:
 	var b := _button("?", fn)
+	EdHelp.attach(b, key, fn.unbind(1))
 	b.tooltip_text = tip
 	b.custom_minimum_size = Vector2(16, 12)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -248,6 +272,11 @@ func _help_button(tip: String, fn: Callable) -> Button:
 
 ## Rebuild a slider row's help from the data as it is now, then open the popup.
 func _show_slider_help(key: String) -> void:
+	_register_slider_help(key)
+	EdHelp.show(help_key(key))
+
+
+func _register_slider_help(key: String) -> void:
 	var d: Dictionary = T.data[key]
 	EdHelp.entries[help_key(key)] = {
 		"title": String(d["label"]),
@@ -259,11 +288,15 @@ func _show_slider_help(key: String) -> void:
 			"Now: %s" % _fmt(T.v(key)),
 		],
 	}
-	EdHelp.show(help_key(key))
 
 
 ## Rebuild a picker row's help from the data as it is now, then open the popup.
 func _show_picker_help(key: String) -> void:
+	_register_picker_help(key)
+	EdHelp.show(help_key(key))
+
+
+func _register_picker_help(key: String) -> void:
 	var d: Dictionary = T.data[key]
 	var opts: Array = d["options"]
 	var saved_i := clampi(int(T.defaults[key]), 0, opts.size() - 1)
@@ -281,21 +314,35 @@ func _show_picker_help(key: String) -> void:
 			"Now: " + String(opts[now_i]),
 		],
 	}
-	EdHelp.show(help_key(key))
 
 
 ## Rebuild a sound row's help from the data as it is now, then open the popup.
 func _show_sound_help(name: String) -> void:
-	var limits: Array = ["Loudness: %s to %s dB" % [_fmt(-30.0), _fmt(6.0)]]
-	if String(Sfx.ev[name]["group"]) == "sfx":
-		limits.append("Pitch variety: %s to %s" % [_fmt(0.0), _fmt(0.25)])
+	_register_sound_help(name)
+	EdHelp.show(sound_help_key(name))
+
+
+func _register_sound_help(name: String) -> void:
+	var live: Dictionary = Sfx.ev[name]
+	var saved := Sfx.saved_settings(name)
+	var limits := [
+		"Loudness: %s to %s dB in steps of 1" % [_fmt(-30.0), _fmt(6.0)],
+		"Saved loudness: %s dB" % _fmt(float(saved.get("volume_db", -8.0))),
+		"Current loudness: %s dB" % _fmt(float(live["volume_db"])),
+		"Saved sound: " + str(saved.get("file", "")).get_file().get_basename().replace("_", " "),
+		"Current sound: " + Sfx.option_text(name),
+	]
+	var what := "The sound or music played for this moment."
+	if String(live["group"]) == "sfx":
+		limits.append("Pitch variety: %s to %s in steps of 0.01" % [_fmt(0.0), _fmt(0.25)])
+		limits.append("Saved pitch variety: %s" % _fmt(float(saved.get("pitch_random", 0.0))))
+		limits.append("Current pitch variety: %s" % _fmt(float(live["pitch_random"])))
 	EdHelp.entries[sound_help_key(name)] = {
 		"title": String(Sfx.LABELS[name]),
-		"what": "< and > try the other sounds for this moment. The sliders are its loudness and its pitch variety.",
+		"what": what,
 		"how": "Press < or > to hear another sound. Press Save to keep it.",
 		"limits": limits,
 	}
-	EdHelp.show(sound_help_key(name))
 
 
 func _process(_delta: float) -> void:
