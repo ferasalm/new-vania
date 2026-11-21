@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests_dev/d8_help.gd" id="1"]
+
+[node name="D8Help" type="Node"]
+script = ExtResource("1")

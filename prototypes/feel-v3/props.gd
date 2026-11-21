@@ -54,7 +54,7 @@ class Lever extends Node2D:
 			G.main.shake(2.0, 0.35)
 			G.main.fx("spark", global_position + Vector2(0, -16))
 			if kind == "library":
-				G.main.lever_library = true
+				G.main.lever_library = true      # no message: the user wants the mystery (2026-11-21)
 				if G.main.get("ambience") != null and G.main.get("ambience").has_method("cue"):
 					G.main.get("ambience").cue("chain_boom", global_position)
 			else:

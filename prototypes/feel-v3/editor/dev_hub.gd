@@ -2,6 +2,7 @@
 extends Node
 
 const WorkspaceShell := preload("res://editor/workspace_shell.gd")
+const EdHelp := preload("res://editor/ed_help.gd")
 const TOOLS := {
 	KEY_F2: ["dev_room", "res://editor/room_builder.gd"],
 	KEY_F3: ["dev_map", "res://editor/map_builder.gd"],
@@ -27,13 +28,42 @@ var _close_dialog: ConfirmationDialog
 var _play_bar: CanvasLayer
 var _play_snapshot: Dictionary = {}
 var _launcher: CanvasLayer
+var _studio_layer: CanvasLayer
+var _studio_was_paused := false
+var _studio_query: LineEdit
+var _studio_results: ItemList
+
+
+## The last few hits she took, newest last: {dmg, src, room, msec}. The F4 note lists them,
+## so a note like "I lost 40 health here" says where the hits really came from.
+var recent_hits: Array = []
+
+
+func _record_hit(dmg: int, src: String) -> void:
+	var room := "?"
+	if G.main != null and G.main.get("room_name") != null:
+		room = String(G.main.room_name)
+	recent_hits.append({"dmg": dmg, "src": src, "room": room, "msec": Time.get_ticks_msec()})
+	if recent_hits.size() > 3:
+		recent_hits.pop_front()
+
+
+## The recent hits in plain words, e.g. "20 from trap in gallery 4s ago", or "" when none.
+func recent_hits_text() -> String:
+	var parts: Array = []
+	var now := Time.get_ticks_msec()
+	for h in recent_hits:
+		parts.append("%d from %s in %s %ds ago" % [h["dmg"], h["src"], h["room"], int((now - int(h["msec"])) / 1000)])
+	return "; ".join(parts)
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	W.player_hurt.connect(_record_hit)
 	if OS.has_feature("mobile") or OS.has_feature("web"):
 		set_process_input(false)
 		return
+	EdHelp.load_file("res://studio/help/help.json")
 	if DisplayServer.get_name() != "headless":
 		_add_launcher()
 	_linked_project = _find_project()
@@ -55,9 +85,114 @@ func _add_launcher() -> void:
 	surface.self_modulate = Color.TRANSPARENT
 	surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var actions := HBoxContainer.new()
-	actions.position = Vector2(1110, 14)
+	actions.position = Vector2(1010, 14)
 	surface.add_child(actions)
 	WorkspaceShell.button(actions, "Builders", show_map, "Open the map workspace (F3). Open the current room with F2.")
+	WorkspaceShell.button(actions, "Studio", open_studio, "Find help and the asset library folder.")
+
+
+## The library path in the linked checkout or portable workspace.
+func studio_library_path() -> String:
+	return project_dir().path_join("studio/library").replace("\\", "/")
+
+
+## Open the searchable desktop help window.
+func open_studio() -> void:
+	if is_instance_valid(_studio_layer) and _studio_layer.visible:
+		return
+	if not is_instance_valid(_studio_layer):
+		_build_studio_dialog()
+	_studio_was_paused = get_tree().paused
+	get_tree().paused = true
+	_studio_layer.show()
+	_refresh_studio_help(_studio_query.text)
+	_studio_query.grab_focus()
+
+
+func _build_studio_dialog() -> void:
+	_studio_layer = CanvasLayer.new()
+	_studio_layer.layer = 109
+	add_child(_studio_layer)
+	var surface := WorkspaceShell.mount(_studio_layer)
+	surface.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+
+	var shade := ColorRect.new()
+	shade.color = Color(0.06, 0.07, 0.11, 0.72)
+	surface.add_child(shade)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var center := CenterContainer.new()
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	surface.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(730, 415)
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	for edge in ["top", "right", "bottom", "left"]:
+		margin.add_theme_constant_override("margin_" + edge, 16)
+	panel.add_child(margin)
+	var page := VBoxContainer.new()
+	page.add_theme_constant_override("separation", 8)
+	margin.add_child(page)
+	var title := Label.new()
+	title.text = "Studio"
+	title.add_theme_font_size_override("font_size", 24)
+	page.add_child(title)
+	var label := Label.new()
+	label.text = "Asset library folder"
+	page.add_child(label)
+	var path := LineEdit.new()
+	path.editable = false
+	path.text = studio_library_path()
+	path.tooltip_text = path.text
+	path.add_theme_font_size_override("font_size", 13)
+	page.add_child(path)
+	_studio_query = LineEdit.new()
+	_studio_query.placeholder_text = "Search help, for example: map resize"
+	_studio_query.text_changed.connect(_refresh_studio_help)
+	_studio_query.text_submitted.connect(func(_query: String): _open_studio_result(-1))
+	page.add_child(_studio_query)
+	_studio_results = ItemList.new()
+	_studio_results.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_studio_results.item_activated.connect(_open_studio_result)
+	page.add_child(_studio_results)
+	var footer := HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGNMENT_END
+	page.add_child(footer)
+	WorkspaceShell.button(footer, "Open selected help", _open_studio_result.bind(-1))
+	WorkspaceShell.button(footer, "Close", _close_studio)
+
+
+func _refresh_studio_help(query: String) -> void:
+	_studio_results.clear()
+	var keys: Array[String] = ["studio.library", "builder.select", "map.map", "tuning.feel", "studio.notes"]
+	if not query.strip_edges().is_empty():
+		keys = EdHelp.search(query)
+	for key in keys:
+		var entry: Dictionary = EdHelp.entries.get(key, {})
+		_studio_results.set_item_metadata(_studio_results.add_item(str(entry.get("title", key))), key)
+	if _studio_results.item_count > 0:
+		_studio_results.select(0)
+
+
+func _open_studio_result(index: int) -> void:
+	if index < 0:
+		var selected := _studio_results.get_selected_items()
+		if selected.is_empty():
+			return
+		index = selected[0]
+	var key := str(_studio_results.get_item_metadata(index))
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null:
+		focused.release_focus()
+	EdHelp.show(key)
+
+
+func _close_studio() -> void:
+	_studio_layer.hide()
+	get_tree().paused = _studio_was_paused
 
 
 func _process(_delta: float) -> void:
@@ -69,6 +204,11 @@ func _input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo or _close_dialog != null:
 		return
 	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
+	if is_instance_valid(_studio_layer) and _studio_layer.visible:
+		if key == KEY_ESCAPE and not EdHelp.is_open():
+			get_viewport().set_input_as_handled()
+			_close_studio()
+		return
 	if not _play_snapshot.is_empty():
 		if key in [KEY_TAB, KEY_ESCAPE, KEY_F2, KEY_F3]:
 			get_viewport().set_input_as_handled()

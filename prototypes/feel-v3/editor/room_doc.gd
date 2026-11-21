@@ -40,7 +40,19 @@ static func parse(id: String, text: String, props_text := "") -> RefCounted:
 		if parsed is Array:
 			for p in parsed:
 				if p is Dictionary:
-					d.props.append(p.duplicate(true))
+					# JSON loads every number as a float. Keep whole pixel coordinates
+					# and cell counts stable without rounding off-grid positions.
+					var picture: Dictionary = p.duplicate(true)
+					for axis in ["x", "y"]:
+						var coordinate = picture.get(axis)
+						if coordinate is float and coordinate == floorf(coordinate):
+							picture[axis] = int(coordinate)
+					var span = picture.get("collision_cells")
+					if span is Array:
+						for index in span.size():
+							if span[index] is float and span[index] == floorf(span[index]):
+								span[index] = int(span[index])
+					d.props.append(picture)
 	return d
 
 
@@ -159,13 +171,36 @@ func resize(w: int, h: int) -> void:
 
 # ---------- props ----------
 
-func add_prop(png: String, x: int, y: int, layer: String, is_tile: bool, flip := false) -> Dictionary:
-	var p := {"png": png, "x": x, "y": y, "flip": flip, "layer": layer, "tile": is_tile}
+## Add a picture at its top-left anchor. Free decor can use fractional pixels.
+func add_prop(png: String, x: float, y: float, layer: String, is_tile: bool, flip := false) -> Dictionary:
+	var p := {"png": png, "flip": flip, "layer": layer, "tile": is_tile}
+	set_prop_position(p, Vector2(x, y))
 	if is_tile and layer == "solid":
 		var footprint := (EdAssets.size_of(png) / TILE).ceil()
 		p["collision_cells"] = [int(footprint.x), int(footprint.y)]
 	props.append(p)
 	return p
+
+
+## Store the top-left anchor without dropping fractional pixels.
+static func set_prop_position(prop: Dictionary, at: Vector2) -> void:
+	prop["x"] = int(at.x) if at.x == floorf(at.x) else at.x
+	prop["y"] = int(at.y) if at.y == floorf(at.y) else at.y
+
+
+## Only non-tile pictures drawn behind or in front may rotate or scale.
+static func can_transform_prop(prop: Dictionary) -> bool:
+	return not bool(prop.get("tile", false)) and String(prop.get("layer", "back")) in ["back", "front"]
+
+
+## The same transform is used by the renderer, picking and the selection outline.
+static func prop_transform(prop: Dictionary) -> Transform2D:
+	var at := Vector2(float(prop.get("x", 0.0)), float(prop.get("y", 0.0)))
+	if not can_transform_prop(prop):
+		return Transform2D(0.0, at)
+	var angle := deg_to_rad(clampf(float(prop.get("rot", 0.0)), -180.0, 180.0))
+	var magnification := clampf(float(prop.get("scale", 1.0)), 0.25, 4.0)
+	return Transform2D(angle, Vector2.ONE * magnification, 0.0, at)
 
 
 ## Overlay separately owned PNG collision on empty cells. Existing room glyphs and legacy
@@ -199,9 +234,99 @@ func prop_at(px: Vector2, size_of: Callable) -> int:
 	for i in range(props.size() - 1, -1, -1):
 		var p: Dictionary = props[i]
 		var s: Vector2 = size_of.call(String(p["png"]))
-		if Rect2(Vector2(p["x"], p["y"]), s).has_point(px):
+		var local := prop_transform(p).affine_inverse() * px
+		if Rect2(Vector2.ZERO, s).has_point(local):
 			return i
 	return -1
+
+
+# ---------- region clipboard & editing ----------
+
+## Copies cells and props whose top-left anchor lands within rect into a clipboard block.
+## Returns a block Dictionary with size, cells, and deep-copied props with relative offsets.
+func copy_region(rect: Rect2i) -> Dictionary:
+	var block := {
+		"size": rect.size,
+		"cells": [],
+		"props": []
+	}
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			if in_room(x, y):
+				block["cells"].append({
+					"dx": x - rect.position.x,
+					"dy": y - rect.position.y,
+					"ch": get_cell(x, y)
+				})
+	var region_px := Vector2(rect.position * TILE)
+	for p in props:
+		if not (p is Dictionary):
+			continue
+		var ax := floori(float(p.get("x", 0)) / TILE)
+		var ay := floori(float(p.get("y", 0)) / TILE)
+		if rect.has_point(Vector2i(ax, ay)):
+			var copy: Dictionary = p.duplicate(true)
+			copy["x"] = float(p.get("x", 0)) - region_px.x
+			copy["y"] = float(p.get("y", 0)) - region_px.y
+			block["props"].append(copy)
+	return block
+
+
+## Cuts cells and props within rect into a clipboard block, clearing cells to "." and removing props.
+func cut_region(rect: Rect2i) -> Dictionary:
+	var block := copy_region(rect)
+	clear_region(rect)
+	return block
+
+
+## Clear cells and picture anchors in the region. The caller manages undo.
+func clear_region(rect: Rect2i) -> void:
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			if in_room(x, y):
+				set_cell(x, y, ".")
+	for i in range(props.size() - 1, -1, -1):
+		var p = props[i]
+		if p is Dictionary:
+			var ax := floori(float(p.get("x", 0)) / TILE)
+			var ay := floori(float(p.get("y", 0)) / TILE)
+			if rect.has_point(Vector2i(ax, ay)):
+				props.remove_at(i)
+
+
+## Pastes a clipboard block at origin without resizing the room.
+## Out-of-bounds cells and prop anchors are clipped.
+## Returns true if destination clipped any cells or props outside the room.
+func paste_region(origin: Vector2i, block: Dictionary) -> bool:
+	if block.is_empty():
+		return false
+	var clipped := false
+	var cells: Array = block.get("cells", [])
+	for c in cells:
+		var dst_x: int = origin.x + int(c.get("dx", 0))
+		var dst_y: int = origin.y + int(c.get("dy", 0))
+		if in_room(dst_x, dst_y):
+			set_cell(dst_x, dst_y, String(c.get("ch", ".")))
+		else:
+			clipped = true
+	var block_props: Array = block.get("props", [])
+	for p in block_props:
+		if not (p is Dictionary):
+			continue
+		var cp: Dictionary = p.duplicate(true)
+		var rel_x: float = float(cp.get("x", 0))
+		var rel_y: float = float(cp.get("y", 0))
+		var dest_x: float = float(origin.x * TILE) + rel_x
+		var dest_y: float = float(origin.y * TILE) + rel_y
+		var ax := floori(dest_x / TILE)
+		var ay := floori(dest_y / TILE)
+		if in_room(ax, ay):
+			cp["x"] = int(dest_x) if dest_x == floorf(dest_x) else dest_x
+			cp["y"] = int(dest_y) if dest_y == floorf(dest_y) else dest_y
+			props.append(cp)
+		else:
+			clipped = true
+	return clipped
 
 
 # ---------- spreading enemies ----------

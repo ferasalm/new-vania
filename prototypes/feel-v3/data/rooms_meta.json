@@ -5,7 +5,7 @@
       "church": {
         "code": "CH",
         "title": "THE NAVE OF ASH",
-        "cell": [48, 18, 3, 1],
+        "cell": [20, 23, 3, 1],
         "entry": "P",
         "save": false,
         "boss": "",
@@ -21,7 +21,7 @@
       "library": {
         "code": "LB",
         "title": "THE UNREAD STACKS",
-        "cell": [32, 32, 2, 2],
+        "cell": [23, 22, 2, 2],
         "entry": "left",
         "save": false,
         "boss": "",
@@ -41,7 +41,7 @@
       "scriptorium": {
         "code": "SC",
         "title": "THE SCRIPTORIUM",
-        "cell": [16, 16, 1, 1],
+        "cell": [22, 22, 1, 1],
         "entry": "right",
         "save": false,
         "boss": "",
@@ -58,7 +58,7 @@
       "save": {
         "code": "S2",
         "title": "CACHE STATION 002",
-        "cell": [20, 16, 1, 1],
+        "cell": [25, 22, 1, 1],
         "entry": "left",
         "save": true,
         "boss": "",
@@ -76,7 +76,7 @@
       "lab": {
         "code": "LA",
         "title": "SPECIMEN HALL",
-        "cell": [48, 32, 3, 2],
+        "cell": [26, 21, 3, 2],
         "entry": "left",
         "save": false,
         "boss": "",
@@ -96,7 +96,7 @@
       "kennel": {
         "code": "KN",
         "title": "THE KENNEL",
-        "cell": [16, 16, 1, 1],
+        "cell": [26, 20, 1, 1],
         "entry": "down",
         "save": false,
         "boss": "",
@@ -113,7 +113,7 @@
       "ordnance": {
         "code": "OW",
         "title": "THE ORDNANCE WARD",
-        "cell": [16, 16, 1, 1],
+        "cell": [29, 21, 1, 1],
         "entry": "left",
         "save": false,
         "boss": "",
@@ -130,7 +130,7 @@
       "hallway": {
         "code": "HW",
         "title": "THE PROCESSIONAL",
-        "cell": [32, 16, 2, 1],
+        "cell": [29, 22, 2, 1],
         "entry": "left",
         "save": false,
         "boss": "",
@@ -149,7 +149,7 @@
       "boss": {
         "code": "PB",
         "title": "THE PALLBEARER",
-        "cell": [20, 16, 1, 1],
+        "cell": [31, 22, 1, 1],
         "entry": "left",
         "save": false,
         "boss": "pallbearer",
@@ -166,7 +166,7 @@
       "gallery": {
         "code": "GA",
         "title": "THE RELIQUARY OF SHELLS",
-        "cell": [48, 16, 3, 1],
+        "cell": [30, 23, 3, 1],
         "entry": "up",
         "save": false,
         "boss": "",
@@ -183,7 +183,7 @@
       "shaft": {
         "code": "SH",
         "title": "THE MARROW WELL",
-        "cell": [16, 34, 1, 2],
+        "cell": [19, 22, 1, 2],
         "entry": "right",
         "save": false,
         "boss": "",
@@ -201,7 +201,7 @@
       "vault": {
         "code": "VA",
         "title": "CACHE STATION 004",
-        "cell": [20, 17, 1, 1],
+        "cell": [19, 21, 1, 1],
         "entry": "left",
         "save": true,
         "boss": "",
@@ -219,7 +219,7 @@
       "hazard": {
         "code": "HZ",
         "title": "THE THRESHING CHAPEL",
-        "cell": [64, 18, 4, 1],
+        "cell": [15, 21, 4, 1],
         "entry": "right",
         "save": false,
         "boss": "",
@@ -240,7 +240,7 @@
       "loft": {
         "code": "WL",
         "title": "THE WINCH LOFT",
-        "cell": [16, 16, 1, 1],
+        "cell": [17, 20, 1, 1],
         "entry": "down",
         "save": false,
         "boss": "",
@@ -258,7 +258,7 @@
       "timemachine": {
         "code": "OR",
         "title": "THE ORGAN OF HOURS",
-        "cell": [32, 18, 2, 1],
+        "cell": [13, 21, 2, 1],
         "entry": "K",
         "save": false,
         "boss": "",

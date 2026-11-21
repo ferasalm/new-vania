@@ -225,6 +225,11 @@ func preview(name: String) -> void:
 		play(name)
 
 
+## Read the last saved tuning values without changing the selected sound.
+func saved_settings(name: String) -> Dictionary:
+	return (raw[ev[name]["group"]][name] as Dictionary).duplicate()
+
+
 func reset() -> void:
 	# back to what is in events.json (the last saved choices)
 	for name in ev:

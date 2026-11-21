@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests_dev/d13_props_xform.gd" id="1"]
+
+[node name="D13PropsXform" type="Node"]
+script = ExtResource("1")

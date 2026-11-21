@@ -5,6 +5,7 @@
 extends Node2D
 
 const EdAssets := preload("res://editor/ed_assets.gd")
+const RoomDoc := preload("res://editor/room_doc.gd")
 
 ## The builder's live copy while she plays a room that has not been saved: file id -> json text.
 static var override := {}
@@ -40,7 +41,7 @@ func setup_props(layout: Array) -> void:
 		s.texture = tex
 		s.centered = false
 		s.flip_h = bool(p.get("flip", false))
-		s.position = Vector2(float(p.get("x", 0)), float(p.get("y", 0)))
+		s.transform = RoomDoc.prop_transform(p)
 		s.z_index = 8 if String(p.get("layer", "back")) == "front" else 0
 		add_child(s)
 

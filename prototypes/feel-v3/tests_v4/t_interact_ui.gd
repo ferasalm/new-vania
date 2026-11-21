@@ -195,10 +195,19 @@ func _run() -> void:
 		_r().call("add_item", "lexicon_core", -1)
 		var pk2 = _spawn("lexicon_core", Vector2(12.0, -6))
 		await _frames(5)
-		var t1 := Time.get_ticks_msec()
+		# measured in game time (60 steps a second), not the wall clock: under --fixed-fps a
+		# headless run is faster than real time (fixed 2026-11-21 with the user's yes)
+		var dt := 10.0 / 60.0      # _take_with_up waits 10 physics frames
 		await _take_with_up()
-		var shown := await _wait_until(_pred_active.bind(card), 400)
-		var dt: float = float(Time.get_ticks_msec() - t1) / 1000.0
+		var shown := false
+		for i in 2000:
+			if _pred_active(card):
+				shown = true
+				break
+			await get_tree().process_frame
+			dt += get_process_delta_time()
+			if dt > 7.0:
+				break
 		var want: float = _tv("special_pickup_time")
 		_check("the special show lasts special_pickup_time (+/-0.1 s) for an ability",
 			shown and absf(dt - want) <= 0.15, "%.2f s want %.2f" % [dt, want])

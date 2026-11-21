@@ -59,3 +59,5 @@ tools/aseprite-mcp/.venv/
 prototypes/feel-v3/tools/models/bank/*.png
 prototypes/feel-v3/assets/hero_3d_preview/textures/shaded.png
 prototypes/feel-v3/assets/pandora_proportion_study/textures/shaded.png
+prototypes/feel-v3/studio/library/
+prototypes/feel-v3/studio/catalog.json

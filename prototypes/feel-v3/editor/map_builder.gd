@@ -5,6 +5,9 @@ signal closed
 const MetaPatch := preload("res://editor/meta_patch.gd")
 const Workspace := preload("res://editor/workspace_shell.gd")
 const WorkspaceFiles := preload("res://editor/workspace_files.gd")
+const EdHelp := preload("res://editor/ed_help.gd")
+const EdThumbs := preload("res://editor/ed_thumbs.gd")
+const RoomScript := preload("res://room.gd")
 const SHEETS := ["before", "after", "restored"]
 const META_FILE := "data/rooms_meta.json"
 const ACCENT := Color("#afccfa")
@@ -356,6 +359,19 @@ func teleport() -> void:
 
 # Workspace controls
 
+func _map_button(parent: Container, label: String, action: Callable, tip: String, id: String) -> Button:
+	var key := "map." + id
+	var button := Workspace.button(parent, label, action, tip, key)
+	var help := parent.get_child(button.get_index() + 1) as Button
+	help.custom_minimum_size.x = 22
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var style := help.get_theme_stylebox(state).duplicate() as StyleBox
+		style.content_margin_left = 4
+		style.content_margin_right = 4
+		help.add_theme_stylebox_override(state, style)
+	return button
+
+
 func _build_ui() -> void:
 	_workspace = Workspace.mount(self)
 	var padding := MarginContainer.new()
@@ -368,17 +384,17 @@ func _build_ui() -> void:
 	padding.add_child(layout)
 	var bar := HBoxContainer.new()
 	layout.add_child(bar)
-	var map_tab := Workspace.button(bar, "Map", func(): pass)
+	var map_tab := _map_button(bar, "Map", func(): pass, "Shows that the map builder is open.", "map")
 	map_tab.toggle_mode = true
 	map_tab.set_pressed_no_signal(true)
 	map_tab.disabled = true
-	_edit_button = Workspace.button(bar, "Edit Room", open_in_room_builder, "Open the selected room in F2 (Enter)")
-	_play_button = Workspace.button(bar, "Play Here", teleport, "Playtest the selected room (T)")
+	_edit_button = _map_button(bar, "Edit Room", open_in_room_builder, "Open the selected room in F2 (Enter)", "edit")
+	_play_button = _map_button(bar, "Play Here", teleport, "Playtest the selected room (T)", "play")
 	bar.add_spacer(false)
-	_undo_button = Workspace.button(bar, "Undo", undo, "Undo (Ctrl+Z)")
-	_redo_button = Workspace.button(bar, "Redo", redo, "Redo (Ctrl+Y)")
-	_save_button = Workspace.button(bar, "Save Map", func(): save(), "Save map footprint changes (Ctrl+S)")
-	Workspace.button(bar, "Close", Dev.request_close, "Close both builders")
+	_undo_button = _map_button(bar, "Undo", undo, "Undo the last map edit (Ctrl+Z)", "undo")
+	_redo_button = _map_button(bar, "Redo", redo, "Redo the last undone map edit (Ctrl+Y)", "redo")
+	_save_button = _map_button(bar, "Save Map", func(): save(), "Save the room positions and sizes on the map (Ctrl+S)", "save")
+	_map_button(bar, "Close", Dev.request_close, "Close both builders", "close")
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -401,11 +417,15 @@ func _build_room_list(body: HBoxContainer) -> void:
 	body.add_child(sidebar)
 	_heading(sidebar, "Rooms")
 	_search = LineEdit.new()
+	EdHelp.attach(_search, "map.search")
 	_search.placeholder_text = "Search name or code"
 	_search.clear_button_enabled = true
 	_search.text_changed.connect(func(_query: String): _refresh_rooms())
 	sidebar.add_child(_search)
 	_list = ItemList.new()
+	EdHelp.attach(_list, "map.rooms")
+	_list.fixed_icon_size = Vector2i(56, 30)
+	_list.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.item_selected.connect(_select_list_room)
 	_list.item_activated.connect(func(_index: int): open_in_room_builder())
@@ -419,21 +439,22 @@ func _build_map_area(body: HBoxContainer) -> void:
 	area.add_theme_constant_override("separation", 8)
 	body.add_child(area)
 	var tools := HBoxContainer.new()
+	tools.add_theme_constant_override("separation", 5)
 	area.add_child(tools)
 	var group := ButtonGroup.new()
 	for era in SHEETS:
-		var tab := Workspace.button(tools, String(era).capitalize(), set_sheet.bind(era))
+		var tab := _map_button(tools, String(era).capitalize(), set_sheet.bind(era), "Show rooms on the %s map." % era, "sheet." + era)
 		tab.toggle_mode = true
 		tab.button_group = group
 		_sheet_buttons.append(tab)
 	tools.add_spacer(false)
-	Workspace.button(tools, "−", func(): _zoom_at(_view.size * 0.5, 0.8), "Zoom out")
+	_map_button(tools, "−", func(): _zoom_at(_view.size * 0.5, 0.8), "Zoom out to see more rooms.", "zoom_out")
 	_zoom_label = _heading(tools, "", 14)
 	_zoom_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_zoom_label.custom_minimum_size.x = 48
-	Workspace.button(tools, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in")
-	Workspace.button(tools, "Fit", _fit, "Fit all rooms in view")
-	Workspace.button(tools, "Center", _center_room, "Center the selected room")
+	_map_button(tools, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in to see the rooms in more detail.", "zoom_in")
+	_map_button(tools, "Fit", _fit, "Fit all rooms in view", "fit")
+	_map_button(tools, "Center", _center_room, "Center the selected room", "center")
 	_view = Control.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.clip_contents = true
@@ -467,6 +488,9 @@ func _build_inspector(body: HBoxContainer) -> void:
 		box.min_value = 0 if i < 2 else 1
 		box.max_value = 9999
 		box.allow_greater = true
+		var help_key: String = ["map.x", "map.y", "map.width", "map.height"][i]
+		EdHelp.attach(box, help_key)
+		EdHelp.attach(box.get_line_edit(), help_key)
 		box.get_line_edit().select_all_on_focus = true
 		box.value_changed.connect(_change_field.bind(i))
 		field.add_child(box)
@@ -507,7 +531,9 @@ func _refresh_rooms() -> void:
 		var code := String(rooms[id].get("code", id))
 		if not query.is_empty() and not ("%s %s %s" % [title, code, id]).to_lower().contains(query):
 			continue
-		var i := _list.add_item(title)
+		var file_id := Dev.room_file_id(String(id), sheet)
+		var preview := EdThumbs.room(RoomScript.read_room_file(file_id))
+		var i := _list.add_item(title, preview)
 		_list.set_item_metadata(i, id)
 		_list.set_item_tooltip(i, "%s (%s)" % [title, code])
 	_room_count.text = "%d rooms" % ids.size() if _list.item_count == ids.size() else "%d of %d rooms" % [_list.item_count, ids.size()]
@@ -615,7 +641,11 @@ func _refresh_issues() -> void:
 			var left: String = rooms[issue["id"]].get("code", issue["id"])
 			var right: String = rooms[issue["other"]].get("code", issue["other"])
 			caption = "Overlap · %s and %s" % [left, right]
-		var button := Workspace.button(_issue_list, caption, _focus_issue.bind(issue), _issue_text(issue))
+		var row := HBoxContainer.new()
+		_issue_list.add_child(row)
+		var button := _map_button(row, caption, _focus_issue.bind(issue), "Jump to this map issue.", "issue")
+		button.tooltip_text = _issue_text(issue)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.clip_text = true
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		displayed += 1
@@ -866,8 +896,12 @@ func _show_overlap(point: Vector2, ids: Array) -> void:
 	for id in ids:
 		var room: Dictionary = _rooms()[id]
 		var caption := "%s (%s)" % [_name_for(id), room.get("code", id)]
-		Workspace.button(rows, caption, _choose_overlap.bind(id))
-	Workspace.button(rows, "Cancel", _hide_overlap)
+		var row := HBoxContainer.new()
+		rows.add_child(row)
+		_map_button(row, caption, _choose_overlap.bind(id), "Pick this room from the rooms at this spot.", "overlap_room")
+	var cancel_row := HBoxContainer.new()
+	rows.add_child(cancel_row)
+	_map_button(cancel_row, "Cancel", _hide_overlap, "Close this list and keep the current room selected.", "overlap_cancel")
 	_position_overlap.call_deferred(point)
 
 

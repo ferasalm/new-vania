@@ -73,7 +73,7 @@ func hurt_rect() -> Rect2:
 
 
 func _physics_process(delta: float) -> void:
-	if G.frozen():
+	if G.frozen() or G.leaving(self):
 		return
 	_flash = maxf(0.0, _flash - delta)
 	_cool = maxf(0.0, _cool - delta)

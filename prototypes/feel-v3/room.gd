@@ -12,6 +12,7 @@
 #   <  >  open edge with no door: walking off goes to header left= / right=
 #   L  library lever   Y  lever behind iron bars   |  iron bars   %  cracked wall
 #   T  time machine (organ)
+#   /  stair rising to the right  \  stair rising to the left
 #   p pendulum, u crusher, f flame vent, i spikes
 extends Node2D
 
@@ -191,6 +192,16 @@ func is_solid(x: int, y: int) -> bool:
 	return c == "#" or c == "|" or c == "%" or c == "B" or c == ":"
 
 
+## Return the local triangle points for a run of connected stair cells.
+static func stair_polygon(glyph: String, cells: int) -> PackedVector2Array:
+	if cells < 1 or not glyph in ["/", "\\"]:
+		return PackedVector2Array()
+	var span := float(cells * TILE)
+	if glyph == "/":
+		return PackedVector2Array([Vector2(0, span), Vector2(span, span), Vector2(span, 0)])
+	return PackedVector2Array([Vector2(0, 0), Vector2(span, span), Vector2(0, span)])
+
+
 func clear_cells(r: Rect2) -> void:
 	for cy in range(int(r.position.y / TILE), int(r.end.y / TILE)):
 		for cx in range(int(r.position.x / TILE), int(r.end.x / TILE)):
@@ -215,6 +226,7 @@ func _build(pictures: Array) -> void:
 	var shutter_cells: Array = []
 	var up_cells: Array = []
 	var down_cells: Array = []
+	var stair_cells: Array[Vector2i] = []
 	var enemy_spawns: Array = []
 	var last_row := grid.size() - 1
 
@@ -260,6 +272,8 @@ func _build(pictures: Array) -> void:
 				_add_marked_prop(ch, feet)
 			elif ch == "L" or ch == "Y":
 				_add_lever(feet, "library" if ch == "L" else "bars")
+			elif ch == "/" or ch == "\\":
+				stair_cells.append(Vector2i(x, y))
 			elif ch == "|":
 				bar_cells.append(Vector2i(x, y))
 			elif ch == "%":
@@ -290,6 +304,8 @@ func _build(pictures: Array) -> void:
 				doors_all.append(d)
 				spawns[side] = Vector2(26.0 if side == "left" else size.x - 26.0, feet.y)
 			x += 1
+
+	_add_stair_runs(solid, stair_cells)
 
 	if not up_cells.is_empty():
 		up_span = Vector2(up_cells.min() * TILE, (up_cells.max() + 1) * TILE)
@@ -369,6 +385,32 @@ func _door_target(side: String, y: int) -> String:
 		if ex is Dictionary and String(ex.get("side", "")) == letter and int(ex.get("at", 0)) == at:
 			return String(ex.get("to", fallback))
 	return fallback
+
+
+## Build one solid triangular collision shape for each connected diagonal stair run.
+func _add_stair_runs(solid: StaticBody2D, cells: Array[Vector2i]) -> void:
+	var starts: Array[Vector2i] = []
+	for cell: Vector2i in cells:
+		var glyph := String(grid[cell.y])[cell.x]
+		var previous := cell + (Vector2i(-1, 1) if glyph == "/" else Vector2i(-1, -1))
+		if not cells.has(previous) or String(grid[previous.y])[previous.x] != glyph:
+			starts.append(cell)
+	for start: Vector2i in starts:
+		var glyph := String(grid[start.y])[start.x]
+		var run: Array[Vector2i] = []
+		var cursor := start
+		var step := Vector2i(1, -1) if glyph == "/" else Vector2i(1, 1)
+		while cells.has(cursor) and String(grid[cursor.y])[cursor.x] == glyph:
+			run.append(cursor)
+			cursor += step
+		var count := run.size()
+		var top_y := start.y - (count - 1) if glyph == "/" else start.y
+		var shape := ConvexPolygonShape2D.new()
+		shape.points = stair_polygon(glyph, count)
+		var collision := CollisionShape2D.new()
+		collision.shape = shape
+		collision.position = Vector2(start.x * TILE, top_y * TILE)
+		solid.add_child(collision)
 
 
 func _add_marked_prop(marker_char: String, feet: Vector2) -> void:
@@ -478,6 +520,12 @@ func _draw() -> void:
 			elif ch == "=" or ch == "v":
 				draw_texture_rect_region(_ledge, Rect2(x * TILE, y * TILE, TILE, 8),
 					Rect2((x % 4) * TILE, 0, TILE, 8), tt)
+			elif ch == "/":
+				draw_colored_polygon(PackedVector2Array([Vector2(x * TILE, (y + 1) * TILE), Vector2((x + 1) * TILE, (y + 1) * TILE), Vector2((x + 1) * TILE, y * TILE)]), tt.darkened(0.28))
+				draw_line(Vector2(x * TILE, (y + 1) * TILE), Vector2((x + 1) * TILE, y * TILE), tt.lightened(0.25), 2.0)
+			elif ch == "\\":
+				draw_colored_polygon(PackedVector2Array([Vector2(x * TILE, y * TILE), Vector2((x + 1) * TILE, (y + 1) * TILE), Vector2(x * TILE, (y + 1) * TILE)]), tt.darkened(0.28))
+				draw_line(Vector2(x * TILE, y * TILE), Vector2((x + 1) * TILE, (y + 1) * TILE), tt.lightened(0.25), 2.0)
 
 
 # The backdrop wall is painted with copies of the picture at its real size,

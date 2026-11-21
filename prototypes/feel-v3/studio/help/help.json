@@ -1,0 +1,812 @@
+{
+	"builder.save": {
+		"title": "Save room",
+		"what": "Saves the room layout and its picture placements.",
+		"how": "Press Save or Ctrl+S.",
+		"limits": [
+			"Desktop builders only."
+		]
+	},
+	"builder.playtest": {
+		"title": "Playtest room",
+		"what": "Tries your current draft in the game.",
+		"how": "Press Tab to play. Press Tab again to return."
+	},
+	"builder.map": {
+		"title": "Map",
+		"what": "Shows where rooms sit and how they line up.",
+		"how": "Press Map or F3 to open it."
+	},
+	"builder.undo": {
+		"title": "Undo and Redo",
+		"what": "Takes back a room edit or puts it back.",
+		"how": "Press Ctrl+Z to undo. Press Ctrl+Y or Ctrl+Shift+Z to redo."
+	},
+	"studio.library": {
+		"title": "The asset library",
+		"what": "Holds searchable copies of project pictures, sounds, and source files.",
+		"how": "Open Library in F2. Run node tools/asset_library.mjs from the repo root to rebuild its list and copies.",
+		"limits": [
+			"The model bank and inbox are listed only. The exported game does not carry the library copies."
+		]
+	},
+	"builder.close": {
+		"title": "Close builders",
+		"what": "Closes the builder tools.",
+		"how": "Press Close or Esc. If asked, save, keep editing, or discard the drafts."
+	},
+	"builder.select": {
+		"title": "Select objects",
+		"what": "Picks one object or a box of objects.",
+		"how": "Press V and click an object. Shift+drag draws a box. Drag the box or use arrow keys to move it.",
+		"limits": [
+			"The box includes pictures whose top-left corners are inside. A move that would lose contents is refused."
+		]
+	},
+	"builder.place": {
+		"title": "Place",
+		"what": "Adds the selected palette item.",
+		"how": "Press B or pick an item, then click the room."
+	},
+	"builder.move": {
+		"title": "Move",
+		"what": "Moves a room object.",
+		"how": "Press M and drag the object to a new spot."
+	},
+	"builder.erase": {
+		"title": "Erase",
+		"what": "Removes a room symbol or picture.",
+		"how": "Press E and click the object to remove."
+	},
+	"builder.zone": {
+		"title": "Spread",
+		"what": "Draws a zone to fill with selected enemies or traps.",
+		"how": "Press S and drag a box, pick types, then press Apply Spread.",
+		"limits": [
+			"Only places types where they fit. Keeps existing objects."
+		]
+	},
+	"builder.start": {
+		"title": "Play from here",
+		"what": "Changes where the next playtest starts.",
+		"how": "Press P, then click the starting spot."
+	},
+	"builder.grid": {
+		"title": "Grid",
+		"what": "Shows the 16-pixel room cells.",
+		"how": "Turn Grid on to see where pieces line up."
+	},
+	"builder.collision": {
+		"title": "Collision",
+		"what": "Shows where walls and platforms block movement.",
+		"how": "Turn Collision on while checking a room."
+	},
+	"builder.tabs": {
+		"title": "Palette groups",
+		"what": "Changes the kinds of objects shown in the palette.",
+		"how": "Open the menu and pick a group. Right-click the menu for help on that group."
+	},
+	"builder.palette": {
+		"title": "Palette items",
+		"what": "Shows the objects you can place from one group.",
+		"how": "Click an item and then click the room. Right-click a symbol to learn what it does."
+	},
+	"builder.asset_folder": {
+		"title": "Asset Folder",
+		"what": "Opens the builder picture folder.",
+		"how": "Add your PNG files under tiles, props, or backdrops. Then press Refresh."
+	},
+	"builder.refresh": {
+		"title": "Refresh",
+		"what": "Looks again for palette pictures.",
+		"how": "Press Refresh after adding or changing a PNG."
+	},
+	"builder.plane": {
+		"title": "Behind, Solid, In Front",
+		"what": "Sets where the next picture draws and whether it blocks movement.",
+		"how": "Choose Behind for scenery, Solid for collision, or In Front to cover moving objects.",
+		"limits": [
+			"Solid pictures stay on the room grid. Existing room symbols keep their collision."
+		]
+	},
+	"builder.count": {
+		"title": "Spread count",
+		"what": "Sets how many selected enemies or traps to try to place.",
+		"how": "Enter a count from 1 to 40.",
+		"limits": [
+			"You may get fewer if the area has too few spots."
+		]
+	},
+	"builder.apply_spread": {
+		"title": "Apply Spread",
+		"what": "Fills the drawn zone with picked enemies or traps.",
+		"how": "Select one or more types, drag a zone in Spread mode, then press Apply Spread."
+	},
+	"builder.zoom_out": {
+		"title": "Zoom out",
+		"what": "Shows more of the room.",
+		"how": "Press − or roll the wheel down over the room."
+	},
+	"builder.zoom_in": {
+		"title": "Zoom in",
+		"what": "Makes room objects larger on screen.",
+		"how": "Press + or roll the wheel up over the room."
+	},
+	"builder.fit": {
+		"title": "Fit room",
+		"what": "Shows the whole room.",
+		"how": "Press Fit or F. Hold Space and drag to pan, or use arrows when no box is selected."
+	},
+	"builder.delete": {
+		"title": "Delete selection",
+		"what": "Clears the selected object or box.",
+		"how": "Press Delete or use the Delete button."
+	},
+	"builder.flip": {
+		"title": "Flip picture",
+		"what": "Mirrors a selected picture left to right.",
+		"how": "Pick a picture and press Flip."
+	},
+	"builder.copy": {
+		"title": "Copy box",
+		"what": "Copies the box contents.",
+		"how": "Select a box with Shift+drag and press Ctrl+C."
+	},
+	"builder.cut": {
+		"title": "Cut box",
+		"what": "Copies and removes the box contents.",
+		"how": "Select a box and press Ctrl+X."
+	},
+	"builder.paste": {
+		"title": "Paste box",
+		"what": "Adds the copied contents to the room.",
+		"how": "Point at a tile and press Ctrl+V.",
+		"limits": [
+			"Pieces over the room edge are clipped. The builder tells you when this happens."
+		]
+	},
+	"builder.duplicate": {
+		"title": "Duplicate box",
+		"what": "Makes another copy of the box contents.",
+		"how": "Select a box and press Ctrl+D."
+	},
+	"builder.rotate": {
+		"title": "Rotate",
+		"what": "Turns a selected decorative picture.",
+		"how": "Press R or Rotate to turn it 15° around its top-left corner.",
+		"limits": [
+			"Tiles and solid pictures cannot turn."
+		]
+	},
+	"builder.shrink": {
+		"title": "Shrink picture",
+		"what": "Makes a selected decorative picture smaller.",
+		"how": "Press [ or − Size to shrink it by 0.25×.",
+		"limits": [
+			"The smallest size is 0.25×. Tiles and solid pictures keep their size."
+		]
+	},
+	"builder.grow": {
+		"title": "Grow picture",
+		"what": "Makes a selected decorative picture larger.",
+		"how": "Press ] or + Size to grow it by 0.25×.",
+		"limits": [
+			"The largest size is 4×. Tiles and solid pictures keep their size."
+		]
+	},
+	"builder.free": {
+		"title": "Free placement",
+		"what": "Lets you position decorative pictures between snap points.",
+		"how": "Turn on Free and place or drag a decorative picture.",
+		"limits": [
+			"Tiles and solid pictures still snap to the room grid."
+		]
+	},
+	"builder.width": {
+		"title": "Room width",
+		"what": "Sets the physical width in 16-pixel tiles.",
+		"how": "Enter the width and press Apply.",
+		"limits": [
+			"Shrinking removes cells on the right. The minimum is four tiles."
+		]
+	},
+	"builder.height": {
+		"title": "Room height",
+		"what": "Sets the physical height in 16-pixel tiles.",
+		"how": "Enter the height and press Apply.",
+		"limits": [
+			"Shrinking removes cells at the bottom. The minimum is four tiles."
+		]
+	},
+	"builder.resize": {
+		"title": "Apply room size",
+		"what": "Changes the physical room dimensions.",
+		"how": "Set the width and height in tiles, then press Apply.",
+		"limits": [
+			"Shrinking trims the right or bottom. Undo can restore the trimmed cells."
+		]
+	},
+	"builder.options": {
+		"title": "Playtest Options",
+		"what": "Changes how a playtest runs.",
+		"how": "Open the menu for Show hitboxes, Invincible, or Half speed."
+	},
+	"builder.hitboxes": {
+		"title": "Show hitboxes",
+		"what": "Draws the areas that deal or receive hits.",
+		"how": "Toggle it in Playtest Options."
+	},
+	"builder.invincible": {
+		"title": "Invincible",
+		"what": "Keeps the player from taking damage in playtests.",
+		"how": "Toggle it in Playtest Options."
+	},
+	"builder.half_speed": {
+		"title": "Half speed",
+		"what": "Runs the game more slowly during the test.",
+		"how": "Toggle it in Playtest Options."
+	},
+	"builder.check": {
+		"title": "Check Reachability",
+		"what": "Checks routes and spots that may be blocked.",
+		"how": "Press Check Reachability, then click an issue to see where it is."
+	},
+	"builder.issue": {
+		"title": "Room issue",
+		"what": "Points out a possible problem in the room.",
+		"how": "Click the issue to bring its location into view."
+	},
+	"library.search": {
+		"title": "Search assets",
+		"what": "Finds project assets by name, category, or tag.",
+		"how": "Type one or more words, such as stone tile."
+	},
+	"library.categories": {
+		"title": "Asset categories",
+		"what": "Narrows the library by asset type.",
+		"how": "Choose a group in the menu. Right-click for help on that group."
+	},
+	"library.results": {
+		"title": "Search results",
+		"what": "Shows the matches and whether they can be used in a room.",
+		"how": "Pick a result to see its details. Double-click a placeable picture to use it."
+	},
+	"library.asset_help": {
+		"title": "Asset help",
+		"what": "Explains what a library item is and how it can be used.",
+		"how": "Pick an asset, then press ?."
+	},
+	"library.use": {
+		"title": "Use this picture",
+		"what": "Copies a supported PNG into the room builder palette.",
+		"how": "Pick a placeable result, press Use this picture, then click the room.",
+		"limits": [
+			"Sounds, source files and JPG pictures cannot be placed."
+		]
+	},
+	"library.close": {
+		"title": "Close library",
+		"what": "Returns to the room canvas.",
+		"how": "Press Close or Esc."
+	},
+	"map.map": {
+		"title": "Map builder",
+		"what": "Shows room layouts on one era sheet at a time.",
+		"how": "Press F3 or Builders to open it. Right-click a control or use its ? for help."
+	},
+	"map.edit": {
+		"title": "Edit Room",
+		"what": "Opens the selected room in the room builder.",
+		"how": "Pick a room then press Edit Room or Enter."
+	},
+	"map.play": {
+		"title": "Play Here",
+		"what": "Starts a playtest in the selected room.",
+		"how": "Pick a room then press Play Here or T. Press Tab to return."
+	},
+	"map.undo": {
+		"title": "Undo map edit",
+		"what": "Takes back the last map change.",
+		"how": "Press Undo or Ctrl+Z."
+	},
+	"map.redo": {
+		"title": "Redo map edit",
+		"what": "Restores a map edit you took back.",
+		"how": "Press Redo, Ctrl+Y or Ctrl+Shift+Z."
+	},
+	"map.save": {
+		"title": "Save Map",
+		"what": "Writes map positions and room footprints.",
+		"how": "Press Save Map or Ctrl+S."
+	},
+	"map.close": {
+		"title": "Close builders",
+		"what": "Closes the map and room workspaces.",
+		"how": "Press Close or Esc. Choose what to do if a draft is unsaved."
+	},
+	"map.search": {
+		"title": "Find a room",
+		"what": "Filters the room list on this era sheet.",
+		"how": "Type a room name or code."
+	},
+	"map.rooms": {
+		"title": "Room thumbnails",
+		"what": "Show a small picture of the terrain in each room.",
+		"how": "Click a thumbnail to select that room. The map brings it into view."
+	},
+	"map.sheet.before": {
+		"title": "Before sheet",
+		"what": "Shows the Before era map.",
+		"how": "Press Before or 1.",
+		"limits": [
+			"Edit each room on its own era sheet."
+		]
+	},
+	"map.sheet.after": {
+		"title": "After sheet",
+		"what": "Shows the After era map.",
+		"how": "Press After or 2.",
+		"limits": [
+			"Edit each room on its own era sheet."
+		]
+	},
+	"map.sheet.restored": {
+		"title": "Restored sheet",
+		"what": "Shows the Restored era map.",
+		"how": "Press Restored or 3.",
+		"limits": [
+			"Edit each room on its own era sheet."
+		]
+	},
+	"map.zoom_out": {
+		"title": "Zoom map out",
+		"what": "Shows more rooms at once.",
+		"how": "Press − or roll the wheel down. Drag with the middle mouse, right mouse or Space held to pan."
+	},
+	"map.zoom_in": {
+		"title": "Zoom map in",
+		"what": "Makes the room boxes larger.",
+		"how": "Press + or roll the wheel up. Arrow keys pan the map."
+	},
+	"map.fit": {
+		"title": "Fit map",
+		"what": "Shows all rooms on the active map sheet.",
+		"how": "Press Fit."
+	},
+	"map.center": {
+		"title": "Center room",
+		"what": "Moves the selected room into the center of the view.",
+		"how": "Pick a room, then press Center."
+	},
+	"map.x": {
+		"title": "Map X",
+		"what": "Sets the left edge of the selected room on the map.",
+		"how": "Enter a cell number, drag the room, or press Alt+left or right.",
+		"limits": [
+			"Positions start at 0."
+		]
+	},
+	"map.y": {
+		"title": "Map Y",
+		"what": "Sets the top edge of the selected room on the map.",
+		"how": "Enter a cell number, drag the room, or press Alt+up or down.",
+		"limits": [
+			"Positions start at 0."
+		]
+	},
+	"map.width": {
+		"title": "Map width",
+		"what": "Changes how many map cells wide the room appears.",
+		"how": "Enter a width, drag the resize handle or press Shift+left or right.",
+		"limits": [
+			"The minimum is one map cell. This does not resize the physical room."
+		]
+	},
+	"map.height": {
+		"title": "Map height",
+		"what": "Changes how many map cells tall the room appears.",
+		"how": "Enter a height, drag the resize handle or press Shift+up or down.",
+		"limits": [
+			"The minimum is one map cell. This does not resize the physical room."
+		]
+	},
+	"map.issue": {
+		"title": "Map issue",
+		"what": "Points out a possible problem such as a disconnected room.",
+		"how": "Click the issue to show its location and read the details."
+	},
+	"map.overlap_room": {
+		"title": "Choose overlapping room",
+		"what": "Picks one of the rooms at the clicked spot.",
+		"how": "Click its name in the list."
+	},
+	"map.overlap_cancel": {
+		"title": "Cancel overlap list",
+		"what": "Closes the list and keeps your current room selected.",
+		"how": "Press Cancel or Esc."
+	},
+	"tuning.feel": {
+		"title": "Feel",
+		"what": "Shows the main controls for the game's feel.",
+		"how": "Press F1, then FEEL. Drag a slider to try a value."
+	},
+	"tuning.weapons": {
+		"title": "Weapons",
+		"what": "Shows the weapon picker and weapon settings.",
+		"how": "Press F1, then WEAPONS. Use < or > to try a weapon."
+	},
+	"tuning.sounds": {
+		"title": "Sounds",
+		"what": "Shows the music and sound effect choices.",
+		"how": "Press F1, then SOUNDS. Use < or > to preview a choice."
+	},
+	"tuning.part": {
+		"title": "Extra tuning page",
+		"what": "Groups related game settings on one page.",
+		"how": "Choose a tab, then drag a slider. Press ? for that setting's range and values."
+	},
+	"tuning.save": {
+		"title": "Save tuning",
+		"what": "Keeps your changes to supported tuning and sound settings.",
+		"how": "Press Save at the bottom of F1."
+	},
+	"tuning.reset": {
+		"title": "Reset tuning",
+		"what": "Restores the last saved tuning and sound choices.",
+		"how": "Press Reset at the bottom of F1."
+	},
+	"studio.search": {
+		"title": "Studio help",
+		"what": "Finds help by tool, key, or activity and shows the library path.",
+		"how": "Click Studio, type what you want to do, then open a result."
+	},
+	"studio.notes": {
+		"title": "Screenshot notes",
+		"what": "Records feedback on a frozen frame.",
+		"how": "Press F4. Type a note, drag to mark an area, and press Enter to save. Right-click removes the last box. Esc cancels."
+	},
+	"studio.stop_test": {
+		"title": "Stop Playtest",
+		"what": "Returns to the builder and its current draft.",
+		"how": "Press Tab, Esc, F2, or F3 while playing a builder test."
+	},
+	"palette.terrain": {
+		"title": "Terrain",
+		"what": "Walls, ledges, bars, and openings that shape the room.",
+		"how": "Pick Terrain and place symbols on the 16-pixel grid."
+	},
+	"palette.enemies": {
+		"title": "Enemies",
+		"what": "Enemy spawn positions inside a room.",
+		"how": "Pick Enemies, then place one or use Spread."
+	},
+	"palette.hazards": {
+		"title": "Traps",
+		"what": "Spikes and moving hazards.",
+		"how": "Pick Traps, then place one or use Spread where there is support."
+	},
+	"palette.spots": {
+		"title": "Room Markers",
+		"what": "Starts, doors, terminals and other room points.",
+		"how": "Pick Room Markers. Place the marker that the room needs."
+	},
+	"palette.tiles": {
+		"title": "PNG Tiles",
+		"what": "Pictures placed on the 16-pixel room grid.",
+		"how": "Pick PNG Tiles and choose a layer. Use Solid to add collision to empty cells."
+	},
+	"palette.props": {
+		"title": "PNG Props",
+		"what": "Decorative pictures such as furniture or lamps.",
+		"how": "Pick PNG Props, choose Behind or In Front, then place the picture."
+	},
+	"palette.backdrops": {
+		"title": "Backdrop",
+		"what": "A picture used as the room background.",
+		"how": "Pick Backdrop and choose a picture to use instead of the default wall."
+	},
+	"catalog.3d": {
+		"title": "3D model bank",
+		"what": "Lists the original 3D models.",
+		"how": "Search to see the original path.",
+		"limits": [
+			"Models are listed only and cannot be placed."
+		]
+	},
+	"catalog.audio": {
+		"title": "Audio",
+		"what": "Music and sound effects from the project.",
+		"how": "Search by a cue name or group. Use F1 SOUNDS to try configured choices.",
+		"limits": [
+			"Audio cannot be placed as a room picture."
+		]
+	},
+	"catalog.bosses": {
+		"title": "Bosses",
+		"what": "Pictures and source files for bosses.",
+		"how": "Search by boss name to find reference art."
+	},
+	"catalog.characters": {
+		"title": "Characters",
+		"what": "Pandora and hero pictures and sources.",
+		"how": "Search by character or movement name."
+	},
+	"catalog.concepts": {
+		"title": "Concept art",
+		"what": "Design sketches and visual references.",
+		"how": "Search for a subject or file name to find its source."
+	},
+	"catalog.enemies": {
+		"title": "Enemies",
+		"what": "Enemy pictures at their original scales.",
+		"how": "Search by enemy name. Use the F2 Enemies palette to place a spawn."
+	},
+	"catalog.environment": {
+		"title": "Environment",
+		"what": "Room tiles, scenery, and backdrops.",
+		"how": "Search by theme or object, then use a placeable PNG in F2."
+	},
+	"catalog.fx": {
+		"title": "Effects",
+		"what": "Effect art, such as sparks and spell pictures.",
+		"how": "Search by effect name to preview a picture."
+	},
+	"catalog.inbox": {
+		"title": "Inbox",
+		"what": "Lists incoming material awaiting sorting.",
+		"how": "Search to find a file and its original path.",
+		"limits": [
+			"Files are listed only and cannot be placed."
+		]
+	},
+	"catalog.items": {
+		"title": "Items",
+		"what": "Pictures for relics and other items.",
+		"how": "Search by item name. If a PNG is placeable, you can use it as a picture."
+	},
+	"catalog.other": {
+		"title": "Other assets",
+		"what": "Files outside the named library groups.",
+		"how": "Search by filename and check each result's details."
+	},
+	"catalog.palettes": {
+		"title": "Color palettes",
+		"what": "Files used as color references.",
+		"how": "Search by palette name to find the original."
+	},
+	"catalog.root-assets": {
+		"title": "Shared assets",
+		"what": "Files held in the repo's shared asset folders.",
+		"how": "Search for the filename or tag and check the original path."
+	},
+	"catalog.source": {
+		"title": "Source and reference files",
+		"what": "Original artwork, previews, and other working files.",
+		"how": "Search by name to find the source path."
+	},
+	"catalog.weapon": {
+		"title": "Weapon art",
+		"what": "Pictures and source files for weapons.",
+		"how": "Search by weapon name. Use F1 WEAPONS to try the game's weapon choices."
+	},
+	"glyph.#": {
+		"title": "Solid wall",
+		"what": "Blocks movement through the cell.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.=": {
+		"title": "Thin ledge",
+		"what": "Makes a platform the player can land on.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.B": {
+		"title": "Bricked arch",
+		"what": "Marks an arch blocked by brickwork.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.|": {
+		"title": "Iron bars",
+		"what": "Blocks the way with bars.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.%": {
+		"title": "Cracked wall",
+		"what": "Marks a wall that can break.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.:": {
+		"title": "Shutter",
+		"what": "Marks a shutter in the room.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph..": {
+		"title": "Empty cell",
+		"what": "Clears the current room symbol.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.^": {
+		"title": "Opening up",
+		"what": "Marks an opening towards the room above.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.v": {
+		"title": "Opening down",
+		"what": "Marks an opening towards the room below.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.<": {
+		"title": "Open left edge",
+		"what": "Marks an opening on the left side.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.>": {
+		"title": "Open right edge",
+		"what": "Marks an opening on the right side.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.p": {
+		"title": "Pendulum",
+		"what": "Spawns a swinging trap.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.u": {
+		"title": "Crusher",
+		"what": "Spawns a crushing trap.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.f": {
+		"title": "Flame vent",
+		"what": "Marks a source of flames.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.i": {
+		"title": "Spikes",
+		"what": "Marks a spike hazard.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.P": {
+		"title": "Player start",
+		"what": "Marks a place for the player to start.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.D": {
+		"title": "Door",
+		"what": "Marks a doorway.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.X": {
+		"title": "Boss door",
+		"what": "Marks the boss door.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.M": {
+		"title": "Save terminal",
+		"what": "Marks a place to save.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.K": {
+		"title": "Capsule",
+		"what": "Marks a capsule location.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.A": {
+		"title": "Relic",
+		"what": "Marks a relic location.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.O": {
+		"title": "Boss spawn",
+		"what": "Marks where the boss appears.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.T": {
+		"title": "Time machine",
+		"what": "Marks the time machine.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.L": {
+		"title": "Library lever",
+		"what": "Marks the lever in the Library.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.Y": {
+		"title": "Lever behind bars",
+		"what": "Marks the lever on the barred side.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.1": {
+		"title": "Mark 1",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.2": {
+		"title": "Mark 2",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.3": {
+		"title": "Mark 3",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.4": {
+		"title": "Mark 4",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.5": {
+		"title": "Mark 5",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.6": {
+		"title": "Mark 6",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.7": {
+		"title": "Mark 7",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.8": {
+		"title": "Mark 8",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"glyph.9": {
+		"title": "Mark 9",
+		"what": "Marks a point that room data can refer to.",
+		"how": "Pick this symbol in the room palette and click a grid cell."
+	},
+	"library.recent": {
+		"title": "Recent pictures",
+		"what": "Shows pictures used from the library in this game session.",
+		"how": "Turn on Recent beside the category menu. The last picture you used appears first."
+	},
+	"glyph.G": {
+		"title": "Grave Static",
+		"what": "A ghost enemy.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.l": {
+		"title": "Tithe Leech",
+		"what": "An enemy that can hang overhead.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.S": {
+		"title": "Bile Cantor",
+		"what": "An enemy that spits at the player.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.H": {
+		"title": "Chainbite Hound",
+		"what": "A ground enemy that pursues the player.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.C": {
+		"title": "Hollow Choir",
+		"what": "A flying enemy.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.m": {
+		"title": "Censer Moth",
+		"what": "A flying enemy.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.n": {
+		"title": "Needle Scribe",
+		"what": "An enemy that throws needles.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.c": {
+		"title": "Reliquary Crab",
+		"what": "A ground enemy.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	},
+	"glyph.W": {
+		"title": "Ossuary Warden",
+		"what": "An enemy spawn point for the Ossuary Warden.",
+		"how": "Pick it in Enemies, then click a cell to set its spawn. Use Spread to add it across a zone."
+	}
+}

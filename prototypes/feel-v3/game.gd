@@ -75,6 +75,18 @@ func frozen() -> bool:
 	return hitstop > 0.0
 
 
+## True while `n` belongs to a room that is being thrown away (she just left it). The old room
+## lives until the end of the frame; its traps and enemies must not touch the Pandora of the
+## new room, which stands at the same coordinates (playtest note 2026-11-21: 40 crusher damage).
+func leaving(n: Node) -> bool:
+	var p := n
+	while p != null:
+		if p.is_queued_for_deletion():
+			return true
+		p = p.get_parent()
+	return false
+
+
 func tex(rel: String) -> Texture2D:
 	# imported projects and exported builds use the imported texture; a cold clone
 	# with no import step falls back to the raw PNG.

@@ -414,7 +414,7 @@ func _tink(dir: int) -> void:
 # ---------- the loop ----------
 
 func _physics_process(delta: float) -> void:
-	if G.frozen() or _dead or G.main == null or G.main.player == null:
+	if G.frozen() or _dead or G.main == null or G.main.player == null or G.leaving(self):
 		return
 	_flash = maxf(0.0, _flash - delta)
 	_cool = maxf(0.0, _cool - delta)

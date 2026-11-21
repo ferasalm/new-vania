@@ -1,10 +1,15 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 extends CanvasLayer
 
+const EdHelp := preload("res://editor/ed_help.gd")
+
 signal closed
 
 const RoomDoc := preload("res://editor/room_doc.gd")
+const EdSelection := preload("res://editor/ed_selection.gd")
 const EdAssets := preload("res://editor/ed_assets.gd")
+const EdCatalog := preload("res://editor/ed_catalog.gd")
+const EdPalette := preload("res://editor/ed_palette.gd")
 const RoomScript := preload("res://room.gd")
 const RoomChecks := preload("res://editor/room_checks.gd")
 const Shell := preload("res://editor/workspace_shell.gd")
@@ -54,6 +59,21 @@ var _redo_btn: Button
 var _tool_buttons := {}
 var _entries: Array = []
 var _markers := {}
+var _copy_btn: Button
+var _cut_btn: Button
+var _paste_btn: Button
+var _dup_btn: Button
+var _transform_buttons: Array[Button] = []
+var _free_btn: Button
+var _clipboard: Dictionary = {}
+var _selecting_box := false
+var _box_select_start := Vector2i(-1, -1)
+var _group_drag := false
+var _group_drag_start := Vector2i(-1, -1)
+
+var library_button: Button
+var library_palette: Control = null
+var _library_overlay: Control
 
 var _cam := Vector2.ZERO
 var _zoom := 1.0
@@ -119,7 +139,7 @@ func begin(info: Dictionary) -> void:
 	_set_tool(tool)
 	_refresh()
 	_fit.call_deferred()
-	_say("Select an object on the canvas, or pick something from the palette.")
+	_say("Click an object, or Shift+drag to select a box.")
 
 
 func _props_source(file: String) -> String:
@@ -154,16 +174,16 @@ func _build_ui() -> void:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
 	layout.add_child(top)
-	Shell.button(top, "Map", func(): Dev.show_map(), "Open the map (F3)")
-	var room_heading := _label(top, "Room", 20)
+	Shell.button(top, "Map", func(): Dev.show_map(), "Open the map (F3)", "builder.map", false)
+	var room_heading := _label(top, "Room · Right-click for help", 16)
 	room_heading.modulate = DESIGN_TINT
 	_title = _label(top, "", 19)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_save_btn = Shell.button(top, "Save", save, "Save this room and its PNG placements (Ctrl+S)")
-	Shell.button(top, "Playtest", play, "Play this room with the current edits (Tab)")
-	Shell.button(top, "Close", func(): Dev.request_close(), "Close the builders")
+	_save_btn = Shell.button(top, "Save", save, "Save this room and its PNG placements (Ctrl+S)", "builder.save", false)
+	Shell.button(top, "Playtest", play, "Play this room with the current edits (Tab)", "builder.playtest", false)
+	Shell.button(top, "Close", func(): Dev.request_close(), "Close the builders", "builder.close", false)
 
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 6)
@@ -175,8 +195,8 @@ func _build_ui() -> void:
 	_tool_button(actions, "ZONE", "Spread", "Draw an area for enemies or traps (S)")
 	_tool_button(actions, "START", "Play from here", "Choose a playtest start on the canvas (P)")
 	_spacer(actions)
-	_undo_btn = Shell.button(actions, "Undo", _undo, "Undo (Ctrl+Z)")
-	_redo_btn = Shell.button(actions, "Redo", _redo, "Redo (Ctrl+Y)")
+	_undo_btn = Shell.button(actions, "Undo", _undo, "Undo (Ctrl+Z)", "builder.undo", false)
+	_redo_btn = Shell.button(actions, "Redo", _redo, "Redo (Ctrl+Y)", "builder.undo", false)
 	_toggle(actions, "Grid", false, func(value: bool):
 		_grid = value
 		_overlay.queue_redraw())
@@ -199,12 +219,19 @@ func _build_ui() -> void:
 func _build_palette(parent: HBoxContainer) -> void:
 	var panel := _sidebar(parent, 218)
 	_label(panel, "Palette", 22)
+	var library_row := HBoxContainer.new()
+	panel.add_child(library_row)
+	library_button = Shell.button(library_row, "Library", open_library, "Find any picture in the project: search, categories, preview", "studio.library")
+	library_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tabs = OptionButton.new()
+	EdHelp.attach(_tabs, "builder.tabs", func(_mouse: InputEventMouseButton):
+		EdHelp.show("palette." + tab.to_lower()))
 	for label in EdAssets.CATEGORY_LABELS:
 		_tabs.add_item(label)
 	_tabs.item_selected.connect(func(index: int): _set_tab(EdAssets.TABS[index]))
 	panel.add_child(_tabs)
 	_list = ItemList.new()
+	EdHelp.attach(_list, "builder.palette", _show_palette_help)
 	_list.select_mode = ItemList.SELECT_MULTI
 	_list.fixed_icon_size = Vector2i(30, 30)
 	_list.add_theme_constant_override("v_separation", 6)
@@ -216,9 +243,10 @@ func _build_palette(parent: HBoxContainer) -> void:
 	_empty_palette.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_assets_actions = HBoxContainer.new()
 	panel.add_child(_assets_actions)
-	Shell.button(_assets_actions, "Asset Folder", _open_assets)
-	Shell.button(_assets_actions, "Refresh", _refresh_assets)
+	Shell.button(_assets_actions, "Asset Folder", _open_assets, "", "builder.asset_folder", false)
+	Shell.button(_assets_actions, "Refresh", _refresh_assets, "", "builder.refresh", false)
 	_plane_choice = OptionButton.new()
+	EdHelp.attach(_plane_choice, "builder.plane")
 	for name in ["Behind", "Solid", "In Front"]:
 		_plane_choice.add_item(name)
 	_plane_choice.item_selected.connect(func(index: int): plane = ["back", "solid", "front"][index])
@@ -228,8 +256,8 @@ func _build_palette(parent: HBoxContainer) -> void:
 	var count_line := HBoxContainer.new()
 	_spread.add_child(count_line)
 	_label(count_line, "Count", 16)
-	_count = _spinner(count_line, 1, 40, 4)
-	_spread_btn = Shell.button(_spread, "Apply Spread", spread_zone)
+	_count = _spinner(count_line, 1, 40, 4, "builder.count")
+	_spread_btn = Shell.button(_spread, "Apply Spread", spread_zone, "", "builder.apply_spread", false)
 	_spread_btn.tooltip_text = "Select enemy or trap types, then draw a region with Spread."
 
 
@@ -243,12 +271,12 @@ func _build_canvas(parent: HBoxContainer) -> void:
 	var help := _label(nav, "Wheel to zoom · Space + drag to pan", 15)
 	help.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	help.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	Shell.button(nav, "−", func(): _zoom_at(_view.size * 0.5, 1.0 / 1.25), "Zoom out")
+	Shell.button(nav, "−", func(): _zoom_at(_view.size * 0.5, 1.0 / 1.25), "Zoom out", "builder.zoom_out", false)
 	_zoom_label = _label(nav, "100%", 15)
 	_zoom_label.custom_minimum_size.x = 56
 	_zoom_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	Shell.button(nav, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in")
-	Shell.button(nav, "Fit", _fit, "Frame the whole room (F)")
+	Shell.button(nav, "+", func(): _zoom_at(_view.size * 0.5, 1.25), "Zoom in", "builder.zoom_in", false)
+	Shell.button(nav, "Fit", _fit, "Frame the whole room (F)", "builder.fit", false)
 	_view = Control.new()
 	_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -282,20 +310,35 @@ func _build_inspector(parent: HBoxContainer) -> void:
 	_picked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var picked_actions := HBoxContainer.new()
 	panel.add_child(picked_actions)
-	_move_btn = Shell.button(picked_actions, "Move", func(): _set_tool("MOVE"))
-	_delete_btn = Shell.button(picked_actions, "Delete", _delete_selection)
-	_flip_btn = Shell.button(picked_actions, "Flip", _flip_selection)
+	_move_btn = Shell.button(picked_actions, "Move", func(): _set_tool("MOVE"), "", "builder.move", false)
+	_delete_btn = Shell.button(picked_actions, "Delete", _delete_selection, "", "builder.delete", false)
+	_flip_btn = Shell.button(picked_actions, "Flip", _flip_selection, "", "builder.flip", false)
+	var clipboard_actions := HBoxContainer.new()
+	panel.add_child(clipboard_actions)
+	_copy_btn = Shell.button(clipboard_actions, "Copy", _copy_region, "Copy the box (Ctrl+C)", "builder.copy", false)
+	_cut_btn = Shell.button(clipboard_actions, "Cut", _cut_region, "Cut the box (Ctrl+X)", "builder.cut", false)
+	_paste_btn = Shell.button(clipboard_actions, "Paste", _paste_clipboard, "Paste at the last tile pointed to (Ctrl+V)", "builder.paste", false)
+	_dup_btn = Shell.button(clipboard_actions, "Duplicate", _duplicate_region, "Make a second copy (Ctrl+D)", "builder.duplicate", false)
+	var picture_actions := HBoxContainer.new()
+	panel.add_child(picture_actions)
+	_transform_buttons = [
+		Shell.button(picture_actions, "Rotate", _rotate_prop, "Turn a decorative picture by 15° (R)", "builder.rotate", false),
+		Shell.button(picture_actions, "− Size", _scale_prop.bind(-0.25), "Shrink a decorative picture ([)", "builder.shrink", false),
+		Shell.button(picture_actions, "+ Size", _scale_prop.bind(0.25), "Grow a decorative picture (])", "builder.grow", false),
+	]
+	_free_btn = Shell.button(picture_actions, "Free", _say_free_placement, "Place and move decorative pictures without snapping", "builder.free", false)
+	_free_btn.toggle_mode = true
 	_label(panel, "Room Size · Tiles", 17)
 	var dimensions := HBoxContainer.new()
 	panel.add_child(dimensions)
-	_width = _spinner(dimensions, 4, 1024, 4)
+	_width = _spinner(dimensions, 4, 1024, 4, "builder.width")
 	_label(dimensions, "×", 16)
-	_height = _spinner(dimensions, 4, 1024, 4)
-	Shell.button(dimensions, "Apply", _apply_size)
+	_height = _spinner(dimensions, 4, 1024, 4, "builder.height")
+	Shell.button(dimensions, "Apply", _apply_size, "", "builder.resize", false)
 	_build_playtest_options(panel)
 
 	_label(panel, "Issues", 22)
-	_check_btn = Shell.button(panel, "Check Reachability", run_full_check)
+	_check_btn = Shell.button(panel, "Check Reachability", run_full_check, "", "builder.check", false)
 	_issue_summary = _label(panel, "", 15)
 	_issue_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var list := ScrollContainer.new()
@@ -309,7 +352,9 @@ func _build_inspector(parent: HBoxContainer) -> void:
 
 func _build_playtest_options(parent: Container) -> void:
 	var options := MenuButton.new()
+	EdHelp.attach(options, "builder.options")
 	options.text = "Playtest Options"
+	options.tooltip_text = "Show hitboxes, Invincible, Half speed"
 	parent.add_child(options)
 	var menu := options.get_popup()
 	menu.add_check_item("Show hitboxes", 0)
@@ -358,8 +403,10 @@ func _label(parent: Container, value: String, size: int) -> Label:
 	return label
 
 
-func _spinner(parent: Container, low: int, high: int, value: int) -> SpinBox:
+func _spinner(parent: Container, low: int, high: int, value: int, help_key: String) -> SpinBox:
 	var box := SpinBox.new()
+	EdHelp.attach(box, help_key)
+	EdHelp.attach(box.get_line_edit(), help_key)
 	box.min_value = low
 	box.max_value = high
 	box.value = value
@@ -376,6 +423,7 @@ func _spacer(parent: Container) -> void:
 
 func _toggle(parent: Container, title: String, value: bool, action: Callable) -> void:
 	var button := CheckButton.new()
+	EdHelp.attach(button, "builder." + title.to_lower())
 	button.text = title
 	button.button_pressed = value
 	button.toggled.connect(action)
@@ -383,7 +431,7 @@ func _toggle(parent: Container, title: String, value: bool, action: Callable) ->
 
 
 func _tool_button(parent: Container, mode: String, title: String, hint: String) -> void:
-	var button := Shell.button(parent, title, func(): _set_tool(mode), hint)
+	var button := Shell.button(parent, title, func(): _set_tool(mode), hint, "builder." + mode.to_lower(), false)
 	button.toggle_mode = true
 	_tool_buttons[mode] = button
 
@@ -431,6 +479,19 @@ func _set_tab(category: String) -> void:
 	_overlay.queue_redraw()
 
 
+func _show_palette_help(mouse: InputEventMouseButton) -> void:
+	var index := _list.get_item_at_position(mouse.position, true)
+	if index < 0:
+		EdHelp.show("builder.palette")
+		return
+	var entry: Dictionary = _entries[index]
+	var glyph := str(entry.get("glyph", ""))
+	var key := "glyph." + glyph
+	if not EdHelp.has(key):
+		key = "palette." + tab.to_lower()
+	EdHelp.show(key)
+
+
 func _on_pick(index: int, selected: bool) -> void:
 	if selected:
 		sel = _entries[index]
@@ -457,9 +518,91 @@ func _refresh_assets() -> void:
 	_say("Asset palette refreshed.")
 
 
+## Open the searchable asset-library overlay; opening it again keeps the same one.
+func open_library() -> void:
+	if library_palette != null and is_instance_valid(library_palette):
+		return
+	if EdCatalog.entry_count() == 0:
+		EdCatalog.load_file(EdAssets.catalog_path())
+	var overlay := Control.new()
+	overlay.z_index = 64   # above the room overlay (z_index 16)
+	_shell.add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_library_overlay = overlay
+	var dim := ColorRect.new()
+	dim.color = Color(Shell.BACKGROUND, 0.72)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(dim)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var center := CenterContainer.new()
+	overlay.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(940, 600)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Shell.SURFACE
+	style.border_color = Shell.ACCENT
+	style.set_border_width_all(1)
+	style.set_content_margin_all(16)
+	panel.add_theme_stylebox_override("panel", style)
+	center.add_child(panel)
+	var column := VBoxContainer.new()
+	panel.add_child(column)
+	var palette := EdPalette.new()
+	palette.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	palette.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(palette)
+	library_palette = palette
+	palette.entry_used.connect(func(entry: Dictionary) -> void:
+		if use_library_entry(entry):
+			EdPalette.record_recent(str(entry.get("id", "")))
+			close_library())
+	var footer := HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGNMENT_END
+	column.add_child(footer)
+	Shell.button(footer, "Close", close_library, "", "library.close", false)
+
+
+## Close the library overlay at once; harmless when it is already closed.
+func close_library() -> void:
+	var overlay := _library_overlay
+	_library_overlay = null
+	library_palette = null
+	if overlay != null and is_instance_valid(overlay):
+		overlay.queue_free()
+
+
+## Copy a library picture into the builder, switch to its tab and arm placing.
+func use_library_entry(entry: Dictionary) -> bool:
+	var reason := EdCatalog.placeable_reason(entry)
+	if not reason.is_empty():
+		_say(reason)
+		return false
+	var rel := EdAssets.adopt(entry)
+	if rel.is_empty():
+		_say("Could not copy that picture into the builder's folder.")
+		return false
+	EdAssets.clear_cache()
+	_set_tab(String(entry.get("placeable", "")).to_upper())
+	var index := -1
+	for i in _entries.size():
+		if String((_entries[i] as Dictionary).get("png", "")) == rel:
+			index = i
+			break
+	if index >= 0:
+		_list.select(index)
+		_on_pick(index, true)
+		_set_tool("PLACE")
+	_say("Ready to place %s. Click in the room." % String(entry.get("name", "")))
+	return true
+
+
 func _set_tool(mode: String) -> void:
 	_end_pointer_actions()
 	tool = mode
+	if tool not in ["SELECT", "MOVE"] and _selection.has("region"):
+		_selection = {}
+		_update_selection()
 	for key in _tool_buttons:
 		_tool_buttons[key].set_pressed_no_signal(key == tool)
 	if mode == "START":
@@ -604,7 +747,7 @@ func _show_issues() -> void:
 			"clearance": "Low Jump Clearance", "jump": "Jump Advisory"}.get(type, "Reachability")
 		var body := String(issue["text"]).trim_prefix("ceiling trap: ")
 		body = body.left(1).to_upper() + body.substr(1)
-		var button := Shell.button(_issues, heading, _focus_issue.bind(issue["rect"]), body)
+		var button := Shell.button(_issues, heading, _focus_issue.bind(issue["rect"]), body, "builder.issue", false)
 		button.modulate = _issue_color(issue)
 		var detail := _label(_issues, body, 14)
 		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -687,16 +830,19 @@ func _place_picture(at: Vector2) -> void:
 		if not doc.in_room(_cell_of(at).x, _cell_of(at).y):
 			return
 		doc.push_undo()
-		doc.add_prop(png, int(pos.x), int(pos.y), plane, tab == "TILES")
+		doc.add_prop(png, pos.x, pos.y, plane, tab == "TILES")
+		if _free_btn.button_pressed and (tab == "TILES" or plane == "solid"):
+			_say("Solid and tile pictures stay on the grid.")
 	else:
 		return
 	_changed()
 
 
 func _picture_position(at: Vector2, png: String, is_tile: bool) -> Vector2:
-	if is_tile:
+	if is_tile or plane == "solid":
 		return Vector2(_cell_of(at)) * TILE
-	return ((at - EdAssets.size_of(png) * 0.5) / 8.0).round() * 8.0
+	var anchor := at - EdAssets.size_of(png) * 0.5
+	return anchor if _free_btn.button_pressed else (anchor / 8.0).round() * 8.0
 
 
 func _pick_at(at: Vector2) -> Dictionary:
@@ -712,7 +858,11 @@ func _pick_at(at: Vector2) -> Dictionary:
 func _update_selection() -> void:
 	var movable := false
 	var label := "No object selected"
-	if _selection.has("prop"):
+	var group := _selection.has("region")
+	if group:
+		var rect: Rect2i = _selection["region"]
+		label = "%d × %d tiles selected\nDrag or use arrows to move the box." % [rect.size.x, rect.size.y]
+	elif _selection.has("prop"):
 		var picture: Dictionary = doc.props[_selection["prop"]]
 		var layer_name := String(picture.get("layer", "back")).capitalize()
 		label = "%s\nPNG · %s" % [String(picture["png"]).get_file(), layer_name]
@@ -726,6 +876,12 @@ func _update_selection() -> void:
 	_move_btn.disabled = not movable
 	_delete_btn.disabled = _selection.is_empty()
 	_flip_btn.disabled = not _selection.has("prop")
+	_copy_btn.disabled = not group
+	_cut_btn.disabled = not group
+	_dup_btn.disabled = not group
+	_paste_btn.disabled = _clipboard.is_empty()
+	for button in _transform_buttons:
+		button.disabled = not _selection.has("prop")
 
 
 func _glyph_name(glyph: String) -> String:
@@ -755,7 +911,93 @@ func _erase_object(target: Dictionary) -> void:
 
 
 func _delete_selection() -> void:
-	_erase_object(_selection)
+	if not _selection.has("region"):
+		_erase_object(_selection)
+		return
+	var rect: Rect2i = _selection["region"]
+	if EdSelection.has_content(doc.copy_region(rect)):
+		doc.push_undo()
+		doc.clear_region(rect)
+		_changed()
+	_selection = {}
+	_update_selection()
+	_overlay.queue_redraw()
+
+
+func _room_bounds() -> Rect2i:
+	return Rect2i(0, 0, doc.width(), doc.height())
+
+
+func _update_box_selection() -> void:
+	var region := EdSelection.box_rect(_box_select_start, _hover, _room_bounds())
+	_selection = {"region": region} if region.has_area() else {}
+	_update_selection()
+
+
+func _move_region(offset: Vector2i) -> void:
+	if offset == Vector2i.ZERO:
+		return
+	var rect: Rect2i = _selection["region"]
+	var block: Dictionary = doc.copy_region(rect)
+	var target := rect.position + offset
+	if not EdSelection.can_move(doc, target, block):
+		_say("That move would leave part of the selection outside the room.")
+		return
+	if EdSelection.has_content(block) or EdSelection.would_paste(doc, target, block):
+		doc.push_undo()
+		doc.clear_region(rect)
+		doc.paste_region(target, block)
+		_changed()
+	var moved := Rect2i(target, rect.size).intersection(_room_bounds())
+	_selection = {"region": moved} if moved.has_area() else {}
+	_update_selection()
+	_overlay.queue_redraw()
+
+
+func _copy_region() -> void:
+	if not _selection.has("region"):
+		return
+	_clipboard = doc.copy_region(_selection["region"])
+	_update_selection()
+	_say("Copied the selection. Point at a tile and press Ctrl+V to paste.")
+
+
+func _cut_region() -> void:
+	if not _selection.has("region"):
+		return
+	_copy_region()
+	_delete_selection()
+	_say("Cut the selection. Point at a tile and press Ctrl+V to paste.")
+
+
+func _paste_clipboard() -> void:
+	if not _clipboard.is_empty():
+		_paste_region(_hover, _clipboard)
+
+
+func _duplicate_region() -> void:
+	if not _selection.has("region"):
+		return
+	var rect: Rect2i = _selection["region"]
+	var target := _hover
+	if rect.has_point(target) or not doc.in_room(target.x, target.y):
+		target = rect.position + Vector2i(rect.size.x, 0)
+		if not doc.in_room(target.x, target.y):
+			target = rect.position - Vector2i(rect.size.x, 0)
+	_paste_region(target, doc.copy_region(rect))
+
+
+func _paste_region(at: Vector2i, block: Dictionary) -> void:
+	if not doc.in_room(at.x, at.y):
+		_say("Point at a tile in the room before pasting.")
+		return
+	if EdSelection.would_paste(doc, at, block):
+		doc.push_undo()
+	var clipped: bool = doc.paste_region(at, block)
+	var region := Rect2i(at, block["size"]).intersection(_room_bounds())
+	_selection = {"region": region}
+	_changed()
+	_say("Pasted. The room edge clipped part of the selection." if clipped else "Pasted the selection.")
 
 
 func _flip_selection() -> void:
@@ -765,6 +1007,36 @@ func _flip_selection() -> void:
 	var picture: Dictionary = doc.props[_selection["prop"]]
 	picture["flip"] = not bool(picture.get("flip", false))
 	_changed()
+
+
+func _say_free_placement() -> void:
+	_say("Free placement is on for decorative pictures." if _free_btn.button_pressed else "Decorative pictures snap as you place and move them.")
+
+
+func _rotate_prop() -> void:
+	_change_prop_transform("rot", 15.0, 0.0)
+
+
+func _scale_prop(amount: float) -> void:
+	_change_prop_transform("scale", amount, 1.0)
+
+
+func _change_prop_transform(field: String, change: float, default: float) -> void:
+	if not _selection.has("prop"):
+		return
+	var picture: Dictionary = doc.props[_selection["prop"]]
+	if not RoomDoc.can_transform_prop(picture):
+		_say("Only decorative pictures can turn or resize. Solid and tile pictures stay on the grid.")
+		return
+	var before := float(picture.get(field, default))
+	var after := before + change
+	after = wrapf(after, -180.0, 180.0) if field == "rot" else clampf(after, 0.25, 4.0)
+	if is_equal_approx(before, after):
+		return
+	doc.push_undo()
+	picture[field] = after
+	_changed()
+	_say("Picture rotation: %s°." % str(after) if field == "rot" else "Picture size: %s×." % str(after))
 
 
 func _pick_for_move(at: Vector2) -> void:
@@ -778,12 +1050,19 @@ func _pick_for_move(at: Vector2) -> void:
 		_drag["offset"] = at - Vector2(picture["x"], picture["y"])
 
 
+func _move_picture_anchor(at: Vector2, picture: Dictionary) -> Vector2:
+	var desired: Vector2 = at - _drag["offset"]
+	if not RoomDoc.can_transform_prop(picture):
+		return Vector2(_cell_of(desired)) * TILE
+	return desired if _free_btn.button_pressed else (desired / 8.0).round() * 8.0
+
+
 func _move_preview(at: Vector2) -> Rect2:
 	if _drag.has("prop"):
 		var picture: Dictionary = doc.props[_drag["prop"]]
-		var snap := float(TILE) if picture.get("tile", false) else 8.0
-		var pos: Vector2 = ((at - _drag["offset"]) / snap).round() * snap
-		return Rect2(pos, EdAssets.size_of(picture["png"]))
+		var transform := RoomDoc.prop_transform(picture)
+		transform.origin = _move_picture_anchor(at, picture)
+		return transform * Rect2(Vector2.ZERO, EdAssets.size_of(picture["png"]))
 	return Rect2(Vector2(_cell_of(at)) * TILE, Vector2.ONE * TILE)
 
 
@@ -797,12 +1076,13 @@ func _drop_move(at: Vector2) -> void:
 	if _drag.has("prop"):
 		var picture: Dictionary = doc.props[_drag["prop"]]
 		var before := Vector2(picture["x"], picture["y"])
-		var pos := _move_preview(at).position
+		var pos := _move_picture_anchor(at, picture)
 		if pos != before:
 			doc.push_undo()
-			picture["x"] = int(pos.x)
-			picture["y"] = int(pos.y)
+			RoomDoc.set_prop_position(picture, pos)
 			_changed()
+			if _free_btn.button_pressed and not RoomDoc.can_transform_prop(picture):
+				_say("Solid and tile pictures stay on the grid.")
 	else:
 		var origin: Vector2i = _drag["cell"]
 		if origin != to and doc.get_cell(to.x, to.y) == ".":
@@ -926,7 +1206,7 @@ func spawn_picked() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not _active or not (event is InputEventKey) or not event.pressed or event.echo:
+	if not _active or is_instance_valid(library_palette) or not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
 	if _playing:
@@ -946,6 +1226,14 @@ func _input(event: InputEvent) -> void:
 					_undo()
 			KEY_Y:
 				_redo()
+			KEY_C:
+				_copy_region()
+			KEY_X:
+				_cut_region()
+			KEY_V:
+				_paste_clipboard()
+			KEY_D:
+				_duplicate_region()
 			_:
 				return
 	else:
@@ -968,11 +1256,20 @@ func _input(event: InputEvent) -> void:
 				_set_tool("ZONE")
 			KEY_P:
 				_set_tool("START")
+			KEY_R:
+				_rotate_prop()
+			KEY_BRACKETLEFT:
+				_scale_prop(-0.25)
+			KEY_BRACKETRIGHT:
+				_scale_prop(0.25)
 			KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
 				_framing = false
 				var offset := Vector2(int(key == KEY_RIGHT) - int(key == KEY_LEFT), int(key == KEY_DOWN) - int(key == KEY_UP))
-				_cam += offset * 48.0 / _zoom
-				_sync_camera()
+				if _selection.has("region"):
+					_move_region(Vector2i(offset))
+				else:
+					_cam += offset * 48.0 / _zoom
+					_sync_camera()
 			_:
 				return
 	get_viewport().set_input_as_handled()
@@ -996,6 +1293,8 @@ func _on_motion(at: Vector2) -> void:
 	if _panning:
 		_cam = _cam_from - (at - _pan_from) / _zoom
 		_sync_camera()
+	elif _selecting_box:
+		_update_box_selection()
 	elif _zone_drag:
 		_set_zone(_hover)
 	elif _painting:
@@ -1031,10 +1330,28 @@ func _on_click(event: InputEventMouseButton) -> void:
 		return
 	var at := _to_world(event.position)
 	if not event.pressed:
-		if not _drag.is_empty():
+		if _selecting_box:
+			_update_box_selection()
+		elif _group_drag:
+			_move_region(_hover - _group_drag_start)
+		elif not _drag.is_empty():
 			_drop_move(at)
 		_end_pointer_actions()
 		return
+	if event.shift_pressed:
+		_set_tool("SELECT")
+		_selecting_box = true
+		_box_select_start = _hover
+		_update_box_selection()
+		return
+	if _selection.has("region"):
+		var region: Rect2i = _selection["region"]
+		if region.has_point(_hover):
+			_group_drag = true
+			_group_drag_start = _hover
+			return
+		_selection = {}
+		_update_selection()
 	match tool:
 		"SELECT":
 			_selection = _pick_at(at)
@@ -1084,6 +1401,8 @@ func _end_pointer_actions() -> void:
 	_painting = false
 	_stroke_snapshot = false
 	_zone_drag = false
+	_selecting_box = false
+	_group_drag = false
 	_drag = {}
 
 
@@ -1125,13 +1444,19 @@ func _on_draw() -> void:
 		var rect := _draw_box(Rect2(Vector2(_start_cell) * TILE, Vector2.ONE * TILE), PLAY_TINT, 0.3)
 		_overlay.draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, -5), "PLAY START",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, PLAY_TINT)
-	if _selection.has("prop"):
+	if _selection.has("region"):
+		var region: Rect2i = _selection["region"]
+		_draw_box(Rect2(Vector2(region.position * TILE), Vector2(region.size * TILE)), DESIGN_TINT, 0.22)
+		if _group_drag:
+			var target := region.position + _hover - _group_drag_start
+			_draw_box(Rect2(Vector2(target * TILE), Vector2(region.size * TILE)), DESIGN_TINT, 0.12)
+	elif _selection.has("prop"):
 		var picture: Dictionary = doc.props[_selection["prop"]]
-		var area := Rect2(Vector2(picture["x"], picture["y"]), EdAssets.size_of(picture["png"]))
+		var area := RoomDoc.prop_transform(picture) * Rect2(Vector2.ZERO, EdAssets.size_of(picture["png"]))
 		_draw_box(area, DESIGN_TINT, 0.12)
 	elif _selection.has("cell"):
 		_draw_box(Rect2(Vector2(_selection["cell"]) * TILE, Vector2.ONE * TILE), DESIGN_TINT, 0.12)
-	if _has_mouse and not _panning:
+	if _has_mouse and not _panning and not _group_drag and not _selecting_box:
 		_draw_brush_preview()
 
 
