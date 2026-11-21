@@ -61,6 +61,8 @@ var _copy_btn: Button
 var _cut_btn: Button
 var _paste_btn: Button
 var _dup_btn: Button
+var _transform_buttons: Array[Button] = []
+var _free_btn: Button
 var _clipboard: Dictionary = {}
 var _selecting_box := false
 var _box_select_start := Vector2i(-1, -1)
@@ -311,6 +313,15 @@ func _build_inspector(parent: HBoxContainer) -> void:
 	_cut_btn = Shell.button(clipboard_actions, "Cut", _cut_region, "Cut the box (Ctrl+X)")
 	_paste_btn = Shell.button(clipboard_actions, "Paste", _paste_clipboard, "Paste at the last tile pointed to (Ctrl+V)")
 	_dup_btn = Shell.button(clipboard_actions, "Duplicate", _duplicate_region, "Make a second copy (Ctrl+D)")
+	var picture_actions := HBoxContainer.new()
+	panel.add_child(picture_actions)
+	_transform_buttons = [
+		Shell.button(picture_actions, "Rotate", _rotate_prop, "Turn a decorative picture by 15° (R)"),
+		Shell.button(picture_actions, "− Size", _scale_prop.bind(-0.25), "Shrink a decorative picture ([)"),
+		Shell.button(picture_actions, "+ Size", _scale_prop.bind(0.25), "Grow a decorative picture (])"),
+	]
+	_free_btn = Shell.button(picture_actions, "Free", _say_free_placement, "Place and move decorative pictures without snapping")
+	_free_btn.toggle_mode = true
 	_label(panel, "Room Size · Tiles", 17)
 	var dimensions := HBoxContainer.new()
 	panel.add_child(dimensions)
@@ -793,16 +804,19 @@ func _place_picture(at: Vector2) -> void:
 		if not doc.in_room(_cell_of(at).x, _cell_of(at).y):
 			return
 		doc.push_undo()
-		doc.add_prop(png, int(pos.x), int(pos.y), plane, tab == "TILES")
+		doc.add_prop(png, pos.x, pos.y, plane, tab == "TILES")
+		if _free_btn.button_pressed and (tab == "TILES" or plane == "solid"):
+			_say("Solid and tile pictures stay on the grid.")
 	else:
 		return
 	_changed()
 
 
 func _picture_position(at: Vector2, png: String, is_tile: bool) -> Vector2:
-	if is_tile:
+	if is_tile or plane == "solid":
 		return Vector2(_cell_of(at)) * TILE
-	return ((at - EdAssets.size_of(png) * 0.5) / 8.0).round() * 8.0
+	var anchor := at - EdAssets.size_of(png) * 0.5
+	return anchor if _free_btn.button_pressed else (anchor / 8.0).round() * 8.0
 
 
 func _pick_at(at: Vector2) -> Dictionary:
@@ -840,6 +854,8 @@ func _update_selection() -> void:
 	_cut_btn.disabled = not group
 	_dup_btn.disabled = not group
 	_paste_btn.disabled = _clipboard.is_empty()
+	for button in _transform_buttons:
+		button.disabled = not _selection.has("prop")
 
 
 func _glyph_name(glyph: String) -> String:
@@ -967,6 +983,36 @@ func _flip_selection() -> void:
 	_changed()
 
 
+func _say_free_placement() -> void:
+	_say("Free placement is on for decorative pictures." if _free_btn.button_pressed else "Decorative pictures snap as you place and move them.")
+
+
+func _rotate_prop() -> void:
+	_change_prop_transform("rot", 15.0, 0.0)
+
+
+func _scale_prop(amount: float) -> void:
+	_change_prop_transform("scale", amount, 1.0)
+
+
+func _change_prop_transform(field: String, change: float, default: float) -> void:
+	if not _selection.has("prop"):
+		return
+	var picture: Dictionary = doc.props[_selection["prop"]]
+	if not RoomDoc.can_transform_prop(picture):
+		_say("Only decorative pictures can turn or resize. Solid and tile pictures stay on the grid.")
+		return
+	var before := float(picture.get(field, default))
+	var after := before + change
+	after = wrapf(after, -180.0, 180.0) if field == "rot" else clampf(after, 0.25, 4.0)
+	if is_equal_approx(before, after):
+		return
+	doc.push_undo()
+	picture[field] = after
+	_changed()
+	_say("Picture rotation: %s°." % str(after) if field == "rot" else "Picture size: %s×." % str(after))
+
+
 func _pick_for_move(at: Vector2) -> void:
 	_selection = _pick_at(at)
 	_update_selection()
@@ -978,12 +1024,19 @@ func _pick_for_move(at: Vector2) -> void:
 		_drag["offset"] = at - Vector2(picture["x"], picture["y"])
 
 
+func _move_picture_anchor(at: Vector2, picture: Dictionary) -> Vector2:
+	var desired: Vector2 = at - _drag["offset"]
+	if not RoomDoc.can_transform_prop(picture):
+		return Vector2(_cell_of(desired)) * TILE
+	return desired if _free_btn.button_pressed else (desired / 8.0).round() * 8.0
+
+
 func _move_preview(at: Vector2) -> Rect2:
 	if _drag.has("prop"):
 		var picture: Dictionary = doc.props[_drag["prop"]]
-		var snap := float(TILE) if picture.get("tile", false) else 8.0
-		var pos: Vector2 = ((at - _drag["offset"]) / snap).round() * snap
-		return Rect2(pos, EdAssets.size_of(picture["png"]))
+		var transform := RoomDoc.prop_transform(picture)
+		transform.origin = _move_picture_anchor(at, picture)
+		return transform * Rect2(Vector2.ZERO, EdAssets.size_of(picture["png"]))
 	return Rect2(Vector2(_cell_of(at)) * TILE, Vector2.ONE * TILE)
 
 
@@ -997,12 +1050,13 @@ func _drop_move(at: Vector2) -> void:
 	if _drag.has("prop"):
 		var picture: Dictionary = doc.props[_drag["prop"]]
 		var before := Vector2(picture["x"], picture["y"])
-		var pos := _move_preview(at).position
+		var pos := _move_picture_anchor(at, picture)
 		if pos != before:
 			doc.push_undo()
-			picture["x"] = int(pos.x)
-			picture["y"] = int(pos.y)
+			RoomDoc.set_prop_position(picture, pos)
 			_changed()
+			if _free_btn.button_pressed and not RoomDoc.can_transform_prop(picture):
+				_say("Solid and tile pictures stay on the grid.")
 	else:
 		var origin: Vector2i = _drag["cell"]
 		if origin != to and doc.get_cell(to.x, to.y) == ".":
@@ -1176,6 +1230,12 @@ func _input(event: InputEvent) -> void:
 				_set_tool("ZONE")
 			KEY_P:
 				_set_tool("START")
+			KEY_R:
+				_rotate_prop()
+			KEY_BRACKETLEFT:
+				_scale_prop(-0.25)
+			KEY_BRACKETRIGHT:
+				_scale_prop(0.25)
 			KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
 				_framing = false
 				var offset := Vector2(int(key == KEY_RIGHT) - int(key == KEY_LEFT), int(key == KEY_DOWN) - int(key == KEY_UP))
@@ -1366,7 +1426,7 @@ func _on_draw() -> void:
 			_draw_box(Rect2(Vector2(target * TILE), Vector2(region.size * TILE)), DESIGN_TINT, 0.12)
 	elif _selection.has("prop"):
 		var picture: Dictionary = doc.props[_selection["prop"]]
-		var area := Rect2(Vector2(picture["x"], picture["y"]), EdAssets.size_of(picture["png"]))
+		var area := RoomDoc.prop_transform(picture) * Rect2(Vector2.ZERO, EdAssets.size_of(picture["png"]))
 		_draw_box(area, DESIGN_TINT, 0.12)
 	elif _selection.has("cell"):
 		_draw_box(Rect2(Vector2(_selection["cell"]) * TILE, Vector2.ONE * TILE), DESIGN_TINT, 0.12)

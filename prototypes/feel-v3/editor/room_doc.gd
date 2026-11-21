@@ -171,13 +171,36 @@ func resize(w: int, h: int) -> void:
 
 # ---------- props ----------
 
-func add_prop(png: String, x: int, y: int, layer: String, is_tile: bool, flip := false) -> Dictionary:
-	var p := {"png": png, "x": x, "y": y, "flip": flip, "layer": layer, "tile": is_tile}
+## Add a picture at its top-left anchor. Free decor can use fractional pixels.
+func add_prop(png: String, x: float, y: float, layer: String, is_tile: bool, flip := false) -> Dictionary:
+	var p := {"png": png, "flip": flip, "layer": layer, "tile": is_tile}
+	set_prop_position(p, Vector2(x, y))
 	if is_tile and layer == "solid":
 		var footprint := (EdAssets.size_of(png) / TILE).ceil()
 		p["collision_cells"] = [int(footprint.x), int(footprint.y)]
 	props.append(p)
 	return p
+
+
+## Store the top-left anchor without dropping fractional pixels.
+static func set_prop_position(prop: Dictionary, at: Vector2) -> void:
+	prop["x"] = int(at.x) if at.x == floorf(at.x) else at.x
+	prop["y"] = int(at.y) if at.y == floorf(at.y) else at.y
+
+
+## Only non-tile pictures drawn behind or in front may rotate or scale.
+static func can_transform_prop(prop: Dictionary) -> bool:
+	return not bool(prop.get("tile", false)) and String(prop.get("layer", "back")) in ["back", "front"]
+
+
+## The same transform is used by the renderer, picking and the selection outline.
+static func prop_transform(prop: Dictionary) -> Transform2D:
+	var at := Vector2(float(prop.get("x", 0.0)), float(prop.get("y", 0.0)))
+	if not can_transform_prop(prop):
+		return Transform2D(0.0, at)
+	var angle := deg_to_rad(clampf(float(prop.get("rot", 0.0)), -180.0, 180.0))
+	var magnification := clampf(float(prop.get("scale", 1.0)), 0.25, 4.0)
+	return Transform2D(angle, Vector2.ONE * magnification, 0.0, at)
 
 
 ## Overlay separately owned PNG collision on empty cells. Existing room glyphs and legacy
@@ -211,7 +234,8 @@ func prop_at(px: Vector2, size_of: Callable) -> int:
 	for i in range(props.size() - 1, -1, -1):
 		var p: Dictionary = props[i]
 		var s: Vector2 = size_of.call(String(p["png"]))
-		if Rect2(Vector2(p["x"], p["y"]), s).has_point(px):
+		var local := prop_transform(p).affine_inverse() * px
+		if Rect2(Vector2.ZERO, s).has_point(local):
 			return i
 	return -1
 
