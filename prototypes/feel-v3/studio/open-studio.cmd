@@ -1,17 +1,12 @@
 @echo off
 setlocal
 for %%I in ("%~dp0..") do set "STUDIO_PROJECT=%%~fI"
-set "STUDIO_BUILD=%STUDIO_PROJECT%\build\windows\new-vania-studio-m3.exe"
-if not exist "%STUDIO_PROJECT%\studio\catalog.json" goto :make_library
-if not exist "%STUDIO_PROJECT%\studio\library\." goto :make_library
-goto :launch
-
-:make_library
+set "STUDIO_BUILD=%STUDIO_PROJECT%\build\windows\new-vania-studio.exe"
 for %%I in ("%STUDIO_PROJECT%\..\..") do set "STUDIO_REPO=%%~fI"
 where.exe node.exe >nul 2>&1
 if errorlevel 1 goto :library_failed
 pushd "%STUDIO_REPO%" || goto :library_failed
-node tools\asset_library.mjs
+node tools\asset_library.mjs --studio
 set "STUDIO_LIBRARY_STATUS=%ERRORLEVEL%"
 popd
 if not "%STUDIO_LIBRARY_STATUS%"=="0" goto :library_failed

@@ -8,10 +8,12 @@
  * that are catalogued but never copied (the 3D model bank and the inbox).
  *
  * Usage:
- *   node tools/asset_library.mjs [--dry-run] [--src <repoRoot>] [--out <studioDir>]
+ *   node tools/asset_library.mjs [--dry-run] [--studio] [--src <repoRoot>] [--out <studioDir>] [--references <folder>]
  *
  *   --src      repository root; defaults to the parent of tools/
  *   --out      Studio folder; defaults to <src>/prototypes/feel-v3/studio
+ *   --studio   include the local or sibling references folder and its derived artwork
+ *   --references  select a different references folder and include its derived artwork
  *   --dry-run  write nothing, print the catalog JSON on stdout
  *
  * Node built-ins only. The script never writes outside --out and never
@@ -22,6 +24,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { writeAssetPreviews } from "./studio_asset_previews.mjs";
 
 /** Directory holding this script (the repository's tools/ folder). */
 const TOOLS_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -40,6 +43,14 @@ const SOURCE_EXT = new Set([".aseprite", ".blend", ".gpl", ".psd", ".kra", ".xcf
 
 /** Extensions catalogued from the 3D model bank. */
 const MODEL_EXT = new Set([".glb", ".gltf", ".obj", ".fbx", ".blend", ".stl", ".ply"]);
+const DOCUMENT_EXT = new Set([".md", ".txt", ".pdf", ".rtf", ".html"]);
+const DATA_EXT = new Set([".json", ".csv", ".xml", ".tmx", ".tsx"]);
+const PROJECT = "prototypes/feel-v3";
+const ORIGINAL_AREAS = new Map([
+  ["arnetria", "Arnetria"],
+  ["demon court", "Demon Court"],
+  ["demonic area", "Demonic Area"],
+]);
 
 /** Folders under prototypes/feel-v3/assets that hold character art. */
 const CHARACTER_DIRS = new Set(["pandora", "hero", "hero_v2", "sprites-pandora"]);
@@ -84,12 +95,14 @@ const CONCEPTS_PREFIX = "design/art/concepts/";
  * @returns {{dryRun: boolean, src: string, out: string}}
  */
 function parseArgs(argv) {
-  const opts = { dryRun: false, src: DEFAULT_SRC, out: null };
+  const opts = { dryRun: false, src: DEFAULT_SRC, out: null, references: null, studio: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--dry-run") {
       opts.dryRun = true;
-    } else if (arg === "--src" || arg === "--out") {
+    } else if (arg === "--studio") {
+      opts.studio = true;
+    } else if (["--src", "--out", "--references"].includes(arg)) {
       const value = argv[i + 1];
       if (value === undefined || value.startsWith("--")) {
         throw new Error(`${arg} needs a value`);
@@ -100,6 +113,8 @@ function parseArgs(argv) {
       opts.src = arg.slice("--src=".length);
     } else if (arg.startsWith("--out=")) {
       opts.out = arg.slice("--out=".length);
+    } else if (arg.startsWith("--references=")) {
+      opts.references = arg.slice("--references=".length);
     } else {
       throw new Error(`unknown argument: ${arg}`);
     }
@@ -107,6 +122,7 @@ function parseArgs(argv) {
   if (!opts.src) throw new Error("--src needs a value");
   opts.src = path.resolve(opts.src);
   opts.out = path.resolve(opts.out ?? path.join(opts.src, "prototypes", "feel-v3", "studio"));
+  if (opts.references === "") throw new Error("--references needs a value");
   return opts;
 }
 
@@ -413,6 +429,100 @@ function collectFiles(opts, rootRel, forcedKind, out) {
   }
 }
 
+/** Resolve the optional references source and keep generated output away from it. */
+function referenceRoot(opts) {
+  const candidates = opts.references === null ? [
+    path.join(opts.src, PROJECT, "references"),
+    path.join(opts.src, "..", "new-vania", PROJECT, "references"),
+  ] : [path.resolve(opts.references)];
+  const source = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!source) {
+    if (opts.references !== null) throw new Error("reference source does not exist");
+    return null;
+  }
+  if (!fs.statSync(source).isDirectory()) throw new Error("reference source is not a directory");
+  const root = fs.realpathSync(source);
+  if ([source, root].some((dir) => isInside(dir, opts.out) || isInside(opts.out, dir))) {
+    throw new Error("reference source and output overlap");
+  }
+  return root;
+}
+
+function referenceLabels(rel) {
+  const parts = rel.split("/");
+  const [collection, group = "", pack] = parts;
+  const original = collection === "Original assets";
+  return {
+    category: original ? "original art" : "reference packs",
+    sub: original ? group : (pack && parts.length > 3 ? pack : group),
+    area: original ? ORIGINAL_AREAS.get(group.toLowerCase()) : undefined,
+    room: original && group.toLowerCase() === "save room & save point" ? "Save Room" : undefined,
+  };
+}
+
+function collectReferences(root) {
+  if (!root) return [];
+  return walkFiles(root).map((abs) => {
+    const rel = toPosix(path.relative(root, abs));
+    const ext = path.extname(rel).toLowerCase();
+    const kind = ext === ".gfi" ? "image" : (kindOf(ext) ?? (MODEL_EXT.has(ext) ? "3d" : "source"));
+    let type = kind;
+    if (ext === ".import") type = "import settings";
+    else if (DOCUMENT_EXT.has(ext)) type = "document";
+    else if (DATA_EXT.has(ext)) type = "data";
+    else if (ext === ".ase") type = "source";
+    else if (kind === "source" && !kindOf(ext)) type = "other file";
+    else if (rel.startsWith("Original assets/") && kind === "image") type = "original";
+    return {
+      abs, rel, ext, kind, type, bytes: fs.statSync(abs).size,
+      origin: "references", labels: referenceLabels(rel), copy: true,
+      placeable: rel.startsWith("Public assets/art/") && ext === ".png" ? "props" : null,
+    };
+  });
+}
+
+/** Load the artist's source-to-output manifest. Only the listed PNGs enter the shelf. */
+function collectDerivatives(opts, referenceFiles) {
+  const root = path.join(opts.src, PROJECT, "studio", "reference-derivatives");
+  const manifest = path.join(root, "manifest.json");
+  if (!fs.existsSync(manifest)) return [];
+  assertUnlinkedOutput(root, manifest);
+  const { entries } = JSON.parse(fs.readFileSync(manifest, "utf8"));
+  if (!Array.isArray(entries)) throw new Error("derivative manifest entries must be a list");
+  const originals = new Set(referenceFiles.map((file) => file.rel));
+  const seen = new Set();
+  return entries.map((item) => {
+    const rel = item.path;
+    const source = item.source;
+    if (typeof rel !== "string" || /[\\:]/.test(rel)
+      || rel.split("/").some((part) => !part || part === "." || part === "..")
+      || !rel.toLowerCase().endsWith(".png")) throw new Error(`invalid derivative path: ${rel}`);
+    if (seen.has(rel.toLowerCase())) throw new Error(`duplicate derivative path: ${rel}`);
+    seen.add(rel.toLowerCase());
+    if (typeof source !== "string" || !source.startsWith("Original assets/")
+      || (originals.size > 0 && !originals.has(source))) throw new Error(`unknown original: ${source}`);
+    if (!["cleaned", "sprite"].includes(item.type)) throw new Error(`invalid derivative type: ${item.type}`);
+    const abs = path.join(root, rel);
+    assertUnlinkedOutput(root, abs);
+    if (!fs.statSync(abs).isFile()) throw new Error(`invalid derivative file: ${rel}`);
+    const labels = referenceLabels(source);
+    const area = typeof item.area === "string" && item.area.toLowerCase() !== labels.sub.toLowerCase()
+      ? item.area : labels.area;
+    return {
+      abs, rel, ext: ".png", kind: "image", bytes: fs.statSync(abs).size, copy: true,
+      origin: "reference-derivatives", type: item.type, derivedFrom: source,
+      name: typeof item.label === "string" ? item.label : undefined,
+      labels: {
+        ...labels, category: "original art",
+        area, room: item.room || labels.room,
+      },
+      placeable: (item.type === "sprite" && ["tiles", "props", "backdrops"].includes(item.placeable))
+        || (item.type === "cleaned" && item.placeable === "backdrops")
+        ? item.placeable : null,
+    };
+  });
+}
+
 /**
  * Turn a collected file record into a catalog entry.
  * @param {object} file collected file record
@@ -421,13 +531,18 @@ function collectFiles(opts, rootRel, forcedKind, out) {
  * @returns {object} the catalog entry
  */
 function makeEntry(file, usedIds, usedPaths) {
-  const name = path.posix.basename(file.rel);
+  const name = file.name ?? path.posix.basename(file.rel);
   const [w, h] = file.ext === ".png" ? readPngSize(file.abs) : [null, null];
-  const id = makeId(file.rel, usedIds);
+  const sourceKey = file.origin ? `${file.origin}/${file.rel}` : file.rel;
+  const id = makeId(sourceKey, usedIds);
   let category;
   let sub = "";
   let libPath = "";
-  if (file.copy) {
+  if (file.origin) {
+    category = file.labels.category;
+    sub = file.labels.sub ?? "";
+    if (file.copy) libPath = claimPath(sourceKey, sourceKey, usedPaths);
+  } else if (file.copy) {
     const mapped = mapCategory(file.rel);
     category = mapped.category;
     sub = mapped.folder === mapped.category
@@ -445,11 +560,16 @@ function makeEntry(file, usedIds, usedPaths) {
     kind: file.kind,
     path: libPath,
     source: file.rel,
+    origin: file.origin,
+    derived_from: file.derivedFrom,
+    type: file.type ?? file.kind,
+    area: file.labels?.area ?? "Unassigned",
+    room: file.labels?.room ?? "Unassigned",
     w,
     h,
     bytes: file.bytes,
     tags: buildTags(file.rel),
-    placeable: placeableFor(category, file.kind, w, h, file.ext),
+    placeable: file.origin ? (file.placeable ?? null) : placeableFor(category, file.kind, w, h, file.ext),
     help_key: `asset:${id}`,
   };
 }
@@ -463,6 +583,10 @@ function buildCatalog(opts) {
   const files = [];
   for (const root of COPY_ROOTS) collectFiles(opts, root, null, files);
   for (const item of CATALOG_ONLY_ROOTS) collectFiles(opts, item.root, item.kind, files);
+  if (opts.studio || opts.references !== null) {
+    const references = collectReferences(referenceRoot(opts));
+    files.push(...references, ...collectDerivatives(opts, references));
+  }
   files.sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
 
   const usedIds = new Set();
@@ -477,12 +601,13 @@ function buildCatalog(opts) {
     .map(([id, count]) => ({ id, count }))
     .sort((a, b) => (a.id < b.id ? -1 : 1));
 
-  return {
-    version: 1,
+  const catalog = {
+    version: 2,
     generated: new Date().toISOString(),
     categories,
     entries,
   };
+  return { catalog, files };
 }
 
 /**
@@ -550,19 +675,19 @@ function assertUnlinkedOutput(root, dest) {
  * @param {object} catalog the catalog to materialise
  * @returns {{copied: number, unchanged: number, catalogOnly: number}} copy counts
  */
-function writeLibrary(opts, catalog) {
+function writeLibrary(opts, catalog, files) {
   const library = path.join(opts.out, "library");
   assertUnlinkedOutput(opts.out, library);
   fs.mkdirSync(library, { recursive: true });
   let copied = 0;
   let unchanged = 0;
   let catalogOnly = 0;
-  for (const entry of catalog.entries) {
+  for (const [index, entry] of catalog.entries.entries()) {
     if (entry.path === "") {
       catalogOnly += 1;
       continue;
     }
-    const srcAbs = path.join(opts.src, ...entry.source.split("/"));
+    const srcAbs = files[index].abs;
     const destAbs = path.join(library, ...entry.path.split("/"));
     if (!isInside(library, destAbs)) throw new Error(`refusing to write outside the library: ${entry.path}`);
     assertUnlinkedOutput(opts.out, destAbs);
@@ -577,18 +702,21 @@ function writeLibrary(opts, catalog) {
  */
 function main() {
   const opts = parseArgs(process.argv.slice(2));
-  const catalog = buildCatalog(opts);
+  const { catalog, files } = buildCatalog(opts);
   if (opts.dryRun) {
     process.stdout.write(`${JSON.stringify(catalog, null, 2)}\n`);
     return;
   }
   const catalogPath = path.join(opts.out, "catalog.json");
   assertUnlinkedOutput(opts.out, catalogPath);
-  const stats = writeLibrary(opts, catalog);
+  const stats = writeLibrary(opts, catalog, files);
+  const previews = opts.studio || opts.references !== null
+    ? writeAssetPreviews(opts.out, catalog, assertUnlinkedOutput) : null;
   fs.writeFileSync(
     catalogPath,
     `${JSON.stringify(catalog, null, 2)}\n`,
   );
+  if (previews) console.log("Studio previews:", previews);
   console.log(
     `asset library: ${catalog.entries.length} entries, `
     + `${stats.copied} copied, ${stats.unchanged} unchanged, `

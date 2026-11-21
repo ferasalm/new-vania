@@ -35,7 +35,7 @@ only needs to know they exist.
 
 From the repo root:
 
-    node tools/asset_library.mjs
+    node tools/asset_library.mjs --studio
 
 It is safe to run again: unchanged files are left alone. `--dry-run`
 prints the catalog without writing anything. `library/` and `catalog.json` are generated
@@ -51,11 +51,23 @@ needs it inside the project.
 ## Open Studio on Windows
 
 Double-click `open-studio.cmd` in this folder, then click **Studio** in
-the top right of the game. The launcher uses the milestone 3 Windows build
+the top right of the game. The launcher uses the current Windows build
 when it exists. Otherwise it uses the workspace's Godot installation or
 the executable set in `GODOT_EXE`.
 
-The launcher builds the library with Node.js if the catalog or library folder is missing.
+The launcher refreshes the catalog and reuses copies and thumbnails from earlier runs.
+It checks the local references folder, then the sibling New Vania checkout.
+Use `--references "<folder>"` with the Node command to select a different location.
+Keep the reference pack's licenses and notes with its files.
+
+In the Library, combine search with **Area**, **Room**, and **Type**. Use **Next**
+and **Previous** for broad searches. **Unassigned** means the source gives no clear
+room or area. Select an item to preview it, play audio, see where a sprite came from,
+or show the file in Explorer. Use eligible PNGs as props, tiles, or backdrops.
+
+GIF, PSD, and audio thumbnails use FFmpeg. ASE thumbnails use Aseprite from
+PATH, `ASEPRITE_EXE`, or the shared workspace tools folder. PDF thumbnails use
+Windows' PDF renderer or Poppler. The first refresh may take a few minutes.
 Turn on **Recent** beside the Library category menu to find pictures you used in this session.
 
 Studio shows the full library path. Search for an activity such as

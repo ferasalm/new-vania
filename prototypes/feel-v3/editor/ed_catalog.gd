@@ -87,14 +87,14 @@ static func categories() -> Array:
 
 ## Entries matching every whitespace-separated word of text (name, category, sub, tags),
 ## optionally limited to one category, sorted by name then id. limit 0 means no limit.
-static func search(text: String, category := "", limit := 0) -> Array:
+static func search(text: String, category := "", limit := 0, facets: Dictionary = {}) -> Array:
 	var words := _whitespace.sub(text.to_lower(), " ", true).split(" ", false)
 	var out: Array = []
 	for id: Variant in _table:
 		var entry: Dictionary = _table[id]
 		if not category.is_empty() and String(entry.get("category", "")) != category:
 			continue
-		if _contains_words(String(_hay.get(id, "")), words):
+		if _matches_facets(entry, facets) and _contains_words(String(_hay.get(id, "")), words):
 			out.append(entry)
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var an := String(a.get("name", "")).to_lower()
@@ -108,13 +108,35 @@ static func search(text: String, category := "", limit := 0) -> Array:
 
 
 ## Search a short ordered list of known IDs without sorting or scanning the entire catalog.
-static func search_ids(text: String, ids: Array[String]) -> Array:
+static func search_ids(text: String, ids: Array[String], facets: Dictionary = {}) -> Array:
 	var words := _whitespace.sub(text.to_lower(), " ", true).split(" ", false)
 	var found: Array = []
 	for id in ids:
-		if _table.has(id) and _contains_words(String(_hay[id]), words):
+		if _table.has(id) and _matches_facets(_table[id], facets) and _contains_words(String(_hay[id]), words):
 			found.append(_table[id])
 	return found
+
+
+## Distinct labels for a filter, sorted for its menu.
+static func facet_values(key: String) -> Array:
+	var values := {}
+	for item: Dictionary in _table.values():
+		values[_facet_value(item, key)] = true
+	var labels := values.keys()
+	labels.sort()
+	return labels
+
+
+static func _facet_value(item: Dictionary, key: String) -> String:
+	var fallback := String(item.get("kind", "Unassigned")) if key == "type" else "Unassigned"
+	return String(item.get(key, fallback))
+
+
+static func _matches_facets(item: Dictionary, facets: Dictionary) -> bool:
+	for key: String in facets:
+		if facets[key] != "" and facets[key] != _facet_value(item, key):
+			return false
+	return true
 
 
 static func _contains_words(hay: String, words: PackedStringArray) -> bool:
@@ -131,6 +153,11 @@ static func placeable_reason(entry: Dictionary) -> String:
 		if String(entry.get("path", "")).get_extension().to_lower() == "png":
 			return ""
 		return "Only PNG pictures can be placed in a room."
+	match String(entry.get("type", "")):
+		"original", "cleaned":
+			return "Use a sprite made from this artwork to place it in a room."
+		"document", "data", "import settings", "other file":
+			return "Use Show file to inspect this asset."
 	match String(entry.get("kind", "")):
 		"audio":
 			return "Sounds cannot be placed in a room."
@@ -148,7 +175,8 @@ static func _haystack(entry: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	parts.append(String(entry.get("name", "")))
 	parts.append(String(entry.get("category", "")))
-	parts.append(String(entry.get("sub", "")))
+	for key: String in ["sub", "source", "derived_from", "room", "area", "type"]:
+		parts.append(String(entry.get(key, "")))
 	var tags: Variant = entry.get("tags", [])
 	if tags is Array:
 		for tag: Variant in (tags as Array):
