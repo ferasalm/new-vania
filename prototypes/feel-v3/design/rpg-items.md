@@ -43,6 +43,8 @@ MODULE), and the screens that show all of it. Every number below is a slider in 
 
 ### 3.1 The stats
 
+> **Superseded 2026-11-20 (decision 28, user):** there are no points and no five-stat sheet to spend. Her stats grow by themselves: every level above 1 adds +6 max HP, +4 max EN, +5 % ATK and +1.5 % DEF (read from tuning: `level_hp`, `level_en`, `level_atk`, `level_def`). Specials follow ATK. MP does not grow with levels (base 60 plus gear). The text below is the old design, kept for history.
+
 Her sheet has five stats she raises with points, and six values that come from them.
 
 | Stat (points) | One point gives | Plain words |
@@ -65,6 +67,8 @@ Her sheet has five stats she raises with points, and six values that come from t
 POWER and VIGOR keep the GDD's own point values (+8 attack, +2 health × 5 = +10).
 
 ### 3.2 Levels and the level-up
+
+> **Superseded 2026-11-20 (decision 28, user):** a level-up refills HP, EN and MP and raises her stats at once. It banks no points and opens no menu. Growth by level (HP / EN / ATK % / DEF %): L1 100 / 100 / 100 / 0, L4 118 / 112 / 115 / 4.5, L5 124 / 116 / 120 / 6, L7 136 / 124 / 130 / 9, L10 154 / 136 / 145 / 13.5. MP stays 60 plus gear. The old automatic split below is replaced.
 
 - XP for the next level = 10 × (current level + 1). Highest level 10. Levels 2 to 5 match the GDD (20, 50, 90, 140).
 - On a level-up, at once: HP, EN and MP refill to full; 2 points are banked; a gold "LEVEL UP" rises above her
@@ -313,7 +317,9 @@ Confirm on SUTURE opens a small choice: USE, PUT IN QUICKSLOT 1-4, BACK. The rar
 for it, plus "(none)". Right: LV, HP, EN, MP, ATK, DEF, SPC, and the scrap gauge size. While a choice is highlighted,
 each value it would change shows the new number, green if better, red if worse ("HP 100 → 60").
 
-**CHARACTER**. Left: VIGOR, POWER, GUARD, STAMINA, MAGIC with their points, a + and − beside each, "POINTS 2", then
+> **Superseded 2026-11-20 (decision 28):** CHARACTER is a read-only sheet: LV, XP, NEXT, HP, EN, MP, ATK, DEF, SPC, and a line "NEXT LEVEL HP +6 EN +4 ATK +5% DEF +1.5%" read from tuning. No buttons, no AUTO, no points.
+
+**CHARACTER (old design)**. Left: VIGOR, POWER, GUARD, STAMINA, MAGIC with their points, a + and − beside each, "POINTS 2", then
 the rows AUTO, AUTO EVERY LEVEL (ON/OFF) and DONE. Right: LV, XP, NEXT, and HP, EN, MP, ATK, DEF, SPC with pending
 changes in green. − only takes back points added since the screen opened. DONE (or closing) makes them permanent.
 

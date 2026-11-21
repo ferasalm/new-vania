@@ -4,32 +4,26 @@
     "en_max_key": "energy_max",
     "mp_max_key": "mp_max"
   },
-  "stats": {
-    "vigor": {
-      "label": "VIGOR",
-      "help": "Every point is 10 more health.",
-      "gives": {"hp_max_key": "vigor_hp"}
+  "growth": {
+    "hp": {
+      "label": "HP",
+      "key": "level_hp",
+      "help": "Each level above 1 adds this much maximum health."
     },
-    "power": {
-      "label": "POWER",
-      "help": "Every point is 8 percent more weapon damage.",
-      "gives": {"atk_key": "power_atk"}
+    "en": {
+      "label": "EN",
+      "key": "level_en",
+      "help": "Each level above 1 adds this much maximum energy."
     },
-    "guard": {
-      "label": "GUARD",
-      "help": "Every point is 3 percent less damage taken.",
-      "gives": {"def_key": "guard_def"}
+    "atk": {
+      "label": "ATK",
+      "key": "level_atk",
+      "help": "Each level above 1 adds this percent to sword hits and specials."
     },
-    "stamina": {
-      "label": "STAMINA",
-      "help": "Every point is 8 more energy.",
-      "gives": {"en_max_key": "stamina_en"}
-    },
-    "magic": {
-      "label": "MAGIC",
-      "help": "Every point is 8 percent more special damage and 6 more MP.",
-      "gives": {"special_key": "magic_special", "mp_max_key": "magic_mp"}
+    "def": {
+      "label": "DEF",
+      "key": "level_def",
+      "help": "Each level above 1 adds this percent less damage from enemy hits."
     }
-  },
-  "auto_order": ["vigor", "power", "guard", "vigor", "power", "magic", "vigor", "power", "guard", "stamina"]
+  }
 }

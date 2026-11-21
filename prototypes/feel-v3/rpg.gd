@@ -1,27 +1,25 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # Autoload "R". Everything about her progress that must survive a room change:
-# level, XP, points, the five stats, items and counts, owned and equipped gear,
-# scrap, the quickslot and the seeded rng for drops. The formulas live in
-# rpg_math.gd; every number is read from tuning through T.
+# level, XP, items and counts, owned and equipped gear, scrap, the quickslot and
+# the seeded rng for drops. Her stats grow automatically with the level: every
+# level above 1 adds the tuning value data/levels.json names. The formulas live
+# in rpg_math.gd; every number is read from tuning through T.
 extends Node
 
 signal xp_changed(xp: int, level: int)
-signal leveled(level: int, points: int)
+signal leveled(level: int)
 signal stats_changed()
 signal items_changed(id: String, count: int)
 signal gear_changed(slot: String, id: String)
 signal scrap_changed(value: float)
 
 const RpgMath := preload("res://rpg_math.gd")
-const STATS := ["vigor", "power", "guard", "stamina", "magic"]
 const SLOTS := ["harness1", "harness2", "module1", "module2"]
 # the two DRIVE modules never add up: one id fits one slot and they never coexist
 const DRIVE := ["coupler_034", "regulator_000"]
 
 var level := 1
 var xp := 0
-var points := 0
-var alloc := {"vigor": 0, "power": 0, "guard": 0, "stamina": 0, "magic": 0}
 var items := {}            # id -> count
 var owned_gear: Array = []
 var equip := {"harness1": "", "harness2": "", "module1": "", "module2": ""}
@@ -51,36 +49,46 @@ func _base(key: String) -> float:
 	return 0.0
 
 
+func growth(kind: String) -> float:
+	# what every level above 1 adds of one kind (hp, en, atk, def), read from
+	# data/levels.json; a kind that file does not name adds nothing
+	var growths: Dictionary = Db.table("levels").get("growth", {})
+	var entry: Dictionary = growths.get(kind, {})
+	var tkey := String(entry.get("key", ""))
+	if tkey != "" and T.data.has(tkey):
+		return float(level - 1) * T.v(tkey)
+	return 0.0
+
+
 func max_hp() -> float:
-	# player_hp + VIGOR, plus gear, never below max_hp_floor
-	var hp := _base("hp_max_key") + float(alloc.get("vigor", 0)) * T.v("vigor_hp") + gear_effect("hp_max_add_key")
+	# player_hp + growth, plus gear, never below max_hp_floor
+	var hp := _base("hp_max_key") + growth("hp") + gear_effect("hp_max_add_key")
 	return maxf(T.v("max_hp_floor"), hp)
 
 
 func max_en() -> float:
-	# energy_max + STAMINA, plus gear
-	return _base("en_max_key") + float(alloc.get("stamina", 0)) * T.v("stamina_en") + gear_effect("en_max_add_key")
+	# energy_max + growth, plus gear
+	return _base("en_max_key") + growth("en") + gear_effect("en_max_add_key")
 
 
 func max_mp() -> float:
-	# mp_max + MAGIC, plus gear (a harness can add MP, a module can add "mag")
-	return _base("mp_max_key") + float(alloc.get("magic", 0)) * T.v("magic_mp") \
-		+ gear_effect("mp_max_add_key") + gear_effect("mag_add_key")
+	# mp_max plus gear only: levels never add MP (a harness can add MP, a module "mag")
+	return _base("mp_max_key") + gear_effect("mp_max_add_key") + gear_effect("mag_add_key")
 
 
 func atk() -> float:
-	# weapon damage in percent: 100 + POWER, plus gear
-	return 100.0 + float(alloc.get("power", 0)) * T.v("power_atk") + gear_effect("atk_add_key")
+	# weapon damage in percent: 100 + growth, plus gear
+	return 100.0 + growth("atk") + gear_effect("atk_add_key")
 
 
 func def() -> float:
-	# percent less damage from enemies: GUARD plus gear, capped
-	return minf(T.v("def_cap"), float(alloc.get("guard", 0)) * T.v("guard_def") + gear_effect("def_add_key"))
+	# percent less damage from enemies: growth plus gear, capped
+	return minf(T.v("def_cap"), growth("def") + gear_effect("def_add_key"))
 
 
 func special_pct() -> float:
-	# special damage in percent: 100 + MAGIC
-	return 100.0 + float(alloc.get("magic", 0)) * T.v("magic_special")
+	# special damage in percent: the same growth as ATK, so specials follow it
+	return 100.0 + growth("atk")
 
 
 func hit_damage(power: float, special: bool) -> int:
@@ -126,12 +134,11 @@ func add_xp(n: int) -> void:
 	xp = mini(xp + n, RpgMath.xp_total(cap, step))
 	var new_level := RpgMath.level_for(xp, step, cap)
 	if new_level > level:
-		var gained := (new_level - level) * int(T.v("points_per_level"))
 		level = new_level
-		points += gained
 		if int(T.v("levelup_refill")) == 1:
 			_refill()
-		leveled.emit(level, points)
+		leveled.emit(level)
+		stats_changed.emit()
 	xp_changed.emit(xp, level)
 
 
@@ -143,27 +150,6 @@ func _refill() -> void:
 	p.hp = max_hp()
 	p.energy = max_en()
 	p.mp = max_mp()
-
-
-func spend(stat: String) -> bool:
-	# spend one point on a stat; refused with no points or an unknown stat
-	if points <= 0 or not alloc.has(stat):
-		return false
-	points -= 1
-	alloc[stat] = int(alloc[stat]) + 1
-	stats_changed.emit()
-	return true
-
-
-func auto_allocate() -> void:
-	# spend every point in the order data/levels.json gives, repeating it
-	var order: Array = Db.table("levels").get("auto_order", STATS)
-	if order.is_empty():
-		return
-	var i := 0
-	while points > 0 and i < 10000:
-		spend(String(order[i % order.size()]))
-		i += 1
 
 
 func has(id: String) -> bool:
@@ -302,17 +288,16 @@ func refill_at_terminal() -> void:
 
 func snapshot() -> Dictionary:
 	# a copy of her whole sheet, for RECALL and the tests
-	return {"level": level, "xp": xp, "points": points, "alloc": alloc.duplicate(true),
+	return {"level": level, "xp": xp,
 		"items": items.duplicate(true), "owned_gear": owned_gear.duplicate(), "equip": equip.duplicate(true),
 		"scrap": scrap, "quickslot": quickslot, "names_seen": names_seen.duplicate(true)}
 
 
 func restore(d: Dictionary) -> void:
-	# put a snapshot back
+	# put a snapshot back; an old save's points and alloc are ignored, since
+	# every stat now comes from the level
 	level = int(d.get("level", 1))
 	xp = int(d.get("xp", 0))
-	points = int(d.get("points", 0))
-	alloc = _stats_dict(d.get("alloc", {}))
 	items = d.get("items", {}).duplicate(true)
 	owned_gear = d.get("owned_gear", []).duplicate()
 	equip = _equip_dict(d.get("equip", {}))
@@ -327,8 +312,6 @@ func reset() -> void:
 	# back to a fresh sheet at start_level (the tests call this between checks)
 	level = int(T.v("start_level")) if T.data.has("start_level") else 1
 	xp = 0
-	points = 0
-	alloc = _stats_dict({})
 	items = {}
 	owned_gear = []
 	equip = _equip_dict({})
@@ -337,14 +320,6 @@ func reset() -> void:
 	names_seen = {}
 	xp_changed.emit(xp, level)
 	stats_changed.emit()
-
-
-func _stats_dict(d: Dictionary) -> Dictionary:
-	# every stat always exists, even when a snapshot only names a few
-	var out := {}
-	for s in STATS:
-		out[s] = int(d.get(s, 0))
-	return out
 
 
 func _equip_dict(d: Dictionary) -> Dictionary:
@@ -356,17 +331,14 @@ func _equip_dict(d: Dictionary) -> Dictionary:
 
 
 func debug_set(d: Dictionary) -> void:
-	# the test hook: set only the fields that are named
+	# the test hook: set only the fields that are named (an old save's points and
+	# alloc are ignored)
 	for k in d:
 		match String(k):
 			"level":
 				level = int(d[k])
 			"xp":
 				xp = int(d[k])
-			"points":
-				points = int(d[k])
-			"alloc":
-				alloc = _stats_dict(d[k])
 			"items":
 				items = d[k].duplicate(true)
 			"owned_gear":

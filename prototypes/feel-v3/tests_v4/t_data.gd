@@ -9,8 +9,9 @@ const GEAR_EFFECTS := ["atk_add_key", "def_add_key", "hp_max_add_key", "en_max_a
 const EXIT_KINDS := ["door", "open", "hole", "tunnel", "lever_door", "boss_door", "sealed_x", "shutter", "bricked"]
 const MARK_TYPES := ["item", "lever", "winch", "candle", "terminal", "organ", "talk", "boss"]
 const ITEM_TYPES := ["consumable", "key", "ability", "weapon", "gear", "orb", "material"]
-const STAT_IDS := ["vigor", "power", "guard", "stamina", "magic"]
-const AUTO_ORDER := ["vigor", "power", "guard", "vigor", "power", "magic", "vigor", "power", "guard", "stamina"]
+# Automatic leveling (user decision 2026-11-20): four growth entries, and the old manual-allocation keys are gone.
+const GROWTH_IDS := ["hp", "en", "atk", "def"]
+const GONE_KEYS := ["points_per_level", "vigor_hp", "power_atk", "guard_def", "stamina_en", "magic_special", "magic_mp"]
 
 var main: Node = null
 var passed := 0
@@ -148,14 +149,19 @@ func _run() -> void:
 		"tdata=%s missing=%s" % ["yes" if tdata_ok else "no", str(tdata_missing.slice(0, 6))])
 
 	# --- S0 tuning values ------------------------------------------------------
-	_check("one VIGOR point is +10 HP", _tv("vigor_hp", "vit_hp") == 10.0, "vigor_hp=%s" % str(_tv("vigor_hp", "vit_hp")))
-	_check("one POWER point is +8 percent ATK", _tv("power_atk", "str_atk") == 8.0, "power_atk=%s" % str(_tv("power_atk", "str_atk")))
-	_check("one GUARD point is +3 DEF", _tv("guard_def", "end_def") == 3.0, "guard_def=%s" % str(_tv("guard_def", "end_def")))
-	_check("one STAMINA point is +8 EN", _tv("stamina_en", "end_en") == 8.0, "stamina_en=%s" % str(_tv("stamina_en", "end_en")))
-	_check("one MAGIC point is +8 percent special", _tv("magic_special", "mag_special") == 8.0, "magic_special=%s" % str(_tv("magic_special", "mag_special")))
-	_check("one MAGIC point is +6 MP", _tv("magic_mp", "mag_mp") == 6.0, "magic_mp=%s" % str(_tv("magic_mp", "mag_mp")))
+	# Level growth (user decision 2026-11-20): the numbers are tuned by playing, so only "above 0" is pinned.
+	var growth_keys := ["level_hp", "level_en", "level_atk", "level_def"]
+	var gain_bad := []
+	for gk in growth_keys:
+		if not (_tv(gk) > 0.0):
+			gain_bad.append("%s=%s" % [gk, str(_tv(gk))])
+	_check("every level raises HP, EN, ATK and DEF (gain above 0)", gain_bad.is_empty(), str(gain_bad))
+	var gone_left := []
+	for gk in GONE_KEYS:
+		if T.data.has(gk):
+			gone_left.append(gk)
+	_check("no points, MAGIC or AUTO keys remain in tuning", gone_left.is_empty(), str(gone_left))
 	_check("highest level is 10", _tv("level_cap") == 10.0, "level_cap=%s" % str(_tv("level_cap")))
-	_check("a level-up gives 2 points", _tv("points_per_level") == 2.0, "points_per_level=%s" % str(_tv("points_per_level")))
 	_check("the XP curve step is 10", _tv("xp_curve_step") == 10.0, "xp_curve_step=%s" % str(_tv("xp_curve_step")))
 	_check("DEF stops at 40", _tv("def_cap") == 40.0, "def_cap=%s" % str(_tv("def_cap")))
 	_check("max HP never drops below 50", _tv("max_hp_floor") == 50.0, "max_hp_floor=%s" % str(_tv("max_hp_floor")))
@@ -326,33 +332,33 @@ func _run() -> void:
 	else:
 		base_bad.append("base missing")
 	_check("levels.json base points at the real tuning keys", base_bad.is_empty(), str(base_bad))
-	var ids := []
-	if levels is Dictionary and levels.has("stats") and levels["stats"] is Dictionary:
-		ids = levels["stats"].keys()
-	var ids_ok := ids.size() == 5
-	if ids_ok:
-		for sid in STAT_IDS:
-			if not ids.has(sid):
-				ids_ok = false
-	_check("the five stats are VIGOR POWER GUARD STAMINA MAGIC (lead ruling 3)", ids_ok, str(ids))
-	var stat_bad := []
-	if levels is Dictionary and levels.has("stats"):
-		for sid in levels["stats"]:
-			var s = levels["stats"][sid]
-			if not (s is Dictionary and s.has("label") and s.has("help") and s.has("gives")):
-				stat_bad.append("%s fields" % sid)
+	var growth_ids := []
+	if levels is Dictionary and levels.has("growth") and levels["growth"] is Dictionary:
+		growth_ids = levels["growth"].keys()
+	var growth_ids_ok := growth_ids.size() == GROWTH_IDS.size()
+	if growth_ids_ok:
+		for gid in GROWTH_IDS:
+			if not growth_ids.has(gid):
+				growth_ids_ok = false
+	_check("levels.json growth names HP, EN, ATK and DEF", growth_ids_ok, str(growth_ids))
+	var growth_bad := []
+	if levels is Dictionary and levels.has("growth") and levels["growth"] is Dictionary:
+		for gid in levels["growth"]:
+			var g = levels["growth"][gid]
+			if not (g is Dictionary and g.has("label") and g.has("help") and g.has("key")):
+				growth_bad.append("%s fields" % gid)
 				continue
-			for gk in s["gives"]:
-				var tk := str(s["gives"][gk])
-				if not tk.ends_with("_key") and not T.data.has(tk):
-					stat_bad.append("%s -> %s" % [sid, tk])
-				elif tk.ends_with("_key") and not T.data.has(tk):
-					stat_bad.append("%s -> %s missing" % [sid, tk])
-	_check("every stat gain points at a real tuning key", stat_bad.is_empty(), str(stat_bad))
-	var order := []
-	if levels is Dictionary and levels.has("auto_order"):
-		order = levels["auto_order"]
-	_check("AUTO spends points in the rpg-items v2 order", str(order) == str(AUTO_ORDER), str(order))
+			if not T.data.has(str(g["key"])):
+				growth_bad.append("%s -> %s missing" % [gid, str(g["key"])])
+	else:
+		growth_bad.append("growth missing")
+	_check("every growth entry points at a real tuning key", growth_bad.is_empty(), str(growth_bad))
+	var manual_left := []
+	if levels is Dictionary:
+		for gone in ["stats", "auto_order"]:
+			if levels.has(gone):
+				manual_left.append(gone)
+	_check("levels.json has no stats or AUTO order (no manual allocation)", manual_left.is_empty(), str(manual_left))
 
 	# --- data/rooms_meta.json --------------------------------------------------
 	var meta = _read_json("res://data/rooms_meta.json")
