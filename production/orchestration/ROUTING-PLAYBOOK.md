@@ -149,3 +149,10 @@ Same step fails twice: stop and ask, recommended option first. Weekly 96%: finis
 Codex calls used in T0: 4 (Terra 1, Sol 3; two of them timed out). Ask the user for the Codex weekly % before the next Sol call.
 
 **Update 2026-11-20 (T3):** Codex Sol with `--ignore-user-config` runs in a **read-only sandbox** even with `-s workspace-write`: it answers but cannot write files or run shell. One gate-writing call changed nothing and cost about 201k tokens and 647 s. Until `-c windows.sandbox=elevated` (untested) is proven on a one-line write probe, Sol is chat-only (review text, drafting) and **Sonnet writes the gates**. Library lessons: before swapping a room, grep the locked tests for its name and for the size rule (`t_world`: `cell[0] = round(px_w/24)`, `cell[1] = round(px_h/14)`), and run smoke early (it watches each new enemy for 420 frames). Android: use `--export-debug "Android"` (release has no keystore).
+
+## Update 2026-11-21 after Studio Milestone 3
+
+- Check the exact worker model, worktree, and write access with a tiny task before sending a full brief. Keep a stalled worker's useful changes only after reviewing the diff and rerunning the gate.
+- For a deliberate fault, preserve the original bytes of the files you own and restore them in a finally block. A test crash or timeout does not prove the check caught the fault.
+- Run screenshot checks in a game window. For long Godot checks that count physics frames, try headless `--fixed-fps 60` and confirm the locked test prints its pass count. Return counts and the first failure to the lead, with full logs on disk.
+- Save a short restart section before compaction. Keep the current branch, last pushed commit, exact test counts, approvals, and the next executable step in that section.
