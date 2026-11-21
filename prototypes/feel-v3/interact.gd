@@ -90,6 +90,8 @@ func _on_room_entered(_file_id: String) -> void:
 	for pr in m.room.props:
 		if pr is Props.Lever and not pr.cut_only and not pr.pulled:
 			register(pr, "lever", "LEVER", Callable(self, "_lever_use").bind(pr), T.v("lever_reach"))
+		elif pr is Props.Candle or pr is Props.Winch:
+			pr._register()      # they registered while the room loaded; the clear above dropped them
 
 
 func _marker(at: Vector2, kind: String, label: String, cb: Callable) -> void:

@@ -369,7 +369,7 @@ func _finish(choice: String, from_input: bool) -> void:
 		_equip_now()
 	if from_input and _player_valid():
 		swallow_left = T.v("input_swallow")
-		if G.main.player.has_method("lock"):
+		if swallow_left > 0.0 and G.main.player.has_method("lock"):
 			G.main.player.lock("")
 			_swallow_locked = true
 	card_closed.emit(choice)

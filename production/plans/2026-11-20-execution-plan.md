@@ -202,8 +202,9 @@ Route: Sonnet edits directly (one text file, one JSON edit, one new test); no wo
 | Slice | Who | Files owned | Check | Depends |
 |---|---|---|---|---|
 | T3-W | **Codex Sol** (gate writer, `-s workspace-write`, the three test files only; Sonnet writes them directly if Sol is unavailable) | `tests_v4/t_data.gd`, `t_rpg.gd`, `t_interact_ui.gd` | the new checks **fail** on the old code; grep guard clean | none |
-| T3-R | Sonnet reads the changed parts of the three test files in full; Haiku runs the mutants and the value-independence check (1.5) | none (scratch edits restored with `git checkout`) | every mutant fails a check; report under 300 words | T3-W |
+| T3-R | Sonnet reads the changed parts of the three test files in full; the fail-first run on the old code is recorded here (the mutants come after the build, in T3-M) | none (scratch edits restored with `git checkout`) | every mutant fails a check; report under 300 words | T3-W |
 | T3-B | DeepSeek builder | `rpg.gd`, `menu.gd`, `hud.gd`, `data/levels.json`, `tuning.d/rpg.json` | `t_data`, `t_rpg`, `t_math`, `t_interact_ui` pass; no new failure | T3-R |
+| T3-M | Haiku or a shell script: the mutants and the value-independence check (1.5), run on the FINISHED build (a mutant only proves a gate bites once the code passes it) | none (scratch edits restored from a copy) | every mutant fails a check; values changed in tuning keep the tests green | T3-B |
 | T3-D | Haiku (docs with exact text) | `design/decisions.md`, `design/rpg-items.md`, `design/contract.md` | text matches Appendix C4 | T3-B |
 Sonnet keeps: the lock, the baseline comparison, the screenshot, the ledger rows, git. Review (P9): Gemini high on the diff against Appendix C and E. Advisor consult 3 before the PR is marked ready. Deliver: build in `playable-history/2026-11-20-proto-v4-autolevel/` (exe and APK), tag, in/NOT-in list.
 
@@ -320,7 +321,7 @@ G="C:/Users/AUC/opencode-workspace/tools/Godot/Godot_v4.7.2-stable_win64_console
 for s in tests_v4/t_data tests_v4/t_math tests_v4/t_rpg tests_v4/t_interact_ui tests_v4/t_world tests_v4/t_bosses \
          smoke hazard_test tests_quick/pause_tabs tests_quick/q3_weapon_frames tests_quick/q7_shot tests_dev/d5_checks tests_dev/d6_map; do
   n=$(basename $s); "$G" --headless --path . --log-file tests_v4/logs/run_$n.log res://$s.tscn >/dev/null 2>&1
-  echo "$n: $(grep -E 'PASS|FAIL' tests_v4/logs/run_$n.log | tail -1)"
+  r=$(grep -E 'PASS|FAIL' tests_v4/logs/run_$n.log | tail -1); echo "$n: ${r:-NO RESULT LINE (the run crashed or hung: read the end of the log)}"
 done
 "$G" --headless --fixed-fps 60 --path . --log-file tests_v4/logs/run_climb.log res://climb_test.tscn >/dev/null 2>&1
 echo "climb: $(grep -E 'PASS|FAIL' tests_v4/logs/run_climb.log | tail -1)"
@@ -354,7 +355,7 @@ Codex Sol (gate writer; `-s workspace-write`; the three test files only; the bri
 - `hud.gd:112-116`: drop the `+N PTS` suffix.
 - `menu.gd`: rewrite `_character_rows()` (`:391-402`); every row has `cb: null`. Rows: `LV n   XP x   NEXT y` (`NEXT MAX` at the cap; use `RpgMath.xp_total`), `HP`, `EN`, `MP`, `ATK %`, `DEF %`, `SPC %`, and `NEXT LEVEL  HP +6  EN +4  ATK +5%  DEF +1.5%` (read from tuning; left out at the cap). Delete `_spend`, `_auto` (`:405-411`) and `offer_points` (`:188-190`). Add a small `_pct(v)` that prints `4.5` or `4`, and use it for DEF on CHARACTER and in the EQUIPMENT summary row (`:441-457`). Do not restyle anything. The `debug_rows`, `debug_tap` and `debug_press` hooks stay.
 - `main.gd`: **no change** (597 lines; the locked limit is 600).
-- Sweep: `grep -rn -E "R\.(points|alloc|spend|auto_allocate|STATS)|offer_points|points_per_level|vigor_hp|power_atk|guard_def|stamina_en|magic_special|magic_mp" --include=*.gd --include=*.json --include=*.tscn .` (exclude `.godot/` and `_dbg/`) returns nothing outside the design docs.
+- Sweep: `grep -rn -E "R\.(points|alloc|spend|auto_allocate|STATS)|offer_points|points_per_level|vigor_hp|power_atk|guard_def|stamina_en|magic_special|magic_mp" --include=*.gd --include=*.json --include=*.tscn .` (exclude `.godot/`, `_dbg/` and `tests_v4/`: `t_data.gd` names the removed keys on purpose in `GONE_KEYS`) returns nothing outside the design docs.
 
 ### C3. Verify
 `t_data`, `t_rpg`, `t_math` pass. `t_interact_ui` has no failure beyond the baseline list. `t_world`, `t_bosses`, smoke 145/145, hazard 62/62, climb PASS, `q7_shot` 13/13, `q3_weapon_frames` 28/28, `d5_checks`, `d6_map` pass. Run the guard in 1.5. Canonical re-lock of `step0.json` (1.5 step 3), then `worker.mjs verify` in the main checkout is meaningful only after the merge, so also run `node -e` to compare the hashes of the 12 worktree files with the new lock. Screenshot proof: run `tests_quick/q4_menu_shot.tscn` windowed; open the CHARACTER tab PNG at level 1 and at level 5 (`R.debug_set({"level":5})` in the probe or the F1 `start_level`).

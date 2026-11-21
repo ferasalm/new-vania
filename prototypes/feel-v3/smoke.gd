@@ -439,6 +439,7 @@ func _run() -> void:
 			p.global_position = en.global_position + Vector2(-60, 0 if not en._d["fly"] else 60)
 			p.velocity = Vector2.ZERO
 			p.invuln = 99.0
+			var ekind: String = String(en.kind)      # read before the watch: an enemy can vanish in it (a moth dive frees it)
 			var first: String = en.state
 			var seen := {}
 			for i in 420:
@@ -450,10 +451,10 @@ func _run() -> void:
 				if i % 30 == 0:
 					p.global_position = en.global_position + Vector2(-60, 0 if not en._d["fly"] else 60)
 					p.velocity = Vector2.ZERO
-			woke[en.kind] = seen.size()
+			woke[ekind] = seen.size()
 			if shots:
-				await _shot("16_enemy_%s" % en.kind)
-			_check("%s moves through several states (two attacks, two moves)" % en.kind, seen.size() >= 3, "%s -> %s" % [first, str(seen.keys())])
+				await _shot("16_enemy_%s" % ekind)
+			_check("%s moves through several states (two attacks, two moves)" % ekind, seen.size() >= 3, "%s -> %s" % [first, str(seen.keys())])
 	G.peace = true
 
 	# the boss

@@ -268,6 +268,8 @@ func _physics_process(delta: float) -> void:
 	projectiles.move_waves(delta)
 	loot.move_orbs(delta)
 	projectiles.move_shots(delta)
+	if _busy:
+		return      # a shot was the last hit
 	interact.tick()
 	arena.tick(delta, player)
 	# holes in the top and bottom rows: up and out, or down and through

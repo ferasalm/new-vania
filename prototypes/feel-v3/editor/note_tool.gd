@@ -87,9 +87,11 @@ func submit(comment: String) -> bool:
 	if _done:
 		return false
 	var ok := _save(comment)
+	if not ok:
+		return false      # keep the note open so the comment is not lost
 	_done = true
 	closed.emit()
-	return ok
+	return true
 
 
 func _norm(p: Vector2) -> Vector2:
