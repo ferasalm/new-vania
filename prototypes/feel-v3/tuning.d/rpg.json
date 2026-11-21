@@ -21,63 +21,39 @@
     "max": 10.0,
     "step": 1.0,
     "label": "Test: start at level",
-    "help": "For testing; the points are spent by AUTO."
+    "help": "For testing; her stats grow with the level."
   },
-  "points_per_level": {
-    "value": 2.0,
-    "min": 1.0,
-    "max": 4.0,
-    "step": 1.0,
-    "label": "Levels: points per level",
-    "help": "Points she gets at each level-up."
-  },
-  "vigor_hp": {
-    "value": 10.0,
-    "min": 0.0,
-    "max": 30.0,
-    "step": 1.0,
-    "label": "One VIGOR point: health +",
-    "help": "10 is about two more ghost touches before she falls."
-  },
-  "power_atk": {
-    "value": 8.0,
-    "min": 0.0,
-    "max": 20.0,
-    "step": 1.0,
-    "label": "One POWER point: weapon damage %",
-    "help": "8 means a level 1 Dirge hit of 10 grows by almost 1."
-  },
-  "guard_def": {
-    "value": 3.0,
-    "min": 0.0,
-    "max": 8.0,
-    "step": 1.0,
-    "label": "One GUARD point: less damage %",
-    "help": "Enemy hits only, not traps."
-  },
-  "stamina_en": {
-    "value": 8.0,
-    "min": 0.0,
-    "max": 20.0,
-    "step": 1.0,
-    "label": "One STAMINA point: energy +",
-    "help": "A swing costs 12 energy."
-  },
-  "magic_special": {
-    "value": 8.0,
-    "min": 0.0,
-    "max": 20.0,
-    "step": 1.0,
-    "label": "One MAGIC point: special damage %",
-    "help": "The blade wave of 30 becomes 32.4 with one point."
-  },
-  "magic_mp": {
+  "level_hp": {
     "value": 6.0,
+    "min": 0.0,
+    "max": 20.0,
+    "step": 1.0,
+    "label": "Each level: health +",
+    "help": "6 is a little more than one ghost touch."
+  },
+  "level_en": {
+    "value": 4.0,
     "min": 0.0,
     "max": 15.0,
     "step": 1.0,
-    "label": "One MAGIC point: MP +",
-    "help": "A blade wave costs 15 MP."
+    "label": "Each level: energy +",
+    "help": "A swing costs 12, so three levels add one swing."
+  },
+  "level_atk": {
+    "value": 5.0,
+    "min": 0.0,
+    "max": 15.0,
+    "step": 1.0,
+    "label": "Each level: damage %",
+    "help": "Sword hits and specials. 5 makes a Dirge hit of 10 into 12 by level 5."
+  },
+  "level_def": {
+    "value": 1.5,
+    "min": 0.0,
+    "max": 5.0,
+    "step": 0.5,
+    "label": "Each level: less damage %",
+    "help": "Enemy hits only, not traps. Never above Defence: most."
   },
   "def_cap": {
     "value": 40.0,
@@ -101,7 +77,7 @@
     "max": 1.0,
     "step": 1.0,
     "label": "Level up: refill health, energy and MP",
-    "help": "1 refills all three bars at once; 0 gives the points only."
+    "help": "1 refills all three bars at once; 0 only raises her stats."
   },
   "area_damage_mult": {
     "value": 0.75,

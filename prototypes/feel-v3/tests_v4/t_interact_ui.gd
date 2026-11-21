@@ -4,7 +4,7 @@
 # the scrap rate at low health, the quick key, the terminal (ruling 1: never refills Sutures),
 # self-repair, nearest wins, Up+attack is the special attack, persistence, LEXICON.
 # UI (S3): pause menu tabs, debug_rows, CHARACTER, ITEMS, EQUIPMENT, MAP, minimap,
-# the level-up offer, the name plate, the dialog box, menu_swallow, debug_tap.
+# no level-up prompt, the name plate, the dialog box, menu_swallow, debug_tap.
 # Builders never edit this pack. Run: godot --headless --path . res://tests_v4/t_interact_ui.tscn
 extends Node
 
@@ -459,12 +459,12 @@ func _ui_checks() -> void:
 		_check("the pause menu opens and pauses the tree", false, "no menu on main")
 		_check("the tabs cycle in order", false, "no menu")
 		_check("debug_rows match each tab", false, "no menu")
-		_check("CHARACTER spends and previews", false, "no menu")
+		_check("CHARACTER shows her stats", false, "no menu")
 		_check("ITEMS uses a Suture from the menu", false, "no menu")
 		_check("EQUIPMENT has 2 harness and 2 module rows", false, "no menu")
 		_check("MAP draws only visited cells", false, "no map_view")
 		_check("the minimap focuses her cell", false, "no minimap")
-		_check("the level-up offer leads to CHARACTER", false, "no menu")
+		_check("a level-up opens no menu", false, "no menu")
 		_check("attack and jump are swallowed after closing", false, "no menu")
 		_check("debug_tap works on every tab", false, "no menu")
 	else:
@@ -501,36 +501,41 @@ func _ui_checks() -> void:
 			await _pframes(3)
 		_check("debug_rows match each tab", rows_bad.is_empty(), str(rows_bad))
 
-		# CHARACTER: spending raises the ATK row; AUTO spends everything; preview == after
+		# CHARACTER shows her effective stats; a level-up raises them; no AUTO row, no points (user decision 2026-11-20).
+		# Expected numbers come from R, never typed in.
 		_reset_all()
-		_r().call("add_xp", 20)
+		var atk_before: float = float(_r().call("atk"))
 		menu.call("open", "CHARACTER")
 		await _pframes(4)
 		var before_rows := _rows_join(menu)
 		menu.call("close")
 		await _pframes(3)
-		_r().call("spend", "power")
+		_r().call("add_xp", 20)
+		var atk_after: float = float(_r().call("atk"))
 		menu.call("open", "CHARACTER")
 		await _pframes(4)
+		var rows2: Array = menu.call("debug_rows")
 		var after_rows := _rows_join(menu)
 		menu.call("close")
 		await _pframes(3)
-		_check("spending POWER raises the ATK row to 108", after_rows.contains("108"),
-			"rows=%s" % after_rows.substr(0, 160))
-		var auto_ok := false
-		menu.call("open", "CHARACTER")
-		await _pframes(4)
-		var rows = menu.call("debug_rows")
-		if rows is Array:
-			for i in (rows as Array).size():
-				if String(rows[i]).contains("AUTO"):
-					menu.call("debug_tap", i)
-					await _pframes(4)
-					auto_ok = int(_r().get("points")) == 0
-					break
-		menu.call("close")
-		await _pframes(3)
-		_check("AUTO spends everything from the menu", auto_ok, "points=%d" % int(_r().get("points")))
+		var stat_missing := []
+		for word in ["LV", "XP", "NEXT", "HP", "EN", "MP", "ATK", "DEF", "SPC"]:
+			if not _row_has(rows2, word, ""):
+				stat_missing.append(word)
+		var shown_value := {"HP": float(_r().call("max_hp")), "EN": float(_r().call("max_en")),
+			"MP": float(_r().call("max_mp")), "SPC": float(_r().call("special_pct"))}
+		for word in shown_value:
+			if not _row_has(rows2, String(word), str(int(round(float(shown_value[word]))))):
+				stat_missing.append("%s value" % word)
+		var prompt_left := after_rows.contains("AUTO") or after_rows.contains("PTS")
+		_check("CHARACTER shows LV XP NEXT HP EN MP ATK DEF SPC, with no AUTO or points row",
+			stat_missing.is_empty() and not prompt_left,
+			"missing=%s prompt=%s rows=%s" % [str(stat_missing), str(prompt_left), after_rows.substr(0, 200)])
+		var atk_row_before := "ATK %d%%" % int(round(atk_before))
+		var atk_row_after := "ATK %d%%" % int(round(atk_after))
+		_check("the ATK row grows after a level-up",
+			atk_after > atk_before and before_rows.contains(atk_row_before) and after_rows.contains(atk_row_after),
+			"want '%s' then '%s'; rows=%s" % [atk_row_before, atk_row_after, after_rows.substr(0, 200)])
 
 		# preview equals the stats after the change (equipment arithmetic)
 		_reset_all()
@@ -550,7 +555,7 @@ func _ui_checks() -> void:
 		_player().set("hp", 50.0)
 		menu.call("open", "ITEMS")
 		await _pframes(4)
-		rows = menu.call("debug_rows")
+		var rows = menu.call("debug_rows")
 		var used_menu := false
 		if rows is Array:
 			for i in (rows as Array).size():
@@ -612,18 +617,15 @@ func _ui_checks() -> void:
 		else:
 			_check("the minimap focuses her cell", false, "no minimap.focus_cell")
 
-		# the level-up offer leads to CHARACTER
+		# a level-up opens no menu and no prompt (user decision 2026-11-20)
 		_reset_all()
-		_r().call("add_xp", 20)
-		if menu.has_method("offer_points"):
-			menu.call("offer_points")
-			await _pframes(5)
-			var offered := bool(menu.get("is_open")) and String(menu.get("tab")) == "CHARACTER"
-			_check("the level-up offer leads to CHARACTER", offered, "open=%s tab=%s" % [str(menu.get("is_open")), str(menu.get("tab"))])
+		if bool(menu.get("is_open")):
 			menu.call("close")
-			await _pframes(5)
-		else:
-			_check("the level-up offer leads to CHARACTER", false, "no menu.offer_points")
+			await _pframes(3)
+		_r().call("add_xp", 20)
+		await _pframes(5)
+		_check("a level-up opens no menu", not bool(menu.get("is_open")) and not get_tree().paused,
+			"open=%s paused=%s" % [str(menu.get("is_open")), str(get_tree().paused)])
 
 		# after closing, attack and jump are ignored for menu_swallow
 		var swallow := _tv("menu_swallow")
@@ -726,6 +728,19 @@ func _ui_checks() -> void:
 			db.call("debug_advance")
 	else:
 		_check("dialog_box.ask returns the chosen index and a page has at most 3 lines", false, "no dialog_box")
+
+
+# true when some row holds `word` as a whole word and, if `num` is not empty, that exact number
+# right after it ("HP 1060" does not match 106; a trailing % is ignored, so "SPC 105%" matches 105)
+func _row_has(rows: Array, word: String, num: String) -> bool:
+	for r in rows:
+		var tokens := String(r).split(" ", false)
+		for i in tokens.size():
+			if tokens[i] != word:
+				continue
+			if num == "" or (i + 1 < tokens.size() and tokens[i + 1].trim_suffix("%") == num):
+				return true
+	return false
 
 
 func _rows_join(menu) -> String:

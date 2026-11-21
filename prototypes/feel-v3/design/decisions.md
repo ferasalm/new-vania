@@ -41,6 +41,7 @@ Status: done (log). The GDD corrections themselves: planned (not made; they wait
 | 25 | Palette A (ash and teal) is her main look; her eyes and suit seam lines glow cyan. Skin B (oxblood) is an optional skin: eyes, seams, weapon strikes and dash trails glow red. B is never drawn: it is baked from A slot for slot (2026-11-19). | `design/skins.md`, `assets/palettes/` |
 | 26 | The jump is made from the best frames of the user's three AI jump clips, graceful, and cleaned with both a rig and PixelLab (2026-11-19). | `assets/sprites-pandora/jump/`, sprites.md 6 |
 | 27 | Attacks feel like a fencer or dancer: long lines, pointed toes, weight from back foot to front, hair/scarf/sleeve-tails trail one frame behind. 5 frames each (wind-up, start, hit, follow-through, recovery); on the hit frame the crescent peaks and her eyes and seams flash brighter (cyan A, red B). J and I differ: ground J quick horizontal cut, ground I rising turning backhand (a two-hit combo); crouch J low thrust from one knee, crouch I floor sweep; air J horizontal slash with legs tucked, air I turning downward cut (no ground poses in the air); cast: hand to chest, light gathers, whole-body push forward. Elegy heavy two-handed with full-body twists; pistol short and precise with recoil. A slim blade silhouette is drawn in her hand on the hit frames and the glow arc stays (2026-11-19). | sprites.md 4 (B3, B6, B7) |
+| 28 | Automatic leveling (user, 2026-11-20): each level above 1 adds +6 HP, +4 EN, +5 % attack and +1.5 % defence. Specials use the same attack percent. MP does not grow. No points, no AUTO, no MAGIC stat, no reset. A level-up still refills HP, EN and MP and opens no menu. Replaces decision 6 and covers asks N19, N20, N21. | `rpg.gd`, `data/levels.json`, `tuning.d/rpg.json`, `menu.gd` |
 
 ## Departs from the GDDs (each now overruled)
 
@@ -48,6 +49,7 @@ Status: done (log). The GDD corrections themselves: planned (not made; they wait
 |---|---|---|
 | `design/gdd/health-damage.md:73` | a level-up banks one training point; the point is the only stat growth | 2 points per level over five stats, and a full HP, EN and MP refill (decision 6) |
 | `design/gdd/health-damage.md:30`, `design/gdd/cache-stations-death.md:61` | points are a choice made at the cache; the cache is the only place to spend them | spent anywhere in CHARACTER, or by AUTO (decision 6) |
+| `design/gdd/health-damage.md:30` and `:73` ("a training point is a choice you make at the cache, not a curve that happens to you") | training points, chosen by the player | automatic growth at every level, no points at all (decision 28, 2026-11-20) |
 | `design/gdd/health-damage.md:477`, `design/gdd/progression.md:72`, `:80` | highest level 5 (`LEVEL_CAP_MVP`) | highest level 10 |
 | `design/gdd/progression.md:72` | XP awards 3 / 7 / 14, boss 40 | per enemy 3-14; bosses 30 / 50 / 80; RECALL 25 % (decision 14) |
 | `design/gdd/progression.md:60`, `:108`, `design/gdd/hud.md:145` | no stat sheet, no comparison numbers | a CHARACTER stat screen and green/red comparison numbers in EQUIPMENT (no respec, as before) |

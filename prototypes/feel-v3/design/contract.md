@@ -329,6 +329,7 @@ Common test hooks (built by S0): `main.debug_enter(room: String, side := "left",
     `end_shift()` (sets `G.shifted` and `sheet`, emits `shift_changed`), `meta(file_id) -> Dictionary`,
     `title(file_id) -> String`, `room_list(sheet) -> Array`, `cell_of(file_id, local: Vector2) -> Vector2i`,
     `snapshot() -> Dictionary`, `restore(d)`, `debug_set(d)`.
+  - **`R`, superseded 2026-11-20 (decision 28):** `leveled(level: int)` only; no `points`, `alloc`, `spend()`, `auto_allocate()` or `STATS`; new `growth(kind: String) -> float`; every stat is computed from `level`; `restore` ignores old `points` and `alloc`. The `R` entry below is the old interface.
   - `R`: signals `xp_changed(xp: int, level: int)`, `leveled(level: int, points: int)`, `stats_changed()`,
     `items_changed(id: String, count: int)`, `gear_changed(slot: String, id: String)`, `scrap_changed(value: float)`.
     Vars `level, xp, points, alloc` ({str, vit, mag, end}), `items` ({id: count}), `owned_gear: Array`,

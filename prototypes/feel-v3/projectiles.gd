@@ -1,7 +1,7 @@
 # PROTOTYPE - NOT FOR PRODUCTION
 # The projectiles system: her blade wave, everything an enemy throws, and the
 # rings that burst around a point. Moved out of main.gd unchanged; her special
-# now asks R for its damage so MAGIC grows it.
+# now asks R for its damage so her level (through ATK) grows it.
 extends Node
 
 var waves: Array = []        # blade waves in flight: {node, dir, left, hit}

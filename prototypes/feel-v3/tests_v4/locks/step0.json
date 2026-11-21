@@ -1,13 +1,13 @@
 {
-  "created": "2026-11-19T05:18:29.868Z",
+  "created": "2026-11-20T20:35:46.209Z",
   "files": {
-    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_data.gd": "694a3fcb4c00bddecf1cb913c875ac78c048de0573651ff534071f1c283feaeb",
+    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_data.gd": "d9acd4bd2777e5c887fd13045f2799b1c7159a2fba643740475557bdcc1627b2",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_data.tscn": "8871ce39202f5804a773d0b7e8d5a5e1d403a7122d2fdaae493304ca135dae75",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_math.gd": "62bdb2023f8ddbd7be89b5dbd0badba181f5f9c689a820d405d494697a5d6d28",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_math.tscn": "f09b490b575d41dfe3347d87ba7fc088b37d7e295260cacac7183732cd2ba0a4",
-    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_rpg.gd": "5b0c2b15c705b4dacb1e6802d23d00ad555d605420d87b75a8a202081b8d1236",
+    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_rpg.gd": "a430d1bae09fbf63024c8b042237a31bcb12b34d0d6c1bc3228fbce74d4e3f2b",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_rpg.tscn": "3c4cdf8c74cecdd71f55798eaa6eac645afbcedbea4c8b019e199e549029a195",
-    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_interact_ui.gd": "8000bc0b8dccfc86b12d46fc761f280e051af70dea1b01ffca1b269c247b25db",
+    "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_interact_ui.gd": "f0e0c1465a378a57738e80a84f51833634b9f386636845caa23f090c080abde8",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_interact_ui.tscn": "69fb0ff86698cf153a75aaf7aeb95efb58a4bf98df41a870a94e481e6d5fcc88",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_world.gd": "a41ace52b9d760c019d25dfcefdc2591014616cd5184f5f47970dfccc873f7dd",
     "C:\\Users\\AUC\\opencode-workspace\\workspace\\new-vania\\prototypes\\feel-v3\\tests_v4\\t_world.tscn": "ea863a165dddebb76fcff3dae195f478d4df07e473b5060c9eb81c44b91a01d9",
