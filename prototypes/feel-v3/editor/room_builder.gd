@@ -4,6 +4,7 @@ extends CanvasLayer
 signal closed
 
 const RoomDoc := preload("res://editor/room_doc.gd")
+const EdSelection := preload("res://editor/ed_selection.gd")
 const EdAssets := preload("res://editor/ed_assets.gd")
 const EdCatalog := preload("res://editor/ed_catalog.gd")
 const EdPalette := preload("res://editor/ed_palette.gd")
@@ -56,6 +57,15 @@ var _redo_btn: Button
 var _tool_buttons := {}
 var _entries: Array = []
 var _markers := {}
+var _copy_btn: Button
+var _cut_btn: Button
+var _paste_btn: Button
+var _dup_btn: Button
+var _clipboard: Dictionary = {}
+var _selecting_box := false
+var _box_select_start := Vector2i(-1, -1)
+var _group_drag := false
+var _group_drag_start := Vector2i(-1, -1)
 
 var library_button: Button
 var library_palette: Control = null
@@ -125,7 +135,7 @@ func begin(info: Dictionary) -> void:
 	_set_tool(tool)
 	_refresh()
 	_fit.call_deferred()
-	_say("Select an object on the canvas, or pick something from the palette.")
+	_say("Click an object, or Shift+drag to select a box.")
 
 
 func _props_source(file: String) -> String:
@@ -295,6 +305,12 @@ func _build_inspector(parent: HBoxContainer) -> void:
 	_move_btn = Shell.button(picked_actions, "Move", func(): _set_tool("MOVE"))
 	_delete_btn = Shell.button(picked_actions, "Delete", _delete_selection)
 	_flip_btn = Shell.button(picked_actions, "Flip", _flip_selection)
+	var clipboard_actions := HBoxContainer.new()
+	panel.add_child(clipboard_actions)
+	_copy_btn = Shell.button(clipboard_actions, "Copy", _copy_region, "Copy the box (Ctrl+C)")
+	_cut_btn = Shell.button(clipboard_actions, "Cut", _cut_region, "Cut the box (Ctrl+X)")
+	_paste_btn = Shell.button(clipboard_actions, "Paste", _paste_clipboard, "Paste at the last tile pointed to (Ctrl+V)")
+	_dup_btn = Shell.button(clipboard_actions, "Duplicate", _duplicate_region, "Make a second copy (Ctrl+D)")
 	_label(panel, "Room Size · Tiles", 17)
 	var dimensions := HBoxContainer.new()
 	panel.add_child(dimensions)
@@ -547,6 +563,9 @@ func use_library_entry(entry: Dictionary) -> bool:
 func _set_tool(mode: String) -> void:
 	_end_pointer_actions()
 	tool = mode
+	if tool not in ["SELECT", "MOVE"] and _selection.has("region"):
+		_selection = {}
+		_update_selection()
 	for key in _tool_buttons:
 		_tool_buttons[key].set_pressed_no_signal(key == tool)
 	if mode == "START":
@@ -799,7 +818,11 @@ func _pick_at(at: Vector2) -> Dictionary:
 func _update_selection() -> void:
 	var movable := false
 	var label := "No object selected"
-	if _selection.has("prop"):
+	var group := _selection.has("region")
+	if group:
+		var rect: Rect2i = _selection["region"]
+		label = "%d × %d tiles selected\nDrag or use arrows to move the box." % [rect.size.x, rect.size.y]
+	elif _selection.has("prop"):
 		var picture: Dictionary = doc.props[_selection["prop"]]
 		var layer_name := String(picture.get("layer", "back")).capitalize()
 		label = "%s\nPNG · %s" % [String(picture["png"]).get_file(), layer_name]
@@ -813,6 +836,10 @@ func _update_selection() -> void:
 	_move_btn.disabled = not movable
 	_delete_btn.disabled = _selection.is_empty()
 	_flip_btn.disabled = not _selection.has("prop")
+	_copy_btn.disabled = not group
+	_cut_btn.disabled = not group
+	_dup_btn.disabled = not group
+	_paste_btn.disabled = _clipboard.is_empty()
 
 
 func _glyph_name(glyph: String) -> String:
@@ -842,7 +869,93 @@ func _erase_object(target: Dictionary) -> void:
 
 
 func _delete_selection() -> void:
-	_erase_object(_selection)
+	if not _selection.has("region"):
+		_erase_object(_selection)
+		return
+	var rect: Rect2i = _selection["region"]
+	if EdSelection.has_content(doc.copy_region(rect)):
+		doc.push_undo()
+		doc.clear_region(rect)
+		_changed()
+	_selection = {}
+	_update_selection()
+	_overlay.queue_redraw()
+
+
+func _room_bounds() -> Rect2i:
+	return Rect2i(0, 0, doc.width(), doc.height())
+
+
+func _update_box_selection() -> void:
+	var region := EdSelection.box_rect(_box_select_start, _hover, _room_bounds())
+	_selection = {"region": region} if region.has_area() else {}
+	_update_selection()
+
+
+func _move_region(offset: Vector2i) -> void:
+	if offset == Vector2i.ZERO:
+		return
+	var rect: Rect2i = _selection["region"]
+	var block: Dictionary = doc.copy_region(rect)
+	var target := rect.position + offset
+	if not EdSelection.can_move(doc, target, block):
+		_say("That move would leave part of the selection outside the room.")
+		return
+	if EdSelection.has_content(block) or EdSelection.would_paste(doc, target, block):
+		doc.push_undo()
+		doc.clear_region(rect)
+		doc.paste_region(target, block)
+		_changed()
+	var moved := Rect2i(target, rect.size).intersection(_room_bounds())
+	_selection = {"region": moved} if moved.has_area() else {}
+	_update_selection()
+	_overlay.queue_redraw()
+
+
+func _copy_region() -> void:
+	if not _selection.has("region"):
+		return
+	_clipboard = doc.copy_region(_selection["region"])
+	_update_selection()
+	_say("Copied the selection. Point at a tile and press Ctrl+V to paste.")
+
+
+func _cut_region() -> void:
+	if not _selection.has("region"):
+		return
+	_copy_region()
+	_delete_selection()
+	_say("Cut the selection. Point at a tile and press Ctrl+V to paste.")
+
+
+func _paste_clipboard() -> void:
+	if not _clipboard.is_empty():
+		_paste_region(_hover, _clipboard)
+
+
+func _duplicate_region() -> void:
+	if not _selection.has("region"):
+		return
+	var rect: Rect2i = _selection["region"]
+	var target := _hover
+	if rect.has_point(target) or not doc.in_room(target.x, target.y):
+		target = rect.position + Vector2i(rect.size.x, 0)
+		if not doc.in_room(target.x, target.y):
+			target = rect.position - Vector2i(rect.size.x, 0)
+	_paste_region(target, doc.copy_region(rect))
+
+
+func _paste_region(at: Vector2i, block: Dictionary) -> void:
+	if not doc.in_room(at.x, at.y):
+		_say("Point at a tile in the room before pasting.")
+		return
+	if EdSelection.would_paste(doc, at, block):
+		doc.push_undo()
+	var clipped: bool = doc.paste_region(at, block)
+	var region := Rect2i(at, block["size"]).intersection(_room_bounds())
+	_selection = {"region": region}
+	_changed()
+	_say("Pasted. The room edge clipped part of the selection." if clipped else "Pasted the selection.")
 
 
 func _flip_selection() -> void:
@@ -1033,6 +1146,14 @@ func _input(event: InputEvent) -> void:
 					_undo()
 			KEY_Y:
 				_redo()
+			KEY_C:
+				_copy_region()
+			KEY_X:
+				_cut_region()
+			KEY_V:
+				_paste_clipboard()
+			KEY_D:
+				_duplicate_region()
 			_:
 				return
 	else:
@@ -1058,8 +1179,11 @@ func _input(event: InputEvent) -> void:
 			KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN:
 				_framing = false
 				var offset := Vector2(int(key == KEY_RIGHT) - int(key == KEY_LEFT), int(key == KEY_DOWN) - int(key == KEY_UP))
-				_cam += offset * 48.0 / _zoom
-				_sync_camera()
+				if _selection.has("region"):
+					_move_region(Vector2i(offset))
+				else:
+					_cam += offset * 48.0 / _zoom
+					_sync_camera()
 			_:
 				return
 	get_viewport().set_input_as_handled()
@@ -1083,6 +1207,8 @@ func _on_motion(at: Vector2) -> void:
 	if _panning:
 		_cam = _cam_from - (at - _pan_from) / _zoom
 		_sync_camera()
+	elif _selecting_box:
+		_update_box_selection()
 	elif _zone_drag:
 		_set_zone(_hover)
 	elif _painting:
@@ -1118,10 +1244,28 @@ func _on_click(event: InputEventMouseButton) -> void:
 		return
 	var at := _to_world(event.position)
 	if not event.pressed:
-		if not _drag.is_empty():
+		if _selecting_box:
+			_update_box_selection()
+		elif _group_drag:
+			_move_region(_hover - _group_drag_start)
+		elif not _drag.is_empty():
 			_drop_move(at)
 		_end_pointer_actions()
 		return
+	if event.shift_pressed:
+		_set_tool("SELECT")
+		_selecting_box = true
+		_box_select_start = _hover
+		_update_box_selection()
+		return
+	if _selection.has("region"):
+		var region: Rect2i = _selection["region"]
+		if region.has_point(_hover):
+			_group_drag = true
+			_group_drag_start = _hover
+			return
+		_selection = {}
+		_update_selection()
 	match tool:
 		"SELECT":
 			_selection = _pick_at(at)
@@ -1171,6 +1315,8 @@ func _end_pointer_actions() -> void:
 	_painting = false
 	_stroke_snapshot = false
 	_zone_drag = false
+	_selecting_box = false
+	_group_drag = false
 	_drag = {}
 
 
@@ -1212,13 +1358,19 @@ func _on_draw() -> void:
 		var rect := _draw_box(Rect2(Vector2(_start_cell) * TILE, Vector2.ONE * TILE), PLAY_TINT, 0.3)
 		_overlay.draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, -5), "PLAY START",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, PLAY_TINT)
-	if _selection.has("prop"):
+	if _selection.has("region"):
+		var region: Rect2i = _selection["region"]
+		_draw_box(Rect2(Vector2(region.position * TILE), Vector2(region.size * TILE)), DESIGN_TINT, 0.22)
+		if _group_drag:
+			var target := region.position + _hover - _group_drag_start
+			_draw_box(Rect2(Vector2(target * TILE), Vector2(region.size * TILE)), DESIGN_TINT, 0.12)
+	elif _selection.has("prop"):
 		var picture: Dictionary = doc.props[_selection["prop"]]
 		var area := Rect2(Vector2(picture["x"], picture["y"]), EdAssets.size_of(picture["png"]))
 		_draw_box(area, DESIGN_TINT, 0.12)
 	elif _selection.has("cell"):
 		_draw_box(Rect2(Vector2(_selection["cell"]) * TILE, Vector2.ONE * TILE), DESIGN_TINT, 0.12)
-	if _has_mouse and not _panning:
+	if _has_mouse and not _panning and not _group_drag and not _selecting_box:
 		_draw_brush_preview()
 
 
